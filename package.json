@@ -1,1 +1,39 @@
-{}
+{
+  "name": "tus-node-server",
+  "description": "Node.js 4 ES2015 tus server, including a transpiled down version for older &lt; 1.0 versions",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tus/tus-node-server.git"
+  },
+  "keywords": [
+    "tus",
+    "framework",
+    "resumable",
+    "upload",
+    "protocol",
+    "app",
+    "api",
+    "server"
+  ],
+  "author": "Ben Stahl <bhstahl@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tus/tus-node-server/issues"
+  },
+  "homepage": "https://github.com/tus/tus-node-server#readme",
+  "engines": {
+     "node": ">= 4.0.0"
+   },
+   "files": [
+     "LICENSE",
+     "README.md",
+     "index.js",
+     "lib/"
+   ],
+   "main": "index.js",
+   "scripts": {
+     "start": "node index.js",
+     "test": "echo \"Error: no test specified\" && exit 1"
+   }
+}
