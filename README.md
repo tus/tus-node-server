@@ -1,2 +1,28 @@
 # tus-node-server
-Node.js 4 ES2015 tus server, including a transpiled down version for older &lt; 1.0 versions
+[TUS Protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) Server Implementation.
+
+## Installation
+
+```bash
+$ npm install tus-node-server
+```
+
+## Quick Start
+
+```javascript
+let Tus = require('../lib/tus');
+let server = new Tus();
+
+const host = '127.0.0.1';
+const port = 8000;
+let server_options = { host, port };
+
+server.listen(server_options, () => {
+    console.log(`tus server listening at http://${host}:${port}`);
+});
+```
+
+## Run Example
+```bash
+$ node example/server.js
+```
