@@ -23,17 +23,20 @@
   },
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "engines": {
-     "node": ">= 4.0.0"
-   },
-   "files": [
-     "LICENSE",
-     "README.md",
-     "index.js",
-     "lib/"
-   ],
-   "main": "index.js",
-   "scripts": {
-     "start": "node index.js",
-     "test": "echo \"Error: no test specified\" && exit 1"
-   }
+    "node": ">= 4.0.0"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "lib/"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "eslint": "^1.6.0"
+  }
 }
