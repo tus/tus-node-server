@@ -1,6 +1,7 @@
 'use strict';
 
 let Tus = require('../lib/tus');
+let crypto = require('crypto');
 
 let server = new Tus();
 
@@ -10,11 +11,12 @@ server.route('/', ['GET'], (req, res) => {
     res.end();
 });
 
-server.route('/upload', ['PATCH'], (req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.write(`Uploading`);
-    res.end();
-});
+let hashingFunction = (file_size) => {
+    let name = `${file_size}${new Date().getTime()}`;
+    return crypto.createHash('md5').update(name).digest('hex');
+};
+
+server.fileRoute('/files', hashingFunction);
 
 const TIMEOUT = 30000;
 server.timeout = TIMEOUT;
