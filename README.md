@@ -17,6 +17,12 @@ const host = '127.0.0.1';
 const port = 8000;
 let server_options = { host, port };
 
+server.route('/', ['GET'], (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.write(`Hello tus!`);
+    res.end();
+});
+
 server.listen(server_options, () => {
     console.log(`tus server listening at http://${host}:${port}`);
 });

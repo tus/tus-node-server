@@ -4,6 +4,18 @@ let Tus = require('../lib/tus');
 
 let server = new Tus();
 
+server.route('/', ['GET'], (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.write(`Hello tus!`);
+    res.end();
+});
+
+server.route('/upload', ['PATCH'], (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.write(`Uploading`);
+    res.end();
+});
+
 const TIMEOUT = 30000;
 server.timeout = TIMEOUT;
 
