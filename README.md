@@ -30,8 +30,12 @@ $ node example/server.js
 
 #### Create a file
 ```bash
-$ curl -X POST -I -H "Entity-Length: 12345678" -H "Content-Length: 0" http://127.0.0.1:8000/files
+$ curl -X POST -I 'http://localhost:8000/files' \
+               -H 'Tus-Resumable: 1.0.0' \
+               -H 'Entity-Length: 12345678'
 
 HTTP/1.1 201 Created
-Location: http://127.0.0.1:8000/files/cb58578de5278d83dcdc7448864d33d7
+Tus-Resumable: 1.0.0
+Access-Control-Expose-Headers: Upload-Offset, Location, Upload-Length, Tus-Version, Tus-Resumable, Tus-Max-Size, Tus-Extension, Upload-Metadata
+Location: http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef
 ```
