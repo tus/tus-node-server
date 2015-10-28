@@ -1,6 +1,7 @@
 # tus-node-server
 [TUS Protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) Server Implementation.
 
+![travis](https://travis-ci.org/tus/tus-node-server.svg)
 ## Installation
 
 ```bash
