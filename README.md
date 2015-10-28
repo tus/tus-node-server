@@ -1,8 +1,8 @@
 # tus-node-server
-[TUS Protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) Server Implementation.
-
-![travis](https://travis-ci.org/tus/tus-node-server.svg)
+[![Build Status](https://travis-ci.org/tus/tus-node-server.svg?branch=master)](https://travis-ci.org/tus/tus-node-server)
 [![Coverage Status](https://coveralls.io/repos/tus/tus-node-server/badge.svg?branch=master&service=github)](https://coveralls.io/github/tus/tus-node-server?branch=master)
+
+[TUS Protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) Server Implementation.
 
 ## Installation
 
@@ -48,7 +48,12 @@ Access-Control-Expose-Headers: Upload-Offset, Location, Upload-Length, Tus-Versi
 Location: http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef
 ```
 
-## Runing Tests
+## Running Tests
 ```bash
-$ npm run test
+$ npm test
+```
+
+## Update Coverage
+```bash
+$ npm run coveralls
 ```
