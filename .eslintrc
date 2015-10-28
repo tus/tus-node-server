@@ -102,7 +102,6 @@
 
         "accessor-pairs": [2, { "setWithoutGet": true }],
         "array-bracket-spacing": [2, "never"],
-        "brace-style": [2, "stroustrup"],
         "camelcase": 2,
         "comma-dangle": [1, "always-multiline"],
         "comma-spacing": 2,
@@ -154,7 +153,6 @@
         "yoda": [2, "never"],
         "camelcase": [0, { "properties": "always" }],
         "prefer-const": 0,
-        "brace-style": [2, "stroustrup", { "allowSingleLine": false }],
         "object-shorthand": 0,
         "no-implicit-coercion": 0
     }

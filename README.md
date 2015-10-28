@@ -39,3 +39,8 @@ Tus-Resumable: 1.0.0
 Access-Control-Expose-Headers: Upload-Offset, Location, Upload-Length, Tus-Version, Tus-Resumable, Tus-Max-Size, Tus-Extension, Upload-Metadata
 Location: http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef
 ```
+
+## Runing Tests
+```bash
+$ npm run test
+```
