@@ -2,6 +2,8 @@
 [TUS Protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) Server Implementation.
 
 ![travis](https://travis-ci.org/tus/tus-node-server.svg)
+[![Coverage Status](https://coveralls.io/repos/tus/tus-node-server/badge.svg?branch=master&service=github)](https://coveralls.io/github/tus/tus-node-server?branch=master)
+
 ## Installation
 
 ```bash
