@@ -7,9 +7,7 @@
 
 ## Installation
 
-```bash
-$ npm install tus-node-server
-```
+Not published yet, coming soon!
 
 ## Quick Start
 
