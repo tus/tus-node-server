@@ -8,6 +8,11 @@ const http = require('http');
 
 const ALLOWED_METHODS = 'POST, HEAD, PATCH, OPTIONS';
 
+let hasHeader = (res, header) => {
+    let key = Object.keys(header)[0];
+    return res._header.indexOf(`${key}: ${header[key]}`) > -1;
+}
+
 describe('BaseHandler', () => {
     let res = null;
     let handler = new BaseHandler();
@@ -31,12 +36,11 @@ describe('BaseHandler', () => {
     });
 
     it('send() should set headers', (done) => {
-        let headers = {};
-        const HEADER_NAME = 'Access-Control-Allow-Methods';
-        const HEADER_VALUE = 'GET, OPTIONS';
-        headers[HEADER_NAME] = HEADER_VALUE;
+        let headers = {
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        };
         handler.send(res, 200, headers);
-        assert.notEqual(res._header.indexOf(`${HEADER_NAME}: ${HEADER_VALUE}`), -1)
+        assert.equal(hasHeader(res, headers), true)
         done();
     });
 

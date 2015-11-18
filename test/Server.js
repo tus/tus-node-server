@@ -25,18 +25,11 @@ describe('Server', () => {
           .expect(204, '', done);
     });
 
-    it('file create api should require an Entity-Length', (done) => {
-        request(server.listen())
-          .post('/files')
-          .set('Tus-Resumable', '1.0.0')
-          .expect(400, 'Entity-Length Required', done)
-    });
-
     it('should return a location for file create api', (done) => {
         request(server.listen())
           .post('/files')
           .set('Tus-Resumable', '1.0.0')
-          .set('Entity-Length', '1234')
+          .set('Upload-Length', '1234')
           .expect(201, done)
           .end((err, res) => {
               res.headers.should.have.property('location');
