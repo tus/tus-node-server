@@ -1,12 +1,3 @@
 'use strict';
 
-const Server = require('./lib/Server');
-const DataStore = require('./lib/stores/DataStore');
-const FileStore = require('./lib/stores/FileStore');
-
-module.exports = {
-    Server: Server,
-    DataStore: DataStore,
-    FileStore: FileStore,
-}
-
+module.exports = require('./lib/tus');

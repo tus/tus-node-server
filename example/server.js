@@ -1,9 +1,9 @@
 'use strict';
 
-const tus = require('../index');
-
-const server = new tus.Server();
-server.datastore = new tus.FileStore({
+const Tus = require('../lib/tus');
+const FileStore = require('../lib/stores/filestore');
+const server = new Tus();
+server.datastore = new FileStore({
     path: '/files',
 });
 
