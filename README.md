@@ -13,11 +13,10 @@ Not published yet, [coming soon](https://github.com/tus/tus-node-server/mileston
 
 #### Build the server
 ```javascript
-const Tus = require('../lib/tus');
-const FileStore = require('../lib/stores/filestore');
+const tus = require('tus-node-server');
 
-const server = new Tus();
-server.datastore = new FileStore({
+const server = new tus.Server();
+server.datastore = new tus.FileStore({
     path: '/files'
 });
 

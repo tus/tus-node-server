@@ -3,7 +3,7 @@
 const assert = require('assert');
 const should = require('should');
 
-const BaseHandler = require('../lib/handlers/basehandler');
+const BaseHandler = require('../lib/handlers/BaseHandler');
 const http = require('http');
 
 const ALLOWED_METHODS = 'POST, HEAD, PATCH, OPTIONS';
