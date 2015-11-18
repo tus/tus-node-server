@@ -11,13 +11,12 @@ Not published yet, [coming soon](https://github.com/tus/tus-node-server/mileston
 
 ## Quick Start
 
-#### Build the server
+#### Build a server
 ```javascript
-const Tus = require('../lib/tus');
-const FileStore = require('../lib/stores/filestore');
+const tus = require('tus-node-server');
 
-const server = new Tus();
-server.datastore = new FileStore({
+const server = new tus.Server();
+server.datastore = new tus.FileStore({
     path: '/files'
 });
 
@@ -26,12 +25,11 @@ const port = 8000;
 server.listen({ host, port }, () => {
     console.log(`[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port}`);
 });
-
 ```
 
 #### Run the server
 ```bash
-$ node example/server.js
+$ node server.js
 ```
 
 
