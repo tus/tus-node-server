@@ -1,26 +1,12 @@
 'use strict';
 
-let request = require('supertest');
+const request = require('supertest');
 // const assert = require('assert');
 const should = require('should');
 const Tus = require('../lib/tus');
-const FileStore = require('../lib/stores/filestore');
+const DataStore = require('../lib/stores/datastore');
 
 describe('Tus', () => {
-
-    it('should serve requests', (done) => {
-        const server = new Tus();
-
-        server.route('/', ['GET'], (req, res) => {
-            res.writeHead(200, {});
-            res.write('Hello tus!');
-            return res.end();
-        });
-
-        request(server.listen())
-          .get('/')
-          .expect(200, 'Hello tus!', done);
-    });
 
     it('should allow for method overriding', (done) => {
         const server = new Tus();
@@ -30,14 +16,6 @@ describe('Tus', () => {
           .expect(204, '', done);
     });
 
-    it('should 404 !GET requests with tus header', (done) => {
-        const server = new Tus();
-        request(server.listen())
-          .post('/')
-          .set('Tus-Resumable', '1.0.0')
-          .expect(404, 'Not Found', done);
-    });
-
     it('should 204 !GET requests without the tus header', (done) => {
         const server = new Tus();
         request(server.listen())
@@ -45,17 +23,9 @@ describe('Tus', () => {
           .expect(204, '', done);
     });
 
-    it('should 404 anything not setup', (done) => {
-        const server = new Tus();
-        request(server.listen())
-          .get('/')
-          .expect(404, done)
-          .expect('Content-Length', 9);
-    });
-
     it('file create api should require an Entity-Length', (done) => {
         const server = new Tus();
-        server.datastore = new FileStore({
+        server.datastore = new DataStore({
             path: '/files'
         });
 
@@ -67,7 +37,7 @@ describe('Tus', () => {
 
     it('should return a location for file create api', (done) => {
         const server = new Tus();
-        server.datastore = new FileStore({
+        server.datastore = new DataStore({
             path: '/files'
         });
 
