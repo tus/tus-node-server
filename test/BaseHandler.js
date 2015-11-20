@@ -4,6 +4,7 @@ const assert = require('assert');
 const should = require('should');
 
 const BaseHandler = require('../lib/handlers/BaseHandler');
+const DataStore = require('../lib/stores/DataStore');
 const http = require('http');
 
 const ALLOWED_METHODS = 'POST, HEAD, PATCH, OPTIONS';
@@ -15,7 +16,8 @@ let hasHeader = (res, header) => {
 
 describe('BaseHandler', () => {
     let res = null;
-    let handler = new BaseHandler();
+    let store = new DataStore({ path: '/files' });
+    let handler = new BaseHandler(store);
 
     beforeEach((done) => {
         const METHOD = 'GET';

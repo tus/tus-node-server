@@ -4,6 +4,7 @@ const assert = require('assert');
 const should = require('should');
 const http = require('http');
 const PatchHandler = require('../lib/handlers/PatchHandler');
+const DataStore = require('../lib/stores/DataStore');
 
 
 let pluckBody = (res) => {
@@ -12,7 +13,8 @@ let pluckBody = (res) => {
 
 describe('PatchHandler', () => {
     let res = null;
-    let handler = new PatchHandler();
+    let store = new DataStore({ path: '/files' });
+    let handler = new PatchHandler(store);
     let req = { headers: {} };
 
     beforeEach((done) => {

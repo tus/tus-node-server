@@ -4,6 +4,7 @@ const assert = require('assert');
 const should = require('should');
 const http = require('http');
 const HeadHandler = require('../lib/handlers/HeadHandler');
+const DataStore = require('../lib/stores/DataStore');
 
 
 let pluckBody = (res) => {
@@ -12,7 +13,8 @@ let pluckBody = (res) => {
 
 describe('HeadHandler', () => {
     let res = null;
-    let handler = new HeadHandler();
+    let store = new DataStore({ path: '/files' });
+    let handler = new HeadHandler(store);
     let req = { headers: {} };
 
     beforeEach((done) => {
