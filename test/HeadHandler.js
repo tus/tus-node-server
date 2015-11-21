@@ -23,10 +23,11 @@ describe('HeadHandler', () => {
         done();
     });
 
-    it('should not be implemented yet', (done) => {
+    it('should 404 if no file is there', (done) => {
         req.headers = {};
+        req.url = '/file/1234';
         handler.send(req, res);
-        assert.equal(res.statusCode, 501)
+        assert.equal(res.statusCode, 404)
         done();
     });
 });

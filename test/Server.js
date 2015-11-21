@@ -49,16 +49,4 @@ describe('Server', () => {
               done();
           });
     });
-
-    it('should respond the tus header', (done) => {
-        request(server.listen())
-          .head('/')
-          .set('Tus-Resumable', '1.0.0')
-          .expect(204, null, done)
-          .end((err, res) => {
-              res.headers.should.have.property('tus-resumable');
-              res.headers['tus-resumable'].should.equal('1.0.0');
-              done();
-          });
-    });
 });
