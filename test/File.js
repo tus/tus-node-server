@@ -11,11 +11,4 @@ describe('File', () => {
         assert.equal(typeof file.id, 'string');
         done();
     });
-
-    it('should return a location property', (done) => {
-        const file = new File(1);
-        const headers = file.getHeaders('tus.io', '/files')
-        headers.should.have.property('Location');
-        done();
-    });
 });
