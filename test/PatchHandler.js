@@ -22,11 +22,4 @@ describe('PatchHandler', () => {
         res = new http.ServerResponse({ method: METHOD });
         done();
     });
-
-    it('should not be implemented yet', (done) => {
-        req.headers = {};
-        handler.send(req, res);
-        assert.equal(res.statusCode, 501)
-        done();
-    });
 });
