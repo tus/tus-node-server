@@ -34,6 +34,7 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test mocha",
+    "coverage": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha && open coverage/lcov-report/index.html",
     "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "example": "cd example && node server.js",
     "lint": "eslint ."
