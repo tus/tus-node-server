@@ -3,6 +3,7 @@
 const request = require('supertest');
 const should = require('should');
 const assert = require('assert');
+const http = require('http');
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
@@ -25,8 +26,6 @@ describe('Server', () => {
     server.datastore = new DataStore({
         path: '/files'
     });
-
-
 
     it('should 412 !OPTIONS requests without the Tus header', (done) => {
         request(server.listen())
@@ -76,4 +75,11 @@ describe('Server', () => {
           .set('Tus-Resumable', TUS_RESUMABLE)
           .expect(404, 'Not found', done)
     });
+
+    it('#listen should create an instance of http.Server', (done) => {
+      let new_server = server.listen();
+      assert.equal(new_server instanceof http.Server, true)
+      done();
+    });
+
 });

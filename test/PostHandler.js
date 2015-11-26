@@ -6,7 +6,6 @@ const http = require('http');
 const DataStore = require('../lib/stores/DataStore');
 const PostHandler = require('../lib/handlers/PostHandler');
 
-
 let pluckBody = (res) => {
     return /\n(.*)$/.exec(res.output[0])[1];
 }
