@@ -15,6 +15,14 @@ let hasHeader = (res, header) => {
 }
 
 describe('BaseHandler', () => {
+
+    it('constructor must require a DataStore', (done) => {
+        assert.throws(() => {
+            let handler = new BaseHandler();
+        }, Error);
+        done();
+    });
+
     let res = null;
     let store = new DataStore({ path: '/files' });
     let handler = new BaseHandler(store);

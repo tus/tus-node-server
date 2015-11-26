@@ -38,4 +38,15 @@ describe('OptionsHandler', () => {
         assert.equal(res.statusCode, 204)
         done();
     });
+
+    it('send() should set extensions header if they exist', (done) => {
+        let headers = {
+            'Tus-Extension': 'creation,expiration',
+        };
+        store.extensions = ['creation', 'expiration'];
+        let handler = new OptionsHandler(store);
+        handler.send(req, res);
+        assert.equal(hasHeader(res, headers), true)
+        done();
+    });
 });

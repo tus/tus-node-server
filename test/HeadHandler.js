@@ -6,28 +6,46 @@ const http = require('http');
 const HeadHandler = require('../lib/handlers/HeadHandler');
 const DataStore = require('../lib/stores/DataStore');
 
-
-let pluckBody = (res) => {
-    return /\n(.*)$/.exec(res.output[0])[1];
+let hasHeader = (res, header) => {
+    let key = Object.keys(header)[0];
+    return res._header.indexOf(`${key}: ${header[key]}`) > -1;
 }
 
 describe('HeadHandler', () => {
+    const path = '/files';
     let res = null;
-    let store = new DataStore({ path: '/files' });
+    let store = new DataStore({ path });
     let handler = new HeadHandler(store);
     let req = { headers: {} };
 
     beforeEach((done) => {
-        const METHOD = 'HEAD';
-        res = new http.ServerResponse({ method: METHOD });
+        res = new http.ServerResponse({ method: 'HEAD' });
         done();
     });
 
-    it('should 404 if no file is there', (done) => {
+    it('should 404 if no file id match', (done) => {
         req.headers = {};
-        req.url = '/file/1234';
+        req.url = '/null';
         handler.send(req, res);
         assert.equal(res.statusCode, 404)
+        done();
+    });
+
+    it('should 404 if no file ID ', (done) => {
+        req.headers = {};
+        req.url = `${path}/`;
+        handler.send(req, res);
+        // This isn't really testing the promise resolution?
+        assert.equal(res.statusCode, 404)
+        done();
+    });
+
+    it('should resolve a promise with the offset', (done) => {
+        req.headers = {};
+        req.url = `${path}/1234`;
+        handler.send(req, res);
+        // This isn't really testing the promise resolution?
+        assert.equal(res.statusCode, 200)
         done();
     });
 });
