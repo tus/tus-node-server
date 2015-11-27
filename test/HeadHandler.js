@@ -34,8 +34,7 @@ describe('HeadHandler', () => {
     it('should 404 if no file ID ', (done) => {
         req.headers = {};
         req.url = `${path}/`;
-        handler.send(req, res);
-        // This isn't really testing the promise resolution?
+        handler.send(req, res)
         assert.equal(res.statusCode, 404)
         done();
     });
@@ -43,9 +42,9 @@ describe('HeadHandler', () => {
     it('should resolve a promise with the offset', (done) => {
         req.headers = {};
         req.url = `${path}/1234`;
-        handler.send(req, res);
-        // This isn't really testing the promise resolution?
-        assert.equal(res.statusCode, 200)
-        done();
+        handler.send(req, res).then(() => {
+            assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
+            assert.equal(res.statusCode, 200);
+        }).then(done);
     });
 });
