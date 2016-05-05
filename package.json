@@ -52,6 +52,7 @@
     "supertest": "^1.1.0"
   },
   "dependencies": {
-    "crypto-rand": "0.0.2"
+    "crypto-rand": "0.0.2",
+    "gcloud": "^0.32.0"
   }
 }
