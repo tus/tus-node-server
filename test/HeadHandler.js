@@ -43,7 +43,7 @@ describe('HeadHandler', () => {
         req.headers = {};
         req.url = `${path}/1234`;
         handler.send(req, res).then(() => {
-            assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
+            assert.equal(hasHeader(res, { 'Upload-Length': 0 }), true);
             assert.equal(res.statusCode, 200);
         }).then(done);
     });
