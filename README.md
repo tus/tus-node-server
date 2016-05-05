@@ -41,8 +41,16 @@ $ curl -X POST -I 'http://localhost:8000/files' \
 
 HTTP/1.1 201 Created
 Tus-Resumable: 1.0.0
-Access-Control-Expose-Headers: Upload-Offset, Location, Upload-Length, Tus-Version, Tus-Resumable, Tus-Max-Size, Tus-Extension, Upload-Metadata
 Location: http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef
+
+$ curl -X PATCH -I 'http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef' \
+               -H 'Tus-Resumable: 1.0.0' \
+               -H 'Upload-Offset: 0'
+               --upload-file path/to/file.mp4
+
+HTTP/1.1 201 Created
+Tus-Resumable: 1.0.0
+Upload-Offset: 613858
 ```
 
 ## Running Tests
