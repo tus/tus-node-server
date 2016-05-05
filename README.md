@@ -37,7 +37,7 @@ $ node server.js
 ```bash
 $ curl -X POST -I 'http://localhost:8000/files' \
                -H 'Tus-Resumable: 1.0.0' \
-               -H 'Entity-Length: 12345678'
+               -H 'Upload-Length: 12345678'
 
 HTTP/1.1 201 Created
 Tus-Resumable: 1.0.0
