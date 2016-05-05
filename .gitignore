@@ -31,3 +31,5 @@ example/files
 
 #OSX
 .DS_Store
+
+*.sublime-workspace

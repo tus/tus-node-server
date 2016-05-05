@@ -1,0 +1,39 @@
+{
+    "settings": {
+        "detect_indentation": true,
+        "ensure_newline_at_eof_on_save": true,
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true,
+        "trim_automatic_white_space": false,
+        "trim_trailing_white_space_on_save": true,
+        "rulers": [
+            79
+        ],
+    },
+    "SublimeLinter": {
+        "linters": {
+            "jshint": {
+                "@disable": true
+            },
+            "eslint": {
+                "@disable": false
+            }
+        },
+        "paths": {
+            "osx": ["${project}/node_modules/.bin"]
+        },
+        "syntax_map": {
+            "javascript (babel)": "javascript"
+        }
+    },
+    "folders": [
+        {
+            "path": "./",
+            "folder_exclude_patterns": ["node_modules"],
+            "file_exclude_patterns": ["*.sublime-workspace"]
+        }
+    ],
+    "syntax_override": {
+        "\\.js$": ["Babel", "JavaScript (Babel)"]
+    }
+}

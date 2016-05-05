@@ -34,16 +34,17 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test mocha",
-    "coverage": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha && open coverage/lcov-report/index.html",
     "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "example": "cd example && node server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
+    "@vimeo/eslint-config-player": "^4.0.1",
     "assert": "^1.3.0",
-    "babel-eslint": "^4.1.3",
+    "babel-eslint": "^6.0.4",
     "coveralls": "^2.11.4",
-    "eslint": "^1.7.3",
+    "eslint": "^2.9.0",
+    "eslint-plugin-promise": "^1.1.0",
     "istanbul": "^0.4.0",
     "mocha": "^2.3.3",
     "mocha-lcov-reporter": "^1.0.0",
