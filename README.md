@@ -9,6 +9,29 @@
 
 Not published yet, [coming soon](https://github.com/tus/tus-node-server/milestones/1.0%20NPM%20Publish)!
 
+## Supported Data Stores
+
+- Local File Storage
+    ```javascript
+    server.datastore = new tus.FileStore({
+        path: '/files'
+    });
+    ```
+
+- Google Cloud Storage
+    ```javascript
+
+    server.datastore = new tus.GCSDataStore({
+        path: '/files',
+        projectId: 'project-id',
+        keyFilename: 'path/to/your/keyfile.json',
+        bucket: 'bucket-name',
+    });
+    ```
+
+- Amazon S3 ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
+
+
 ## Quick Start
 
 #### Build a server
