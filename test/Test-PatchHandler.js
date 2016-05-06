@@ -56,10 +56,26 @@ describe('PatchHandler', () => {
             };
             req.url = `${path}/1234`;
 
-
             return handler.send(req, res)
                 .then(() => {
                     assert.equal(res.statusCode, 409);
+                    return;
+                })
+                .then(done)
+                .catch(done);
+        });
+
+        it('must acknowledge successful PATCH requests with the 204', (done) => {
+            req.headers = {
+                'upload-offset': 0,
+                'content-type': 'application/offset+octet-stream',
+            };
+            req.url = `${path}/1234`;
+
+            return handler.send(req, res)
+                .then(() => {
+                    assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
+                    assert.equal(res.statusCode, 204);
                     return;
                 })
                 .then(done)
