@@ -1,3 +1,6 @@
+/* eslint-env node, mocha */
+/* eslint no-unused-vars: ["error", { "vars": "none" }] */
+
 'use strict';
 const assert = require('assert');
 const should = require('should');
@@ -40,8 +43,15 @@ describe('FileStore', () => {
         done();
     });
 
-    it('#getOffset must return a promise', (done) => {
-        assert.equal(filestore.getOffset() instanceof Promise, true);
-        done();
+
+    describe('getOffset()', () => {
+        it('must return a promise', (done) => {
+            assert.equal(filestore.getOffset() instanceof Promise, true);
+            done();
+        });
+
+        it('must 404 if the file doesnt exist', () => {
+            return filestore.getOffset().should.be.rejectedWith(404);
+        });
     });
 });
