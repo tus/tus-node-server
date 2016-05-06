@@ -69,7 +69,7 @@ describe('Server', () => {
         request(server.listen())
           .post(server.datastore.path)
           .set('Tus-Resumable', TUS_RESUMABLE)
-          .expect(400, 'Upload-Length or Upload-Defer-Length required', done)
+          .expect(400, {}, done)
     });
 
     it('POST should require non negative Upload-Length number', (done) => {
@@ -77,7 +77,7 @@ describe('Server', () => {
           .post(server.datastore.path)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Length', -3)
-          .expect(400, 'Upload-Length must be non-negative', done)
+          .expect(400, {}, done)
     });
 
     it('should 404 other requests', (done) => {
