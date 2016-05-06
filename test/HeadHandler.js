@@ -1,22 +1,22 @@
+/* eslint-env node, mocha */
 'use strict';
 
 const assert = require('assert');
-const should = require('should');
 const http = require('http');
 const HeadHandler = require('../lib/handlers/HeadHandler');
 const DataStore = require('../lib/stores/DataStore');
 
-let hasHeader = (res, header) => {
-    let key = Object.keys(header)[0];
+const hasHeader = (res, header) => {
+    const key = Object.keys(header)[0];
     return res._header.indexOf(`${key}: ${header[key]}`) > -1;
-}
+};
 
 describe('HeadHandler', () => {
     const path = '/files';
     let res = null;
-    let store = new DataStore({ path });
-    let handler = new HeadHandler(store);
-    let req = { headers: {} };
+    const store = new DataStore({ path });
+    const handler = new HeadHandler(store);
+    const req = { headers: {} };
 
     beforeEach((done) => {
         res = new http.ServerResponse({ method: 'HEAD' });
@@ -27,24 +27,36 @@ describe('HeadHandler', () => {
         req.headers = {};
         req.url = '/null';
         handler.send(req, res);
-        assert.equal(res.statusCode, 404)
+        assert.equal(res.statusCode, 404);
         done();
     });
 
     it('should 404 if no file ID ', (done) => {
         req.headers = {};
         req.url = `${path}/`;
-        handler.send(req, res)
-        assert.equal(res.statusCode, 404)
+        handler.send(req, res);
+        assert.equal(res.statusCode, 404);
         done();
     });
 
-    it('should resolve a promise with the offset', (done) => {
+    it('should 403 if no Upload-Offset header ', (done) => {
         req.headers = {};
         req.url = `${path}/1234`;
-        handler.send(req, res).then(() => {
-            assert.equal(hasHeader(res, { 'Upload-Length': 0 }), true);
-            assert.equal(res.statusCode, 200);
-        }).then(done);
+        handler.send(req, res);
+        assert.equal(res.statusCode, 403);
+        done();
+    });
+
+    it('should resolve with the offset', (done) => {
+        req.headers = { 'upload-offset': 0 };
+        req.url = `${path}/1234`;
+        handler.send(req, res)
+            .then(() => {
+                assert.equal(hasHeader(res, { 'Upload-Length': 0 }), true);
+                assert.equal(res.statusCode, 200);
+                return;
+            })
+            .then(done)
+            .catch(done);
     });
 });
