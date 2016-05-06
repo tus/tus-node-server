@@ -39,14 +39,6 @@ describe('HeadHandler', () => {
         done();
     });
 
-    it('should 403 if no Upload-Offset header ', (done) => {
-        req.headers = {};
-        req.url = `${path}/1234`;
-        handler.send(req, res);
-        assert.equal(res.statusCode, 403);
-        done();
-    });
-
     it('should resolve with the offset', (done) => {
         req.headers = { 'upload-offset': 0 };
         req.url = `${path}/1234`;
