@@ -21,19 +21,9 @@ describe('FileStore', () => {
         done();
     });
 
-    it('#create must return a promise', (done) => {
-        assert.equal(filestore.create(new File(1)) instanceof Promise, true);
-        done();
-    });
-
     it('must have a write method', (done) => {
         filestore.should.have.property('write');
         filestore.write();
-        done();
-    });
-
-    it('#write must return a promise', (done) => {
-        assert.equal(filestore.write() instanceof Promise, true);
         done();
     });
 
@@ -43,6 +33,19 @@ describe('FileStore', () => {
         done();
     });
 
+    describe('create()', () => {
+        it('must return a promise', (done) => {
+            assert.equal(filestore.create(new File(1)) instanceof Promise, true);
+            done();
+        });
+    });
+
+    describe('write()', () => {
+        it('must return a promise', (done) => {
+            assert.equal(filestore.write() instanceof Promise, true);
+            done();
+        });
+    });
 
     describe('getOffset()', () => {
         it('must return a promise', (done) => {
