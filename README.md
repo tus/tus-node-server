@@ -34,7 +34,7 @@ Not published yet, [coming soon](https://github.com/tus/tus-node-server/mileston
 
 ## Quick Start
 
-#### Build a server
+#### Build a standalone server
 ```javascript
 const tus = require('tus-node-server');
 
@@ -48,6 +48,22 @@ const port = 8000;
 server.listen({ host, port }, () => {
     console.log(`[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port}`);
 });
+```
+
+#### Alternatively, you could deploy tus-node-server as [Express Middleware](http://expressjs.com/en/guide/using-middleware.html)
+
+```javascript
+const tus = require('tus-node-server');
+const server = new tus.Server();
+server.datastore = new tus.FileStore({
+    path: '/files'
+});
+
+var app = express();
+app.all('/files/*', function(req, res) {
+  server.handle(req, res);
+});
+app.listen(port, host);
 ```
 
 #### Run the server
