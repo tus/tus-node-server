@@ -9,7 +9,7 @@
 
 Not published yet, [coming soon](https://github.com/tus/tus-node-server/milestones/1.0%20NPM%20Publish)!
 
-## Supported Data Stores
+## Flexible Data Stores
 
 - Local File Storage
     ```javascript
@@ -18,7 +18,7 @@ Not published yet, [coming soon](https://github.com/tus/tus-node-server/mileston
     });
     ```
 
-- Google Cloud Storage
+- Google Cloud Storage ([_coming soon_](https://github.com/tus/tus-node-server/issues/20))
     ```javascript
 
     server.datastore = new tus.GCSDataStore({
@@ -30,7 +30,13 @@ Not published yet, [coming soon](https://github.com/tus/tus-node-server/mileston
     ```
 
 - Amazon S3 ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
+    ```javascript
 
+    server.datastore = new tus.S3Store({
+        path: '/files',
+        bucket: 'bucket-name',
+    });
+    ```
 
 ## Quick Start
 
