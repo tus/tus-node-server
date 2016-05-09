@@ -7,7 +7,9 @@
 
 ## Installation
 
-Not published yet, [coming soon](https://github.com/tus/tus-node-server/milestones/1.0%20NPM%20Publish)!
+```bash
+$ npm install tus-node-server
+```
 
 ## Flexible Data Stores
 

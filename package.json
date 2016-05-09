@@ -1,6 +1,6 @@
 {
   "name": "tus-node-server",
-  "description": "Node.js 4 ES2015 tus server, including a transpiled down version for older &lt; 1.0 versions",
+  "description": "Node.js tus server",
   "version": "0.0.1",
   "repository": {
     "type": "git",
