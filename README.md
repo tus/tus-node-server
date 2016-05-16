@@ -93,7 +93,8 @@ Location: http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef
 
 $ curl -X PATCH -I 'http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef' \
                -H 'Tus-Resumable: 1.0.0' \
-               -H 'Upload-Offset: 0'
+               -H 'Upload-Offset: 0' \
+               -H 'Content-Type: application/offset+octet-stream' \
                --upload-file path/to/file.mp4
 
 HTTP/1.1 201 Created
@@ -127,6 +128,7 @@ Location: http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e
 $ curl -X PATCH -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
                -H 'Tus-Resumable: 1.0.0' \
                -H 'Upload-Offset: 0' \
+               -H 'Content-Type: application/offset+octet-stream' \
                -T partial_fileaa
 HTTP/1.1 204 No Content
 Tus-Resumable: 1.0.0
@@ -146,6 +148,7 @@ Upload-Length: 617379340
 $ 11curl -X PATCH -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
                -H 'Tus-Resumable: 1.0.0' \
                -H 'Upload-Offset: 400000000' \
+               -H 'Content-Type: application/offset+octet-stream' \
                -T partial_fileab
 HTTP/1.1 204 No Content
 Tus-Resumable: 1.0.0
