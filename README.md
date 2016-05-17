@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/tus/tus-node-server/badge.svg?branch=master&service=github)](https://coveralls.io/github/tus/tus-node-server?branch=master)
 [![Dependency Status](https://david-dm.org/tus/tus-node-server.svg)](https://david-dm.org/tus/tus-node-server#info=dependencies)
 
-tus is a new open protocol for resumable uploads built on HTTP. This is the [tus protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) node.js server implementation. 
+tus is a new open protocol for resumable uploads built on HTTP. This is the [tus protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) node.js server implementation.
 
 ## Installation
 
@@ -138,7 +138,9 @@ $ curl -X HEAD -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e'
                -H 'Tus-Resumable: 1.0.0'
 HTTP/1.1 200 OK
 Tus-Resumable: 1.0.0
-Upload-length: 400000000
+Upload-Offset: 400000000
+Upload-Length: 617379340
+
 
 # Resume the upload with the second partial file
 $ 11curl -X PATCH -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
@@ -154,6 +156,7 @@ $ curl -X HEAD -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e'
                -H 'Tus-Resumable: 1.0.0'
 HTTP/1.1 200 OK
 Tus-Resumable: 1.0.0
+Upload-Offset: 617379340
 Upload-Length: 617379340
 ```
 
