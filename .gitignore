@@ -28,8 +28,10 @@ node_modules
 
 # Example local FileStore
 example/files
+files/
 
 #OSX
 .DS_Store
 
 *.sublime-workspace
+
