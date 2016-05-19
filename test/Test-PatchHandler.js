@@ -3,6 +3,7 @@
 
 const assert = require('assert');
 const http = require('http');
+const should = require('should');
 const PatchHandler = require('../lib/handlers/PatchHandler');
 const DataStore = require('../lib/stores/DataStore');
 
@@ -23,7 +24,7 @@ describe('PatchHandler', () => {
         done();
     });
 
-    it('should 403 if no Content-Type header is not application/offset+octet-stream', (done) => {
+    it('should 403 if no Content-Type header', (done) => {
         req.headers = {};
         req.url = `${path}/1234`;
         handler.send(req, res);

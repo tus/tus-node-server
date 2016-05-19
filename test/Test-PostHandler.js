@@ -23,25 +23,7 @@ describe('PostHandler', () => {
     it('MUST require the Upload-Length or Upload-Defer-Length required header', (done) => {
         req.headers = {};
         handler.send(req, res);
-        assert.equal(res.statusCode, 400);
-        done();
-    });
-
-    it('Upload-Length MUST be a non-negative integer', (done) => {
-        req.headers = {
-            'upload-length': -2
-        };
-        handler.send(req, res);
-        assert.equal(res.statusCode, 400);
-        done();
-    });
-
-    it('The Upload-Defer-Length value MUST be 1', (done) => {
-        req.headers = {
-            'upload-defer-length': 5
-        };
-        handler.send(req, res);
-        assert.equal(res.statusCode, 400);
+        assert.equal(res.statusCode, 412);
         done();
     });
 
