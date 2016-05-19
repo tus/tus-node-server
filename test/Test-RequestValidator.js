@@ -80,14 +80,9 @@ describe('RequestValidator', () => {
         });
 
         it('should fail on non comma separated list', (done) => {
-            const value = 'hello';
-            assert.equal(RequestValidator._invalidUploadMetadataHeader(value), true);
-            done();
-        });
-
-        it('should fail on non comma separated list', (done) => {
-            const value = 'hello world, tusrules';
-            assert.equal(RequestValidator._invalidUploadMetadataHeader(value), true);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello'), true);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello world, tusrules'), true);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader(''), true);
             done();
         });
     });
