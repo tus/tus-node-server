@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "crypto-rand": "0.0.2",
-    "gcloud": "^0.32.0",
     "configstore": "^2.0.0"
   }
 }
