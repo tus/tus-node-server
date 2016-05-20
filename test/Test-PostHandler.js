@@ -13,7 +13,7 @@ const hasHeader = (res, header) => {
     return res._header.indexOf(`${key}: ${header[key]}`) > -1;
 };
 
-describe.only('PostHandler', () => {
+describe('PostHandler', () => {
     let res = null;
     const namingFunction = function(req) { return req.url.replace(/\//g, '-'); };
     let store = new DataStore({ path: '/files',  namingFunction });
