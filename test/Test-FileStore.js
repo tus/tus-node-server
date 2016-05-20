@@ -18,12 +18,15 @@ const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_FILE_SIZE = 960244;
 const TEST_FILE_NAME = 'test_file.mp4';
+const TEST_METADATA = 'some data, for you';
 
 
 describe('FileStore', () => {
     let server;
     let created_file_name;
     let created_file_path;
+    let deferred_file_name;
+    let deferred_file_path;
     before(() => {
         server = new Server();
         server.datastore = new FileStore({
@@ -118,11 +121,26 @@ describe('FileStore', () => {
             .post(STORE_PATH)
             .set('Tus-Resumable', TUS_RESUMABLE)
             .set('Upload-Length', 960244)
+            .set('Upload-Metadata', TEST_METADATA)
             .expect(201)
             .end((err, res) => {
                 created_file_name = res.headers.location.split('/').pop();
                 created_file_path = path.resolve(FILES_DIRECTORY, created_file_name);
                 assert.equal(fs.existsSync(created_file_path), true);
+                done();
+            });
+        });
+
+        it('should create a file with deferred length', (done) => {
+            request(server.listen())
+            .post(STORE_PATH)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Defer-Length', 1)
+            .expect(201)
+            .end((err, res) => {
+                deferred_file_name = res.headers.location.split('/').pop();
+                deferred_file_path = path.resolve(FILES_DIRECTORY, deferred_file_name);
+                assert.equal(fs.existsSync(deferred_file_path), true);
                 done();
             });
         });
@@ -155,6 +173,17 @@ describe('FileStore', () => {
                     assert.equal(res.headers['upload-length'], TEST_FILE_SIZE);
                     done();
                 });
+            });
+        });
+
+        it('should return the defer header for deferred files', (done) => {
+            request(server.listen())
+            .head(`${STORE_PATH}/${created_file_path}`)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .expect(200)
+            .end((err, res) => {
+                assert.equal(res.headers['upload-metadata'], TEST_METADATA);
+                done();
             });
         });
     });
