@@ -10,12 +10,14 @@ const exec = require('child_process').exec;
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const FileStore = require('../lib/stores/FileStore');
+const File = require('../lib/models/File');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_FILE_SIZE = 960244;
+const TEST_FILE_NAME = 'test_file.mp4';
 
 
 describe('FileStore', () => {
@@ -28,6 +30,8 @@ describe('FileStore', () => {
             path: STORE_PATH,
         });
 
+        // Create the file used in getOffset
+        exec(`touch ${FILES_DIRECTORY}/${TEST_FILE_NAME}`);
     });
 
     after(() => {
@@ -65,6 +69,49 @@ describe('FileStore', () => {
         });
     });
 
+    describe('create', () => {
+        it('should reject when the directory doesnt exist', () => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            file_store.directory = 'some_new_path';
+            return file_store.create(new File(1))
+                    .should.be.rejected();
+        });
+
+        it('should resolve when the directory exists', () => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            return file_store.create(new File('name.mp4'))
+                    .should.be.fulfilled();
+        });
+    });
+
+    describe('write', () => {
+        it('should reject write streams that cant be opened', () => {
+            return server.datastore.write()
+                    .should.be.rejectedWith(500);
+        });
+
+        it('should open a stream and resolve the new offset', () => {
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            const file_store = new FileStore({ path: STORE_PATH });
+            return file_store.write(write_stream, TEST_FILE_NAME, 0)
+                    .should.be.fulfilledWith(TEST_FILE_SIZE);
+        });
+    });
+
+    describe('getOffset', () => {
+        it('should reject non-existant files', () => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            return file_store.getOffset('doesnt_exist')
+                    .should.be.rejectedWith(404);
+        });
+
+        it('should resolve the stats for existant files', () => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            return file_store.getOffset(TEST_FILE_NAME)
+                    .should.be.fulfilledWith(fs.statSync(`${FILES_DIRECTORY}/${TEST_FILE_NAME}`));
+        });
+    });
+
     describe('POST', () => {
         it('should create a file in the provided directory', (done) => {
             request(server.listen())
@@ -80,7 +127,6 @@ describe('FileStore', () => {
             });
         });
     });
-
 
     describe('HEAD', () => {
         it('should return the starting offset and length', (done) => {
