@@ -150,6 +150,13 @@ describe('FileStore', () => {
                 done();
             });
         });
+
+        it('should 404 paths without a file id', (done) => {
+            request(server.listen())
+            .head(`${STORE_PATH}/`)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .expect(404, done);
+        });
     });
 
     describe('HEAD', () => {
@@ -203,6 +210,13 @@ describe('FileStore', () => {
                 assert.equal(res.headers['upload-metadata'], TEST_METADATA);
                 done();
             });
+        });
+
+        it('should 404 files that dont exist', (done) => {
+            request(server.listen())
+            .head(`${STORE_PATH}/a_file_that_doesnt_exist`)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .expect(404, done);
         });
     });
 });
