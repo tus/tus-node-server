@@ -184,6 +184,18 @@ describe('FileStore', () => {
 
         it('should return the defer header for deferred files', (done) => {
             request(server.listen())
+            .head(`${STORE_PATH}/${deferred_file_path}`)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .expect(200)
+            .end((err, res) => {
+                assert.equal(res.headers['upload-defer-length'], 1);
+                assert.equal(res.headers['upload-length'], undefined);
+                done();
+            });
+        });
+
+        it('should return the upload metatata', (done) => {
+            request(server.listen())
             .head(`${STORE_PATH}/${created_file_path}`)
             .set('Tus-Resumable', TUS_RESUMABLE)
             .expect(200)
