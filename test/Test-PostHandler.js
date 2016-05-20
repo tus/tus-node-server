@@ -27,7 +27,7 @@ describe.only('PostHandler', () => {
     });
 
     describe('send()', () => {
-        it('must 412 if the Upload-Length or Upload-Defer-Length headers are both missing', (done) => {
+        it('must 412 if the Upload-Length and Upload-Defer-Length headers are both missing', (done) => {
             req.headers = {};
             handler.send(req, res).then(() => {
                 assert.equal(res.statusCode, 412);

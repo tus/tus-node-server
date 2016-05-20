@@ -38,7 +38,7 @@ describe('FileStore', () => {
         let req = { headers: { 'upload-length': 1000 }, url: '/example/files' };
 
         it('must return a promise', (done) => {
-            assert.equal(filestore.create(new File('my-file', 1)) instanceof Promise, true);
+            assert.equal(filestore.create(req) instanceof Promise, true);
             done();
         });
 
