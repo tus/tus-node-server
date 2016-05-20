@@ -9,7 +9,8 @@ const FileStore = require('../lib/stores/FileStore');
 const File = require('../lib/models/File');
 
 describe('FileStore', () => {
-    const filestore = new FileStore({ path: 'example/files' });
+    const namingFunction = function(req) { return req.url.replace(/\//g, '-'); };
+    const filestore = new FileStore({ path: '/example/files', namingFunction  });
     it('must inherit from Datastore', (done) => {
         assert.equal(filestore instanceof DataStore, true);
         done();
@@ -17,7 +18,7 @@ describe('FileStore', () => {
 
     it('must have a create method', (done) => {
         filestore.should.have.property('create');
-        filestore.create(new File(1));
+        filestore.create();
         done();
     });
 
@@ -34,9 +35,18 @@ describe('FileStore', () => {
     });
 
     describe('create()', () => {
+        let req = { headers: { 'upload-length': 1000 }, url: '/example/files' };
+
         it('must return a promise', (done) => {
-            assert.equal(filestore.create(new File(1)) instanceof Promise, true);
+            assert.equal(filestore.create(new File('my-file', 1)) instanceof Promise, true);
             done();
+        });
+
+        it('should return the file name', (done) => {
+            filestore.create(req).then((file_id) => {
+                assert.equal(file_id, '-example-files');
+                done();
+            });
         });
     });
 

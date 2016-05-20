@@ -22,8 +22,9 @@ describe('PostHandler', () => {
 
     it('MUST require the Upload-Length or Upload-Defer-Length required header', (done) => {
         req.headers = {};
-        handler.send(req, res);
-        assert.equal(res.statusCode, 412);
+        handler.send(req, res).then(() => {
+            assert.equal(res.statusCode, 412);
+        });
         done();
     });
 
