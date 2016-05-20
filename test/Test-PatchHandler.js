@@ -41,6 +41,31 @@ describe('PatchHandler', () => {
     });
 
     describe('send()', () => {
+
+        it('should 404 urls without a path', () => {
+            req.url = `${path}/`;
+            handler.send(req, res);
+            assert.equal(res.statusCode, 404);
+        });
+
+        it('should 403 if the offset is omitted', () => {
+            req.headers = {
+                'content-type': 'application/offset+octet-stream',
+            };
+            req.url = `${path}/file`;
+            handler.send(req, res);
+            assert.equal(res.statusCode, 403);
+        });
+
+        it('should 403 the content-type is omitted', () => {
+            req.headers = {
+                'upload-offset': 0,
+            };
+            req.url = `${path}/file`;
+            handler.send(req, res);
+            assert.equal(res.statusCode, 403);
+        });
+
         it('must return a promise if the headers validate', () => {
             req.headers = {
                 'upload-offset': 0,
