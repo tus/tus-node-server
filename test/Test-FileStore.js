@@ -93,11 +93,17 @@ describe('FileStore', () => {
                     .should.be.rejectedWith(500);
         });
 
-        it('should open a stream and resolve the new offset', () => {
-            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+        it('should open a stream and resolve the new offset', (done) => {
             const file_store = new FileStore({ path: STORE_PATH });
-            return file_store.write(write_stream, TEST_FILE_NAME, 0)
-                    .should.be.fulfilledWith(TEST_FILE_SIZE);
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            write_stream.once('open', () => {
+                file_store.write(write_stream, TEST_FILE_NAME, 0)
+                .then((offset) => {
+                    assert.equal(offset, TEST_FILE_SIZE);
+                    return done();
+                })
+                .catch(done);
+            });
         });
     });
 
