@@ -1,5 +1,4 @@
 /* eslint-env node, mocha */
-/* eslint no-unused-vars: ["error", { "vars": "none" }] */
 'use strict';
 
 const assert = require('assert');
@@ -14,15 +13,15 @@ const hasHeader = (res, header) => {
 };
 
 describe('PostHandler', () => {
+    const path = '/files';
     let res = null;
-    const namingFunction = function(req) { return req.url.replace(/\//g, '-'); };
-    let store = new DataStore({ path: '/files',  namingFunction });
-    let handler = new PostHandler(store);
-    let req = { headers: {} };
+    const namingFunction = (req) => req.url.replace(/\//g, '-');
+    const store = new DataStore({ path, namingFunction });
+    const handler = new PostHandler(store);
+    const req = { headers: {}, url: '/files' };
 
     beforeEach((done) => {
-        const METHOD = 'POST';
-        res = new http.ServerResponse({ method: METHOD });
+        res = new http.ServerResponse({ method: 'POST' });
         done();
     });
 
@@ -31,22 +30,22 @@ describe('PostHandler', () => {
             req.headers = {};
             handler.send(req, res).then(() => {
                 assert.equal(res.statusCode, 412);
-            });
-            done();
+                return done();
+            })
+            .catch(done);
         });
 
         it('must acknowledge successful POST requests with the 201', (done) => {
-            const req = { headers: { 'upload-length': 1000, host: 'localhost:3000' }, url: '/files' };
+            req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
 
             handler.send(req, res)
                 .then(() => {
                     assert.equal(hasHeader(res, { 'Location': 'http://localhost:3000/files/-files' }), true);
                     assert.equal(res.statusCode, 201);
-                    return;
+                    return done();
                 })
-                .then(done)
                 .catch(done);
-        });    
+        });
 
     });
 
