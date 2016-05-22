@@ -21,29 +21,40 @@ const TEST_FILE_NAME = 'test_file.mp4';
 const TEST_METADATA = 'some data, for you';
 
 
-describe('FileStore', () => {
+describe.only('FileStore', () => {
     let server;
     let created_file_name;
     let created_file_path;
     let deferred_file_name;
     let deferred_file_path;
-    before(() => {
-        const namingFunction = (req) => req.url.replace(/\//g, '-');
+
+    before((done) => {
         server = new Server();
         server.datastore = new FileStore({
             path: STORE_PATH,
-            namingFunction,
         });
 
         // Create the file used in getOffset
-        exec(`touch ${FILES_DIRECTORY}/${TEST_FILE_NAME}`);
+        exec(`touch ${FILES_DIRECTORY}/${TEST_FILE_NAME}`, (err) => {
+            if (err) {
+                return done(err);
+            }
+
+            return done();
+        });
     });
 
-    after(() => {
+    after((done) => {
         // Remove the files directory
-        exec(`rm -r ${FILES_DIRECTORY}`);
-        // clear the config
-        server.datastore.configstore.clear();
+        exec(`rm -r ${FILES_DIRECTORY}`, (err) => {
+            if (err) {
+                return done(err);
+            }
+
+            // clear the config
+            server.datastore.configstore.clear();
+            return done();
+        });
     });
 
     describe('constructor', () => {
@@ -75,25 +86,40 @@ describe('FileStore', () => {
     });
 
     describe('create', () => {
+        const req = { headers: { 'upload-length': 1000 }, url: STORE_PATH };
+
         it('should reject when the directory doesnt exist', () => {
             const file_store = new FileStore({ path: STORE_PATH });
             file_store.directory = 'some_new_path';
-            return file_store.create(new File(1))
+            return file_store.create(req)
                     .should.be.rejected();
         });
 
         it('should resolve when the directory exists', () => {
             const file_store = new FileStore({ path: STORE_PATH });
-            return file_store.create(new File('name.mp4'))
+            return file_store.create(req)
                     .should.be.fulfilled();
         });
 
-        it('should return the file name', (done) => {
-            let req = { headers: { 'upload-length': 1000 }, url: '/example/files' };
-            filestore.create(req).then((file_id) => {
-                assert.equal(file_id, '-example-files');
-                done();
-            });
+        it('should resolve to the File model', (done) => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            file_store.create(req)
+                .then((newFile) => {
+                    assert.equal(newFile instanceof File, true);
+                    return done();
+                })
+                .catch(done);
+        });
+
+        it('should use custom naming function when provided', (done) => {
+            const namingFunction = (incomingReq) => incomingReq.url.replace(/\//g, '-');
+            const file_store = new FileStore({ path: STORE_PATH, namingFunction });
+            file_store.create(req)
+                .then((newFile) => {
+                    assert.equal(newFile.id, '-files');
+                    return done();
+                })
+                .catch(done);
         });
     });
 
@@ -105,7 +131,7 @@ describe('FileStore', () => {
         });
 
         it('should open a stream and resolve the new offset', (done) => {
-            const file_store = new FileStore({ path: STORE_PATH });
+            const file_store = new FileStore({ path: STORE_PATH, directory: FILES_DIRECTORY });
             const write_stream = fs.createReadStream(TEST_FILE_PATH);
             write_stream.once('open', () => {
                 file_store.write(write_stream, TEST_FILE_NAME, 0)
@@ -202,7 +228,7 @@ describe('FileStore', () => {
 
         it('should return the defer header for deferred files', (done) => {
             request(server.listen())
-            .head(`${STORE_PATH}/${deferred_file_path}`)
+            .head(`${STORE_PATH}/${deferred_file_name}`)
             .set('Tus-Resumable', TUS_RESUMABLE)
             .expect(200)
             .end((err, res) => {
@@ -214,7 +240,7 @@ describe('FileStore', () => {
 
         it('should return the upload metatata', (done) => {
             request(server.listen())
-            .head(`${STORE_PATH}/${created_file_path}`)
+            .head(`${STORE_PATH}/${created_file_name}`)
             .set('Tus-Resumable', TUS_RESUMABLE)
             .expect(200)
             .end((err, res) => {
