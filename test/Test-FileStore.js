@@ -21,7 +21,7 @@ const TEST_FILE_NAME = 'test_file.mp4';
 const TEST_METADATA = 'some data, for you';
 
 
-describe.only('FileStore', () => {
+describe('FileStore', () => {
     let server;
     let created_file_name;
     let created_file_path;
