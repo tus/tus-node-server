@@ -86,7 +86,21 @@ describe('FileStore', () => {
     });
 
     describe('create', () => {
+        const invalidReq = { headers: {}, url: STORE_PATH };
         const req = { headers: { 'upload-length': 1000 }, url: STORE_PATH };
+
+        it('should reject if both upload-length and upload-defer-length are not provided', () => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            return file_store.create(invalidReq)
+                    .should.be.rejected();
+        });
+
+        it('should reject when namingFunction is invalid', () => {
+            const namingFunction = (incomingReq) => incomingReq.body.filename.replace(/\//g, '-');
+            const file_store = new FileStore({ path: STORE_PATH, namingFunction });
+            return file_store.create(req)
+                    .should.be.rejected();
+        });
 
         it('should reject when the directory doesnt exist', () => {
             const file_store = new FileStore({ path: STORE_PATH });
@@ -116,6 +130,7 @@ describe('FileStore', () => {
             const file_store = new FileStore({ path: STORE_PATH, namingFunction });
             file_store.create(req)
                 .then((newFile) => {
+                    assert.equal(newFile instanceof File, true);
                     assert.equal(newFile.id, '-files');
                     return done();
                 })
