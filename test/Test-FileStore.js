@@ -146,7 +146,8 @@ describe('FileStore', () => {
         });
 
         it('should open a stream and resolve the new offset', (done) => {
-            const file_store = new FileStore({ path: STORE_PATH, directory: FILES_DIRECTORY });
+            const file_store = new FileStore({ path: STORE_PATH });
+            // const file_store = new FileStore({ path: STORE_PATH, directory: FILES_DIRECTORY });
             const write_stream = fs.createReadStream(TEST_FILE_PATH);
             write_stream.once('open', () => {
                 file_store.write(write_stream, TEST_FILE_NAME, 0)
