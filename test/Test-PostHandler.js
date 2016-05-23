@@ -1,5 +1,4 @@
 /* eslint-env node, mocha */
-/* eslint no-unused-vars: ["error", { "vars": "none" }] */
 'use strict';
 
 const assert = require('assert');
@@ -8,23 +7,46 @@ const http = require('http');
 const DataStore = require('../lib/stores/DataStore');
 const PostHandler = require('../lib/handlers/PostHandler');
 
+const hasHeader = (res, header) => {
+    const key = Object.keys(header)[0];
+    return res._header.indexOf(`${key}: ${header[key]}`) > -1;
+};
+
 describe('PostHandler', () => {
+    const path = '/files';
     let res = null;
-    let store = new DataStore({ path: '/files' });
-    let handler = new PostHandler(store);
-    let req = { headers: {} };
+    const namingFunction = (req) => req.url.replace(/\//g, '-');
+    const store = new DataStore({ path, namingFunction });
+    const handler = new PostHandler(store);
+    const req = { headers: {}, url: '/files' };
 
     beforeEach((done) => {
-        const METHOD = 'POST';
-        res = new http.ServerResponse({ method: METHOD });
+        res = new http.ServerResponse({ method: 'POST' });
         done();
     });
 
-    it('MUST require the Upload-Length or Upload-Defer-Length required header', (done) => {
-        req.headers = {};
-        handler.send(req, res);
-        assert.equal(res.statusCode, 412);
-        done();
+    describe('send()', () => {
+        it('must 412 if the Upload-Length and Upload-Defer-Length headers are both missing', (done) => {
+            req.headers = {};
+            handler.send(req, res).then(() => {
+                assert.equal(res.statusCode, 412);
+                return done();
+            })
+            .catch(done);
+        });
+
+        it('must acknowledge successful POST requests with the 201', (done) => {
+            req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
+
+            handler.send(req, res)
+                .then(() => {
+                    assert.equal(hasHeader(res, { 'Location': 'http://localhost:3000/files/-files' }), true);
+                    assert.equal(res.statusCode, 201);
+                    return done();
+                })
+                .catch(done);
+        });
+
     });
 
 });

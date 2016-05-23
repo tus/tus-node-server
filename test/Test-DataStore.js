@@ -1,3 +1,6 @@
+/* eslint-env node, mocha */
+/* eslint no-unused-vars: ["error", { "vars": "none" }] */
+
 'use strict';
 const assert = require('assert');
 const should = require('should');
@@ -9,6 +12,11 @@ describe('DataStore', () => {
 
     it('constructor must require a path', (done) => {
         assert.throws(() => { new DataStore() }, Error);
+        done();
+    });
+
+    it('constructor must require the namingFunction to be a function, if it is provided', (done) => {
+        assert.throws(() => { new DataStore({ path: '/files', namingFunction: {} }) }, Error);
         done();
     });
 
@@ -30,14 +38,7 @@ describe('DataStore', () => {
 
     it('must have a create method', (done) => {
         datastore.should.have.property('create');
-        datastore.create(new File(1));
-        done();
-    });
-
-    it('create() must require a File', (done) => {
-        assert.throws(() => {
-            datastore.create();
-        }, Error);
+        datastore.create();
         done();
     });
 
@@ -46,6 +47,7 @@ describe('DataStore', () => {
         datastore.write();
         done();
     });
+
     it('must have a getOffset method', (done) => {
         datastore.should.have.property('getOffset');
         datastore.getOffset();
