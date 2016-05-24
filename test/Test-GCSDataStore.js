@@ -8,7 +8,6 @@ const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
 
-
 const STORE_PATH = '/files';
 const PROJECT_ID = 'vimeo-open-source';
 const KEYFILE = path.resolve(__dirname, 'keyfile.json');
@@ -34,31 +33,34 @@ describe('GCSDataStore', () => {
     });
 
     describe('constructor', () => {
-        it('must inherit from Datastore', (done) => {
+        it('must inherit from Datastore', () => {
             assert.equal(server.datastore instanceof DataStore, true);
-            done();
         });
 
-        it('must have a create method', (done) => {
+        it('must have a create method', () => {
             server.datastore.should.have.property('create');
-            done();
         });
 
-        it('must have a write method', (done) => {
+        it('must have a write method', () => {
             server.datastore.should.have.property('write');
-            done();
         });
 
-        it('must have a getOffset method', (done) => {
+        it('must have a getOffset method', () => {
             server.datastore.should.have.property('getOffset');
-            done();
         });
     });
 
-    // describe('_getBucket', () => {
-    //     it('should ', () => {
-    //     });
-    // });
+    describe('_getBucket', () => {
+        it('should be able to connect to GCS bucket', () => {
+            assert.doesNotThrow(() => {
+                server.datastore._getBucket();
+            });
+        });
+
+        it('should set the bucket property to a bucket', () => {
+            assert.equal(server.datastore.bucket.name, BUCKET);
+        });
+    });
 
     // describe('_makeAuthorizedRequest', () => {
     //     it('should ', () => {
