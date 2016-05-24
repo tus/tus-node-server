@@ -4,9 +4,12 @@
 const should = require('should');
 const assert = require('assert');
 const path = require('path');
+const fs = require('fs');
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
+const File = require('../lib/models/File');
+const ERRORS = require('../lib/constants').ERRORS;
 
 const STORE_PATH = '/files';
 const PROJECT_ID = 'vimeo-open-source';
@@ -14,11 +17,15 @@ const KEYFILE = path.resolve(__dirname, 'keyfile.json');
 const BUCKET = 'tus-node-server';
 
 const TEST_FILE_SIZE = 960244;
-const TEST_FILE_NAME = 'test_file.mp4';
+const TEST_FILE_NAME = 'travis_test_file.mp4';
+const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_METADATA = 'some data, for you';
+const FILE_ALREADY_IN_BUCKET = 'dont_detete_this_file';
 
 describe('GCSDataStore', () => {
     let server;
+    let test_file_id;
+    const files_created = [];
     before(() => {
         server = new Server();
         server.datastore = new GCSDataStore({
@@ -26,10 +33,13 @@ describe('GCSDataStore', () => {
             projectId: PROJECT_ID,
             keyFilename: KEYFILE,
             bucket: BUCKET,
+            namingFunction: () => TEST_FILE_NAME,
         });
     });
 
     after(() => {
+        // Delete these files from the bucket for cleanup?
+        console.log(files_created);
     });
 
     describe('constructor', () => {
@@ -62,32 +72,69 @@ describe('GCSDataStore', () => {
         });
     });
 
-    // describe('_makeAuthorizedRequest', () => {
-    //     it('should ', () => {
-    //     });
-    // });
 
-    // describe('getFileMetadata', () => {
-    //     it('should ', () => {
-    //     });
-    // });
+    describe('getFileMetadata', () => {
+        it('should resolve non-existent files with a size of 0', () => {
+            return server.datastore.getFileMetadata('not_a_file')
+                    .should.be.fulfilledWith({ size: 0 });
+        });
 
-    // describe('create', () => {
-    //     it('should ', () => {
-    //     });
-    // });
+        it('should resolve existing files with the metadata', () => {
+            return server.datastore.getFileMetadata(FILE_ALREADY_IN_BUCKET)
+                    .should.be.fulfilledWith({
+                        size: `${TEST_FILE_SIZE}`,
+                        upload_length: `${TEST_FILE_SIZE}`,
+                        upload_metadata: undefined,
+                    });
+        });
+    });
 
-    // describe('write', () => {
-    //     it('should ', () => {
-    //     });
-    // });
-    //
-    // describe('getRange', () => {
-    //     it('should ', () => {
-    //     });
-    // });
-    // describe('getOffset', () => {
-    //     it('should ', () => {
-    //     });
-    // });
+    describe('create', () => {
+        it('should reject requests without a length header', () => {
+            const req = {
+                headers: {},
+            };
+            return server.datastore.create(req)
+                    .should.be.rejectedWith(ERRORS.INVALID_LENGTH);
+        });
+
+        it('should create a file', (done) => {
+            const req = {
+                headers: {
+                    'upload-length': TEST_FILE_SIZE,
+                },
+            };
+            server.datastore.create(req)
+                .then((file) => {
+                    assert.equal(file instanceof File, true);
+                    assert.equal(file.upload_length, TEST_FILE_SIZE);
+                    test_file_id = file.id;
+                    return done();
+                }).catch(console.log);
+        });
+    });
+
+    describe('write', () => {
+
+        it('should open a stream and resolve the new offset', (done) => {
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            write_stream.once('open', () => {
+                server.datastore.write(write_stream, test_file_id, 0)
+                .then((offset) => {
+                    files_created.push(test_file_id.split('&upload_id')[0]);
+                    assert.equal(offset, TEST_FILE_SIZE);
+                    return done();
+                })
+                .catch(console.log);
+            });
+        });
+    });
+
+
+    describe('getRange', () => {
+        it('shouldnt ovveride size from getFileMetadata if range fails', () => {
+            return server.datastore.getRange('hello')
+                    .should.be.fulfilledWith({});
+        });
+    });
 });
