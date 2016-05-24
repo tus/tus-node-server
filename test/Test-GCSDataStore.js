@@ -17,7 +17,6 @@ const KEYFILE = path.resolve(__dirname, 'keyfile.json');
 const BUCKET = 'tus-node-server';
 
 const TEST_FILE_SIZE = 960244;
-const TEST_FILE_NAME = 'travis_test_file.mp4';
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_METADATA = 'some data, for you';
 const FILE_ALREADY_IN_BUCKET = 'dont_detete_this_file';
@@ -33,7 +32,6 @@ describe('GCSDataStore', () => {
             projectId: PROJECT_ID,
             keyFilename: KEYFILE,
             bucket: BUCKET,
-            namingFunction: () => TEST_FILE_NAME,
         });
     });
 
@@ -43,6 +41,12 @@ describe('GCSDataStore', () => {
     });
 
     describe('constructor', () => {
+        it('must require a bucket', () => {
+            assert.throws(() => {
+                new GCSDataStore({ path: STORE_PATH });
+            }, Error);
+        });
+
         it('must inherit from Datastore', () => {
             assert.equal(server.datastore instanceof DataStore, true);
         });
@@ -115,7 +119,6 @@ describe('GCSDataStore', () => {
     });
 
     describe('write', () => {
-
         it('should open a stream and resolve the new offset', (done) => {
             const write_stream = fs.createReadStream(TEST_FILE_PATH);
             write_stream.once('open', () => {
@@ -129,7 +132,6 @@ describe('GCSDataStore', () => {
             });
         });
     });
-
 
     describe('getRange', () => {
         it('shouldnt ovveride size from getFileMetadata if range fails', () => {
