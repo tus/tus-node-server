@@ -141,7 +141,14 @@ describe('FileStore', () => {
 
     describe('write', () => {
         it('should reject write streams that cant be opened', () => {
-            return server.datastore.write()
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            return server.datastore.write(write_stream, null, 0)
+                    .should.be.rejectedWith(500);
+        });
+
+        it('should reject write streams that cant be opened', () => {
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            return server.datastore.write(write_stream, '', 0)
                     .should.be.rejectedWith(500);
         });
 
