@@ -104,6 +104,14 @@ describe('Server', () => {
               .expect(412, 'Invalid upload-length\n', done);
         });
 
+        it('POST should validate the metadata header', (done) => {
+            request(server.listen())
+              .post(server.datastore.path)
+              .set('Tus-Resumable', TUS_RESUMABLE)
+              .set('Upload-Metadata', '')
+              .expect(412, 'Invalid upload-metadata\n', done);
+        });
+
         it('should 404 other requests', (done) => {
             request(server.listen())
               .get('/')
