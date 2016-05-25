@@ -8,6 +8,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
+const gcloud = require('gcloud');
 const File = require('../lib/models/File');
 const ERRORS = require('../lib/constants').ERRORS;
 
@@ -18,8 +19,22 @@ const BUCKET = 'tus-node-server';
 
 const TEST_FILE_SIZE = 960244;
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
-const TEST_METADATA = 'some data, for you';
-const FILE_ALREADY_IN_BUCKET = 'dont_detete_this_file';
+const FILE_ALREADY_IN_BUCKET = 'dont_delete_this_file.mp4';
+
+const gcs = gcloud.storage({
+    projectId: PROJECT_ID,
+    keyFilename: KEYFILE,
+});
+
+const bucket = gcs.bucket(BUCKET);
+const deleteFile = (file_name) => {
+    return new Promise((resolve, reject) => {
+        console.log(`[GCLOUD] Deleting ${file_name} from ${bucket.name} bucket`)
+        bucket.file(file_name).delete((err, res) => {
+            resolve(res);
+        });
+    });
+};
 
 describe('GCSDataStore', () => {
     let server;
@@ -35,9 +50,12 @@ describe('GCSDataStore', () => {
         });
     });
 
-    after(() => {
-        // Delete these files from the bucket for cleanup?
-        console.log(files_created);
+    after((done) => {
+        // Delete these files from the bucket for cleanup
+        const deletions = files_created.map((file_name) => deleteFile(file_name));
+        Promise.all(deletions).then(() => {
+            return done();
+        }).catch(done);
     });
 
     describe('constructor', () => {

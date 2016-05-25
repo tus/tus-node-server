@@ -10,6 +10,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const FileStore = require('../lib/stores/FileStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
+const gcloud = require('gcloud');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
@@ -21,6 +22,21 @@ const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_SIZE = 960244;
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_METADATA = 'some data, for you';
+
+const gcs = gcloud.storage({
+    projectId: PROJECT_ID,
+    keyFilename: KEYFILE,
+});
+
+const bucket = gcs.bucket(BUCKET);
+const deleteFile = (file_name) => {
+    return new Promise((resolve, reject) => {
+        console.log(`[GCLOUD] Deleting ${file_name} from ${bucket.name} bucket`)
+        bucket.file(file_name).delete((err, res) => {
+            resolve(res);
+        });
+    });
+};
 
 describe('EndToEnd', () => {
     let server;
@@ -218,9 +234,12 @@ describe('EndToEnd', () => {
             agent = request.agent(server.listen());
         });
 
-        after(() => {
-            // Delete these files from the bucket for cleanup?
-            console.log(files_created);
+        after((done) => {
+            // Delete these files from the bucket for cleanup
+            const deletions = files_created.map((file_name) => deleteFile(file_name));
+            Promise.all(deletions).then(() => {
+                return done();
+            }).catch(done);
         });
 
         describe('HEAD', () => {
