@@ -1,7 +1,6 @@
 /* eslint-env node, mocha */
 
 'use strict';
-const request = require('supertest');
 const should = require('should');
 const assert = require('assert');
 const fs = require('fs');
@@ -11,22 +10,16 @@ const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const FileStore = require('../lib/stores/FileStore');
 const File = require('../lib/models/File');
-const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_FILE_SIZE = 960244;
 const TEST_FILE_NAME = 'test_file.mp4';
-const TEST_METADATA = 'some data, for you';
 
 
 describe('FileStore', () => {
     let server;
-    let created_file_name;
-    let created_file_path;
-    let deferred_file_name;
-    let deferred_file_path;
 
     before((done) => {
         server = new Server();
