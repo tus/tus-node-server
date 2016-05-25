@@ -31,7 +31,7 @@ const gcs = gcloud.storage({
 const bucket = gcs.bucket(BUCKET);
 const deleteFile = (file_name) => {
     return new Promise((resolve, reject) => {
-        console.log(`[GCLOUD] Deleting ${file_name} from ${bucket.name} bucket`)
+        console.log(`[GCLOUD] Deleting ${file_name} from ${bucket.name} bucket`);
         bucket.file(file_name).delete((err, res) => {
             resolve(res);
         });
@@ -243,16 +243,16 @@ describe('EndToEnd', () => {
         });
 
         describe('HEAD', () => {
-            // it('should 404 file ids that dont exist', (done) => {
-            //     agent.head(`${STORE_PATH}/${file_id}`)
-            //     .set('Tus-Resumable', TUS_RESUMABLE)
-            //     .set('Upload-Length', TEST_FILE_SIZE)
-            //     .set('Upload-Metadata', TEST_METADATA)
-            //     .set('Tus-Resumable', TUS_RESUMABLE)
-            //     .expect(404)
-            //     .expect('Tus-Resumable', TUS_RESUMABLE)
-            //     .end(done);
-            // });
+            it('should 404 file ids that dont exist', (done) => {
+                agent.head(`${STORE_PATH}/${file_id}`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', TEST_FILE_SIZE)
+                .set('Upload-Metadata', TEST_METADATA)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(404)
+                .expect('Tus-Resumable', TUS_RESUMABLE)
+                .end(done);
+            });
         });
 
         describe('POST', () => {
@@ -324,22 +324,22 @@ describe('EndToEnd', () => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
-                // .expect('Upload-Metadata', TEST_METADATA)
+                .expect('Upload-Metadata', TEST_METADATA)
                 .expect('Upload-Offset', 0)
-                // .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Length', TEST_FILE_SIZE)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
 
-            // it('should return the defer length of the new deferred file', (done) => {
-            //     agent.head(`${STORE_PATH}/${deferred_file_id}`)
-            //     .set('Tus-Resumable', TUS_RESUMABLE)
-            //     .expect(200)
-            //     .expect('Upload-Offset', 0)
-            //     .expect('Upload-Defer-Length', 1)
-            //     .expect('Tus-Resumable', TUS_RESUMABLE)
-            //     .end(done);
-            // });
+            it('should return the defer length of the new deferred file', (done) => {
+                agent.head(`${STORE_PATH}/${deferred_file_id}`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(200)
+                .expect('Upload-Offset', 0)
+                .expect('Upload-Defer-Length', 1)
+                .expect('Tus-Resumable', TUS_RESUMABLE)
+                .end(done);
+            });
         });
 
         describe('PATCH', () => {
@@ -382,12 +382,24 @@ describe('EndToEnd', () => {
         });
 
         describe('HEAD', () => {
+            // mocha cant use arrow functions for setting timeout
+            before(function(done) {
+                this.timeout(0);
+
+                // GCS need a few seconds before it can show the changes
+                const TIMEOUT = 5000;
+                console.log(`Pausing for ${TIMEOUT / 1000} seconds while GCS updates...`);
+                setTimeout(() => {
+                    done();
+                }, TIMEOUT);
+            });
+
             it('should return the ending offset of the uploaded file', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 // .expect('Upload-Metadata', TEST_METADATA)
-                // .expect('Upload-Offset', TEST_FILE_SIZE)
+                .expect('Upload-Offset', TEST_FILE_SIZE)
                 // .expect('Upload-Length', TEST_FILE_SIZE)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);

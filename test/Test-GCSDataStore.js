@@ -29,7 +29,7 @@ const gcs = gcloud.storage({
 const bucket = gcs.bucket(BUCKET);
 const deleteFile = (file_name) => {
     return new Promise((resolve, reject) => {
-        console.log(`[GCLOUD] Deleting ${file_name} from ${bucket.name} bucket`)
+        console.log(`[GCLOUD] Deleting ${file_name} from ${bucket.name} bucket`);
         bucket.file(file_name).delete((err, res) => {
             resolve(res);
         });
@@ -96,17 +96,16 @@ describe('GCSDataStore', () => {
 
 
     describe('getFileMetadata', () => {
-        it('should resolve non-existent files with a size of 0', () => {
+        it('should reject non existent files', () => {
             return server.datastore.getFileMetadata('not_a_file')
-                    .should.be.fulfilledWith({ size: 0 });
+                    .should.be.rejectedWith(ERRORS.FILE_NOT_FOUND);
         });
 
         it('should resolve existing files with the metadata', () => {
             return server.datastore.getFileMetadata(FILE_ALREADY_IN_BUCKET)
                     .should.be.fulfilledWith({
-                        size: `${TEST_FILE_SIZE}`,
-                        upload_length: `${TEST_FILE_SIZE}`,
-                        upload_metadata: undefined,
+                        size: TEST_FILE_SIZE,
+                        upload_length: TEST_FILE_SIZE
                     });
         });
     });
