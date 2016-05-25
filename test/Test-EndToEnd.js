@@ -21,6 +21,7 @@ const TEST_METADATA = 'some data, for you';
 describe('EndToEnd', () => {
     let server;
     let agent;
+    let file_to_delete;
     describe('FileStore', () => {
         let file_id;
         let deferred_file_id;
@@ -31,6 +32,7 @@ describe('EndToEnd', () => {
             });
             agent = request.agent(server.listen());
         });
+
         after((done) => {
             // Remove the files directory
             exec(`rm -r ${FILES_DIRECTORY}`, (err) => {
@@ -43,11 +45,12 @@ describe('EndToEnd', () => {
                 return done();
             });
         });
+
         describe('HEAD', () => {
-            it('should 404 the files that doesnt exist yet', (done) => {
+            it('should 404 file ids that dont exist', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .set('Upload-Length', 960244)
+                .set('Upload-Length', TEST_FILE_SIZE)
                 .set('Upload-Metadata', TEST_METADATA)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(404)
@@ -57,17 +60,31 @@ describe('EndToEnd', () => {
         });
 
         describe('POST', () => {
-            it('should create a file and respond with a location', (done) => {
+            it('should create a file that will be deleted', (done) => {
                 agent.post(STORE_PATH)
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .set('Upload-Length', 960244)
+                .set('Upload-Defer-Length', 1)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(201)
+                .end((err, res) => {
+                    assert.equal('location' in res.headers, true);
+                    assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
+                    // Save the id for subsequent tests
+                    file_to_delete = res.headers.location.split('/').pop();
+                    done();
+                });
+            });
+
+            it('should create a file and respond with its location', (done) => {
+                agent.post(STORE_PATH)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', TEST_FILE_SIZE)
                 .set('Upload-Metadata', TEST_METADATA)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(201)
                 .end((err, res) => {
                     assert.equal('location' in res.headers, true);
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
-
                     // Save the id for subsequent tests
                     file_id = res.headers.location.split('/').pop();
                     done();
@@ -84,7 +101,6 @@ describe('EndToEnd', () => {
                 .end((err, res) => {
                     assert.equal('location' in res.headers, true);
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
-
                     // Save the id for subsequent tests
                     deferred_file_id = res.headers.location.split('/').pop();
                     done();
@@ -93,7 +109,22 @@ describe('EndToEnd', () => {
         });
 
         describe('HEAD', () => {
-            it('should return a starting offset and metadata for a new file', (done) => {
+            before((done) => {
+                // Remove the file to delete for 410 Gone test
+                exec(`rm ${FILES_DIRECTORY}/${file_to_delete}`, () => {
+                    return done();
+                });
+            });
+
+            it('should return 410 Gone for the file that has been deleted', (done) => {
+                agent.head(`${STORE_PATH}/${file_to_delete}`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(410)
+                .expect('Tus-Resumable', TUS_RESUMABLE)
+                .end(done);
+            });
+
+            it('should return a starting offset, metadata for the new file', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
@@ -104,7 +135,7 @@ describe('EndToEnd', () => {
                 .end(done);
             });
 
-            it('should return the defer length of the deferred file', (done) => {
+            it('should return the defer length of the new deferred file', (done) => {
                 agent.head(`${STORE_PATH}/${deferred_file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
@@ -155,7 +186,7 @@ describe('EndToEnd', () => {
         });
 
         describe('HEAD', () => {
-            it('should return the ending offset of the file', (done) => {
+            it('should return the ending offset of the uploaded file', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
