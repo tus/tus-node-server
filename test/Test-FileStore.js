@@ -174,6 +174,12 @@ describe('FileStore', () => {
                     .should.be.rejectedWith(404);
         });
 
+        it('should reject directories', () => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            return file_store.getOffset('')
+                    .should.be.rejectedWith(404);
+        });
+
         it('should resolve the stats for existant files', () => {
             const file_store = new FileStore({ path: STORE_PATH });
             return file_store.getOffset(TEST_FILE_NAME)
