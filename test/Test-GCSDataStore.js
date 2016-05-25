@@ -94,22 +94,6 @@ describe('GCSDataStore', () => {
         });
     });
 
-
-    describe('getFileMetadata', () => {
-        it('should reject non existent files', () => {
-            return server.datastore.getFileMetadata('not_a_file')
-                    .should.be.rejectedWith(ERRORS.FILE_NOT_FOUND);
-        });
-
-        it('should resolve existing files with the metadata', () => {
-            return server.datastore.getFileMetadata(FILE_ALREADY_IN_BUCKET)
-                    .should.be.fulfilledWith({
-                        size: TEST_FILE_SIZE,
-                        upload_length: TEST_FILE_SIZE
-                    });
-        });
-    });
-
     describe('create', () => {
         it('should reject requests without a length header', () => {
             const req = {
@@ -150,10 +134,18 @@ describe('GCSDataStore', () => {
         });
     });
 
-    describe('getRange', () => {
-        it('shouldnt ovveride size from getFileMetadata if range fails', () => {
-            return server.datastore.getRange('hello')
-                    .should.be.fulfilledWith({});
+    describe('getOffset', () => {
+        it('should reject non existent files', () => {
+            return server.datastore.getOffset('not_a_file')
+                    .should.be.rejectedWith(ERRORS.FILE_NOT_FOUND);
+        });
+
+        it('should resolve existing files with the metadata', () => {
+            return server.datastore.getOffset(FILE_ALREADY_IN_BUCKET)
+                    .should.be.fulfilledWith({
+                        size: TEST_FILE_SIZE,
+                        upload_length: TEST_FILE_SIZE,
+                    });
         });
     });
 });
