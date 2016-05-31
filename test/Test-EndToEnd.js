@@ -343,25 +343,25 @@ describe('EndToEnd', () => {
         });
 
         describe('PATCH', () => {
-            // it('should 404 paths without a file id', (done) => {
-            //     agent.patch(`${STORE_PATH}/`)
-            //     .set('Tus-Resumable', TUS_RESUMABLE)
-            //     .set('Upload-Offset', 0)
-            //     .set('Content-Type', 'application/offset+octet-stream')
-            //     .expect(404)
-            //     .expect('Tus-Resumable', TUS_RESUMABLE)
-            //     .end(done);
-            // });
+            it('should 404 paths without a file id', (done) => {
+                agent.patch(`${STORE_PATH}/`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Offset', 0)
+                .set('Content-Type', 'application/offset+octet-stream')
+                .expect(404)
+                .expect('Tus-Resumable', TUS_RESUMABLE)
+                .end(done);
+            });
 
-            // it('should 404 paths that do not exist', (done) => {
-            //     agent.patch(`${STORE_PATH}/dont_exist`)
-            //     .set('Tus-Resumable', TUS_RESUMABLE)
-            //     .set('Upload-Offset', 0)
-            //     .set('Content-Type', 'application/offset+octet-stream')
-            //     .expect(404)
-            //     .expect('Tus-Resumable', TUS_RESUMABLE)
-            //     .end(done);
-            // });
+            it('should 404 paths that do not exist', (done) => {
+                agent.patch(`${STORE_PATH}/dont_exist`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Offset', 0)
+                .set('Content-Type', 'application/offset+octet-stream')
+                .expect(404)
+                .expect('Tus-Resumable', TUS_RESUMABLE)
+                .end(done);
+            });
 
             it('should upload the file', (done) => {
                 const read_stream = fs.createReadStream(TEST_FILE_PATH);
@@ -387,7 +387,7 @@ describe('EndToEnd', () => {
                 this.timeout(0);
 
                 // GCS need a few seconds before it can show the changes
-                const TIMEOUT = 5000;
+                const TIMEOUT = 10000;
                 console.log(`Pausing for ${TIMEOUT / 1000} seconds while GCS updates...`);
                 setTimeout(() => {
                     done();
@@ -398,9 +398,9 @@ describe('EndToEnd', () => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
-                // .expect('Upload-Metadata', TEST_METADATA)
+                .expect('Upload-Metadata', TEST_METADATA)
                 .expect('Upload-Offset', TEST_FILE_SIZE)
-                // .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Length', TEST_FILE_SIZE)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
