@@ -70,9 +70,6 @@ describe('EndToEnd', () => {
             it('should 404 file ids that dont exist', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .set('Upload-Length', TEST_FILE_SIZE)
-                .set('Upload-Metadata', TEST_METADATA)
-                .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
@@ -246,9 +243,6 @@ describe('EndToEnd', () => {
             it('should 404 file ids that dont exist', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .set('Upload-Length', TEST_FILE_SIZE)
-                .set('Upload-Metadata', TEST_METADATA)
-                .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
@@ -284,7 +278,7 @@ describe('EndToEnd', () => {
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
                     // Save the id for subsequent tests
                     file_id = res.headers.location.split('/').pop();
-                    files_created.push(file_id.split('&upload_id')[0])
+                    files_created.push(file_id.split('&upload_id')[0]);
                     done();
                 });
             });
@@ -301,7 +295,7 @@ describe('EndToEnd', () => {
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
                     // Save the id for subsequent tests
                     deferred_file_id = res.headers.location.split('/').pop();
-                    files_created.push(deferred_file_id.split('&upload_id')[0])
+                    files_created.push(deferred_file_id.split('&upload_id')[0]);
                     done();
                 });
             });
@@ -387,7 +381,7 @@ describe('EndToEnd', () => {
                 this.timeout(0);
 
                 // GCS need a few seconds before it can show the changes
-                const TIMEOUT = 10000;
+                const TIMEOUT = 5000;
                 console.log(`Pausing for ${TIMEOUT / 1000} seconds while GCS updates...`);
                 setTimeout(() => {
                     done();
