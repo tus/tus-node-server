@@ -95,6 +95,25 @@ describe('GCSDataStore', () => {
     });
 
     describe('create', () => {
+        it('should reject when namingFunction is invalid', () => {
+            const req = {
+                headers: {
+                    'upload-length': TEST_FILE_SIZE,
+                },
+            };
+            const namingFunction = (incomingReq) => incomingReq.body.filename.replace(/\//g, '-');
+            const file_store = new GCSDataStore({
+                path: STORE_PATH,
+                projectId: PROJECT_ID,
+                keyFilename: KEYFILE,
+                bucket: BUCKET,
+                namingFunction
+            });
+            return file_store.create(req)
+                    .should.be.rejected();
+        });
+
+
         it('should reject requests without a length header', () => {
             const req = {
                 headers: {},
