@@ -14,15 +14,20 @@ $ npm install tus-node-server
 
 ## Flexible Data Stores
 
-- Local File Storage
-    ```javascript
+- **Local File Storage**
+    ```js
     server.datastore = new tus.FileStore({
         path: '/files'
     });
     ```
 
-- Google Cloud Storage ([_coming soon_](https://github.com/tus/tus-node-server/issues/20))
-    ```javascript
+    Try it:
+    ```sh
+    $ npm run example
+    ```
+
+- **Google Cloud Storage**
+    ```js
 
     server.datastore = new tus.GCSDataStore({
         path: '/files',
@@ -31,9 +36,13 @@ $ npm install tus-node-server
         bucket: 'bucket-name',
     });
     ```
+    Try it:
+    ```sh
+    $ npm run gcs_example
+    ```
 
-- Amazon S3 ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
-    ```javascript
+- **Amazon S3** ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
+    ```js
 
     server.datastore = new tus.S3Store({
         path: '/files',
@@ -44,7 +53,7 @@ $ npm install tus-node-server
 ## Quick Start
 
 #### Build a standalone server
-```javascript
+```js
 const tus = require('tus-node-server');
 
 const server = new tus.Server();
@@ -61,7 +70,7 @@ server.listen({ host, port }, () => {
 
 #### Alternatively, you could deploy tus-node-server as [Express Middleware](http://expressjs.com/en/guide/using-middleware.html)
 
-```javascript
+```js
 const tus = require('tus-node-server');
 const server = new tus.Server();
 server.datastore = new tus.FileStore({

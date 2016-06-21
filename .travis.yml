@@ -1,6 +1,9 @@
 language: node_js
 node_js:
-  - "4.2.4"
+- 4.2.4
 script:
-    - npm run lint
-    - npm run coveralls
+- npm run lint
+- npm run coveralls
+before_install:
+- openssl aes-256-cbc -K $encrypted_d9f08a58d46a_key -iv $encrypted_d9f08a58d46a_iv
+  -in keyfile.json.enc -out test/keyfile.json -d
