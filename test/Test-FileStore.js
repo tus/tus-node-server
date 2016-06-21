@@ -158,6 +158,7 @@ describe('FileStore', () => {
                 .catch(done);
             });
         });
+
     });
 
     describe('getOffset', () => {
