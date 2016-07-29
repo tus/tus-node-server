@@ -31,6 +31,7 @@ describe('OptionsHandler', () => {
         let headers = {
             'Access-Control-Allow-Methods': ALLOWED_METHODS,
             'Access-Control-Allow-Headers': ALLOWED_HEADERS,
+            'Access-Control-Expose-Headers': ALLOWED_HEADERS,
             'Access-Control-Max-Age': MAX_AGE,
         };
         handler.send(req, res);
