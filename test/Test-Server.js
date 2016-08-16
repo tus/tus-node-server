@@ -53,6 +53,34 @@ describe('Server', () => {
         });
     });
 
+    describe('get', () => {
+        let server;
+        before(() => {
+            server = new Server();
+            server.datastore = new DataStore({
+                path: '/files',
+            });
+
+            server.get('/some_url', (req, res) => {
+                res.writeHead(200);
+                res.write('Hello world!\n');
+                res.end();
+            });
+        });
+
+        it('should respond to user implemented GET requests', (done) => {
+            request(server.listen())
+              .get('/some_url')
+              .expect(200, 'Hello world!\n', done);
+        });
+
+        it('should 404 non-user implemented GET requests', (done) => {
+            request(server.listen())
+              .get('/not_here')
+              .expect(404, 'Not found\n', done);
+        });
+    });
+
     describe('handle', () => {
         let server;
         before(() => {
