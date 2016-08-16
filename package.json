@@ -35,8 +35,8 @@
   "scripts": {
     "test": "NODE_ENV=test mocha",
     "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
-    "example": "nodemon example/server.js",
-    "gcs_example": "DATA_STORE=GCSDataStore nodemon example/server.js",
+    "demo": "node demo/server.js",
+    "gcs_demo": "DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
@@ -48,9 +48,9 @@
     "istanbul": "^0.4.0",
     "mocha": "^2.3.3",
     "mocha-lcov-reporter": "^1.0.0",
-    "nodemon": "^1.9.2",
     "should": "^8.0.1",
-    "supertest": "^1.1.0"
+    "supertest": "^1.1.0",
+    "tus-js-client": "^1.1.4"
   },
   "dependencies": {
     "configstore": "^2.0.0",
