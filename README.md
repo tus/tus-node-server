@@ -81,6 +81,58 @@ app.all('/files/*', function(req, res) {
 app.listen(port, host);
 ```
 
+## Event Hooks
+
+Execute code when lifecycle events happen by adding event handlers to your server.
+
+```js
+const Server = require('tus-node-server').Server;
+const EVENTS = require('tus-node-server').EVENTS;
+
+const server = new Server();
+server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`);
+    console.log(event);
+});
+```
+
+#### Events:
+
+- `EVENT_FILE_CREATED`: Fired when a `POST` request successfully creates a new file
+
+    _Example payload:_
+    ```
+    {
+        file: {
+            id: '7b26bf4d22cf7198d3b3706bf0379794',
+            upload_length: '41767441',
+            upload_metadata: 'filename NDFfbWIubXA0'
+         }
+    }
+    ```
+
+- `EVENT_ENDPOINT_CREATED`: Fired when a `POST` request successfully creates a new upload endpoint
+
+    _Example payload:_
+    ```
+    {
+        url: 'http://localhost:8000/files/7b26bf4d22cf7198d3b3706bf0379794'
+    }
+    ```
+
+- `EVENT_UPLOAD_COMPLETE`: Fired when a `PATCH` request finishes writing the file.
+
+    _Example payload:_
+    ```
+    {
+        file: {
+            id: '7b26bf4d22cf7198d3b3706bf0379794',
+            upload_length: '41767441',
+            upload_metadata: 'filename NDFfbWIubXA0'
+        }
+    }
+    ```
+
 ## Development
 
 Start the demo server using Local File Storage

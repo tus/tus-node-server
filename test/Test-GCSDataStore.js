@@ -11,6 +11,7 @@ const GCSDataStore = require('../lib/stores/GCSDataStore');
 const gcloud = require('google-cloud');
 const File = require('../lib/models/File');
 const ERRORS = require('../lib/constants').ERRORS;
+const EVENTS = require('../lib/constants').EVENTS;
 
 const STORE_PATH = '/files';
 const PROJECT_ID = 'vimeo-open-source';
@@ -136,6 +137,23 @@ describe('GCSDataStore', () => {
                     return done();
                 }).catch(console.log);
         });
+
+
+        it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
+            server.datastore.on(EVENTS.EVENT_FILE_CREATED, (event) => {
+                event.should.have.property('file');
+                assert.equal(event.file instanceof File, true);
+                done();
+            });
+
+            const req = {
+                headers: {
+                    'upload-length': TEST_FILE_SIZE,
+                },
+            };
+            server.datastore.create(req)
+                .catch(console.log);
+        });
     });
 
     describe('write', () => {
@@ -149,6 +167,20 @@ describe('GCSDataStore', () => {
                     return done();
                 })
                 .catch(console.log);
+            });
+        });
+
+
+        it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
+            server.datastore.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+                event.should.have.property('file');
+                done();
+            });
+
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            write_stream.once('open', () => {
+                server.datastore.write(write_stream, test_file_id, 0)
+                    .catch(console.log);
             });
         });
     });

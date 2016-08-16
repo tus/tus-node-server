@@ -1,16 +1,20 @@
 'use strict';
 
-const tus = require('../index');
 const path = require('path');
 const fs = require('fs');
 
-const server = new tus.Server();
+const Server = require('../index').Server;
+const FileStore = require('../index').FileStore;
+const GCSDataStore = require('../index').GCSDataStore;
+const EVENTS = require('../index').EVENTS;
+
+const server = new Server();
 
 const data_store = process.env.DATA_STORE || 'FileStore';
 
 switch (data_store) {
     case 'GCSDataStore':
-        server.datastore = new tus.GCSDataStore({
+        server.datastore = new GCSDataStore({
             path: '/files',
             projectId: 'vimeo-open-source',
             keyFilename: path.resolve(__dirname, '../test/keyfile.json'),
@@ -19,7 +23,7 @@ switch (data_store) {
         break;
 
     default:
-        server.datastore = new tus.FileStore({
+        server.datastore = new FileStore({
             path: '/files',
         });
 }
@@ -51,6 +55,10 @@ const writeFile = (req, res) => {
 server.get('/', writeFile);
 server.get('/demo/index.js', writeFile);
 server.get('/node_modules/tus-js-client/dist/tus.js', writeFile);
+
+server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`);
+});
 
 const host = '127.0.0.1';
 const port = 8000;

@@ -10,6 +10,7 @@ const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const FileStore = require('../lib/stores/FileStore');
 const File = require('../lib/models/File');
+const EVENTS = require('../lib/constants').EVENTS;
 
 const STORE_PATH = '/files';
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
@@ -129,6 +130,16 @@ describe('FileStore', () => {
                 })
                 .catch(done);
         });
+
+        it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            file_store.on(EVENTS.EVENT_FILE_CREATED, (event) => {
+                event.should.have.property('file');
+                assert.equal(event.file instanceof File, true);
+                done();
+            });
+            file_store.create(req);
+        });
     });
 
 
@@ -156,6 +167,23 @@ describe('FileStore', () => {
                     return done();
                 })
                 .catch(done);
+            });
+        });
+
+        it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
+            const file_store = new FileStore({ path: STORE_PATH });
+            file_store.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+                event.should.have.property('file');
+                done();
+            });
+
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            write_stream.once('open', () => {
+                const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: STORE_PATH }
+                file_store.create(req)
+                    .then((newFile) => {
+                        return file_store.write(write_stream, newFile.id, 0);
+                    }).catch(done);
             });
         });
     });
