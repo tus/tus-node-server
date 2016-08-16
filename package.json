@@ -54,6 +54,8 @@
   },
   "dependencies": {
     "configstore": "^2.0.0",
+    "gcloud": "^0.34.0",
+    "google-auto-auth": "^0.2.4",
     "crypto-rand": "0.0.2",
     "object-assign": "^4.1.0",
     "request": "^2.72.0"
