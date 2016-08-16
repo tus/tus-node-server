@@ -8,6 +8,7 @@ const DataStore = require('../lib/stores/DataStore');
 
 const ALLOWED_METHODS = require('../lib/constants').ALLOWED_METHODS;
 const ALLOWED_HEADERS = require('../lib/constants').ALLOWED_HEADERS;
+const EXPOSED_HEADERS = require('../lib/constants').EXPOSED_HEADERS;
 const MAX_AGE = require('../lib/constants').MAX_AGE;
 
 let hasHeader = (res, header) => {
@@ -31,7 +32,7 @@ describe('OptionsHandler', () => {
         let headers = {
             'Access-Control-Allow-Methods': ALLOWED_METHODS,
             'Access-Control-Allow-Headers': ALLOWED_HEADERS,
-            'Access-Control-Expose-Headers': ALLOWED_HEADERS,
+            'Access-Control-Expose-Headers': EXPOSED_HEADERS,
             'Access-Control-Max-Age': MAX_AGE,
         };
         handler.send(req, res);
