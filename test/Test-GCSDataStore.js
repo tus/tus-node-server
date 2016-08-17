@@ -8,7 +8,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
-const gcloud = require('gcloud');
+const gcloud = require('google-cloud');
 const File = require('../lib/models/File');
 const ERRORS = require('../lib/constants').ERRORS;
 

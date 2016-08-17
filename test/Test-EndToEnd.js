@@ -10,7 +10,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const FileStore = require('../lib/stores/FileStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
-const gcloud = require('gcloud');
+const gcloud = require('google-cloud');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
