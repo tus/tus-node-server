@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>tus-js-client demo</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <style type="text/css">
+        body {
+            padding-top: 40px;
+        }
+        .progress {
+            height: 32px;
+        }
+        .row {
+            padding: 10px 0;
+        }
+
+        .input-group {
+            padding-bottom: 5px;
+        }
+
+        .action-buttons {
+            margin-bottom: 10px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>tus-node-server demo (using <a href="https://www.npmjs.com/package/tus-js-client"/>tus-js-client</a>)</h1>
+            <p>
+                For a prettier demo please go to the
+                <a href="http://tus.io/demo.html">tus.io</a> website.
+                This demo is just here to aid developers.
+            </p>
+            <div class="alert alert-danger hidden js-support-alert" role="alert">
+                    <strong>Warning!</strong> Your browser does not seem to support the features necessary to run tus-js-client. The buttons below may work but probably will fail silently.
+            </div>
+
+            <div class="row">
+                <label for="upload-endpoint">Upload creation endpoint:</label>
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
+                    </span>
+                    <input type="text" class="form-control js-upload-endpoint" aria-describedby="upload-endpoint"  value="http://localhost:8000/files">
+                </div>
+            </div>
+            <div class="row">
+                <label for="resume-endpoint">Or provide an endpoint to resume:</label>
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
+                    </span>
+                    <input type="text" class="form-control js-resume-endpoint" aria-describedby="resume-endpoint">
+                </div>
+            </div>
+            <div class="row">
+                <label for="chunk-size">Chunk size:</label>
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon glyphicon-th" aria-hidden="true"></span>
+                    </span>
+                    <input type="number" class="form-control js-chunk-size" aria-describedby="chunk-size">
+                </div>
+            </div>
+
+            <div class="row">
+                <input type="file" class="btn btn-default">
+            </div>
+
+            <div class="row">
+                <div class="span4 action-buttons">
+                    <button class="btn btn-danger stop disabled js-stop-button">
+                        <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                        stop upload
+                    </button>
+                    <button class="btn btn-success resume disabled js-resume-button">
+                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                        resume upload
+                    </button>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src="/node_modules/tus-js-client/dist/tus.js"></script>
+    <script src="/demo/index.js"></script>
+</html>
