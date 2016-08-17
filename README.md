@@ -91,8 +91,7 @@ const EVENTS = require('tus-node-server').EVENTS;
 
 const server = new Server();
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`);
-    console.log(event);
+    console.log(`Upload complete for file ${event.file.id}`);
 });
 ```
 
