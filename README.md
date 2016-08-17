@@ -52,7 +52,13 @@ $ npm install tus-node-server
 
 ## Quick Start
 
-#### Build a standalone server
+#### Use the [tus-node-deploy](https://hub.docker.com/r/bhstahl/tus-node-deploy/) Docker image
+
+```sh
+$ docker run -p 49160:8080 -d bhstahl/tus-node-deploy
+```
+
+#### Build a standalone server yourself
 ```js
 const tus = require('tus-node-server');
 
@@ -68,7 +74,7 @@ server.listen({ host, port }, () => {
 });
 ```
 
-#### Alternatively, you could deploy tus-node-server as [Express Middleware](http://expressjs.com/en/guide/using-middleware.html)
+#### Use tus-node-server as [Express Middleware](http://expressjs.com/en/guide/using-middleware.html)
 
 ```js
 const tus = require('tus-node-server');
@@ -84,100 +90,14 @@ app.all('/files/*', function(req, res) {
 app.listen(port, host);
 ```
 
-#### Run the server
+## Development
+
+##### Start up the demo using the FileStore
 ```bash
-$ node server.js
+$ npm run demo
 ```
 
-
-#### Quick Upload
+##### Start up the demo using the GCSDataStore
 ```bash
-$ curl -X POST -I 'http://localhost:8000/files' \
-               -H 'Tus-Resumable: 1.0.0' \
-               -H 'Upload-Length: 12345678'
-
-HTTP/1.1 201 Created
-Tus-Resumable: 1.0.0
-Location: http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef
-
-$ curl -X PATCH -I 'http://localhost:8000/files/2d70739670d3304cbb8d3f2203857fef' \
-               -H 'Tus-Resumable: 1.0.0' \
-               -H 'Upload-Offset: 0' \
-               -H 'Content-Type: application/offset+octet-stream' \
-               --upload-file path/to/file.mp4
-
-HTTP/1.1 201 Created
-Tus-Resumable: 1.0.0
-Upload-Offset: 613858
-```
-
-
-#### Resumable Upload
-```bash
-
-# Start with 617379340 byte file
-$ ls -ln
--rw-r--r--@ 1 1369348960  1355554294  617379340 May  5 17:31 file.mp4
-
-# Split it into two chunks
-$ split -b 400000000 file.mp4 partial_file
--rw-r--r--  1 1369348960  1355554294  400000000 May  5 17:51 partial_fileaa
--rw-r--r--  1 1369348960  1355554294  217379340 May  5 17:51 partial_fileab
-
-# Create the endpoint via POST
-$ curl -X POST -I 'http://localhost:8000/files' \
-               -H 'Tus-Resumable: 1.0.0' \
-               -H 'Upload-Length: 617379340'
-
-HTTP/1.1 201 Created
-Tus-Resumable: 1.0.0
-Location: http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e
-
-# Upload the first partial file
-$ curl -X PATCH -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
-               -H 'Tus-Resumable: 1.0.0' \
-               -H 'Upload-Offset: 0' \
-               -H 'Content-Type: application/offset+octet-stream' \
-               -T partial_fileaa
-HTTP/1.1 204 No Content
-Tus-Resumable: 1.0.0
-Upload-Offset: 400000000
-
-
-# Check how much has been uploaded
-$ curl -X HEAD -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
-               -H 'Tus-Resumable: 1.0.0'
-HTTP/1.1 200 OK
-Tus-Resumable: 1.0.0
-Upload-Offset: 400000000
-Upload-Length: 617379340
-
-
-# Resume the upload with the second partial file
-$ 11curl -X PATCH -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
-               -H 'Tus-Resumable: 1.0.0' \
-               -H 'Upload-Offset: 400000000' \
-               -H 'Content-Type: application/offset+octet-stream' \
-               -T partial_fileab
-HTTP/1.1 204 No Content
-Tus-Resumable: 1.0.0
-Upload-Offset: 617379340
-
-# Check how much has been uploaded
-$ curl -X HEAD -I 'http://localhost:8000/files/88473063b1a06f11e2eced7983d4ab2e' \
-               -H 'Tus-Resumable: 1.0.0'
-HTTP/1.1 200 OK
-Tus-Resumable: 1.0.0
-Upload-Offset: 617379340
-Upload-Length: 617379340
-```
-
-## Running Tests
-```bash
-$ npm test
-```
-
-## Update Coverage
-```bash
-$ npm run coveralls
+$ npm run gcs_demo
 ```
