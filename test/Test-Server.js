@@ -8,6 +8,7 @@ const http = require('http');
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
+const EVENTS = require('../lib/constants').EVENTS;
 
 const hasHeader = (res, header) => {
     const key = Object.keys(header)[0];
@@ -164,6 +165,56 @@ describe('Server', () => {
                 'Access-Control-Allow-Origin': origin,
             }), true);
             done();
+        });
+    });
+
+    describe('hooks', () => {
+        let server;
+        beforeEach(() => {
+            server = new Server();
+            server.datastore = new DataStore({
+                path: '/files',
+            });
+        });
+
+        it('should fire when an endpoint is created', (done) => {
+            server.on(EVENTS.EVENT_ENDPOINT_CREATED, (event) => {
+                event.should.have.property('url');
+                done();
+            });
+
+            request(server.listen())
+              .post(server.datastore.path)
+              .set('Tus-Resumable', TUS_RESUMABLE)
+              .set('Upload-Length', 12345678)
+              .end();
+        });
+
+        it('should fire when a file is created', (done) => {
+            server.on(EVENTS.EVENT_FILE_CREATED, (event) => {
+                event.should.have.property('file');
+                done();
+            });
+
+            request(server.listen())
+              .post(server.datastore.path)
+              .set('Tus-Resumable', TUS_RESUMABLE)
+              .set('Upload-Length', 12345678)
+              .end();
+        });
+
+        it('should fire when an upload is finished', (done) => {
+            server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+                event.should.have.property('file');
+                done();
+            });
+
+            request(server.listen())
+              .patch(`${server.datastore.path}/file`)
+              .set('Tus-Resumable', TUS_RESUMABLE)
+              .set('Upload-Offset', 0)
+              .set('Content-Type', 'application/offset+octet-stream')
+              .end();
         });
     });
 });
