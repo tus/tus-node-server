@@ -21,11 +21,6 @@ $ npm install tus-node-server
     });
     ```
 
-    Try it:
-    ```sh
-    $ npm run example
-    ```
-
 - **Google Cloud Storage**
     ```js
 
@@ -35,10 +30,6 @@ $ npm install tus-node-server
         keyFilename: 'path/to/your/keyfile.json',
         bucket: 'bucket-name',
     });
-    ```
-    Try it:
-    ```sh
-    $ npm run gcs_example
     ```
 
 - **Amazon S3** ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
@@ -92,12 +83,14 @@ app.listen(port, host);
 
 ## Development
 
-##### Start up the demo using the FileStore
+Start the demo server using Local File Storage
 ```bash
 $ npm run demo
 ```
 
-##### Start up the demo using the GCSDataStore
+Or start up the demo server using Google Cloud Storage
 ```bash
 $ npm run gcs_demo
 ```
+
+Then navigate to the demo ([localhost:8000](http://localhost:8000)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client)
