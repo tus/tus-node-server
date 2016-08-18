@@ -81,7 +81,8 @@ app.all('/files/*', function(req, res) {
 app.listen(port, host);
 ```
 
-## Event Hooks
+## Features
+#### Events:
 
 Execute code when lifecycle events happen by adding event handlers to your server.
 
@@ -94,8 +95,6 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     console.log(`Upload complete for file ${event.file.id}`);
 });
 ```
-
-#### Events:
 
 - `EVENT_FILE_CREATED`: Fired when a `POST` request successfully creates a new file
 
@@ -119,7 +118,7 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     }
     ```
 
-- `EVENT_UPLOAD_COMPLETE`: Fired when a `PATCH` request finishes writing the file.
+- `EVENT_UPLOAD_COMPLETE`: Fired when a `PATCH` request finishes writing the file
 
     _Example payload:_
     ```
@@ -131,6 +130,19 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
         }
     }
     ```
+
+#### Custom `GET` handlers:
+Add custom `GET` handlers to suit your needs, similar to [Express routing](https://expressjs.com/en/guide/routing.html).
+```js
+const server = new Server();
+server.get('/uploads', (req, res) => {
+    // Read from your DataStore
+    fs.readdir(server.datastore.path, (err, files) => {
+        // Format the JSON response and send it
+    }
+});
+```
+
 
 ## Development
 
