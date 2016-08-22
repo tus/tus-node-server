@@ -143,6 +143,17 @@ server.get('/uploads', (req, res) => {
 });
 ```
 
+#### Custom file names:
+```js
+const fileNameFromUrl = (req) => {
+    return req.url.replace(/\//g, '-');
+}
+
+server.datastore = new tus.FileStore({
+    path: '/files',
+    namingFunction: fileNameFromUrl
+});
+```
 
 ## Development
 
