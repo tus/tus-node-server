@@ -40,7 +40,7 @@ describe('PostHandler', () => {
 
             handler.send(req, res)
                 .then(() => {
-                    assert.equal(hasHeader(res, { 'Location': 'http://localhost:3000/files/-files' }), true);
+                    assert.equal(hasHeader(res, { 'Location': '//localhost:3000/files/-files' }), true);
                     assert.equal(res.statusCode, 201);
                     return done();
                 })
