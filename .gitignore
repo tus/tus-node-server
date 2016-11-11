@@ -35,7 +35,7 @@ files/
 
 *.sublime-workspace
 
-# IDEA
+# IDEA / Webstorm
 .idea
 
 # Keyfile will be decrypted from keyfile.json.enc by travis
