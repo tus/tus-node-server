@@ -12,6 +12,6 @@ module.exports = {
     DataStore,
     FileStore,
     GCSDataStore,
-    MongoGridFSStore
+    MongoGridFSStore,
     EVENTS,
 };
