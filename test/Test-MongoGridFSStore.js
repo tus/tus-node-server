@@ -26,7 +26,7 @@ let grid_fs = null;
 
 const mongoURI = "mongodb://localhost/tus-unit-test";
 
-describe.only('MongoGridFSStore', () => {
+describe('MongoGridFSStore', () => {
     let server;
     let test_file_id;
     const files_created = [];
@@ -48,7 +48,7 @@ describe.only('MongoGridFSStore', () => {
     });
 
     after(() => {
-        // return grid_fs.drop();
+        return grid_fs.drop();
     });
 
     describe('constructor', () => {
