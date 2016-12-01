@@ -26,7 +26,7 @@ let grid_fs = null;
 
 const mongoURI = "mongodb://localhost/tus-unit-test";
 
-describe('MongoGridFSStore', () => {
+describe.only('MongoGridFSStore', () => {
     let server;
     let test_file_id;
     const files_created = [];
