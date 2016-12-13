@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "engines": {
-    "node": "4.4.4"
+    "node": "6.0"
   },
   "files": [
     "LICENSE",
