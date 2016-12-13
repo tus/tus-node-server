@@ -15,7 +15,7 @@ const EVENTS = require('../lib/constants').EVENTS;
 
 const STORE_PATH = '/files';
 const PROJECT_ID = 'vimeo-open-source';
-const KEYFILE = path.resolve(__dirname, 'keyfile.json');
+const KEYFILE = path.resolve(__dirname, '../keyfile.json');
 const BUCKET = 'tus-node-server';
 
 const TEST_FILE_SIZE = 960244;

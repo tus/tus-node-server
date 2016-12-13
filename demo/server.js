@@ -17,7 +17,7 @@ switch (data_store) {
         server.datastore = new GCSDataStore({
             path: '/files',
             projectId: 'vimeo-open-source',
-            keyFilename: path.resolve(__dirname, '../test/keyfile.json'),
+            keyFilename: path.resolve(__dirname, '../keyfile.json'),
             bucket: 'tus-node-server',
         });
         break;
