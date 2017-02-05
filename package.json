@@ -53,11 +53,14 @@
     "tus-js-client": "^1.1.4"
   },
   "dependencies": {
+    "chunking-streams": "0.0.8",
     "configstore": "^2.0.0",
     "crypto-rand": "0.0.2",
     "google-auto-auth": "^0.2.4",
     "google-cloud": "^0.38.3",
+    "mongodb": "^2.2.11",
     "object-assign": "^4.1.0",
-    "request": "^2.72.0"
+    "request": "^2.72.0",
+    "spark-md5": "^2.0.2"
   }
 }
