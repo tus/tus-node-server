@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -55,9 +55,11 @@
   "dependencies": {
     "configstore": "^2.0.0",
     "crypto-rand": "0.0.2",
-    "google-auto-auth": "^0.2.4",
-    "google-cloud": "^0.38.3",
+    "google-auto-auth": "^0.5.2",
+    "google-cloud": "^0.46.2",
+    "lodash": "^4.17.4",
     "object-assign": "^4.1.0",
-    "request": "^2.72.0"
+    "request": "^2.72.0",
+    "resolutejs": "https://github.com/hangar-technology/resolutejs#6fa4480"
   }
 }
