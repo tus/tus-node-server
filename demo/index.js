@@ -62,6 +62,7 @@ inputEl.addEventListener('change', function(e) {
         chunkSize: chunkSize,
         metadata: {
             filename: file.name,
+            contentType: file.type,
         },
         onError: function(error) {
             if (error.originalRequest) {

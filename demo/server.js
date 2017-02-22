@@ -6,6 +6,7 @@ const fs = require('fs');
 const Server = require('../index').Server;
 const FileStore = require('../index').FileStore;
 const GCSDataStore = require('../index').GCSDataStore;
+const GCSResumableStore = require('../index').GCSResumableStore;
 const EVENTS = require('../index').EVENTS;
 
 const server = new Server();
@@ -19,6 +20,14 @@ switch (data_store) {
             projectId: 'vimeo-open-source',
             keyFilename: path.resolve(__dirname, '../keyfile.json'),
             bucket: 'tus-node-server',
+        });
+        break;
+    case 'GCSResumableStore':
+        server.datastore = new GCSResumableStore({
+            path: '/files',
+            projectId: 'vimeo-open-source',
+            keyFilename: path.resolve(__dirname, '../keyfile-dev.json'),
+            bucket: 'console-uploads',
         });
         break;
 
@@ -57,7 +66,7 @@ server.get('/demo/index.js', writeFile);
 server.get('/node_modules/tus-js-client/dist/tus.js', writeFile);
 
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`);
+    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.filename} (content-type='${event.file.contentType}')`);
 });
 
 const host = '127.0.0.1';
