@@ -66,7 +66,7 @@ server.get('/demo/index.js', writeFile);
 server.get('/node_modules/tus-js-client/dist/tus.js', writeFile);
 
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.filename} (content-type='${event.file.contentType}')`);
+    console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id} (upload-metadata [base64] values ='${event.file.upload_metadata}')`);
 });
 
 const host = '127.0.0.1';
