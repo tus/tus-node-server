@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.2.4",
+  "version": "0.1.4-ht",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -36,7 +36,7 @@
     "test": "NODE_ENV=test mocha",
     "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "demo": "node demo/server.js",
-    "gcs_demo": "DATA_STORE=GCSDataStore node demo/server.js",
+    "gcs_demo": "DATA_STORE=GCSResumableStore node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
