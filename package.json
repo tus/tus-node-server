@@ -37,6 +37,7 @@
     "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "demo": "node demo/server.js",
     "gcs_demo": "DATA_STORE=GCSResumableStore node demo/server.js",
+    "debug_gcs_demo": "DATA_STORE=GCSResumableStore node debug demo/server.js",    
     "lint": "eslint ."
   },
   "devDependencies": {

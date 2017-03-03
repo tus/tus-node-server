@@ -17,15 +17,15 @@ switch (data_store) {
     case 'GCSDataStore':
         server.datastore = new GCSDataStore({
             path: '/files',
-            projectId: 'vimeo-open-source',
-            keyFilename: path.resolve(__dirname, '../keyfile.json'),
-            bucket: 'tus-node-server',
+            projectId: 'hangar-406b5',
+            keyFilename: path.resolve(__dirname, '../keyfile-dev.json'),
+            bucket: 'console-uploads',
         });
         break;
     case 'GCSResumableStore':
         server.datastore = new GCSResumableStore({
             path: '/files',
-            projectId: 'vimeo-open-source',
+            projectId: 'hangar-406b5',
             keyFilename: path.resolve(__dirname, '../keyfile-dev.json'),
             bucket: 'console-uploads',
         });
