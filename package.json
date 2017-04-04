@@ -61,6 +61,6 @@
     "lodash": "^4.17.4",
     "object-assign": "^4.1.0",
     "request": "^2.72.0",
-    "resolutejs": "https://github.com/hangar-technology/resolutejs#6fa4480"
+    "resolutejs": "https://github.com/abacaj/resolutejs#b2047fe"
   }
 }
