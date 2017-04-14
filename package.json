@@ -37,7 +37,7 @@
     "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "demo": "node demo/server.js",
     "gcs_demo": "DATA_STORE=GCSResumableStore node demo/server.js",
-    "debug_gcs_demo": "DATA_STORE=GCSResumableStore node debug demo/server.js",    
+    "debug_gcs_demo": "DATA_STORE=GCSResumableStore node debug demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
@@ -60,6 +60,7 @@
     "google-cloud": "^0.46.2",
     "lodash": "^4.17.4",
     "object-assign": "^4.1.0",
+    "redis": "^2.7.1",
     "request": "^2.72.0",
     "resolutejs": "https://github.com/abacaj/resolutejs#b2047fe"
   }
