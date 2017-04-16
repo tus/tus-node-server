@@ -54,7 +54,7 @@ inputEl.addEventListener('change', function(e) {
     stopBtnEl.classList.remove('disabled');
     var chunkSize = parseInt(chunkInputEl.value, 10);
     if (isNaN(chunkSize)) {
-        chunkSize = Infinity;
+        chunkSize = 104857600;
     }
 
     var options = {
@@ -62,6 +62,7 @@ inputEl.addEventListener('change', function(e) {
         chunkSize: chunkSize,
         metadata: {
             filename: file.name,
+            contentType: file.type,
         },
         onError: function(error) {
             if (error.originalRequest) {
