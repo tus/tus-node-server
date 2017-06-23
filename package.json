@@ -56,7 +56,7 @@
     "configstore": "^2.0.0",
     "crypto-rand": "0.0.2",
     "google-auto-auth": "^0.2.4",
-    "google-cloud": "^0.38.3",
+    "google-cloud": "^0.55.0",
     "object-assign": "^4.1.0",
     "request": "^2.72.0"
   }
