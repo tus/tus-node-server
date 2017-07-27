@@ -32,12 +32,17 @@ $ npm install tus-node-server
     });
     ```
 
-- **Amazon S3** ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
+- **Amazon S3**
     ```js
 
     server.datastore = new tus.S3Store({
         path: '/files',
         bucket: 'bucket-name',
+        accessKeyId: 'access-key-id',
+        secretAccessKey: 'secret-access-key',
+        region: 'eu-west-1',
+        part_size: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+        tmp_dir_prefix: 'tus-s3-store',
     });
     ```
 
