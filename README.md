@@ -41,8 +41,8 @@ $ npm install tus-node-server
         accessKeyId: 'access-key-id',
         secretAccessKey: 'secret-access-key',
         region: 'eu-west-1',
-        part_size: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
-        tmp_dir_prefix: 'tus-s3-store',
+        partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+        tmpDirPrefix: 'tus-s3-store',
     });
     ```
 
