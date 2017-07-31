@@ -81,7 +81,7 @@ app.all('/files/*', function(req, res) {
 app.listen(port, host);
 ```
 
-#### Use tus-node-server with [Koa](https://github.com/koajs/koa)
+#### Use tus-node-server with [Koa](https://github.com/koajs/koa) or plain Node server
 
 ```js
 const http = require('http');
