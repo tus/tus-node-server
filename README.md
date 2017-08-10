@@ -86,6 +86,37 @@ app.all('/files/*', function(req, res) {
 app.listen(port, host);
 ```
 
+#### Use tus-node-server with [Koa](https://github.com/koajs/koa) or plain Node server
+
+```js
+const http = require('http');
+const url = require('url');
+const Koa = require('koa')
+const tus = require('tus-node-server');
+const tusServer = new tus.Server();
+
+const app = new Koa();
+const appCallback = app.callback();
+const port = 8000;
+
+tusServer.datastore = new tus.FileStore({
+    path: '/files',
+});
+
+const server = http.createServer((req, res) => {
+    const urlPath = url.parse(req.url).pathname;
+
+    // handle any requests with the `/files/*` pattern
+    if (/^\/files\/.+/.test(urlPath.toLowerCase())) {
+        return tusServer.handle(req, res);
+    }
+
+    appCallback(req, res);
+});
+
+server.listen(port)
+```
+
 ## Features
 #### Events:
 
