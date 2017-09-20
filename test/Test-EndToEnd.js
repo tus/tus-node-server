@@ -85,6 +85,7 @@ describe('EndToEnd', () => {
                 .expect(201)
                 .end((err, res) => {
                     assert.equal('location' in res.headers, true);
+                    assert.equal(res.headers['location'].substring(0,7),'http://');
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
                     // Save the id for subsequent tests
                     file_to_delete = res.headers.location.split('/').pop();
@@ -101,6 +102,7 @@ describe('EndToEnd', () => {
                 .expect(201)
                 .end((err, res) => {
                     assert.equal('location' in res.headers, true);
+                    assert.equal(res.headers['location'].substring(0,7),'http://');
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
                     // Save the id for subsequent tests
                     file_id = res.headers.location.split('/').pop();
@@ -117,6 +119,7 @@ describe('EndToEnd', () => {
                 .expect(201)
                 .end((err, res) => {
                     assert.equal('location' in res.headers, true);
+                    assert.equal(res.headers['location'].substring(0,7),'http://');
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
                     // Save the id for subsequent tests
                     deferred_file_id = res.headers.location.split('/').pop();
