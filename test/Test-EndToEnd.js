@@ -15,7 +15,7 @@ const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
 const PROJECT_ID = 'vimeo-open-source';
-const KEYFILE = path.resolve(__dirname, 'keyfile.json');
+const KEYFILE = path.resolve(__dirname, '../keyfile.json');
 const BUCKET = 'tus-node-server';
 
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
