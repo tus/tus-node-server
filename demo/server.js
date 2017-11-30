@@ -60,6 +60,18 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`);
 });
 
+// // this is the express stile ;)
+// const express = require('express');
+// const app = express();
+// // Define routes to serve the demo html/js files.
+// app.get('/', writeFile);
+// app.get('/demo/index.js', writeFile);
+// app.get('/node_modules/tus-js-client/dist/tus.js', writeFile);
+//
+// const uploadApp = express();
+// uploadApp.all('*', server.handle.bind(server));
+// app.use('/uploads', uploadApp);
+
 const host = '127.0.0.1';
 const port = 8000;
 server.listen({ host, port }, () => {
