@@ -217,6 +217,10 @@ describe('EndToEnd', () => {
     });
 
     describe('GCSDataStore', () => {
+        if (process.env.TRAVIS_SECURE_ENV_VARS !== true) {
+            it.skip();
+        }
+
         let file_id;
         let deferred_file_id;
         const files_created = [];

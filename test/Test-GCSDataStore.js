@@ -38,6 +38,10 @@ const deleteFile = (file_name) => {
 };
 
 describe('GCSDataStore', () => {
+    if (process.env.TRAVIS_SECURE_ENV_VARS !== true) {
+        it.skip();
+    }
+
     let server;
     let test_file_id;
     const files_created = [];
