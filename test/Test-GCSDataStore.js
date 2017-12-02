@@ -38,7 +38,7 @@ const deleteFile = (file_name) => {
 };
 
 describe('GCSDataStore', () => {
-    if (process.env.TRAVIS_SECURE_ENV_VARS !== true) {
+    if (process.env.TRAVIS_SECURE_ENV_VARS !== 'true') {
         return;
     }
 
