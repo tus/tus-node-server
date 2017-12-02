@@ -218,7 +218,7 @@ describe('EndToEnd', () => {
 
     describe('GCSDataStore', () => {
         if (process.env.TRAVIS_SECURE_ENV_VARS !== true) {
-            it.skip();
+            return;
         }
 
         let file_id;
