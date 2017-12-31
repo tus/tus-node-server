@@ -42,6 +42,12 @@ describe('DataStore', () => {
         done();
     });
 
+    it('must have a remove method', (done) => {
+        datastore.should.have.property('remove');
+        datastore.remove();
+        done();
+    });
+
     it('must have a write method', (done) => {
         datastore.should.have.property('write');
         datastore.write();
