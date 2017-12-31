@@ -130,6 +130,16 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
         }
     }
     ```
+    
+- `EVENT_FILE_DELETED`: Fired when a `DELETE` request finishes deleting the file
+
+    _Example payload:_
+    ```
+    {
+        file_id: '7b26bf4d22cf7198d3b3706bf0379794'
+           
+    }
+    ```
 
 #### Custom `GET` handlers:
 Add custom `GET` handlers to suit your needs, similar to [Express routing](https://expressjs.com/en/guide/routing.html).
