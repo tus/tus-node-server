@@ -5,7 +5,9 @@ const request = require('supertest');
 const should = require('should');
 const assert = require('assert');
 const http = require('http');
+const fs = require('fs');
 const Server = require('../lib/Server');
+const FileStore = require('../lib/stores/FileStore');
 const DataStore = require('../lib/stores/DataStore');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 const EVENTS = require('../lib/constants').EVENTS;
@@ -16,6 +18,19 @@ const hasHeader = (res, header) => {
 };
 
 describe('Server', () => {
+
+    after(() => {
+        let d = 'files';
+        if (fs.existsSync(d)) {
+            fs.readdirSync(d).forEach(function(file) {
+                let C = d + '/' + file;
+                if (fs.statSync(C).isDirectory()) self(C);
+                else fs.unlinkSync(C)
+            });
+            fs.rmdirSync(d)
+        }
+    });
+
     describe('instantiation', () => {
         it('datastore setter must require a DataStore subclass', (done) => {
             assert.throws(() => {
@@ -35,6 +50,7 @@ describe('Server', () => {
             server.handlers.should.have.property('OPTIONS');
             server.handlers.should.have.property('POST');
             server.handlers.should.have.property('PATCH');
+            server.handlers.should.have.property('DELETE');
             done();
         });
     });
@@ -86,7 +102,7 @@ describe('Server', () => {
         let server;
         before(() => {
             server = new Server();
-            server.datastore = new DataStore({
+            server.datastore = new FileStore({
                 path: '/files',
             });
         });
@@ -141,6 +157,33 @@ describe('Server', () => {
               .expect(412, 'Invalid upload-metadata\n', done);
         });
 
+        it('DELETE should return 404 when file does not exist', (done) => {
+            request(server.listen())
+                .delete(server.datastore.path + "/123")
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(404, 'The file for this url was not found\n', done);
+        });
+
+        it('DELETE should return 404 on invalid paths', (done) => {
+            request(server.listen())
+                .delete("/this/is/wrong/123")
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(404, 'Invalid path name\n', done);
+        });
+
+        it('DELETE should return 204 on proper deletion', (done) => {
+            request(server.listen())
+                .post(server.datastore.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', 12345678)
+                .then((res)=>{
+                    request(server.listen())
+                        .delete(res.headers.location)
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .expect(204, done);
+                });
+        });
+
         it('should 404 other requests', (done) => {
             request(server.listen())
               .get('/')
@@ -172,7 +215,7 @@ describe('Server', () => {
         let server;
         beforeEach(() => {
             server = new Server();
-            server.datastore = new DataStore({
+            server.datastore = new FileStore({
                 path: '/files',
             });
         });
@@ -203,18 +246,45 @@ describe('Server', () => {
               .end();
         });
 
+        it('should fire when a file is deleted', (done) => {
+            server.on(EVENTS.EVENT_FILE_DELETED, (event) => {
+                event.should.have.property('file_id');
+                done();
+            });
+
+            request(server.listen())
+                .post(server.datastore.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', 12345678)
+                .then((res)=>{
+                    request(server.listen())
+                        .delete(res.headers.location)
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .end((err,res)=>{});
+                });
+        });
+
         it('should fire when an upload is finished', (done) => {
+
             server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
                 event.should.have.property('file');
                 done();
             });
 
+            const content = 'hey';
             request(server.listen())
-              .patch(`${server.datastore.path}/file`)
-              .set('Tus-Resumable', TUS_RESUMABLE)
-              .set('Upload-Offset', 0)
-              .set('Content-Type', 'application/offset+octet-stream')
-              .end();
+                .post(server.datastore.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', Buffer.byteLength(content, 'utf8'))
+                .then((res) => {
+                    request(server.listen())
+                        .patch(res.headers.location)
+                        .send(content)
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .set('Upload-Offset', 0)
+                        .set('Content-Type', 'application/offset+octet-stream')
+                        .end((err,res)=>{});
+                })
         });
     });
 });
