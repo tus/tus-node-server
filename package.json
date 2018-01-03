@@ -55,6 +55,7 @@
   "dependencies": {
     "configstore": "^3.1.1",
     "crypto-rand": "0.0.2",
+    "debug": "^3.1.0",
     "google-auto-auth": "^0.8.1",
     "google-cloud": "^0.57.0",
     "object-assign": "^4.1.1",
