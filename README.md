@@ -32,12 +32,17 @@ $ npm install tus-node-server
     });
     ```
 
-- **Amazon S3** ([_coming soon_](https://github.com/tus/tus-node-server/issues/12))
+- **Amazon S3**
     ```js
 
     server.datastore = new tus.S3Store({
         path: '/files',
         bucket: 'bucket-name',
+        accessKeyId: 'access-key-id',
+        secretAccessKey: 'secret-access-key',
+        region: 'eu-west-1',
+        partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+        tmpDirPrefix: 'tus-s3-store',
     });
     ```
 
@@ -79,6 +84,37 @@ const uploadApp = express();
 uploadApp.all('*', server.handle.bind(server));
 app.use('/uploads', uploadApp);
 app.listen(port, host);
+```
+
+#### Use tus-node-server with [Koa](https://github.com/koajs/koa) or plain Node server
+
+```js
+const http = require('http');
+const url = require('url');
+const Koa = require('koa')
+const tus = require('tus-node-server');
+const tusServer = new tus.Server();
+
+const app = new Koa();
+const appCallback = app.callback();
+const port = 8000;
+
+tusServer.datastore = new tus.FileStore({
+    path: '/files',
+});
+
+const server = http.createServer((req, res) => {
+    const urlPath = url.parse(req.url).pathname;
+
+    // handle any requests with the `/files/*` pattern
+    if (/^\/files\/.+/.test(urlPath.toLowerCase())) {
+        return tusServer.handle(req, res);
+    }
+
+    appCallback(req, res);
+});
+
+server.listen(port)
 ```
 
 ## Features
