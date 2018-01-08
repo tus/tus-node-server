@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.2.3",
+  "version": "0.2.8",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -50,17 +50,17 @@
     "mocha-lcov-reporter": "^1.0.0",
     "should": "^8.0.1",
     "supertest": "^1.1.0",
-    "tus-js-client": "^1.1.4"
+    "tus-js-client": "^1.4.5"
   },
   "dependencies": {
     "aws-sdk": "^2.91.0",
-    "configstore": "^2.0.0",
+    "configstore": "^3.1.1",
     "crypto-rand": "0.0.2",
     "debug": "^2.6.8",
-    "google-auto-auth": "^0.2.4",
-    "google-cloud": "^0.55.0",
+    "google-auto-auth": "^0.8.1",
+    "google-cloud": "^0.57.0",
     "mkdirp": "^0.5.1",
-    "object-assign": "^4.1.0",
+    "object-assign": "^4.1.1",
     "request": "^2.72.0"
   }
 }
