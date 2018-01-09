@@ -53,12 +53,12 @@
     "tus-js-client": "^1.4.5"
   },
   "dependencies": {
+    "@google-cloud/storage": "1.1.1",
     "aws-sdk": "^2.91.0",
     "configstore": "^3.1.1",
     "crypto-rand": "0.0.2",
     "debug": "^2.6.8",
     "google-auto-auth": "^0.8.1",
-    "google-cloud": "^0.57.0",
     "mkdirp": "^0.5.1",
     "object-assign": "^4.1.1",
     "request": "^2.72.0"
