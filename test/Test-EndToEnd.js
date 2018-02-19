@@ -10,7 +10,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const FileStore = require('../lib/stores/FileStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
-const gcloud = require('google-cloud');
+const storage = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
@@ -23,7 +23,7 @@ const TEST_FILE_SIZE = 960244;
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_METADATA = 'some data, for you';
 
-const gcs = gcloud.storage({
+const gcs = storage({
     projectId: PROJECT_ID,
     keyFilename: KEYFILE,
 });
