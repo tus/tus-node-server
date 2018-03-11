@@ -63,7 +63,6 @@ describe('EndToEnd', () => {
                 }
 
                 // clear the config
-                server.datastore.configstore.clear();
                 listener.close();
                 return done();
             });
