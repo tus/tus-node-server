@@ -142,6 +142,13 @@ describe('RequestValidator', () => {
         });
     });
 
+    describe('_invalidAuthorizationHeader', () => {
+        it('always validate ', (done) => {
+            assert.equal(RequestValidator._invalidAuthorizationHeader(), false);
+            done();
+        });
+    });
+
     describe('_invalidContentTypeHeader', () => {
         it('should validate octet-stream', (done) => {
             assert.equal(RequestValidator._invalidContentTypeHeader('application/offset+octet-stream'), false);
