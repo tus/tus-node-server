@@ -37,7 +37,6 @@ switch (data_store) {
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             region: process.env.AWS_REGION,
             partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
-            tmpDirPrefix: 'tus-s3-store',
         });
         break;
 
