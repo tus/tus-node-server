@@ -50,11 +50,11 @@
     "mocha-lcov-reporter": "^1.0.0",
     "should": "^8.0.1",
     "supertest": "^1.1.0",
-    "tus-js-client": "^1.4.5"
+    "tus-js-client": "^1.5.1"
   },
   "dependencies": {
     "@google-cloud/storage": "1.1.1",
-    "aws-sdk": "^2.91.0",
+    "aws-sdk": "^2.224.1",
     "configstore": "^3.1.1",
     "crypto-rand": "0.0.2",
     "debug": "^2.6.8",
