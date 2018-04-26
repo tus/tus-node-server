@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.2.8",
+  "version": "0.2.11",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -34,7 +34,7 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test mocha",
-    "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "demo": "node demo/server.js",
     "gcs_demo": "DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
@@ -47,7 +47,7 @@
     "eslint-plugin-promise": "^1.1.0",
     "istanbul": "^0.4.0",
     "mocha": "^2.3.3",
-    "mocha-lcov-reporter": "^1.0.0",
+    "nyc": "^11.6.0",
     "should": "^8.0.1",
     "supertest": "^1.1.0",
     "tus-js-client": "^1.5.1"
@@ -55,11 +55,11 @@
   "dependencies": {
     "@google-cloud/storage": "1.1.1",
     "aws-sdk": "^2.224.1",
-    "configstore": "^3.1.1",
+    "configstore": "^3.1.2",
     "crypto-rand": "0.0.2",
-    "debug": "^2.6.8",
-    "google-auto-auth": "^0.8.1",
+    "debug": "^3.1.0",
+    "google-auto-auth": "^0.8.2",
     "object-assign": "^4.1.1",
-    "request": "^2.72.0"
+    "request": "^2.85.0"
   }
 }
