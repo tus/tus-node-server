@@ -2,10 +2,12 @@
 
 const path = require('path');
 const fs = require('fs');
+const assert = require('assert');
 
 const Server = require('../index').Server;
 const FileStore = require('../index').FileStore;
 const GCSDataStore = require('../index').GCSDataStore;
+const S3Store = require('../index').S3Store;
 const EVENTS = require('../index').EVENTS;
 
 const server = new Server();
@@ -19,6 +21,22 @@ switch (data_store) {
             projectId: 'vimeo-open-source',
             keyFilename: path.resolve(__dirname, '../keyfile.json'),
             bucket: 'tus-node-server',
+        });
+        break;
+
+    case 'S3Store':
+        assert.ok(process.env.AWS_ACCESS_KEY_ID, 'environment variable `AWS_ACCESS_KEY_ID` must be set');
+        assert.ok(process.env.AWS_SECRET_ACCESS_KEY, 'environment variable `AWS_SECRET_ACCESS_KEY` must be set');
+        assert.ok(process.env.AWS_BUCKET, 'environment variable `AWS_BUCKET` must be set');
+        assert.ok(process.env.AWS_REGION, 'environment variable `AWS_REGION` must be set');
+
+        server.datastore = new S3Store({
+            path: '/files',
+            bucket: process.env.AWS_BUCKET,
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            region: process.env.AWS_REGION,
+            partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
         });
         break;
 
