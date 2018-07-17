@@ -59,7 +59,6 @@
     "crypto-rand": "0.0.2",
     "debug": "^3.1.0",
     "google-auto-auth": "^0.8.2",
-    "object-assign": "^4.1.1",
-    "request": "^2.85.0"
+    "object-assign": "^4.1.1"
   }
 }
