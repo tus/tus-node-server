@@ -53,7 +53,7 @@
     "tus-js-client": "^1.5.1"
   },
   "dependencies": {
-    "@google-cloud/storage": "1.1.1",
+    "@google-cloud/storage": "1.7.0",
     "aws-sdk": "^2.224.1",
     "configstore": "^3.1.2",
     "crypto-rand": "0.0.2",
