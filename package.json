@@ -57,7 +57,6 @@
     "aws-sdk": "^2.224.1",
     "configstore": "^3.1.2",
     "crypto-rand": "0.0.2",
-    "debug": "^3.1.0",
-    "object-assign": "^4.1.1"
+    "debug": "^3.1.0"
   }
 }
