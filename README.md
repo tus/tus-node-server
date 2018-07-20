@@ -51,7 +51,7 @@ $ npm install tus-node-server
 #### Use the [tus-node-deploy](https://hub.docker.com/r/bhstahl/tus-node-deploy/) Docker image
 
 ```sh
-$ docker run -p 49160:8080 -d bhstahl/tus-node-deploy
+$ docker run -p 1080:8080 -d bhstahl/tus-node-deploy
 ```
 
 #### Build a standalone server yourself
@@ -64,7 +64,7 @@ server.datastore = new tus.FileStore({
 });
 
 const host = '127.0.0.1';
-const port = 8000;
+const port = 1080;
 server.listen({ host, port }, () => {
     console.log(`[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port}`);
 });
@@ -79,10 +79,13 @@ server.datastore = new tus.FileStore({
     path: '/files'
 });
 
-var app = express();
+const app = express();
 const uploadApp = express();
 uploadApp.all('*', server.handle.bind(server));
 app.use('/uploads', uploadApp);
+
+const host = '127.0.0.1';
+const port = 1080;
 app.listen(port, host);
 ```
 
@@ -97,7 +100,7 @@ const tusServer = new tus.Server();
 
 const app = new Koa();
 const appCallback = app.callback();
-const port = 8000;
+const port = 1080;
 
 tusServer.datastore = new tus.FileStore({
     path: '/files',
@@ -150,7 +153,7 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     _Example payload:_
     ```
     {
-        url: 'http://localhost:8000/files/7b26bf4d22cf7198d3b3706bf0379794'
+        url: 'http://localhost:1080/files/7b26bf4d22cf7198d3b3706bf0379794'
     }
     ```
 
@@ -203,4 +206,4 @@ Or start up the demo server using Google Cloud Storage
 $ npm run gcs_demo
 ```
 
-Then navigate to the demo ([localhost:8000](http://localhost:8000)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client)
+Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client)
