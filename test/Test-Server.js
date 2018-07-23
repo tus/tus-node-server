@@ -141,6 +141,20 @@ describe('Server', () => {
               .expect(412, 'Invalid upload-metadata\n', done);
         });
 
+        it('POST should ignore invalid Content-Type header', (done) => {
+            request(server.listen())
+              .post(server.datastore.path)
+              .set('Tus-Resumable', TUS_RESUMABLE)
+              .set('Upload-Length', 300)
+              .set('Upload-Metadata', 'foo aGVsbG8=, bar d29ynGQ=')
+              .set('Content-Type', 'application/false')
+              .expect(201, {}, done)
+              .end((err, res) => {
+                  res.headers.should.have.property('location');
+                  done();
+              });
+        });
+
         it('should 404 other requests', (done) => {
             request(server.listen())
               .get('/')

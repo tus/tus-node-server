@@ -196,6 +196,7 @@ describe('GCSDataStore', () => {
         });
 
         it('should resolve existing files with the metadata', () => {
+            // TODO: upload this file to the bucket first
             return server.datastore.getOffset(FILE_ALREADY_IN_BUCKET)
                     .should.be.fulfilledWith({
                         size: TEST_FILE_SIZE,
