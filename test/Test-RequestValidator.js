@@ -81,7 +81,7 @@ describe('RequestValidator', () => {
 
         it('should fail on non comma separated list', (done) => {
             assert.equal(RequestValidator._invalidUploadMetadataHeader('hello'), true);
-            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello world, tusrules'), true);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello world, tusrules'), false);
             assert.equal(RequestValidator._invalidUploadMetadataHeader(''), true);
             done();
         });
