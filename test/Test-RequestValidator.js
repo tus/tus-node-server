@@ -79,10 +79,16 @@ describe('RequestValidator', () => {
             done();
         });
 
+        it('should validate keys without a value', (done) => {
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello'), false);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello world, tusrules'), false);
+            done();
+        });
+
         it('should fail on non comma separated list', (done) => {
-            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello'), true);
-            assert.equal(RequestValidator._invalidUploadMetadataHeader('hello world, tusrules'), true);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('too-many   spaces'), true);
             assert.equal(RequestValidator._invalidUploadMetadataHeader(''), true);
+            assert.equal(RequestValidator._invalidUploadMetadataHeader('  \t\n'), true);
             done();
         });
     });
