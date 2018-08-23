@@ -41,10 +41,16 @@ describe('DataStore', () => {
         done();
     });
 
-    it('must have a create method', (done) => {
+    it('must have a create method', () => {
         datastore.should.have.property('create');
-        datastore.create();
-        done();
+        const req = {
+            headers: {
+                'upload-length': 42,
+                'upload-defer-length': 0,
+                'upload-metadata': 'type YXBwbGljYXRpb24vcGRm,name bXktZmlsZS5wZGY=,filetype YXBwbGljYXRpb24vcGRm,filename bXktZmlsZS5wZGY='
+            }
+        };
+        return datastore.create(req);
     });
 
     it('must have a write method', (done) => {
@@ -53,9 +59,34 @@ describe('DataStore', () => {
         done();
     });
 
-    it('must have a getOffset method', (done) => {
+    it('must have a getOffset method', () => {
         datastore.should.have.property('getOffset');
-        datastore.getOffset();
+        const id = 42;
+        return datastore.getOffset(id);
+    });
+
+    it('must have a _parseMetadataString method', (done) => {
+        datastore.should.have.property('_parseMetadataString');
+        const uploadMetadata = 'type YXBwbGljYXRpb24vcGRm,name bXktZmlsZS5wZGY=,filetype YXBwbGljYXRpb24vcGRm,filename bXktZmlsZS5wZGY='
+        const parsed = datastore._parseMetadataString(uploadMetadata);
+        parsed.should.deepEqual({
+            "filename": {
+                "decoded": "my-file.pdf",
+                "encoded": "bXktZmlsZS5wZGY="
+            },
+            "filetype": {
+                "decoded": "application/pdf",
+                "encoded": "YXBwbGljYXRpb24vcGRm"
+            },
+            "name": {
+                "decoded": "my-file.pdf",
+                "encoded": "bXktZmlsZS5wZGY="
+            },
+            "type": {
+                "decoded": "application/pdf",
+                "encoded": "YXBwbGljYXRpb24vcGRm"
+            }
+        })
         done();
     });
 });
