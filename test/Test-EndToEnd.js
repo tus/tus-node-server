@@ -217,8 +217,6 @@ describe('EndToEnd', () => {
     });
 
     describe('FileStore with relativeLocation', () => {
-        let file_id;
-        let deferred_file_id;
         before(() => {
             server = new Server();
             server.datastore = new FileStore({
@@ -244,7 +242,7 @@ describe('EndToEnd', () => {
                     // the location header is relative to the store path
                     assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, false);
                     // Save the id for subsequent tests
-                    file_id = res.headers.location.split('/').pop();
+                    res.headers.location.split('/').pop();
                     done();
                 });
             });
