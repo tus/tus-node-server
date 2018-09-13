@@ -256,7 +256,7 @@ describe('EndToEnd', () => {
                     // the location header is not absolute
                     assert.equal(res.headers.location.indexOf("//") === -1, true);
                     // and contains the store path
-                    assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, false);
+                    assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, true);
                     done();
                 });
             });
