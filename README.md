@@ -79,6 +79,7 @@ server.datastore = new tus.FileStore({
     path: '/files'
 });
 
+const express = require('express');
 const app = express();
 const uploadApp = express();
 uploadApp.all('*', server.handle.bind(server));
