@@ -68,7 +68,7 @@ describe('DataStore', () => {
     it('must have a _parseMetadataString method', (done) => {
         datastore.should.have.property('_parseMetadataString');
         const uploadMetadata = 'type YXBwbGljYXRpb24vcGRm,name bXktZmlsZS5wZGY=,filetype YXBwbGljYXRpb24vcGRm,filename bXktZmlsZS5wZGY='
-        const parsed = datastore._parseMetadataString(uploadMetadata);
+        let parsed = datastore._parseMetadataString(uploadMetadata);
         parsed.should.deepEqual({
             "filename": {
                 "decoded": "my-file.pdf",
@@ -87,6 +87,8 @@ describe('DataStore', () => {
                 "encoded": "YXBwbGljYXRpb24vcGRm"
             }
         })
+        parsed = datastore._parseMetadataString(null);
+        parsed.should.deepEqual({})
         done();
     });
 });
