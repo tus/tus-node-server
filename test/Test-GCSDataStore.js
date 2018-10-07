@@ -128,9 +128,11 @@ describe('GCSDataStore', () => {
         });
 
         it('should create a file', (done) => {
+            const uploadMetadata = 'type YXBwbGljYXRpb24vcGRm,name bXktZmlsZS5wZGY=,filetype YXBwbGljYXRpb24vcGRm,filename bXktZmlsZS5wZGY='
             const req = {
                 headers: {
                     'upload-length': TEST_FILE_SIZE,
+                    'upload-metadata': uploadMetadata,
                 },
             };
             server.datastore.create(req)
@@ -144,6 +146,7 @@ describe('GCSDataStore', () => {
 
 
         it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
+          const uploadMetadata = 'type YXBwbGljYXRpb24vcGRm,name bXktZmlsZS5wZGY=,filetype YXBwbGljYXRpb24vcGRm,filename bXktZmlsZS5wZGY='
             server.datastore.on(EVENTS.EVENT_FILE_CREATED, (event) => {
                 event.should.have.property('file');
                 assert.equal(event.file instanceof File, true);
@@ -153,6 +156,7 @@ describe('GCSDataStore', () => {
             const req = {
                 headers: {
                     'upload-length': TEST_FILE_SIZE,
+                  'upload-metadata': uploadMetadata,
                 },
             };
             server.datastore.create(req)
@@ -199,8 +203,7 @@ describe('GCSDataStore', () => {
             // TODO: upload this file to the bucket first
             return server.datastore.getOffset(FILE_ALREADY_IN_BUCKET)
                     .should.be.fulfilledWith({
-                        size: TEST_FILE_SIZE,
-                        upload_length: TEST_FILE_SIZE,
+                        size: TEST_FILE_SIZE
                     });
         });
     });
