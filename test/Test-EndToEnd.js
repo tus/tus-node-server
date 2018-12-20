@@ -201,7 +201,13 @@ describe('EndToEnd', () => {
                     done();
                 });
 
-                read_stream.pipe(write_stream);
+                // The pipe method must not call the end function or otherwise
+                // we cannot inject the callback into the end function for write_stream
+                // which is needed for supertest.
+                read_stream.pipe(write_stream, { end: false });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
             });
         });
 

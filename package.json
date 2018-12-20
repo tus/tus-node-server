@@ -46,7 +46,7 @@
     "eslint": "^2.9.0",
     "eslint-plugin-promise": "^1.1.0",
     "istanbul": "^0.4.0",
-    "mocha": "^4.1.0",
+    "mocha": "^5.2.0",
     "nyc": "^11.6.0",
     "should": "^8.0.1",
     "supertest": "^1.1.0",
