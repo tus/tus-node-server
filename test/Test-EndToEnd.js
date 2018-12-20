@@ -149,8 +149,8 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -159,8 +159,8 @@ describe('EndToEnd', () => {
                 agent.head(`${STORE_PATH}/${deferred_file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Defer-Length', 1)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Defer-Length', '1')
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -217,8 +217,8 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', TEST_FILE_SIZE)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', `${TEST_FILE_SIZE}`)
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -246,7 +246,7 @@ describe('EndToEnd', () => {
             it('should create a file and respond with its _relative_ location', (done) => {
                 agent.post(STORE_PATH)
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .set('Upload-Length', TEST_FILE_SIZE)
+                .set('Upload-Length', `${TEST_FILE_SIZE}`)
                 .set('Upload-Metadata', TEST_METADATA)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(201)
@@ -371,8 +371,8 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -381,8 +381,8 @@ describe('EndToEnd', () => {
                 agent.head(`${STORE_PATH}/${deferred_file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Defer-Length', 1)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Defer-Length', '1')
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -444,8 +444,8 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', TEST_FILE_SIZE)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', `${TEST_FILE_SIZE}`)
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });

@@ -49,7 +49,7 @@
     "mocha": "^5.2.0",
     "nyc": "^11.6.0",
     "should": "^8.0.1",
-    "supertest": "^1.1.0",
+    "supertest": "^2.0.1",
     "tus-js-client": "^1.5.1"
   },
   "dependencies": {

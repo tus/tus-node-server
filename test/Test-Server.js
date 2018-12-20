@@ -115,14 +115,13 @@ describe('Server', () => {
         it('OPTIONS should return configuration', (done) => {
             request(listener)
             .options('/')
-            .expect(204, '', done)
-            .end((err, res) => {
+            .expect(204, '', (err, res) => {
                 res.headers.should.have.property('access-control-allow-methods');
                 res.headers.should.have.property('access-control-allow-headers');
                 res.headers.should.have.property('access-control-max-age');
                 res.headers.should.have.property('tus-resumable');
                 res.headers['tus-resumable'].should.equal(TUS_RESUMABLE);
-                done();
+                done(err);
             });
         });
 
@@ -130,7 +129,7 @@ describe('Server', () => {
             request(listener)
               .head('/')
               .set('Tus-Resumable', TUS_RESUMABLE)
-              .expect(404, '', done);
+              .expect(404, {}, done);
         });
 
         it('POST should require Upload-Length header', (done) => {
@@ -163,10 +162,9 @@ describe('Server', () => {
               .set('Upload-Length', 300)
               .set('Upload-Metadata', 'foo aGVsbG8=, bar d29ynGQ=')
               .set('Content-Type', 'application/false')
-              .expect(201, {}, done)
-              .end((err, res) => {
+              .expect(201, {}, (err, res) => {
                   res.headers.should.have.property('location');
-                  done();
+                  done(err);
               });
         });
 
