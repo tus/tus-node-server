@@ -40,6 +40,7 @@ const deleteFile = (file_name) => {
 
 describe('EndToEnd', () => {
     let server;
+    let listener;
     let agent;
     let file_to_delete;
     describe('FileStore', () => {
@@ -50,7 +51,8 @@ describe('EndToEnd', () => {
             server.datastore = new FileStore({
                 path: STORE_PATH,
             });
-            agent = request.agent(server.listen());
+            listener = server.listen();
+            agent = request.agent(listener);
         });
 
         after((done) => {
@@ -62,6 +64,7 @@ describe('EndToEnd', () => {
 
                 // clear the config
                 server.datastore.configstore.clear();
+                listener.close();
                 return done();
             });
         });
@@ -224,8 +227,13 @@ describe('EndToEnd', () => {
                 // configure the store to return relative path in Location Header
                 relativeLocation: true
             });
-            agent = request.agent(server.listen());
+            listener = server.listen();
+            agent = request.agent(listener);
         });
+
+        after(() => {
+            listener.close();
+        })
 
         describe('POST', () => {
 
@@ -263,7 +271,8 @@ describe('EndToEnd', () => {
                 keyFilename: KEYFILE,
                 bucket: BUCKET,
             });
-            agent = request.agent(server.listen());
+            listener = server.listen();
+            agent = request.agent(listener);
         });
 
         after((done) => {
@@ -272,6 +281,8 @@ describe('EndToEnd', () => {
             Promise.all(deletions).then(() => {
                 return done();
             }).catch(done);
+
+            listener.close();
         });
 
         describe('HEAD', () => {

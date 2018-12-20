@@ -50,12 +50,14 @@ describe('Server', () => {
         it('should create an instance of http.Server', (done) => {
             const new_server = server.listen();
             assert.equal(new_server instanceof http.Server, true);
+            new_server.close();
             done();
         });
     });
 
     describe('get', () => {
         let server;
+        let listener;
         before(() => {
             server = new Server();
             server.datastore = new DataStore({
@@ -67,16 +69,22 @@ describe('Server', () => {
                 res.write('Hello world!\n');
                 res.end();
             });
+
+            listener = server.listen();
         });
 
+        after(() => {
+          listener.close();
+        })
+
         it('should respond to user implemented GET requests', (done) => {
-            request(server.listen())
+            request(listener)
               .get('/some_url')
               .expect(200, 'Hello world!\n', done);
         });
 
         it('should 404 non-user implemented GET requests', (done) => {
-            request(server.listen())
+            request(listener)
               .get('/not_here')
               .expect(404, 'Not found\n', done);
         });
@@ -84,21 +92,28 @@ describe('Server', () => {
 
     describe('handle', () => {
         let server;
+        let listener;
         before(() => {
             server = new Server();
             server.datastore = new DataStore({
                 path: '/files',
             });
+
+            listener = server.listen();
         });
 
+        after(() => {
+          listener.close();
+        })
+
         it('should 412 !OPTIONS requests without the Tus header', (done) => {
-            request(server.listen())
+            request(listener)
               .post('/')
               .expect(412, 'Tus-Resumable Required\n', done);
         });
 
         it('OPTIONS should return configuration', (done) => {
-            request(server.listen())
+            request(listener)
             .options('/')
             .expect(204, '', done)
             .end((err, res) => {
@@ -112,21 +127,21 @@ describe('Server', () => {
         });
 
         it('HEAD should 404 non files', (done) => {
-            request(server.listen())
+            request(listener)
               .head('/')
               .set('Tus-Resumable', TUS_RESUMABLE)
               .expect(404, '', done);
         });
 
         it('POST should require Upload-Length header', (done) => {
-            request(server.listen())
+            request(listener)
               .post(server.datastore.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .expect(412, {}, done);
         });
 
         it('POST should require non negative Upload-Length number', (done) => {
-            request(server.listen())
+            request(listener)
               .post(server.datastore.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', -3)
@@ -134,7 +149,7 @@ describe('Server', () => {
         });
 
         it('POST should validate the metadata header', (done) => {
-            request(server.listen())
+            request(listener)
               .post(server.datastore.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Metadata', '')
@@ -142,7 +157,7 @@ describe('Server', () => {
         });
 
         it('POST should ignore invalid Content-Type header', (done) => {
-            request(server.listen())
+            request(listener)
               .post(server.datastore.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', 300)
@@ -156,7 +171,7 @@ describe('Server', () => {
         });
 
         it('should 404 other requests', (done) => {
-            request(server.listen())
+            request(listener)
               .get('/')
               .set('Tus-Resumable', TUS_RESUMABLE)
               .expect(404, 'Not found\n', done);
@@ -184,12 +199,19 @@ describe('Server', () => {
 
     describe('hooks', () => {
         let server;
+        let listener;
         beforeEach(() => {
             server = new Server();
             server.datastore = new DataStore({
                 path: '/files',
             });
+
+            listener = server.listen();
         });
+
+        afterEach(() => {
+          listener.close();
+        })
 
         it('should fire when an endpoint is created', (done) => {
             server.on(EVENTS.EVENT_ENDPOINT_CREATED, (event) => {
@@ -197,11 +219,11 @@ describe('Server', () => {
                 done();
             });
 
-            request(server.listen())
+            request(listener)
               .post(server.datastore.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', 12345678)
-              .end();
+              .end((err) => { if(err) done(err) });
         });
 
         it('should fire when a file is created', (done) => {
@@ -210,11 +232,11 @@ describe('Server', () => {
                 done();
             });
 
-            request(server.listen())
+            request(listener)
               .post(server.datastore.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', 12345678)
-              .end();
+              .end((err) => { if(err) done(err) });
         });
 
         it('should fire when an upload is finished', (done) => {
@@ -223,12 +245,12 @@ describe('Server', () => {
                 done();
             });
 
-            request(server.listen())
+            request(listener)
               .patch(`${server.datastore.path}/file`)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Offset', 0)
               .set('Content-Type', 'application/offset+octet-stream')
-              .end();
+              .end((err) => { if(err) done(err) });
         });
     });
 });
