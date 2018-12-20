@@ -43,19 +43,19 @@ describe('DataStore', () => {
 
     it('must have a create method', (done) => {
         datastore.should.have.property('create');
-        datastore.create();
+        datastore.create.should.be.type('function');
         done();
     });
 
     it('must have a write method', (done) => {
         datastore.should.have.property('write');
-        datastore.write();
+        datastore.write.should.be.type('function');
         done();
     });
 
     it('must have a getOffset method', (done) => {
         datastore.should.have.property('getOffset');
-        datastore.getOffset();
+        datastore.getOffset.should.be.type('function');
         done();
     });
 });
