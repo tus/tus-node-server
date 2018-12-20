@@ -42,7 +42,7 @@
   "devDependencies": {
     "@vimeo/eslint-config-player": "^4.0.1",
     "babel-eslint": "^6.0.4",
-    "coveralls": "^2.11.4",
+    "coveralls": "^3.0.2",
     "eslint": "^2.9.0",
     "eslint-plugin-promise": "^1.1.0",
     "istanbul": "^0.4.0",
