@@ -403,26 +403,25 @@ describe('EndToEnd', () => {
                     assert.equal(res.statusCode, 204);
                     assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
                     assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
-                    done();
+
+                    bucket.file(file_id).getMetadata().then((result) => {
+                        const metadata = result[0];
+                        assert.equal(metadata.size, `${TEST_FILE_SIZE}`);
+                        done();
+                    }).catch(done);
                 });
 
-                read_stream.pipe(write_stream);
+                // The pipe method must not call the end function or otherwise
+                // we cannot inject the callback into the end function for write_stream
+                // which is needed for supertest.
+                read_stream.pipe(write_stream, { end: false });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
             });
         });
 
         describe('HEAD', () => {
-            // mocha cant use arrow functions for setting timeout
-            before(function(done) {
-                this.timeout(0);
-
-                // GCS need a few seconds before it can show the changes
-                const TIMEOUT = 5000;
-                console.log(`Pausing for ${TIMEOUT / 1000} seconds while GCS updates...`);
-                setTimeout(() => {
-                    done();
-                }, TIMEOUT);
-            });
-
             it('should return the ending offset of the uploaded file', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
