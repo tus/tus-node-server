@@ -72,10 +72,10 @@ describe('PatchHandler', () => {
                 'content-type': 'application/offset+octet-stream',
             };
             req.url = `${path}/1234`;
-            return handler.send(req, res).should.be.a.Promise();
+            handler.send(req, res).should.be.a.Promise();
         });
 
-        it('must 409 if the offset does not match', (done) => {
+        it('must 409 if the offset does not match', () => {
             req.headers = {
                 'upload-offset': 10,
                 'content-type': 'application/offset+octet-stream',
@@ -85,13 +85,10 @@ describe('PatchHandler', () => {
             return handler.send(req, res)
                 .then(() => {
                     assert.equal(res.statusCode, 409);
-                    return;
-                })
-                .then(done)
-                .catch(done);
+                });
         });
 
-        it('must acknowledge successful PATCH requests with the 204', (done) => {
+        it('must acknowledge successful PATCH requests with the 204', () => {
             req.headers = {
                 'upload-offset': 0,
                 'content-type': 'application/offset+octet-stream',
@@ -102,10 +99,7 @@ describe('PatchHandler', () => {
                 .then(() => {
                     assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
                     assert.equal(res.statusCode, 204);
-                    return;
-                })
-                .then(done)
-                .catch(done);
+                });
         });
     });
 
