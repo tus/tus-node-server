@@ -40,6 +40,7 @@ const deleteFile = (file_name) => {
 
 describe('EndToEnd', () => {
     let server;
+    let listener;
     let agent;
     let file_to_delete;
     describe('FileStore', () => {
@@ -50,7 +51,8 @@ describe('EndToEnd', () => {
             server.datastore = new FileStore({
                 path: STORE_PATH,
             });
-            agent = request.agent(server.listen());
+            listener = server.listen();
+            agent = request.agent(listener);
         });
 
         after((done) => {
@@ -62,6 +64,7 @@ describe('EndToEnd', () => {
 
                 // clear the config
                 server.datastore.configstore.clear();
+                listener.close();
                 return done();
             });
         });
@@ -146,8 +149,8 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -156,8 +159,8 @@ describe('EndToEnd', () => {
                 agent.head(`${STORE_PATH}/${deferred_file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Defer-Length', 1)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Defer-Length', '1')
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -198,7 +201,13 @@ describe('EndToEnd', () => {
                     done();
                 });
 
-                read_stream.pipe(write_stream);
+                // The pipe method must not call the end function or otherwise
+                // we cannot inject the callback into the end function for write_stream
+                // which is needed for supertest.
+                read_stream.pipe(write_stream, { end: false });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
             });
         });
 
@@ -208,10 +217,46 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', TEST_FILE_SIZE)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', `${TEST_FILE_SIZE}`)
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
+            });
+        });
+    });
+
+    describe('FileStore with relativeLocation', () => {
+        before(() => {
+            server = new Server();
+            server.datastore = new FileStore({
+                path: STORE_PATH,
+                // configure the store to return relative path in Location Header
+                relativeLocation: true
+            });
+            listener = server.listen();
+            agent = request.agent(listener);
+        });
+
+        after(() => {
+            listener.close();
+        })
+
+        describe('POST', () => {
+
+            it('should create a file and respond with its _relative_ location', (done) => {
+                agent.post(STORE_PATH)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', `${TEST_FILE_SIZE}`)
+                .set('Upload-Metadata', TEST_METADATA)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(201)
+                .end((err, res) => {
+                    assert.equal('location' in res.headers, true);
+                    assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
+                    // the location header is relative to the store path
+                    assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, false);
+                    done();
+                });
             });
         });
     });
@@ -232,7 +277,8 @@ describe('EndToEnd', () => {
                 keyFilename: KEYFILE,
                 bucket: BUCKET,
             });
-            agent = request.agent(server.listen());
+            listener = server.listen();
+            agent = request.agent(listener);
         });
 
         after((done) => {
@@ -241,6 +287,8 @@ describe('EndToEnd', () => {
             Promise.all(deletions).then(() => {
                 return done();
             }).catch(done);
+
+            listener.close();
         });
 
         describe('HEAD', () => {
@@ -323,8 +371,8 @@ describe('EndToEnd', () => {
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -333,8 +381,8 @@ describe('EndToEnd', () => {
                 agent.head(`${STORE_PATH}/${deferred_file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
-                .expect('Upload-Offset', 0)
-                .expect('Upload-Defer-Length', 1)
+                .expect('Upload-Offset', '0')
+                .expect('Upload-Defer-Length', '1')
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
@@ -372,33 +420,32 @@ describe('EndToEnd', () => {
                     assert.equal(res.statusCode, 204);
                     assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
                     assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
-                    done();
+
+                    bucket.file(file_id).getMetadata().then((result) => {
+                        const metadata = result[0];
+                        assert.equal(metadata.size, `${TEST_FILE_SIZE}`);
+                        done();
+                    }).catch(done);
                 });
 
-                read_stream.pipe(write_stream);
+                // The pipe method must not call the end function or otherwise
+                // we cannot inject the callback into the end function for write_stream
+                // which is needed for supertest.
+                read_stream.pipe(write_stream, { end: false });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
             });
         });
 
         describe('HEAD', () => {
-            // mocha cant use arrow functions for setting timeout
-            before(function(done) {
-                this.timeout(0);
-
-                // GCS need a few seconds before it can show the changes
-                const TIMEOUT = 5000;
-                console.log(`Pausing for ${TIMEOUT / 1000} seconds while GCS updates...`);
-                setTimeout(() => {
-                    done();
-                }, TIMEOUT);
-            });
-
             it('should return the ending offset of the uploaded file', (done) => {
                 agent.head(`${STORE_PATH}/${file_id}`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(200)
                 .expect('Upload-Metadata', TEST_METADATA)
-                .expect('Upload-Offset', TEST_FILE_SIZE)
-                .expect('Upload-Length', TEST_FILE_SIZE)
+                .expect('Upload-Offset', `${TEST_FILE_SIZE}`)
+                .expect('Upload-Length', `${TEST_FILE_SIZE}`)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
                 .end(done);
             });
