@@ -253,8 +253,10 @@ describe('EndToEnd', () => {
                 .end((err, res) => {
                     assert.equal('location' in res.headers, true);
                     assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE);
-                    // the location header is relative to the store path
-                    assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, false);
+                    // the location header is not absolute
+                    assert.equal(res.headers.location.indexOf("//") === -1, true);
+                    // and contains the store path
+                    assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, true);
                     done();
                 });
             });
