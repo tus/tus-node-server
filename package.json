@@ -33,21 +33,24 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --timeout 5000",
+    "test": "cross-env NODE_ENV=test mocha --timeout 5000",
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "demo": "node demo/server.js",
-    "gcs_demo": "DATA_STORE=GCSDataStore node demo/server.js",
+    "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
     "@vimeo/eslint-config-player": "^4.0.1",
     "babel-eslint": "^6.0.4",
     "coveralls": "^3.0.2",
+    "cross-env": "^5.2.0",
     "eslint": "^2.9.0",
     "eslint-plugin-promise": "^1.1.0",
     "istanbul": "^0.4.0",
     "mocha": "^5.2.0",
+    "node-mocks-http": "^1.7.3",
     "nyc": "^13.1.0",
+    "rimraf": "^2.6.3",
     "should": "^8.0.1",
     "supertest": "^2.0.1",
     "tus-js-client": "^1.5.1"

@@ -1,7 +1,7 @@
 /* eslint-env node, mocha */
 
 'use strict';
-const should = require('should');
+const rimraf = require('rimraf');
 const assert = require('assert');
 const request = require('supertest');
 const exec = require('child_process').exec;
@@ -57,7 +57,7 @@ describe('EndToEnd', () => {
 
         after((done) => {
             // Remove the files directory
-            exec(`rm -r ${FILES_DIRECTORY}`, (err) => {
+            rimraf(FILES_DIRECTORY, (err) => {
                 if (err) {
                     return done(err);
                 }
@@ -131,7 +131,7 @@ describe('EndToEnd', () => {
         describe('HEAD', () => {
             before((done) => {
                 // Remove the file to delete for 410 Gone test
-                exec(`rm ${FILES_DIRECTORY}/${file_to_delete}`, () => {
+                rimraf(FILES_DIRECTORY + '/' + file_to_delete, () => {
                     return done();
                 });
             });
