@@ -9,16 +9,13 @@
         "esnext": true
     },
     "parser": "babel-eslint",
-    "ecmaFeatures": {
-        "generators": false,
-        "modules": true
-    },
     "globals": {
         "console": false
     },
     "rules": {
         "camelcase": 0,
         "comma-dangle": [1, "always-multiline"],
+        "max-nested-callbacks": ["error", 4],
         "max-params": ["error", 7],
         "complexity": ["error", 14],
         "prefer-rest-params": 0,
