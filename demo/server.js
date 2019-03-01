@@ -53,15 +53,25 @@ switch (data_store) {
  * @param  {object} res http.ServerResponse
  */
 const writeFile = (req, res) => {
-    const filename = req.url === '/' ? 'demo/index.html' : req.url;
-    const filepath = path.join(process.cwd(), filename);
-    fs.readFile(filepath, 'binary', (err, file) => {
+    // Determine file to serve
+    let filename = req.url;
+    if (filename == '/') {
+        filename = '/index.html';
+    }
+    if (!filename.startsWith('/dist/')) {
+        filename = '/demos/browser' + filename;
+    }
+    filename = path.join(process.cwd(), '/node_modules/tus-js-client', filename);
+    fs.readFile(filename, 'binary', (err, file) => {
         if (err) {
             res.writeHead(500, { 'Content-Type': 'text/plain' });
             res.write(err);
             res.end();
             return;
         }
+
+        // Update demo URL to point to our local server
+        file = file.replace('https://master.tus.io/files/', `http://${host}:${port}/files/`)
 
         res.writeHead(200);
         res.write(file);
@@ -71,8 +81,15 @@ const writeFile = (req, res) => {
 
 // Define routes to serve the demo html/js files.
 server.get('/', writeFile);
-server.get('/demo/index.js', writeFile);
-server.get('/node_modules/tus-js-client/dist/tus.js', writeFile);
+server.get('/index.html', writeFile);
+server.get('/demo.js', writeFile);
+server.get('/demo.css', writeFile);
+server.get('/video.html', writeFile);
+server.get('/video.js', writeFile);
+server.get('/dist/tus.js', writeFile);
+server.get('/dist/tus.js.map', writeFile);
+server.get('/dist/tus.min.js', writeFile);
+server.get('/dist/tus.min.js.map', writeFile);
 
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     console.log(`[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`);
@@ -81,14 +98,10 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
 // // this is the express stile ;)
 // const express = require('express');
 // const app = express();
-// // Define routes to serve the demo html/js files.
-// app.get('/', writeFile);
-// app.get('/demo/index.js', writeFile);
-// app.get('/node_modules/tus-js-client/dist/tus.js', writeFile);
-//
 // const uploadApp = express();
 // uploadApp.all('*', server.handle.bind(server));
 // app.use('/uploads', uploadApp);
+// app.get('*', writeFile);
 
 const host = '127.0.0.1';
 const port = 1080;
