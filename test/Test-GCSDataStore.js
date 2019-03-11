@@ -8,7 +8,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
-const storage = require('@google-cloud/storage');
+const { Storage } = require('@google-cloud/storage');
 const File = require('../lib/models/File');
 const ERRORS = require('../lib/constants').ERRORS;
 const EVENTS = require('../lib/constants').EVENTS;
@@ -22,7 +22,7 @@ const TEST_FILE_SIZE = 960244;
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const FILE_ALREADY_IN_BUCKET = 'dont_delete_this_file.mp4';
 
-const gcs = storage({
+const gcs = new Storage({
     projectId: PROJECT_ID,
     keyFilename: KEYFILE,
 });

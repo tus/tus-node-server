@@ -10,7 +10,7 @@ const fs = require('fs');
 const Server = require('../lib/Server');
 const FileStore = require('../lib/stores/FileStore');
 const GCSDataStore = require('../lib/stores/GCSDataStore');
-const storage = require('@google-cloud/storage');
+const { Storage } = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/files';
@@ -23,7 +23,7 @@ const TEST_FILE_SIZE = 960244;
 const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
 const TEST_METADATA = 'some data, for you';
 
-const gcs = storage({
+const gcs = new Storage({
     projectId: PROJECT_ID,
     keyFilename: KEYFILE,
 });
@@ -201,10 +201,11 @@ describe('EndToEnd', () => {
                     done();
                 });
 
-                // The pipe method must not call the end function or otherwise
-                // we cannot inject the callback into the end function for write_stream
-                // which is needed for supertest.
-                read_stream.pipe(write_stream, { end: false });
+                // Using .pipe() broke when upgrading to Superagent 3.0+,
+                // so now we use data events to read the file to the agent.
+                read_stream.on('data', (chunk) => {
+                    write_stream.write(chunk);
+                });
                 read_stream.on("end", () => {
                     write_stream.end(() => {});
                 });
