@@ -33,30 +33,32 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --timeout 5000",
+    "test": "cross-env NODE_ENV=test mocha --timeout 5000",
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "demo": "node demo/server.js",
-    "gcs_demo": "DATA_STORE=GCSDataStore node demo/server.js",
+    "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@vimeo/eslint-config-player": "^4.0.1",
-    "babel-eslint": "^6.0.4",
-    "coveralls": "^3.0.2",
-    "eslint": "^2.9.0",
-    "eslint-plugin-promise": "^1.1.0",
-    "istanbul": "^0.4.0",
-    "mocha": "^5.2.0",
-    "nyc": "^13.1.0",
-    "should": "^8.0.1",
-    "supertest": "^2.0.1",
-    "tus-js-client": "^1.5.1"
+    "@vimeo/eslint-config-player": "^5.0.1",
+    "babel-eslint": "^10.0.1",
+    "coveralls": "^3.0.3",
+    "cross-env": "^5.2.0",
+    "eslint": "^5.15.1",
+    "eslint-plugin-promise": "^4.0.1",
+    "istanbul": "^0.4.5",
+    "mocha": "^6.0.2",
+    "node-mocks-http": "^1.7.3",
+    "nyc": "^13.3.0",
+    "rimraf": "^2.6.3",
+    "should": "^13.2.3",
+    "supertest": "^4.0.0",
+    "tus-js-client": "^1.6.1"
   },
   "dependencies": {
-    "@google-cloud/storage": "1.7.0",
-    "aws-sdk": "^2.224.1",
-    "configstore": "^3.1.2",
-    "crypto-rand": "0.0.2",
-    "debug": "^3.1.0"
+    "@google-cloud/storage": "^2.4.2",
+    "aws-sdk": "^2.418.0",
+    "configstore": "^4.0.0",
+    "debug": "^4.1.1"
   }
 }

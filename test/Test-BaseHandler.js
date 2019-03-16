@@ -1,18 +1,13 @@
 'use strict';
 
 const assert = require('assert');
-const should = require('should');
+const httpMocks = require('node-mocks-http');
 
 const BaseHandler = require('../lib/handlers/BaseHandler');
 const DataStore = require('../lib/stores/DataStore');
 const http = require('http');
 
 const ALLOWED_METHODS = 'POST, HEAD, PATCH, OPTIONS';
-
-let hasHeader = (res, header) => {
-    let key = Object.keys(header)[0];
-    return res._header.indexOf(`${key}: ${header[key]}`) > -1;
-}
 
 describe('BaseHandler', () => {
 
@@ -29,7 +24,7 @@ describe('BaseHandler', () => {
 
     beforeEach((done) => {
         const METHOD = 'GET';
-        res = new http.ServerResponse({ method: METHOD });
+        res = httpMocks.createResponse({ method: METHOD });
         done();
     });
 
@@ -50,7 +45,9 @@ describe('BaseHandler', () => {
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
         };
         handler.send(res, 200, headers);
-        assert.equal(hasHeader(res, headers), true)
+        for (let header of Object.keys(headers)) {
+            assert.equal(res.getHeader(header), headers[header]);
+        }
         done();
     });
 
@@ -58,8 +55,8 @@ describe('BaseHandler', () => {
     it('send() should write the body', (done) => {
         const body = 'Hello tus!'
         handler.send(res, 200, {}, body);
-        assert.equal(res._hasBody, true)
-        assert.equal(res.output[0].match(/Hello tus!$/).index, res.output[0].length - body.length)
+        let output = res._getData();
+        assert.equal(output.match(/Hello tus!$/).index, output.length - body.length)
         done();
     });
 });
