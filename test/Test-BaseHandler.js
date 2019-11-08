@@ -1,5 +1,7 @@
 'use strict';
 
+const path = require('path');
+
 const assert = require('assert');
 const httpMocks = require('node-mocks-http');
 
@@ -51,6 +53,40 @@ describe('BaseHandler', () => {
         done();
     });
 
+    describe('getFileIdFromRequest()', () => {
+      const filePath = '/files'
+      const filename = 'Abklz1xxRcmbf7fqUa6rHg.mp4'
+
+      it('relativeLocation = false. should return fileId', (done) => {
+          const store = new DataStore({ path: filePath });
+          const handler = new BaseHandler(store);
+
+          const req = httpMocks.createRequest({
+            method: 'PATCH',
+            originalUrl: path.join(filePath, filename)
+          });
+
+          const fileId = handler.getFileIdFromRequest(req);
+
+          assert.equal(fileId, filename);
+          done();
+      })
+
+      it('relativeLocation = true. should return fileId', (done) => {
+          const store = new DataStore({ path: filePath, relativeLocation: true });
+          const handler = new BaseHandler(store);
+
+          const req = httpMocks.createRequest({
+            method: 'PATCH',
+            originalUrl: path.join('/', filename)
+          });
+
+          const fileId = handler.getFileIdFromRequest(req);
+
+          assert.equal(fileId, filename);
+          done();
+      })
+    })
 
     it('send() should write the body', (done) => {
         const body = 'Hello tus!'
