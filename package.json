@@ -58,7 +58,7 @@
   "dependencies": {
     "@google-cloud/storage": "^2.4.2",
     "aws-sdk": "^2.418.0",
-    "configstore": "^4.0.0",
+    "configstore": "^5.0.0",
     "debug": "^4.1.1"
   }
 }
