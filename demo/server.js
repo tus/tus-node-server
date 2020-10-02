@@ -71,7 +71,7 @@ const writeFile = (req, res) => {
         }
 
         // Update demo URL to point to our local server
-        file = file.replace('https://master.tus.io/files/', `http://${host}:${port}/files/`)
+        file = file.replace('https://tusd.tusdemo.net/files/', `http://${host}:${port}/files/`)
 
         res.writeHead(200);
         res.write(file);
