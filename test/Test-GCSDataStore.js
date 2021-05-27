@@ -142,7 +142,6 @@ describe('GCSDataStore', () => {
             }).catch(console.log);
         });
 
-
         it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
             server.datastore.once(EVENTS.EVENT_FILE_CREATED, (event) => {
                 event.should.have.property('file');
@@ -185,6 +184,29 @@ describe('GCSDataStore', () => {
             .catch(console.log);
         });
 
+        it('should open a stream and resolve the new offset with continuation', (done) => {
+            const req = {
+                headers: {
+                    'upload-length': 2 * TEST_FILE_SIZE,
+                },
+            };          
+            
+            server.datastore.create(req)
+            .then((file) => {
+                files_created.push(file.id);
+
+                return server.datastore.write(fs.createReadStream(TEST_FILE_PATH), file.id, 0)
+                .then((offset) => {
+                    assert.equal(offset, 1 * TEST_FILE_SIZE);
+                    return server.datastore.write(fs.createReadStream(TEST_FILE_PATH), file.id, offset)
+                })
+                .then((offset) => {
+                    assert.equal(offset, 2 * TEST_FILE_SIZE);
+                    return done();
+                })
+            })
+            .catch(console.log);
+        });
 
         it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
             server.datastore.once(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
@@ -221,7 +243,7 @@ describe('GCSDataStore', () => {
                 },
             };
                 
-            return server.datastore.create(req)
+            server.datastore.create(req)
             .then((file) => {
                 files_created.push(file.id);
                 const write_stream = fs.createReadStream(TEST_FILE_PATH);
