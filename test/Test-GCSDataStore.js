@@ -217,6 +217,7 @@ describe('GCSDataStore', () => {
 
             const write_stream = fs.createReadStream(TEST_FILE_PATH);
             
+            write_stream.pause();
             write_stream.on('data', () => {
                 write_stream.destroy();
             })
