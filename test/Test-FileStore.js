@@ -196,13 +196,12 @@ describe('FileStore', () => {
         it('should settle on closed input stream', (done) => {
             const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: STORE_PATH };
             
-            const controller = new AbortController();
-            const write_stream = stream.addAbortSignal(
-                controller.signal,
-                fs.createReadStream(TEST_FILE_PATH)
-            );
-            
-            setTimeout(() => controller.abort(), 1);
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);            
+
+            write_stream.pause();
+            write_stream.on('data', () => {
+                write_stream.destroy();
+            })
 
             const file_store = new FileStore({ path: STORE_PATH });
             file_store.create(req)

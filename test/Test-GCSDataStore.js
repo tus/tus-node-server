@@ -215,13 +215,11 @@ describe('GCSDataStore', () => {
                 },
             };
 
-            const controller = new AbortController();
-            const write_stream = stream.addAbortSignal(
-                controller.signal,
-                fs.createReadStream(TEST_FILE_PATH)
-            );
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
             
-            setTimeout(() => controller.abort(), 1);
+            write_stream.on('data', () => {
+                write_stream.destroy();
+            })
             
             server.datastore.create(req)
             .then((file) => {
