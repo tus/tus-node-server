@@ -139,7 +139,7 @@ describe('GCSDataStore', () => {
                 assert.equal(file instanceof File, true);
                 assert.equal(file.upload_length, TEST_FILE_SIZE);
                 return done();
-            }).catch(console.log);
+            }).catch(done);
         });
 
         it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
@@ -158,7 +158,7 @@ describe('GCSDataStore', () => {
             .then((file) => {
                 files_created.push(file.id);
             })
-            .catch(console.log);
+            .catch(done);
         });
     });
 
@@ -181,7 +181,7 @@ describe('GCSDataStore', () => {
                 assert.equal(offset, TEST_FILE_SIZE);
                 return done();
             })
-            .catch(console.log);
+            .catch(done);
         });
 
         it('should open a stream and resolve the new offset with continuation', (done) => {
@@ -205,7 +205,7 @@ describe('GCSDataStore', () => {
                     return done();
                 })
             })
-            .catch(console.log);
+            .catch(done);
         });
 
         it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
@@ -226,7 +226,7 @@ describe('GCSDataStore', () => {
                 const write_stream = fs.createReadStream(TEST_FILE_PATH);
                 return server.datastore.write(write_stream, file.id, 0)
             })
-            .catch(console.log);
+            .catch(done);
         });
     });
 
@@ -236,7 +236,7 @@ describe('GCSDataStore', () => {
                     .should.be.rejectedWith(ERRORS.FILE_NOT_FOUND);
         });
 
-        it('should resolve existing files with the metadata', () => {
+        it('should resolve existing files with the metadata', (done) => {
             const req = {
                 headers: {
                     'upload-length': TEST_FILE_SIZE,
@@ -252,10 +252,12 @@ describe('GCSDataStore', () => {
                     return server.datastore.getOffset(file.id)
                 })
             })
-            .should.be.fulfilledWith({
-                size: TEST_FILE_SIZE,
-                upload_length: TEST_FILE_SIZE,
-            });
+            .then((offset) => {
+                assert.equal(offset.size, TEST_FILE_SIZE);
+                assert.equal(offset.upload_length, TEST_FILE_SIZE);
+                done();
+            })
+            .catch(done)
         });
     });
 });
