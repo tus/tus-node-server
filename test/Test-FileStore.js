@@ -5,6 +5,7 @@ const rimraf = require('rimraf');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const stream = require('stream');
 const exec = require('child_process').exec;
 const Server = require('../lib/Server');
 const DataStore = require('../lib/stores/DataStore');
@@ -190,6 +191,25 @@ describe('FileStore', () => {
                         return file_store.write(write_stream, newFile.id, 0);
                     }).catch(done);
             });
+        });
+
+        it('should settle on closed input stream', (done) => {
+            const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: STORE_PATH };
+            
+            const controller = new AbortController();
+            const write_stream = stream.addAbortSignal(
+                controller.signal,
+                fs.createReadStream(TEST_FILE_PATH)
+            );
+            
+            setTimeout(() => controller.abort(), 1);
+
+            const file_store = new FileStore({ path: STORE_PATH });
+            file_store.create(req)
+            .then((file) => {
+                return file_store.write(write_stream, file.id, 0)
+            })
+            .finally(() => done())
         });
     });
 
