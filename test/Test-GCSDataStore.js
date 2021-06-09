@@ -227,6 +227,7 @@ describe('GCSDataStore', () => {
                 files_created.push(file.id);
                 return server.datastore.write(write_stream, file.id, 0)
             })
+            .catch(() => {})
             .finally(() => done())
         });
 
