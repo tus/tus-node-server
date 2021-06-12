@@ -7,7 +7,7 @@
 
 tus is a new open protocol for resumable uploads built on HTTP. This is the [tus protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) node.js server implementation.
 
-> :warning: **Attention:** We currently lack the resources to properly maintain tus-node-server. This has the unfortunate consequence that this project is in rather bad condition (out-dated dependencies, no tests for the S3 storage, no resumable uploads for the GCS storage etc). If you want to help us with tus-node-server, we are more than happy to assist you and welcome new contributors. In the meantime, we can recommend [tusd](https://github.com/tus/tusd) as a reliable and production-tested tus server. Of course, you can use tus-node-server if it serves your purpose.
+> :warning: **Attention:** We currently lack the resources to properly maintain tus-node-server. This has the unfortunate consequence that this project is in rather bad condition (out-dated dependencies, no tests for the S3 storage etc). If you want to help us with tus-node-server, we are more than happy to assist you and welcome new contributors. In the meantime, we can recommend [tusd](https://github.com/tus/tusd) as a reliable and production-tested tus server. Of course, you can use tus-node-server if it serves your purpose.
 
 ## Installation
 
