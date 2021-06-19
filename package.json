@@ -37,6 +37,7 @@
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
+    "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
@@ -56,8 +57,9 @@
     "tus-js-client": "^2.2.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.18.0",
     "@google-cloud/storage": "^5.3.0",
-    "aws-sdk": "^2.761.0",
+    "aws-sdk": "^2.929.0",
     "configstore": "^5.0.1",
     "debug": "^4.2.0"
   }
