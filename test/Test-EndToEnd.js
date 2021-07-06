@@ -126,6 +126,30 @@ describe('EndToEnd', () => {
                     done();
                 });
             });
+
+            it('should create a file and upload content', (done) => {
+                const read_stream = fs.createReadStream(TEST_FILE_PATH);
+                const write_stream = agent.post(STORE_PATH)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', TEST_FILE_SIZE)
+                .set('Content-Type', 'application/offset+octet-stream');
+
+                write_stream.on('response', (res) => {
+                    assert.equal(res.statusCode, 201);
+                    assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
+                    assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
+                    done();
+                });
+
+                // Using .pipe() broke when upgrading to Superagent 3.0+,
+                // so now we use data events to read the file to the agent.
+                read_stream.on('data', (chunk) => {
+                    write_stream.write(chunk);
+                });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
+            });
         });
 
         describe('HEAD', () => {
@@ -354,6 +378,30 @@ describe('EndToEnd', () => {
                     done();
                 });
             });
+
+            it('should create a file and upload content', (done) => {
+                const read_stream = fs.createReadStream(TEST_FILE_PATH);
+                const write_stream = agent.post(STORE_PATH)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', TEST_FILE_SIZE)
+                .set('Content-Type', 'application/offset+octet-stream');
+
+                write_stream.on('response', (res) => {
+                    assert.equal(res.statusCode, 201);
+                    assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
+                    assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
+                    done();
+                });
+
+                // Using .pipe() broke when upgrading to Superagent 3.0+,
+                // so now we use data events to read the file to the agent.
+                read_stream.on('data', (chunk) => {
+                    write_stream.write(chunk);
+                });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
+            })
         });
 
         describe('HEAD', () => {
