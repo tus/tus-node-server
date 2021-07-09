@@ -86,7 +86,7 @@ describe('Server', () => {
         it('should 404 non-user implemented GET requests', (done) => {
             request(listener)
               .get('/not_here')
-              .expect(404, 'Not found\n', done);
+              .expect(404, {}, done);
         });
     });
 
@@ -172,7 +172,7 @@ describe('Server', () => {
             request(listener)
               .get('/')
               .set('Tus-Resumable', TUS_RESUMABLE)
-              .expect(404, 'Not found\n', done);
+              .expect(404, {}, done);
         });
 
         it('should allow overriding the HTTP method', (done) => {
