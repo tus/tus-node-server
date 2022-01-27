@@ -34,7 +34,7 @@
   "main": "index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --timeout 5000",
-    "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
@@ -42,7 +42,6 @@
   "devDependencies": {
     "@vimeo/eslint-config-player": "^5.0.1",
     "babel-eslint": "^10.1.0",
-    "coveralls": "^3.1.0",
     "cross-env": "^7.0.2",
     "eslint": "^7.9.0",
     "eslint-plugin-promise": "^4.2.1",
