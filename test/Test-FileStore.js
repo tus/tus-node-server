@@ -1,7 +1,7 @@
 /* eslint-env node, mocha */
 
 'use strict';
-const should = require('should');
+const rimraf = require('rimraf');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -29,18 +29,23 @@ describe('FileStore', () => {
         });
 
         // Create the file used in getOffset
-        exec(`touch ${FILES_DIRECTORY}/${TEST_FILE_NAME}`, (err) => {
+        fs.open(FILES_DIRECTORY + '/' + TEST_FILE_NAME, 'w', (err, fd) => {
             if (err) {
                 return done(err);
             }
 
-            return done();
+            fs.close(fd, err => {
+                if (err) {
+                    return done(err);
+                }
+                done();
+            });
         });
     });
 
     after((done) => {
         // Remove the files directory
-        exec(`rm -r ${FILES_DIRECTORY}`, (err) => {
+        rimraf(FILES_DIRECTORY, err => {
             if (err) {
                 return done(err);
             }

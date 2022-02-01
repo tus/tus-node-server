@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.2.8",
+  "version": "0.4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "engines": {
-    "node": ">=6.0"
+    "node": ">=10.0"
   },
   "files": [
     "LICENSE",
@@ -33,31 +33,32 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha",
-    "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "test": "cross-env NODE_ENV=test mocha --timeout 5000",
+    "coverage": "nyc npm test",
     "demo": "node demo/server.js",
-    "gcs_demo": "DATA_STORE=GCSDataStore node demo/server.js",
+    "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@vimeo/eslint-config-player": "^4.0.1",
-    "babel-eslint": "^6.0.4",
-    "coveralls": "^2.11.4",
-    "eslint": "^2.9.0",
-    "eslint-plugin-promise": "^1.1.0",
-    "istanbul": "^0.4.0",
-    "mocha": "^2.3.3",
-    "mocha-lcov-reporter": "^1.0.0",
-    "should": "^8.0.1",
-    "supertest": "^1.1.0",
-    "tus-js-client": "^1.4.5"
+    "@vimeo/eslint-config-player": "^5.0.1",
+    "babel-eslint": "^10.1.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^7.32.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "istanbul": "^0.4.5",
+    "mocha": "^9.2.0",
+    "node-mocks-http": "^1.11.0",
+    "nyc": "^15.1.0",
+    "rimraf": "^3.0.2",
+    "should": "^13.2.3",
+    "sinon": "^12.0.1",
+    "supertest": "^6.2.2",
+    "tus-js-client": "^2.3.0"
   },
   "dependencies": {
-    "configstore": "^3.1.1",
-    "crypto-rand": "0.0.2",
-    "google-auto-auth": "^0.8.1",
-    "google-cloud": "^0.57.0",
-    "object-assign": "^4.1.1",
-    "request": "^2.72.0"
+    "@google-cloud/storage": "^5.18.1",
+    "aws-sdk": "^2.1064.0",
+    "configstore": "^5.0.1",
+    "debug": "^4.3.3"
   }
 }
