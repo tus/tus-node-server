@@ -2,7 +2,6 @@
 'use strict';
 
 const request = require('supertest');
-const should = require('should');
 const assert = require('assert');
 const http = require('http');
 const fs = require('fs');
@@ -18,18 +17,6 @@ const hasHeader = (res, header) => {
 };
 
 describe('Server', () => {
-    after(() => {
-        let d = 'files';
-        if (fs.existsSync(d)) {
-            fs.readdirSync(d).forEach(function(file) {
-                let C = d + '/' + file;
-                if (fs.statSync(C).isDirectory()) self(C);
-                else fs.unlinkSync(C)
-            });
-            fs.rmdirSync(d)
-        }
-    });
-
     describe('instantiation', () => {
         it('datastore setter must require a DataStore subclass', (done) => {
             assert.throws(() => {
