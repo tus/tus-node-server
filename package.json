@@ -33,7 +33,7 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --exit",
+    "test": "cross-env NODE_ENV=test mocha --timeout 5000 --exit",
     "coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
