@@ -67,6 +67,11 @@ describe('FileStore', () => {
             done();
         });
 
+        it('must have a remove method', (done) => {
+            server.datastore.should.have.property('remove');
+            done();
+        });
+
         it('must have a write method', (done) => {
             server.datastore.should.have.property('write');
             done();
@@ -147,6 +152,44 @@ describe('FileStore', () => {
         });
     });
 
+
+
+    describe('remove', () => {
+
+       it('should reject when the file does not exist', () => {
+           const file_store = new FileStore({path: STORE_PATH});
+           const req = {file_id: '1234'};
+           return file_store.remove(req).should.be.rejected();
+       });
+
+        it('should delete the file when it does exist', () => {
+            const file_store = new FileStore({path: STORE_PATH});
+            const create_req = { headers: { 'upload-length': 1000 }, url: STORE_PATH };
+            return file_store.create(create_req)
+                .then((res) => {
+                    const rem_req = {file_id: res.id};
+                    return file_store.remove(rem_req);
+                }).should.be.fulfilled();
+        });
+
+        it(`should fire the ${EVENTS.EVENT_FILE_DELETED} event`, (done) => {
+            const file_store = new FileStore({path: STORE_PATH});
+            const create_req = { headers: { 'upload-length': 1000 }, url: STORE_PATH };
+            file_store.on(EVENTS.EVENT_FILE_DELETED, (event) => {
+                event.should.have.property('file_id');
+                assert.equal(typeof event.file_id === 'string', true);
+                done();
+            });
+
+            file_store.create(create_req)
+                             .then((res) => {
+                                 const rem_req = {file_id: res.id};
+                                 return file_store.remove(rem_req);
+                             });
+        });
+
+
+    });
 
     describe('write', () => {
         it('should reject write streams that cant be opened', () => {
