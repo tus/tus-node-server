@@ -1,3 +1,4 @@
+import configstore from 'configstore'
 import { EventEmitter } from "events";
 import * as fs from "fs";
 import http from "http";
@@ -62,6 +63,7 @@ export declare class DataStore extends EventEmitter {
  * file store in local storage
  */
 export declare class FileStore extends DataStore {
+    configstore: configstore
     constructor(options: FileStoreOptions);
     read(file_id: string): fs.ReadStream;
     getOffset(file_id: string): Promise<fs.Stats & File>;
