@@ -2,10 +2,11 @@
 'use strict';
 
 const request = require('supertest');
-const should = require('should');
 const assert = require('assert');
 const http = require('http');
+const fs = require('fs');
 const Server = require('../lib/Server');
+const FileStore = require('../lib/stores/FileStore');
 const DataStore = require('../lib/stores/DataStore');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 const EVENTS = require('../lib/constants').EVENTS;
@@ -35,6 +36,7 @@ describe('Server', () => {
             server.handlers.should.have.property('OPTIONS');
             server.handlers.should.have.property('POST');
             server.handlers.should.have.property('PATCH');
+            server.handlers.should.have.property('DELETE');
             done();
         });
     });
@@ -86,7 +88,7 @@ describe('Server', () => {
         it('should 404 non-user implemented GET requests', (done) => {
             request(listener)
               .get('/not_here')
-              .expect(404, 'Not found\n', done);
+              .expect(404, {}, done);
         });
     });
 
@@ -95,7 +97,7 @@ describe('Server', () => {
         let listener;
         before(() => {
             server = new Server();
-            server.datastore = new DataStore({
+            server.datastore = new FileStore({
                 path: '/files',
             });
 
@@ -155,6 +157,32 @@ describe('Server', () => {
               .expect(412, 'Invalid upload-metadata\n', done);
         });
 
+        it('DELETE should return 404 when file does not exist', (done) => {
+            request(server.listen())
+                .delete(server.datastore.path + "/123")
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(404, 'The file for this url was not found\n', done);
+        });
+
+        it('DELETE should return 404 on invalid paths', (done) => {
+            request(server.listen())
+                .delete("/this/is/wrong/123")
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .expect(404, 'Invalid path name\n', done);
+        });
+
+        it('DELETE should return 204 on proper deletion', (done) => {
+            request(server.listen())
+                .post(server.datastore.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', 12345678)
+                .then((res)=>{
+                    request(server.listen())
+                        .delete(res.headers.location)
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .expect(204, done);
+                });
+
         it('POST should ignore invalid Content-Type header', (done) => {
             request(listener)
               .post(server.datastore.path)
@@ -172,7 +200,7 @@ describe('Server', () => {
             request(listener)
               .get('/')
               .set('Tus-Resumable', TUS_RESUMABLE)
-              .expect(404, 'Not found\n', done);
+              .expect(404, {}, done);
         });
 
         it('should allow overriding the HTTP method', (done) => {
@@ -200,7 +228,7 @@ describe('Server', () => {
         let listener;
         beforeEach(() => {
             server = new Server();
-            server.datastore = new DataStore({
+            server.datastore = new FileStore({
                 path: '/files',
             });
 
@@ -237,18 +265,44 @@ describe('Server', () => {
               .end((err) => { if(err) done(err) });
         });
 
+        it('should fire when a file is deleted', (done) => {
+            server.on(EVENTS.EVENT_FILE_DELETED, (event) => {
+                event.should.have.property('file_id');
+                done();
+            });
+
+            request(server.listen())
+                .post(server.datastore.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', 12345678)
+                .then((res)=>{
+                    request(server.listen())
+                        .delete(res.headers.location)
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .end((err,res)=>{});
+                });
+        });
+
         it('should fire when an upload is finished', (done) => {
             server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
                 event.should.have.property('file');
                 done();
             });
 
-            request(listener)
-              .patch(`${server.datastore.path}/file`)
-              .set('Tus-Resumable', TUS_RESUMABLE)
-              .set('Upload-Offset', 0)
-              .set('Content-Type', 'application/offset+octet-stream')
-              .end((err) => { if(err) done(err) });
+            request(server.listen())
+                .post(server.datastore.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', Buffer.byteLength('test', 'utf8'))
+                .then((res) => {
+                    request(server.listen())
+                        .patch(res.headers.location)
+                        .send('test')
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .set('Upload-Offset', 0)
+                        .set('Content-Type', 'application/offset+octet-stream')
+                        .end((err,res)=>{});
+                })
         });
+    })
     });
 });
