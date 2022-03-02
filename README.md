@@ -192,21 +192,14 @@ server.get('/uploads', (req, res) => {
 ```
 
 #### Custom file names:
-
-The default naming of files is a random crypto hex string. When using your own `namingFunction`, make sure to create URL friendly names such as removing spaces.
-
 ```js
-const crypto = require('crypto');
-
-// req is http.IncomingMessage
-const randomString = (req) => {
-    // same as the default implementation
-    return crypto.randomBytes(16).toString('hex');
+const fileNameFromUrl = (req) => {
+    return req.url.replace(/\//g, '-');
 }
 
 server.datastore = new tus.FileStore({
     path: '/files',
-    namingFunction: randomString
+    namingFunction: fileNameFromUrl
 });
 ```
 
