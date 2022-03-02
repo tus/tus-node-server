@@ -208,6 +208,29 @@ describe('GCSDataStore', () => {
             .catch(done);
         });
 
+        it('should settle on closed input stream', (done) => {
+            const req = {
+                headers: {
+                    'upload-length': TEST_FILE_SIZE,
+                },
+            };
+
+            const write_stream = fs.createReadStream(TEST_FILE_PATH);
+            
+            write_stream.pause();
+            write_stream.on('data', () => {
+                write_stream.destroy();
+            })
+            
+            server.datastore.create(req)
+            .then((file) => {
+                files_created.push(file.id);
+                return server.datastore.write(write_stream, file.id, 0)
+            })
+            .catch(() => {})
+            .finally(() => done())
+        });
+
         it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
             server.datastore.once(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
                 event.should.have.property('file');
