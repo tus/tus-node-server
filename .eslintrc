@@ -20,6 +20,7 @@
         "complexity": ["error", 14],
         "prefer-rest-params": 0,
         "prefer-spread": 0,
-        "strict": 0
+        "strict": 0,
+        "no-warning-comments": 0
     }
 }
