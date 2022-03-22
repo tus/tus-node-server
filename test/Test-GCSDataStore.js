@@ -20,7 +20,7 @@ const KEYFILE = path.resolve(__dirname, '../keyfile.json');
 const BUCKET = 'tus-node-server';
 
 const TEST_FILE_SIZE = 960244;
-const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
+const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4');
 const FILE_ALREADY_IN_BUCKET = 'dont_delete_this_file.mp4';
 
 const gcs = new Storage({

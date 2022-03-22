@@ -20,7 +20,7 @@ const BUCKET = 'tus-node-server';
 
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_SIZE = 960244;
-const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
+const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4');
 const TEST_METADATA = 'some data, for you';
 
 const gcs = new Storage({
