@@ -9,7 +9,7 @@ const FileStore = require('../lib/stores/FileStore')
 const File = require('../lib/models/File')
 const EVENTS = require('../lib/constants').EVENTS
 
-const STORE_PATH = '/files'
+const STORE_PATH = '/test/output'
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`)
 const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4')
 const TEST_FILE_SIZE = 960244
@@ -122,13 +122,13 @@ describe('FileStore', () => {
     })
 
     it('should use custom naming function when provided', (done) => {
-      const namingFunction = (incomingReq) => incomingReq.url.replace(/\//g, '-')
+      const namingFunction = (req) => req.url.replace(/\//g, '-')
       const file_store = new FileStore({ path: STORE_PATH, namingFunction })
       file_store
         .create(req)
         .then((newFile) => {
           assert.equal(newFile instanceof File, true)
-          assert.equal(newFile.id, '-files')
+          assert.equal(newFile.id, '-test-output')
           return done()
         })
         .catch(done)

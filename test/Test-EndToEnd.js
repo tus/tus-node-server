@@ -13,7 +13,7 @@ const GCSDataStore = require('../lib/stores/GCSDataStore');
 const { Storage } = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
-const STORE_PATH = '/files';
+const STORE_PATH = '/test/output';
 const PROJECT_ID = 'vimeo-open-source';
 const KEYFILE = path.resolve(__dirname, '../keyfile.json');
 const BUCKET = 'tus-node-server';

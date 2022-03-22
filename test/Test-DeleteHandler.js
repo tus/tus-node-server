@@ -9,7 +9,7 @@ const DeleteHandler = require('../lib/handlers/DeleteHandler');
 
 describe('DeleteHandler', () => {
     let res = null;
-    const path = '/files';
+    const path = '/test/output';
     const pathClean = path.replace(/^\//, '');
     const namingFunction = (req) => req.url.replace(/\//g, '-');
     const store = new FileStore({ path, namingFunction});

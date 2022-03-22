@@ -19,7 +19,7 @@ describe('BaseHandler', () => {
     });
 
     let res = null;
-    let store = new DataStore({ path: '/files' });
+    let store = new DataStore({ path: '/test/output' });
     let handler = new BaseHandler(store);
 
     beforeEach((done) => {

@@ -14,7 +14,7 @@ const File = require('../lib/models/File');
 const ERRORS = require('../lib/constants').ERRORS;
 const EVENTS = require('../lib/constants').EVENTS;
 
-const STORE_PATH = '/files';
+const STORE_PATH = '/test/output';
 const PROJECT_ID = 'vimeo-open-source';
 const KEYFILE = path.resolve(__dirname, '../keyfile.json');
 const BUCKET = 'tus-node-server';

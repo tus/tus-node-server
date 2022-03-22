@@ -13,7 +13,7 @@ const hasHeader = (res, header) => {
 };
 
 describe('PatchHandler', () => {
-    const path = '/files';
+    const path = '/test/output';
     let res = null;
     const store = new DataStore({ path });
     const handler = new PatchHandler(store);
