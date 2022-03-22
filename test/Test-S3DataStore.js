@@ -4,7 +4,7 @@ const S3Store = require('../lib/stores/S3Store')
 
 const shared = require('./Test-Stores.shared')
 
-describe('S3DataStore', () => {
+describe('S3DataStore', function () {
   beforeEach(function() {
     this.testFileSize = 960244
     this.server = new Server()
