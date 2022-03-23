@@ -1,4 +1,6 @@
 'use strict'
+const path = require('path')
+
 const Server = require('../lib/Server')
 const S3Store = require('../lib/stores/S3Store')
 
@@ -6,7 +8,9 @@ const shared = require('./Test-Stores.shared')
 
 describe('S3DataStore', function () {
   beforeEach(function() {
+    this.testFileSize = 960244
     this.storePath = '/test/output'
+    this.testFilePath = path.resolve(__dirname, 'fixtures', 'test.mp4')
     this.server = new Server()
     this.server.datastore = new S3Store({
       path: this.storePath,
@@ -20,4 +24,7 @@ describe('S3DataStore', function () {
 
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
+  // Termination extension not implemented yet
+  // shared.shouldRemoveUploads()
+  shared.shouldWriteUploads()
 })

@@ -34,10 +34,10 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 7000 --exit",
+    "test": "cross-env NODE_ENV=test mocha --timeout 10000 --exit",
     "test:local": "env-cmd npm run test",
     "coverage": "nyc npm test",
-    "demo": "node demo/server.js",
+    "demo": "DATA_STORE=S3Store env-cmd node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "lint": "eslint ."
   },

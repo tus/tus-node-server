@@ -1,5 +1,6 @@
 const assert = require('assert')
 const sinon = require('sinon')
+const fs = require('fs')
 
 const File = require('../lib/models/File')
 const { EVENTS } = require('../lib/constants')
@@ -69,7 +70,7 @@ exports.shouldCreateUploads = function () {
       const file = await this.server.datastore.create(req)
       assert.equal(file instanceof File, true)
       assert.equal(file.upload_length, testFileSize)
-      assert(fileCreatedEvent.calledOnce)
+      assert.equal(fileCreatedEvent.calledOnce, true)
     })
 
     it('should use custom naming function when provided', async function () {
@@ -81,6 +82,68 @@ exports.shouldCreateUploads = function () {
       assert.equal(file instanceof File, true)
       assert.equal(file.id, 'hardcoded-name')
       assert.equal(file.upload_length, testFileSize)
+    })
+  })
+}
+
+exports.shouldRemoveUploads = function () {
+  describe('remove (termination extension)', function () {
+    it('should reject when the file does not exist', function () {
+      const req = { file_id: '1234' }
+      return this.server.datastore.remove(req).should.be.rejected()
+    })
+
+    it('should delete the file when it does exist', async function () {
+      const fileDeletedEvent = sinon.fake()
+      const req = { headers: { 'upload-length': 1000 }, url: this.storePath }
+
+      this.server.datastore.on(EVENTS.EVENT_FILE_DELETED, fileDeletedEvent)
+
+      const file = await this.server.datastore.create(req)
+      await this.server.datastore.remove({ file_id: file.id })
+      assert.equal(fileDeletedEvent.calledOnce, true)
+    })
+  })
+}
+
+exports.shouldWriteUploads = function () {
+  describe('write', function () {
+    it('should reject write streams that cant be opened', function () {
+      const stream = fs.createReadStream(this.testFilePath)
+      return this.server.datastore.write(stream, null, 0).should.be.rejectedWith(500)
+    })
+
+    it('should open a stream, resolve the new offset, and emit upload complete', async function () {
+      const uploadCompleteEvent = sinon.fake()
+      const req = { headers: { 'upload-length': this.testFileSize.toString(), 'upload-metadata': 'foo bar' } }
+
+      this.server.datastore.on(EVENTS.EVENT_UPLOAD_COMPLETE, uploadCompleteEvent)
+
+      const file = await this.server.datastore.create(req)
+      const stream = fs.createReadStream(this.testFilePath)
+      const offset = await this.server.datastore.write(stream, file.id, 0)
+
+      assert.equal(offset, this.testFileSize)
+      assert.equal(uploadCompleteEvent.calledOnce, true)
+    })
+
+    it('should settle on closed input stream', function (done) {
+      const req = { headers: { 'upload-length': this.testFileSize }, url: this.storePath }
+
+      const stream = fs.createReadStream(this.testFilePath)
+
+      stream.pause()
+      stream.on('data', () => {
+        stream.destroy()
+      })
+
+      this.server.datastore
+        .create(req)
+        .then((file) => {
+          return this.server.datastore.write(stream, file.id, 0)
+        })
+        .catch(() => {})
+        .finally(() => done())
     })
   })
 }
