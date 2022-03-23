@@ -6,10 +6,10 @@ const shared = require('./Test-Stores.shared')
 
 describe('S3DataStore', function () {
   beforeEach(function() {
-    this.testFileSize = 960244
+    this.storePath = '/test/output'
     this.server = new Server()
     this.server.datastore = new S3Store({
-      path: '/test/output',
+      path: this.storePath,
       bucket: process.env.AWS_BUCKET,
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -18,5 +18,6 @@ describe('S3DataStore', function () {
     })
   })
 
-  shared.shouldBehaveLikeAStore()
+  shared.shouldHaveStoreMethods()
+  shared.shouldCreateUploads()
 })

@@ -34,28 +34,53 @@ exports.shouldHaveStoreMethods = function () {
       this.server.datastore.should.have.property('getOffset')
       done()
     })
-
   })
 }
 
-exports.shouldBehaveLikeAStore = function () {
-  it('should be able to connect to the bucket', function () {
-    assert.doesNotThrow(() => this.server.datastore._bucketExists())
-  })
-
-  it('should create a file and upload it', async function () {
-    const fileCreatedEvent = sinon.fake()
-
-    this.server.on(EVENTS.EVENT_FILE_CREATED, fileCreatedEvent)
-
-    const file = await this.server.datastore.create({
+exports.shouldCreateUploads = function () {
+  describe('create', function () {
+    const testFileSize = 960244
+    const invalidReq = { headers: {}, url: this.storePath }
+    const req = {
       headers: {
-        'upload-length': this.testFileSize.toString(),
+        'upload-length': testFileSize.toString(),
         'upload-metadata': 'foo bar',
       },
+      url: this.storePath,
+    }
+
+    it('should reject if both upload-length and upload-defer-length are not provided', function (done) {
+      assert.rejects(() => this.server.datastore.create(invalidReq))
+      done()
     })
-    assert.equal(file instanceof File, true)
-    assert.equal(file.upload_length, this.testFileSize)
-    assert(fileCreatedEvent.calledOnce)
+
+    it('should reject when namingFunction is invalid', function (done) {
+      const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
+      this.server.datastore.generateFileName = namingFunction
+      assert.rejects(() => this.server.datastore.create(req))
+      done()
+    })
+
+    it('should create a file, process it, and send file created event', async function () {
+      const fileCreatedEvent = sinon.fake()
+
+      this.server.on(EVENTS.EVENT_FILE_CREATED, fileCreatedEvent)
+
+      const file = await this.server.datastore.create(req)
+      assert.equal(file instanceof File, true)
+      assert.equal(file.upload_length, testFileSize)
+      assert(fileCreatedEvent.calledOnce)
+    })
+
+    it('should use custom naming function when provided', async function () {
+      const namingFunction = () => 'hardcoded-name'
+
+      this.server.datastore.generateFileName = namingFunction
+
+      const file = await this.server.datastore.create(req)
+      assert.equal(file instanceof File, true)
+      assert.equal(file.id, 'hardcoded-name')
+      assert.equal(file.upload_length, testFileSize)
+    })
   })
 }

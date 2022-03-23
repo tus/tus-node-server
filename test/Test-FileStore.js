@@ -4,11 +4,8 @@ const fs = require('fs')
 const path = require('path')
 const Server = require('../lib/Server')
 const FileStore = require('../lib/stores/FileStore')
-const File = require('../lib/models/File')
 const EVENTS = require('../lib/constants').EVENTS
 
-const STORE_PATH = '/test/output'
-const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`)
 const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4')
 const TEST_FILE_SIZE = 960244
 
@@ -16,92 +13,38 @@ const shared = require('./Test-Stores.shared')
 
 describe('FileStore', function () {
   beforeEach(function () {
+    this.storePath = '/test/output'
+    this.filesDirectory = path.resolve(__dirname, `..${this.storePath}`)
     this.server = new Server()
-    this.server.datastore = new FileStore({
-      path: STORE_PATH,
-    })
+    this.server.datastore = new FileStore({ path: this.storePath })
   })
 
   shared.shouldHaveStoreMethods()
 
   it('should create a directory for the files', function (done) {
-    const stats = fs.lstatSync(FILES_DIRECTORY)
+    const stats = fs.lstatSync(this.filesDirectory)
     assert.equal(stats.isDirectory(), true)
     done()
   })
 
-  describe('create', function () {
-    const invalidReq = { headers: {}, url: STORE_PATH }
-    const req = { headers: { 'upload-length': 1000 }, url: STORE_PATH }
+  shared.shouldCreateUploads()
 
-    it('should reject if both upload-length and upload-defer-length are not provided', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
-      return file_store.create(invalidReq).should.be.rejected()
-    })
-
-    it('should reject when namingFunction is invalid', function () {
-      const namingFunction = (incomingReq) =>
-        incomingReq.body.filename.replace(/\//g, '-')
-      const file_store = new FileStore({ path: STORE_PATH, namingFunction })
-      return file_store.create(req).should.be.rejected()
-    })
-
-    it('should reject when the directory doesnt exist', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
-      file_store.directory = 'some_new_path'
-      return file_store.create(req).should.be.rejected()
-    })
-
-    it('should resolve when the directory exists', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
-      return file_store.create(req).should.be.fulfilled()
-    })
-
-    it('should resolve to the File model', function (done) {
-      const file_store = new FileStore({ path: STORE_PATH })
-      file_store
-        .create(req)
-        .then((newFile) => {
-          assert.equal(newFile instanceof File, true)
-          return done()
-        })
-        .catch(done)
-    })
-
-    it('should use custom naming function when provided', function (done) {
-      const namingFunction = (req) => req.url.replace(/\//g, '-')
-      const file_store = new FileStore({ path: STORE_PATH, namingFunction })
-      file_store
-        .create(req)
-        .then((newFile) => {
-          assert.equal(newFile instanceof File, true)
-          assert.equal(newFile.id, '-test-output')
-          return done()
-        })
-        .catch(done)
-    })
-
-    it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, function (done) {
-      const file_store = new FileStore({ path: STORE_PATH })
-      file_store.on(EVENTS.EVENT_FILE_CREATED, (event) => {
-        event.should.have.property('file')
-        assert.equal(event.file instanceof File, true)
-        done()
-      })
-      file_store.create(req)
-    })
+  it('should reject when the directory doesnt exist', function (done) {
+    this.server.datastore.directory = 'some_new_path'
+    assert.throws(() => this.server.datastore.create(req))
+    done()
   })
 
   describe('remove', function () {
     it('should reject when the file does not exist', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
+      const file_store = new FileStore({ path: this.storePath })
       const req = { file_id: '1234' }
       return file_store.remove(req).should.be.rejected()
     })
 
     it('should delete the file when it does exist', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
-      const create_req = { headers: { 'upload-length': 1000 }, url: STORE_PATH }
+      const file_store = new FileStore({ path: this.storePath })
+      const create_req = { headers: { 'upload-length': 1000 }, url: this.storePath }
       return file_store
         .create(create_req)
         .then((res) => {
@@ -112,8 +55,8 @@ describe('FileStore', function () {
     })
 
     it(`should fire the ${EVENTS.EVENT_FILE_DELETED} event`, function (done) {
-      const file_store = new FileStore({ path: STORE_PATH })
-      const create_req = { headers: { 'upload-length': 1000 }, url: STORE_PATH }
+      const file_store = new FileStore({ path: this.storePath })
+      const create_req = { headers: { 'upload-length': 1000 }, url: this.storePath }
       file_store.on(EVENTS.EVENT_FILE_DELETED, (event) => {
         event.should.have.property('file_id')
         assert.equal(typeof event.file_id === 'string', true)
@@ -157,7 +100,7 @@ describe('FileStore', function () {
     })
 
     it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, function (done) {
-      const file_store = new FileStore({ path: STORE_PATH })
+      const file_store = new FileStore({ path: this.storePath })
       file_store.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
         event.should.have.property('file')
         done()
@@ -165,7 +108,7 @@ describe('FileStore', function () {
 
       const write_stream = fs.createReadStream(TEST_FILE_PATH)
       write_stream.once('open', () => {
-        const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: STORE_PATH }
+        const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: this.storePath }
         file_store
           .create(req)
           .then((newFile) => {
@@ -176,7 +119,7 @@ describe('FileStore', function () {
     })
 
     it('should settle on closed input stream', function (done) {
-      const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: STORE_PATH }
+      const req = { headers: { 'upload-length': TEST_FILE_SIZE }, url: this.storePath }
 
       const write_stream = fs.createReadStream(TEST_FILE_PATH)
 
@@ -185,7 +128,7 @@ describe('FileStore', function () {
         write_stream.destroy()
       })
 
-      const file_store = new FileStore({ path: STORE_PATH })
+      const file_store = new FileStore({ path: this.storePath })
       file_store
         .create(req)
         .then((file) => {
@@ -198,17 +141,17 @@ describe('FileStore', function () {
 
   describe('getOffset', function () {
     it('should reject non-existant files', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
+      const file_store = new FileStore({ path: this.storePath })
       return file_store.getOffset('doesnt_exist').should.be.rejectedWith(404)
     })
 
     it('should reject directories', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
+      const file_store = new FileStore({ path: this.storePath })
       return file_store.getOffset('').should.be.rejectedWith(404)
     })
 
     it('should resolve the stats for existant files', function () {
-      const file_store = new FileStore({ path: STORE_PATH })
+      const file_store = new FileStore({ path: this.storePath })
       const req = { headers: { 'upload-length': TEST_FILE_SIZE } }
 
       file_store.create(req).then((file) => {
