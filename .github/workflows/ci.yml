@@ -10,9 +10,13 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  CI:
     runs-on: ubuntu-latest
+    env:
+      AWS_BUCKET: ${{secrets.AWS_BUCKET}}
+      AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      AWS_REGION: ${{secrets.AWS_REGION}}
 
     strategy:
       matrix:
@@ -27,11 +31,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
-      env:
-        AWS_BUCKET: ${{secrets.AWS_BUCKET}}
-        AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
-        AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-        AWS_REGION: ${{secrets.AWS_REGION}}
     - run: npm run lint
     - run: npm run test
     - run: npm run coverage
