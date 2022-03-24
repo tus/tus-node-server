@@ -8,11 +8,15 @@ const FileStore = require('../lib/stores/FileStore')
 const shared = require('./Test-Stores.shared')
 
 describe('FileStore', function () {
-  beforeEach(function () {
+  before(function() {
     this.testFileSize = 960244
+    this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
-    this.testFilePath = path.resolve(__dirname, 'fixtures', 'test.mp4')
+    this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
     this.filesDirectory = path.resolve(__dirname, `..${this.storePath}`)
+  })
+
+  beforeEach(function () {
     this.server = new Server()
     this.server.datastore = new FileStore({ path: this.storePath })
   })
@@ -33,25 +37,5 @@ describe('FileStore', function () {
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // termination extension
   shared.shouldWriteUploads()
-
-  describe('getOffset', function () {
-    it('should reject non-existant files', function () {
-      const file_store = new FileStore({ path: this.storePath })
-      return file_store.getOffset('doesnt_exist').should.be.rejectedWith(404)
-    })
-
-    it('should reject directories', function () {
-      const file_store = new FileStore({ path: this.storePath })
-      return file_store.getOffset('').should.be.rejectedWith(404)
-    })
-
-    it('should resolve the stats for existant files', function () {
-      const file_store = new FileStore({ path: this.storePath })
-      const req = { headers: { 'upload-length': this.testFileSize } }
-
-      file_store.create(req).then((file) => {
-        file_store.getOffset(file.id).should.be.fulfilledWith(this.testFileSize)
-      })
-    })
-  })
+  shared.shouldHandleOffset()
 })

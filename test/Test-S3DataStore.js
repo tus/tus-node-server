@@ -7,10 +7,14 @@ const S3Store = require('../lib/stores/S3Store')
 const shared = require('./Test-Stores.shared')
 
 describe('S3DataStore', function () {
-  beforeEach(function() {
+  before(function() {
     this.testFileSize = 960244
+    this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
-    this.testFilePath = path.resolve(__dirname, 'fixtures', 'test.mp4')
+    this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
+  })
+
+  beforeEach(function() {
     this.server = new Server()
     this.server.datastore = new S3Store({
       path: this.storePath,
@@ -27,4 +31,5 @@ describe('S3DataStore', function () {
   // Termination extension not implemented yet
   // shared.shouldRemoveUploads()
   shared.shouldWriteUploads()
+  shared.shouldHandleOffset()
 })
