@@ -34,7 +34,7 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 10000 --exit",
+    "test": "cross-env NODE_ENV=test mocha --timeout 7000 --exit",
     "test:local": "env-cmd npm run test",
     "coverage": "nyc npm test",
     "demo": "DATA_STORE=S3Store env-cmd node demo/server.js",
