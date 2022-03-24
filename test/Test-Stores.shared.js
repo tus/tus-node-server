@@ -40,10 +40,11 @@ exports.shouldHaveStoreMethods = function () {
 
 exports.shouldCreateUploads = function () {
   describe('create', function () {
+    const testFileSize = 960244
     const invalidReq = { headers: {}, url: this.storePath }
     const req = {
       headers: {
-        'upload-length': this.testFileSize.toString(),
+        'upload-length': testFileSize.toString(),
         'upload-metadata': 'foo bar',
       },
       url: this.storePath,
@@ -68,7 +69,7 @@ exports.shouldCreateUploads = function () {
 
       const file = await this.server.datastore.create(req)
       assert.equal(file instanceof File, true)
-      assert.equal(file.upload_length, this.testFileSize)
+      assert.equal(file.upload_length, testFileSize)
       assert.equal(fileCreatedEvent.calledOnce, true)
     })
 
@@ -80,7 +81,7 @@ exports.shouldCreateUploads = function () {
       const file = await this.server.datastore.create(req)
       assert.equal(file instanceof File, true)
       assert.equal(file.id, 'hardcoded-name')
-      assert.equal(file.upload_length, this.testFileSize)
+      assert.equal(file.upload_length, testFileSize)
     })
   })
 }
