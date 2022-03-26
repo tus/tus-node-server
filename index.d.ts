@@ -27,6 +27,9 @@ declare interface S3StoreOptions extends DataStoreOptions {
     bucket: string;
     tmpDirPrefix: string;
     partSize: number;
+    endpoint: string;
+    s3ForcePathStyle: boolean;
+    signatureVersion: string;
 }
 
 declare class File {
