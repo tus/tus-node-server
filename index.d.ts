@@ -101,6 +101,7 @@ export declare const EVENTS: {
     EVENT_ENDPOINT_CREATED: string;
     EVENT_FILE_CREATED: string;
     EVENT_UPLOAD_COMPLETE: string;
+    EVENT_FILE_DELETED: string;
 };
 
 export declare const ERRORS: {
