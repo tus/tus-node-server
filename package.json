@@ -60,6 +60,7 @@
     "@google-cloud/storage": "^5.18.1",
     "aws-sdk": "^2.1064.0",
     "configstore": "^5.0.1",
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "path-to-regexp": "^6.2.0"
   }
 }
