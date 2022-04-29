@@ -8,6 +8,9 @@ const PatchHandler = require('../lib/handlers/PatchHandler');
 const DataStore = require('../lib/stores/DataStore');
 
 const hasHeader = (res, header) => {
+    if (typeof header === 'string') {
+        return res._header.indexOf(`${header}:`) > -1;
+    }
     const key = Object.keys(header)[0];
     return res._header.indexOf(`${key}: ${header[key]}`) > -1;
 };
@@ -98,6 +101,7 @@ describe('PatchHandler', () => {
             return handler.send(req, res)
                 .then(() => {
                     assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
+                    assert.equal(hasHeader(res, 'Content-Length'), false);
                     assert.equal(res.statusCode, 204);
                 });
         });
