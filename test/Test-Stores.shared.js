@@ -188,10 +188,9 @@ exports.shouldHandleOffset = function () {
     })
 
     it('should resolve the stats for existing files', function (done) {
-      const size = this.testFileSize.toString()
       const req = {
         headers: {
-          'upload-length': size,
+          'upload-length': this.testFileSize.toString(),
           'upload-metadata': 'foo bar',
         },
         url: this.storePath,
@@ -201,7 +200,8 @@ exports.shouldHandleOffset = function () {
         .create(req)
         .then((file) => this.server.datastore.getOffset(file.id))
         .then((stats) => {
-          assert.strictEqual(stats.upload_length, size)
+          // TODO: make sure all stores return a number and not a string
+          assert.strictEqual(Number(stats.upload_length), this.testFileSize)
         })
         .then(done)
         .catch(done)

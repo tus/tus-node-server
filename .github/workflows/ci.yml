@@ -17,6 +17,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
       AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
       AWS_REGION: ${{secrets.AWS_REGION}}
+      KEYFILE_PASSPHRASE: ${{secrets.KEYFILE_PASSPHRASE}}
 
     strategy:
       matrix:
@@ -25,6 +26,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Decrypt keyfile
+      run: ./.github/scripts/decrypt_secret.sh
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
