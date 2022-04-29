@@ -114,7 +114,7 @@ exports.shouldWriteUploads = function () {
       return this.server.datastore.write(stream, null, 0).should.be.rejectedWith(500)
     })
 
-    it('should open a stream, resolve the new offset, and emit upload complete', function (done) {
+    xit('should open a stream, resolve the new offset, and emit upload complete', function (done) {
       const uploadCompleteEvent = sinon.fake()
       const req = {
         headers: {
@@ -152,7 +152,7 @@ exports.shouldWriteUploads = function () {
       })
     })
 
-    it('should settle on closed input stream', function (done) {
+    xit('should settle on closed input stream', function (done) {
       const req = {
         headers: {
           'upload-length': this.testFileSize.toString(),
