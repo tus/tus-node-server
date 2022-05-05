@@ -1,5 +1,7 @@
 .idea
 
+.env
+
 # Logs
 logs
 *.log
@@ -31,7 +33,7 @@ node_modules
 
 # Example local FileStore
 example/files
-files/
+test/output
 
 #OSX
 .DS_Store

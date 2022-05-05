@@ -30,7 +30,7 @@ describe('Server', () => {
             const server = new Server();
             server.handlers.should.be.empty();
             server.datastore = new DataStore({
-                path: '/files',
+                path: '/test/output',
             });
             server.handlers.should.have.property('HEAD');
             server.handlers.should.have.property('OPTIONS');
@@ -45,7 +45,7 @@ describe('Server', () => {
         before(() => {
             server = new Server();
             server.datastore = new DataStore({
-                path: '/files',
+                path: '/test/output',
             });
         });
 
@@ -63,7 +63,7 @@ describe('Server', () => {
         before(() => {
             server = new Server();
             server.datastore = new DataStore({
-                path: '/files',
+                path: '/test/output',
             });
 
             server.get('/some_url', (req, res) => {
@@ -98,7 +98,7 @@ describe('Server', () => {
         before(() => {
             server = new Server();
             server.datastore = new FileStore({
-                path: '/files',
+                path: '/test/output',
             });
 
             listener = server.listen();
@@ -229,7 +229,7 @@ describe('Server', () => {
         beforeEach(() => {
             server = new Server();
             server.datastore = new FileStore({
-                path: '/files',
+                path: '/test/output',
             });
 
             listener = server.listen();

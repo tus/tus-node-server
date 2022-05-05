@@ -8,7 +8,7 @@ const DataStore = require('../lib/stores/DataStore');
 const File = require('../lib/models/File');
 
 describe('DataStore', () => {
-    const datastore = new DataStore({path: '/files'});
+    const datastore = new DataStore({path: '/test/output'});
 
     it('constructor must require a path', (done) => {
         assert.throws(() => { new DataStore() }, Error);
@@ -16,7 +16,7 @@ describe('DataStore', () => {
     });
 
     it('constructor must require the namingFunction to be a function, if it is provided', (done) => {
-        assert.throws(() => { new DataStore({ path: '/files', namingFunction: {} }) }, Error);
+        assert.throws(() => { new DataStore({ path: '/test/output', namingFunction: {} }) }, Error);
         done();
     });
 

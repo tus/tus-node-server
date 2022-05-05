@@ -4,7 +4,6 @@
 const rimraf = require('rimraf');
 const assert = require('assert');
 const request = require('supertest');
-const exec = require('child_process').exec;
 const path = require('path');
 const fs = require('fs');
 const Server = require('../lib/Server');
@@ -13,14 +12,14 @@ const GCSDataStore = require('../lib/stores/GCSDataStore');
 const { Storage } = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
-const STORE_PATH = '/files';
-const PROJECT_ID = 'vimeo-open-source';
+const STORE_PATH = '/test/output';
+const PROJECT_ID = 'tus-node-server';
 const KEYFILE = path.resolve(__dirname, '../keyfile.json');
-const BUCKET = 'tus-node-server';
+const BUCKET = 'tus-node-server-ci';
 
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_SIZE = 960244;
-const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
+const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4');
 const TEST_METADATA = 'some data, for you';
 
 const gcs = new Storage({
@@ -289,10 +288,6 @@ describe('EndToEnd', () => {
     });
 
     describe('GCSDataStore', () => {
-        if (process.env.TRAVIS_SECURE_ENV_VARS !== 'true') {
-            return;
-        }
-
         let file_id;
         let deferred_file_id;
         const files_created = [];
