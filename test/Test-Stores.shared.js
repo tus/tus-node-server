@@ -114,7 +114,7 @@ exports.shouldWriteUploads = function () {
       return this.server.datastore.write(stream, null, 0).should.be.rejectedWith(500)
     })
 
-    xit('should open a stream, resolve the new offset, and emit upload complete', function (done) {
+    it('should open a stream, resolve the new offset, and emit upload complete', function (done) {
       const uploadCompleteEvent = sinon.fake()
       const req = {
         headers: {
@@ -128,7 +128,6 @@ exports.shouldWriteUploads = function () {
 
       const stream = fs.createReadStream(this.testFilePath)
       const size = this.testFileSize
-      const path = this.testFilePath
       let id
 
       stream.once('open', () => {
@@ -136,8 +135,7 @@ exports.shouldWriteUploads = function () {
           .create(req)
           .then((file) => {
             id = file.id
-            const write_stream = fs.createReadStream(path)
-            return this.server.datastore.write(write_stream, file.id, 0)
+            return this.server.datastore.write(stream, file.id, 0)
           })
           .then((offset) => {
             assert.equal(offset, size)
@@ -150,29 +148,6 @@ exports.shouldWriteUploads = function () {
           .then(done)
           .catch(done)
       })
-    })
-
-    xit('should settle on closed input stream', function (done) {
-      const req = {
-        headers: {
-          'upload-length': this.testFileSize.toString(),
-          'upload-metadata': 'foo bar',
-        },
-        url: this.storePath,
-      }
-
-      const stream = fs.createReadStream(this.testFilePath)
-
-      stream.pause()
-      stream.on('data', () => stream.destroy())
-
-      this.server.datastore
-        .create(req)
-        .then((file) => {
-          return this.server.datastore.write(stream, file.id, 0)
-        })
-        .catch(() => {})
-        .finally(() => done())
     })
   })
 }
