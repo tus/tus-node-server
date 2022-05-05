@@ -119,6 +119,47 @@ const server = http.createServer((req, res) => {
 server.listen(port)
 ```
 
+#### Use tus-node-server with [Fastify](https://www.fastify.io)
+
+```js
+const tus = require('tus-node-server');
+const tusServer = new tus.Server();
+tusServer.datastore = new tus.FileStore({
+    path: '/files',
+});
+
+const fastify = require('fastify')({ logger: true });
+
+/**
+ * add new content-type to fastify forewards request 
+ * without any parser to leave body untouched
+ * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
+ */
+fastify.addContentTypeParser(
+    'application/offset+octet-stream', async () => true
+);
+
+/**
+ * let tus handle preparation and filehandling requests 
+ * fastify exposes raw nodejs http req/res via .raw property
+ * @see https://www.fastify.io/docs/latest/Reference/Request/
+ * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
+ */
+fastify.all('/files', (req, res) => {
+    tusServer.handle(req.raw, res.raw);
+});
+fastify.all('/files/*', (req, res) => {
+    tusServer.handle(req.raw, res.raw);
+});
+
+fastify.listen(3000, (err) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+});
+```
+
 ## Features
 #### Events:
 
