@@ -17,7 +17,7 @@ const hasHeader = (res, header) => {
 };
 
 describe('GetHandler', () => {
-    const path = '/files';
+    const path = '/test/output';
     let req = null;    
     let res = null;
 

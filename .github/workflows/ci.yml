@@ -10,9 +10,14 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  CI:
     runs-on: ubuntu-latest
+    env:
+      AWS_BUCKET: ${{secrets.AWS_BUCKET}}
+      AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      AWS_REGION: ${{secrets.AWS_REGION}}
+      KEYFILE_PASSPHRASE: ${{secrets.KEYFILE_PASSPHRASE}}
 
     strategy:
       matrix:
@@ -20,9 +25,11 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Decrypt keyfile
+      run: ./.github/scripts/decrypt_secret.sh
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'

@@ -8,7 +8,7 @@ import http from "http";
 declare interface DataStoreOptions {
     path: string;
     namingFunction?: (req: http.IncomingMessage) => string;
-    relativeLocation?: string;
+    relativeLocation?: boolean;
 }
 
 declare interface FileStoreOptions extends DataStoreOptions {
@@ -25,6 +25,7 @@ declare interface S3StoreOptions extends DataStoreOptions {
     accessKeyId: string;
     secretAccessKey: string;
     bucket: string;
+    region?: string;
     tmpDirPrefix: string;
     partSize: number;
 }

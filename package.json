@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -34,7 +34,8 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 5000 --exit",
+    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit",
+    "test:local": "env-cmd npm run test",
     "coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
@@ -45,15 +46,16 @@
     "@vimeo/eslint-config-player": "^5.0.1",
     "babel-eslint": "^10.1.0",
     "cross-env": "^7.0.3",
+    "env-cmd": "^10.1.0",
     "eslint": "^7.32.0",
-    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-promise": "^6.0.0",
     "istanbul": "^0.4.5",
     "mocha": "^9.2.0",
     "node-mocks-http": "^1.11.0",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
     "should": "^13.2.3",
-    "sinon": "^12.0.1",
+    "sinon": "^13.0.1",
     "supertest": "^6.2.2",
     "tus-js-client": "^2.3.0"
   },
