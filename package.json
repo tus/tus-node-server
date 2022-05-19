@@ -39,6 +39,7 @@
     "coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
+    "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
     "lint": "eslint ."
   },
   "devDependencies": {
