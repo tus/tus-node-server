@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as fs from "fs";
-import http from "http";
+import * as http from "http";
 
 /**
  * arguments of constructor which in class extend DataStore
