@@ -90,7 +90,7 @@ export declare class Server extends EventEmitter {
     constructor();
     get datastore(): DataStore;
     set datastore(store: DataStore);
-    get(path: string, callback: (...args) => any): any;
+    get(path: string, callback: (...args: any[]) => any): any;
     handle(
         req: http.IncomingMessage,
         res: http.ServerResponse
