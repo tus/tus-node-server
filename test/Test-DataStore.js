@@ -43,11 +43,11 @@ describe('DataStore', () => {
 
     it('should check for an extension', (done) => {
         datastore.extensions = [ 'creation', 'expiration'];
-        assert(datastore.hasExtension('creation'));
-        assert(datastore.hasExtension('expiration'));
+        assert.equal(datastore.hasExtension('creation'), true);
+        assert.equal(datastore.hasExtension('expiration'), true);
 
-        assert(!datastore.hasExtension('concatentation'));
-        assert(!datastore.hasExtension('CREATION')); // test case sensitivity
+        assert.equal(datastore.hasExtension('concatentation'), false);
+        assert.equal(datastore.hasExtension('CREATION'), false); // test case sensitivity
         done();
     });
 
