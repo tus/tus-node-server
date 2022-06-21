@@ -50,6 +50,10 @@ exports.shouldCreateUploads = function () {
       url: this.storePath,
     }
 
+    it('should report \'creation\' extension', function () {
+      assert.equal(this.server.datastore.hasExtension('creation'), true);
+    })
+
     it('should reject if both upload-length and upload-defer-length are not provided', function (done) {
       assert.rejects(() => this.server.datastore.create(invalidReq))
       done()
@@ -88,6 +92,10 @@ exports.shouldCreateUploads = function () {
 
 exports.shouldRemoveUploads = function () {
   describe('remove (termination extension)', function () {
+    it('should report \'termination\' extension', function () {
+      assert.equal(this.server.datastore.hasExtension('termination'), true);
+    })
+
     it('should reject when the file does not exist', function () {
       const req = { file_id: '1234' }
       return this.server.datastore.remove(req).should.be.rejected()

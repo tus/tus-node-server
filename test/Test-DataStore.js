@@ -41,6 +41,16 @@ describe('DataStore', () => {
         done();
     });
 
+    it('should check for an extension', (done) => {
+        datastore.extensions = [ 'creation', 'expiration'];
+        assert(datastore.hasExtension('creation'));
+        assert(datastore.hasExtension('expiration'));
+
+        assert(!datastore.hasExtension('concatentation'));
+        assert(!datastore.hasExtension('CREATION')); // test case sensitivity
+        done();
+    });
+
     it('must have a create method', (done) => {
         datastore.should.have.property('create');
         datastore.create.should.be.type('function');
