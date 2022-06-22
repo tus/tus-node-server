@@ -35,6 +35,15 @@ describe('PostHandler', () => {
             .catch(done);
         });
 
+        it('must 400 if the \'concatenation\' extension is not supported', (done) => {
+            req.headers = { 'upload-concat': 'partial' };
+            handler.send(req, res).then(() => {
+                assert.equal(res.statusCode, 400);
+                return done();
+            })
+            .catch(done);
+        });
+
         it('must acknowledge successful POST requests with the 201', (done) => {
             req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
 
