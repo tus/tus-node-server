@@ -13,12 +13,12 @@ const hasHeader = (res, header) => {
 };
 
 describe('PostHandler', () => {
-    const path = '/files';
+    const path = '/test/output';
     let res = null;
     const namingFunction = (req) => req.url.replace(/\//g, '-');
     const store = new DataStore({ path, namingFunction });
     const handler = new PostHandler(store);
-    const req = { headers: {}, url: '/files' };
+    const req = { headers: {}, url: '/test/output' };
 
     beforeEach((done) => {
         res = new http.ServerResponse({ method: 'POST' });
@@ -40,7 +40,7 @@ describe('PostHandler', () => {
 
             handler.send(req, res)
                 .then(() => {
-                    assert.equal(hasHeader(res, { 'Location': '//localhost:3000/files/-files' }), true);
+                    assert.equal(hasHeader(res, { 'Location': '//localhost:3000/test/output/-test-output' }), true);
                     assert.equal(res.statusCode, 201);
                     return done();
                 })

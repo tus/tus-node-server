@@ -8,7 +8,7 @@ const DataStore = require('../lib/stores/DataStore');
 const File = require('../lib/models/File');
 
 describe('DataStore', () => {
-    const datastore = new DataStore({path: '/files'});
+    const datastore = new DataStore({path: '/test/output'});
 
     it('constructor must require a path', (done) => {
         assert.throws(() => { new DataStore() }, Error);
@@ -16,7 +16,7 @@ describe('DataStore', () => {
     });
 
     it('constructor must require the namingFunction to be a function, if it is provided', (done) => {
-        assert.throws(() => { new DataStore({ path: '/files', namingFunction: {} }) }, Error);
+        assert.throws(() => { new DataStore({ path: '/test/output', namingFunction: {} }) }, Error);
         done();
     });
 
@@ -41,9 +41,25 @@ describe('DataStore', () => {
         done();
     });
 
+    it('should check for an extension', (done) => {
+        datastore.extensions = [ 'creation', 'expiration'];
+        assert.equal(datastore.hasExtension('creation'), true);
+        assert.equal(datastore.hasExtension('expiration'), true);
+
+        assert.equal(datastore.hasExtension('concatentation'), false);
+        assert.equal(datastore.hasExtension('CREATION'), false); // test case sensitivity
+        done();
+    });
+
     it('must have a create method', (done) => {
         datastore.should.have.property('create');
         datastore.create.should.be.type('function');
+        done();
+    });
+
+    it('must have a remove method', (done) => {
+        datastore.should.have.property('remove');
+        datastore.remove();
         done();
     });
 

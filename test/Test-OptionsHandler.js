@@ -18,7 +18,7 @@ let hasHeader = (res, header) => {
 
 describe('OptionsHandler', () => {
     let res = null;
-    let store = new DataStore({ path: '/files' });
+    let store = new DataStore({ path: '/test/output' });
     let handler = new OptionsHandler(store);
     let req = { headers: {} };
 

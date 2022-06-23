@@ -1,92 +1,100 @@
 import { EventEmitter } from "events";
-import http from 'http';
+import * as fs from "fs";
+import * as http from "http";
 
 /**
  * arguments of constructor which in class extend DataStore
  */
-declare interface DataStoreOptions{
+declare interface DataStoreOptions {
     path: string;
-    namingFunction?: (req : http.IncomingMessage) => string;
-    relativeLocation?: string;
+    namingFunction?: (req: http.IncomingMessage) => string;
+    relativeLocation?: boolean;
 }
 
-declare interface FileStoreOptions extends DataStoreOptions{
+declare interface FileStoreOptions extends DataStoreOptions {
     directory?: string;
 }
 
-declare interface GCStoreOptions extends DataStoreOptions{
+declare interface GCStoreOptions extends DataStoreOptions {
     bucket: string;
     projectId: string;
     keyFilename: string;
 }
 
-declare interface S3StoreOptions extends DataStoreOptions{
+declare interface S3StoreOptions extends DataStoreOptions {
     accessKeyId: string;
     secretAccessKey: string;
     bucket: string;
+    region?: string;
     tmpDirPrefix: string;
     partSize: number;
 }
 
-declare class File{
+declare class File {
     id: string;
     upload_length: any;
     upload_defer_length: any;
     upload_metadata: any;
-    constructor(file_id: string, upload_length: any, upload_defer_length: any, upload_metadata: any);
+    constructor(
+        file_id: string,
+        upload_length: any,
+        upload_defer_length: any,
+        upload_metadata: any
+    );
 }
 
 /**
  * Based store for all DataStore classes.
  */
-export declare class DataStore extends EventEmitter{
-    constructor(options : DataStoreOptions);
-    get extensions() : any;
-    set extensions(extensions_array : any);
-    create(req: http.IncomingMessage): Promise<any>;
-    write(req: http.IncomingMessage, file_id?: string, offset?: number): Promise<any>;
-    getOffset(id: string): Promise<any>;
+export declare class DataStore extends EventEmitter {
+    constructor(options: DataStoreOptions);
+    get extensions(): any;
+    set extensions(extensions_array: any);
+    create(req: Partial<http.IncomingMessage>): Promise<any>;
+    write(
+        req: http.IncomingMessage,
+        file_id?: string,
+        offset?: number
+    ): Promise<any>;
+    getOffset(file_id: string): Promise<any>;
 }
 
 /**
  * file store in local storage
  */
-export declare class FileStore extends DataStore{
-    constructor(options : FileStoreOptions);
-    create(req: http.IncomingMessage): Promise<any>;
-    write(req: http.IncomingMessage, file_id?: string, offset?: number): Promise<any>;
-    getOffset(file_id: string): Promise<any>;
+export declare class FileStore extends DataStore {
+    constructor(options: FileStoreOptions);
+    read(file_id: string): fs.ReadStream;
+    getOffset(file_id: string): Promise<fs.Stats & File>;
 }
 
 /**
  * file store in Google Cloud
  */
-export declare class GCSDataStore extends DataStore{
+export declare class GCSDataStore extends DataStore {
     constructor(options: GCStoreOptions);
-    create(req: http.IncomingMessage): Promise<any>;
-    write(req: http.IncomingMessage, file_id?: string, offset?: number): Promise<any>;
-    getOffset(file_id: string): Promise<any>;
 }
 
 /**
  * file store in AWS S3
  */
 export declare class S3Store extends DataStore {
-    constructor(options : S3StoreOptions);
-    create(req: http.IncomingMessage): Promise<any>;
-    write(req: http.IncomingMessage, file_id?: string, offset?: number): Promise<any>;
-    getOffset(file_id: string, with_parts?: boolean): Promise<any>;    
+    constructor(options: S3StoreOptions);
+    getOffset(file_id: string, with_parts?: boolean): Promise<any>;
 }
 
 /**
  * Tus protocol server implements
  */
-export declare class Server extends EventEmitter{
+export declare class Server extends EventEmitter {
     constructor();
-    get datastore() : DataStore;
+    get datastore(): DataStore;
     set datastore(store: DataStore);
-    get(path: string, callback: Function): any;
-    handle(req: http.IncomingMessage, res: http.ServerResponse): http.ServerResponse;
+    get(path: string, callback: (...args: any[]) => any): any;
+    handle(
+        req: http.IncomingMessage,
+        res: http.ServerResponse
+    ): http.ServerResponse;
     listen(): http.Server;
 }
 
@@ -130,3 +138,8 @@ export declare const ERRORS: {
         body: string;
     };
 };
+
+export declare class Metadata {
+    static parse(str: string): Record<string, string>;
+    static stringify(metadata: Record<string, string>): string;
+}

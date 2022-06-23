@@ -4,7 +4,6 @@
 const rimraf = require('rimraf');
 const assert = require('assert');
 const request = require('supertest');
-const exec = require('child_process').exec;
 const path = require('path');
 const fs = require('fs');
 const Server = require('../lib/Server');
@@ -13,14 +12,14 @@ const GCSDataStore = require('../lib/stores/GCSDataStore');
 const { Storage } = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
-const STORE_PATH = '/files';
-const PROJECT_ID = 'vimeo-open-source';
+const STORE_PATH = '/test/output';
+const PROJECT_ID = 'tus-node-server';
 const KEYFILE = path.resolve(__dirname, '../keyfile.json');
-const BUCKET = 'tus-node-server';
+const BUCKET = 'tus-node-server-ci';
 
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_SIZE = 960244;
-const TEST_FILE_PATH = path.resolve(__dirname, 'test.mp4');
+const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4');
 const TEST_METADATA = 'some data, for you';
 
 const gcs = new Storage({
@@ -124,6 +123,30 @@ describe('EndToEnd', () => {
                     // Save the id for subsequent tests
                     deferred_file_id = res.headers.location.split('/').pop();
                     done();
+                });
+            });
+
+            it('should create a file and upload content', (done) => {
+                const read_stream = fs.createReadStream(TEST_FILE_PATH);
+                const write_stream = agent.post(STORE_PATH)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', TEST_FILE_SIZE)
+                .set('Content-Type', 'application/offset+octet-stream');
+
+                write_stream.on('response', (res) => {
+                    assert.equal(res.statusCode, 201);
+                    assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
+                    assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
+                    done();
+                });
+
+                // Using .pipe() broke when upgrading to Superagent 3.0+,
+                // so now we use data events to read the file to the agent.
+                read_stream.on('data', (chunk) => {
+                    write_stream.write(chunk);
+                });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
                 });
             });
         });
@@ -265,10 +288,6 @@ describe('EndToEnd', () => {
     });
 
     describe('GCSDataStore', () => {
-        if (process.env.TRAVIS_SECURE_ENV_VARS !== 'true') {
-            return;
-        }
-
         let file_id;
         let deferred_file_id;
         const files_created = [];
@@ -354,6 +373,30 @@ describe('EndToEnd', () => {
                     done();
                 });
             });
+
+            it('should create a file and upload content', (done) => {
+                const read_stream = fs.createReadStream(TEST_FILE_PATH);
+                const write_stream = agent.post(STORE_PATH)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Length', TEST_FILE_SIZE)
+                .set('Content-Type', 'application/offset+octet-stream');
+
+                write_stream.on('response', (res) => {
+                    assert.equal(res.statusCode, 201);
+                    assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
+                    assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
+                    done();
+                });
+
+                // Using .pipe() broke when upgrading to Superagent 3.0+,
+                // so now we use data events to read the file to the agent.
+                read_stream.on('data', (chunk) => {
+                    write_stream.write(chunk);
+                });
+                read_stream.on("end", () => {
+                    write_stream.end(() => {});
+                });
+            })
         });
 
         describe('HEAD', () => {

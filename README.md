@@ -1,13 +1,8 @@
 # tus-node-server
 [![npm version](https://badge.fury.io/js/tus-node-server.svg)](https://badge.fury.io/js/tus-node-server)
-[![Build Status](https://travis-ci.org/tus/tus-node-server.svg?branch=master)](https://travis-ci.org/tus/tus-node-server)
-[![Coverage Status](https://coveralls.io/repos/github/tus/tus-node-server/badge.svg?branch=master)](https://coveralls.io/github/tus/tus-node-server?branch=master)
-[![Dependency Status](https://david-dm.org/tus/tus-node-server.svg)](https://david-dm.org/tus/tus-node-server#info=dependencies)
-[![devDependencies Status](https://david-dm.org/tus/tus-node-server/dev-status.svg)](https://david-dm.org/tus/tus-node-server?type=dev)
+[![Build Status](https://github.com/tus/tus-node-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tus/tus-node-server/actions/workflows/ci.yml)
 
 tus is a new open protocol for resumable uploads built on HTTP. This is the [tus protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) node.js server implementation.
-
-> :warning: **Attention:** We currently lack the resources to properly maintain tus-node-server. This has the unfortunate consequence that this project is in rather bad condition (out-dated dependencies, no tests for the S3 storage etc). If you want to help us with tus-node-server, we are more than happy to assist you and welcome new contributors. In the meantime, we can recommend [tusd](https://github.com/tus/tusd) as a reliable and production-tested tus server. Of course, you can use tus-node-server if it serves your purpose.
 
 ## Installation
 
@@ -124,6 +119,47 @@ const server = http.createServer((req, res) => {
 server.listen(port)
 ```
 
+#### Use tus-node-server with [Fastify](https://www.fastify.io)
+
+```js
+const tus = require('tus-node-server');
+const tusServer = new tus.Server();
+tusServer.datastore = new tus.FileStore({
+    path: '/files',
+});
+
+const fastify = require('fastify')({ logger: true });
+
+/**
+ * add new content-type to fastify forewards request 
+ * without any parser to leave body untouched
+ * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
+ */
+fastify.addContentTypeParser(
+    'application/offset+octet-stream', async () => true
+);
+
+/**
+ * let tus handle preparation and filehandling requests 
+ * fastify exposes raw nodejs http req/res via .raw property
+ * @see https://www.fastify.io/docs/latest/Reference/Request/
+ * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
+ */
+fastify.all('/files', (req, res) => {
+    tusServer.handle(req.raw, res.raw);
+});
+fastify.all('/files/*', (req, res) => {
+    tusServer.handle(req.raw, res.raw);
+});
+
+fastify.listen(3000, (err) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+});
+```
+
 ## Features
 #### Events:
 
@@ -173,6 +209,16 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
         }
     }
     ```
+    
+- `EVENT_FILE_DELETED`: Fired when a `DELETE` request finishes deleting the file
+
+    _Example payload:_
+    ```
+    {
+        file_id: '7b26bf4d22cf7198d3b3706bf0379794'
+           
+    }
+    ```
 
 #### Custom `GET` handlers:
 Add custom `GET` handlers to suit your needs, similar to [Express routing](https://expressjs.com/en/guide/routing.html).
@@ -187,14 +233,21 @@ server.get('/uploads', (req, res) => {
 ```
 
 #### Custom file names:
+
+The default naming of files is a random crypto hex string. When using your own `namingFunction`, make sure to create URL friendly names such as removing spaces.
+
 ```js
-const fileNameFromUrl = (req) => {
-    return req.url.replace(/\//g, '-');
+const crypto = require('crypto');
+
+// req is http.IncomingMessage
+const randomString = (req) => {
+    // same as the default implementation
+    return crypto.randomBytes(16).toString('hex');
 }
 
 server.datastore = new tus.FileStore({
     path: '/files',
-    namingFunction: fileNameFromUrl
+    namingFunction: randomString
 });
 ```
 
