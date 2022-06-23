@@ -35,10 +35,10 @@ describe('PostHandler', () => {
             .catch(done);
         });
 
-        it('must 400 if the \'concatenation\' extension is not supported', (done) => {
+        it('must 501 if the \'concatenation\' extension is not supported', (done) => {
             req.headers = { 'upload-concat': 'partial' };
             handler.send(req, res).then(() => {
-                assert.equal(res.statusCode, 400);
+                assert.equal(res.statusCode, 501);
                 return done();
             })
             .catch(done);
