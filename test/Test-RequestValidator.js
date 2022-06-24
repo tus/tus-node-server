@@ -93,6 +93,21 @@ describe('RequestValidator', () => {
         });
     });
 
+    describe('_invalidUploadConcatHeader', () => {
+        it('should validate partial and final', (done) => {
+            assert.equal(RequestValidator._invalidUploadConcatHeader('partial'), false);
+            assert.equal(RequestValidator._invalidUploadConcatHeader('final;/files/a /files/b'), false);
+            done();
+        });
+
+        it('should invalidate everything else', (done) => {
+            assert.equal(RequestValidator._invalidUploadConcatHeader(''), true);
+            assert.equal(RequestValidator._invalidUploadConcatHeader('PARTIAL'), true);
+            assert.equal(RequestValidator._invalidUploadConcatHeader('invalid-value'), true);
+            done();
+        });
+    });
+
     describe('_invalidXRequestedWithHeader', () => {
         it('always validate ', (done) => {
             assert.equal(RequestValidator._invalidXRequestedWithHeader(), false);
