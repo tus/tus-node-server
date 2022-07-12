@@ -40,6 +40,5 @@ test/output
 
 *.sublime-workspace
 
-# Keyfile will be decrypted from keyfile.json.enc by travis
-# https://docs.travis-ci.com/user/encrypting-files/
+# Keyfile will be decrypted from keyfile.json.enc by GitHub Actions
 keyfile.json
