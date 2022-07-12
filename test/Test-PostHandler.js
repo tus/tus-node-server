@@ -1,11 +1,16 @@
 /* eslint-env node, mocha */
 'use strict';
 
+
 const assert = require('assert');
-const should = require('should');
 const http = require('http');
+
+const should = require('should');
+const sinon = require('sinon');
+
 const DataStore = require('../lib/stores/DataStore');
 const PostHandler = require('../lib/handlers/PostHandler');
+const { EVENTS } = require('../lib/constants');
 
 const hasHeader = (res, header) => {
     const key = Object.keys(header)[0];
@@ -13,40 +18,110 @@ const hasHeader = (res, header) => {
 };
 
 describe('PostHandler', () => {
-    const path = '/test/output';
+    let req = null;
     let res = null;
-    const namingFunction = (req) => req.url.replace(/\//g, '-');
-    const store = new DataStore({ path, namingFunction });
-    const handler = new PostHandler(store);
-    const req = { headers: {}, url: '/test/output' };
+
+    const fake_store = sinon.createStubInstance(DataStore);
+    fake_store.generateFileName.returns("1234");
+    fake_store.create.resolves({});
 
     beforeEach((done) => {
+        req = { headers: {}, url: '/files', host: 'localhost:3000' };
         res = new http.ServerResponse({ method: 'POST' });
         done();
     });
 
     describe('send()', () => {
-        it('must 412 if the Upload-Length and Upload-Defer-Length headers are both missing', (done) => {
-            req.headers = {};
-            handler.send(req, res).then(() => {
+
+        describe('test errors', () => {
+            it('must 412 if the Upload-Length and Upload-Defer-Length headers are both missing', async() => {
+                const handler = new PostHandler(fake_store);
+
+                req.headers = {};
+                await handler.send(req, res);
                 assert.equal(res.statusCode, 412);
-                return done();
+            });
+
+            it('must 412 if the Upload-Length and Upload-Defer-Length headers are both present', async() => {
+                const handler = new PostHandler(fake_store);
+
+                req.headers = { 'upload-length': '512', 'upload-defer-length': '1'};
+                await handler.send(req, res);
+                assert.equal(res.statusCode, 412);
+            });
+
+            it('should send error when naming function throws', async() => {
+                const fake_store = sinon.createStubInstance(DataStore);
+                fake_store.generateFileName.throws();
+
+                const handler = new PostHandler(fake_store);
+
+                req.headers = { 'upload-length': 1000 };
+                await handler.send(req, res)
+
+                assert.equal(res.statusCode, 500);
+            });
+
+            it('should send error when naming store rejects', async() => {
+                const fake_store = sinon.createStubInstance(DataStore);
+                fake_store.generateFileName.returns('1234');
+                fake_store.create.rejects();
+
+                const handler = new PostHandler(fake_store);
+
+                req.headers = { 'upload-length': 1000 };
+                await handler.send(req, res)
+
+                assert.equal(res.statusCode, 500);
+            });
+
+            // it('should use custom naming function when provided', (done) => {
+            //     const namingFunction = (incomingReq) => incomingReq.url.replace(/\//g, '-');
+            //     const file_store = new FileStore({ path: STORE_PATH, namingFunction });
+            //     file_store.create(file)
+            //         .then((newFile) => {
+            //             assert.equal(newFile instanceof File, true);
+            //             assert.equal(newFile.id, '-files');
+            //             return done();
+            //         })
+            //         .catch(done);
+            // });
+        })
+
+        describe('test successful scenarios', () => {
+            it('must acknowledge successful POST requests with the 201', async() => {
+                const fake_store = sinon.createStubInstance(DataStore);
+                fake_store.generateFileName.returns("1234");
+                fake_store.create.resolves({});
+
+                const handler = new PostHandler(fake_store);
+
+                req.headers = { 'upload-length': 1000 };
+                await handler.send(req, res)
+
+                // TODO: move to another test
+                // assert.equal(hasHeader(res, { 'Location': '//localhost:3000/files/-files' }), true);
+                assert.equal(res.statusCode, 201);
+            });
+        })
+
+        describe('events', () => {
+            it('should emit object returned by store', (done) => {
+                const fake_store = sinon.createStubInstance(DataStore);
+                fake_store.generateFileName.returns("1234");
+
+                const file = {};
+                fake_store.create.resolves(file);
+
+                const handler = new PostHandler(fake_store);
+                handler.on(EVENTS.EVENT_FILE_CREATED, (obj) => {
+                    assert.strictEqual(obj.file, file);
+                    done();
+                });
+
+                req.headers = { 'upload-length': 1000 };
+                handler.send(req, res);
             })
-            .catch(done);
         });
-
-        it('must acknowledge successful POST requests with the 201', (done) => {
-            req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
-
-            handler.send(req, res)
-                .then(() => {
-                    assert.equal(hasHeader(res, { 'Location': '//localhost:3000/test/output/-test-output' }), true);
-                    assert.equal(res.statusCode, 201);
-                    return done();
-                })
-                .catch(done);
-        });
-
     });
-
 });
