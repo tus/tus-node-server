@@ -1,4 +1,5 @@
 const assert = require('assert')
+const should = require('should');
 const sinon = require('sinon')
 const fs = require('fs')
 
@@ -54,16 +55,14 @@ exports.shouldCreateUploads = function () {
       assert.equal(this.server.datastore.hasExtension('creation'), true);
     })
 
-    it('should reject if both upload-length and upload-defer-length are not provided', function (done) {
-      assert.rejects(() => this.server.datastore.create(invalidReq))
-      done()
+    it('should reject if both upload-length and upload-defer-length are not provided', async function () {
+      return assert.rejects(() => this.server.datastore.create(invalidReq), { status_code: 412 })
     })
 
-    it('should reject when namingFunction is invalid', function (done) {
+    it('should reject when namingFunction is invalid', async function () {
       const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
       this.server.datastore.generateFileName = namingFunction
-      assert.rejects(() => this.server.datastore.create(req))
-      done()
+      return assert.rejects(() => this.server.datastore.create(req), { status_code: 500 })
     })
 
     it('should create a file, process it, and send file created event', async function () {
@@ -110,7 +109,7 @@ exports.shouldRemoveUploads = function () {
       const file = await this.server.datastore.create(req)
       await this.server.datastore.remove({ file_id: file.id })
       assert.equal(fileDeletedEvent.calledOnce, true)
-      assert.rejects(this.server.datastore.remove({ file_id: file.id }))
+      return assert.rejects(this.server.datastore.remove({ file_id: file.id }))
     })
   })
 }
@@ -163,11 +162,11 @@ exports.shouldWriteUploads = function () {
 exports.shouldHandleOffset = function () {
   describe('getOffset', function () {
     it('should reject non-existant files', function () {
-      return this.server.datastore.getOffset('doesnt_exist').should.be.rejectedWith(404)
+      return assert.rejects(() => this.server.datastore.getOffset('doesnt_exist'), { status_code: 404 })
     })
 
     it('should reject directories', function () {
-      return this.server.datastore.getOffset('').should.be.rejectedWith(404)
+      return assert.rejects(() => this.server.datastore.getOffset(''), { status_code: 404 })
     })
 
     it('should resolve the stats for existing files', function (done) {
