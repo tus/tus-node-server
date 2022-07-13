@@ -17,7 +17,7 @@ const hasHeader = (res, header) => {
     return res._header.indexOf(`${key}: ${header[key]}`) > -1;
 };
 
-describe('PostHandler', () => {
+describe.only('PostHandler', () => {
     let req = null;
     let res = null;
 
@@ -44,10 +44,16 @@ describe('PostHandler', () => {
 
             it('must 412 if the Upload-Length and Upload-Defer-Length headers are both present', async() => {
                 const handler = new PostHandler(fake_store);
-
                 req.headers = { 'upload-length': '512', 'upload-defer-length': '1'};
                 await handler.send(req, res);
                 assert.equal(res.statusCode, 412);
+            });
+
+            it('must 501 if the \'concatenation\' extension is not supported', async() => {
+                const handler = new PostHandler(fake_store);
+                req.headers = { 'upload-concat': 'partial' };
+                await handler.send(req, res);
+                assert.equal(res.statusCode, 501);
             });
 
             it('should send error when naming function throws', async() => {
@@ -89,20 +95,14 @@ describe('PostHandler', () => {
         })
 
         describe('test successful scenarios', () => {
-            it('must acknowledge successful POST requests with the 201', async() => {
-                const fake_store = sinon.createStubInstance(DataStore);
-                fake_store.generateFileName.returns("1234");
-                fake_store.create.resolves({});
-
+            it('must acknowledge successful POST requests with the 201', async () => {
                 const handler = new PostHandler(fake_store);
-
-                req.headers = { 'upload-length': 1000 };
+                req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
                 await handler.send(req, res)
-
-                // TODO: move to another test
-                // assert.equal(hasHeader(res, { 'Location': '//localhost:3000/files/-files' }), true);
+                assert.equal(hasHeader(res, { 'Location': '//localhost:3000/test/output/1234' }), true);
                 assert.equal(res.statusCode, 201);
             });
+
         })
 
         describe('events', () => {
