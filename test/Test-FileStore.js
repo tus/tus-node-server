@@ -9,7 +9,7 @@ const should = require('should')
 const Server = require('../lib/Server')
 const FileStore = require('../lib/stores/FileStore')
 const File = require('../lib/models/File')
-const EVENTS = require('../lib/constants').EVENTS
+const { ERRORS, EVENTS } = require('../lib/constants')
 
 
 const shared = require('./Test-Stores.shared')
@@ -43,7 +43,6 @@ describe('FileStore', function () {
   describe('create', function () {
     const file = new File('1234', 1000);
 
-
     it('should reject when the directory doesnt exist', function () {
       const file_store = new FileStore({ path: this.storePath });
       file_store.directory = 'some_new_path';
@@ -76,20 +75,20 @@ describe('FileStore', function () {
     });
   });
 
-  describe('write', () => {
-    it('should reject write streams that cant be opened', () => {
+  describe('write', function () {
+    it('should reject write streams that cant be opened', function () {
       const write_stream = fs.createReadStream(this.testFilePath);
-      return server.datastore.write(write_stream, null, 0)
+      return this.server.datastore.write(write_stream, null, 0)
           .should.be.rejectedWith(ERRORS.FILE_WRITE_ERROR);
     });
 
-    it('should reject write streams that cant be opened', () => {
+    it('should reject write streams that cant be opened', function () {
       const write_stream = fs.createReadStream(this.testFilePath);
-      return server.datastore.write(write_stream, '.', 0)
+      return this.server.datastore.write(write_stream, '.', 0)
           .should.be.rejectedWith(ERRORS.FILE_WRITE_ERROR);
     });
 
-    it('should open a stream and resolve the new offset', (done) => {
+    it('should open a stream and resolve the new offset', function (done) {
       const file_store = new FileStore({ path: this.storePath });
       // const file_store = new FileStore({ path: this.storePath, directory: this.filesDirectory });
       const readable = fs.createReadStream(this.testFilePath);

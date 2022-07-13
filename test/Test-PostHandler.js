@@ -17,7 +17,7 @@ const hasHeader = (res, header) => {
     return res._header.indexOf(`${key}: ${header[key]}`) > -1;
 };
 
-describe.only('PostHandler', () => {
+describe('PostHandler', () => {
     let req = null;
     let res = null;
 

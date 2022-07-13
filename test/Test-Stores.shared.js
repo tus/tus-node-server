@@ -41,7 +41,6 @@ exports.shouldHaveStoreMethods = function () {
 exports.shouldCreateUploads = function () {
   describe('create', function () {
     const testFileSize = 960244
-    const invalidReq = { headers: {}, url: this.storePath }
     const req = {
       headers: {
         'upload-length': testFileSize.toString(),
@@ -54,27 +53,12 @@ exports.shouldCreateUploads = function () {
       assert.equal(this.server.datastore.hasExtension('creation'), true);
     })
 
-    it('should reject if both upload-length and upload-defer-length are not provided', function (done) {
-      assert.rejects(() => this.server.datastore.create(invalidReq))
-      done()
-    })
 
     it('should reject when namingFunction is invalid', function (done) {
       const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
       this.server.datastore.generateFileName = namingFunction
       assert.rejects(() => this.server.datastore.create(req))
       done()
-    })
-
-    it('should create a file, process it, and send file created event', async function () {
-      const fileCreatedEvent = sinon.fake()
-
-      this.server.on(EVENTS.EVENT_FILE_CREATED, fileCreatedEvent)
-
-      const file = await this.server.datastore.create(req)
-      assert.equal(file instanceof File, true)
-      assert.equal(file.upload_length, testFileSize)
-      assert.equal(fileCreatedEvent.calledOnce, true)
     })
 
     it('should use custom naming function when provided', async function () {
@@ -97,20 +81,19 @@ exports.shouldRemoveUploads = function () {
     })
 
     it('should reject when the file does not exist', function () {
-      const req = { file_id: '1234' }
-      return this.server.datastore.remove(req).should.be.rejected()
+      const file_id = '1234';
+      return this.server.datastore.remove(file_id).should.be.rejected()
     })
 
     it('should delete the file when it does exist', async function () {
       const fileDeletedEvent = sinon.fake()
-      const req = { headers: { 'upload-length': 1000 }, url: this.storePath }
+      const file = new File('1234', 1000);
 
       this.server.datastore.on(EVENTS.EVENT_FILE_DELETED, fileDeletedEvent)
 
-      const file = await this.server.datastore.create(req)
-      await this.server.datastore.remove({ file_id: file.id })
+      await this.server.datastore.create(file)
+      await this.server.datastore.remove(file.id)
       assert.equal(fileDeletedEvent.calledOnce, true)
-      assert.rejects(this.server.datastore.remove({ file_id: file.id }))
     })
   })
 }
