@@ -22,6 +22,7 @@ describe.only('PostHandler', () => {
     let res = null;
 
     const fake_store = sinon.createStubInstance(DataStore);
+    fake_store._path = '/test/output';
     fake_store.generateFileName.returns("1234");
     fake_store.create.resolves({});
 
