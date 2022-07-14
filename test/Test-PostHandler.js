@@ -33,11 +33,10 @@ describe('PostHandler', () => {
     });
 
     // describe('test naming function', () => {
-    //     it('should reject when namingFunction is invalid', function (done) {
+    //     it('should reject when namingFunction is invalid', function () {
     //         const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
     //         this.server.datastore.generateFileName = namingFunction
-    //         assert.rejects(() => this.server.datastore.create(req))
-    //         done()
+    //         return assert.rejects(() => this.server.datastore.create(req), { status_code: 500 })
     //     })
 
     //     it('should use custom naming function when provided', async function () {
@@ -69,6 +68,10 @@ describe('PostHandler', () => {
                 await handler.send(req, res);
                 assert.equal(res.statusCode, 412);
             });
+
+            // it('should reject if both upload-length and upload-defer-length are not provided', async function () {
+            //     return assert.rejects(() => this.server.datastore.create(invalidReq), { status_code: 412 })
+            // })
 
             it('must 501 if the \'concatenation\' extension is not supported', async() => {
                 const handler = new PostHandler(fake_store);
