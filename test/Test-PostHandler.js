@@ -32,6 +32,26 @@ describe('PostHandler', () => {
         done();
     });
 
+    // describe('test naming function', () => {
+    //     it('should reject when namingFunction is invalid', function (done) {
+    //         const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
+    //         this.server.datastore.generateFileName = namingFunction
+    //         assert.rejects(() => this.server.datastore.create(req))
+    //         done()
+    //     })
+
+    //     it('should use custom naming function when provided', async function () {
+    //         const namingFunction = () => 'hardcoded-name'
+
+    //         this.server.datastore.generateFileName = namingFunction
+
+    //         const file = await this.server.datastore.create(req)
+    //         assert.equal(file instanceof File, true)
+    //         assert.equal(file.id, 'hardcoded-name')
+    //         assert.equal(file.upload_length, testFileSize)
+    //     })
+    // })
+
     describe('send()', () => {
 
         describe('test errors', () => {
@@ -103,7 +123,6 @@ describe('PostHandler', () => {
                 assert.equal(hasHeader(res, { 'Location': '//localhost:3000/test/output/1234' }), true);
                 assert.equal(res.statusCode, 201);
             });
-
         })
 
         describe('events', () => {
@@ -123,6 +142,33 @@ describe('PostHandler', () => {
                 req.headers = { 'upload-length': 1000 };
                 handler.send(req, res);
             })
+
+            // it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, function (done) {
+            //     const file_store = new FileStore({ path: this.storePath });
+            //     file_store.on(EVENTS.EVENT_FILE_CREATED, (event) => {
+            //       event.should.have.property('file');
+            //       assert.equal(event.file instanceof File, true);
+            //       done();
+            //     });
+            //     file_store.create(file);
+            // });
+
+            // it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
+            //     const file_store = new FileStore({ path: this.storePath });
+            //     file_store.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+            //         event.should.have.property('file');
+            //         done();
+            //     });
+
+            //     const readable = fs.createReadStream(this.testFilePath);
+            //     readable.once('open', () => {
+            //         const req = { headers: { 'upload-length': this.testFileSize }, url: this.storePath }
+            //         file_store.create(new File('1234', this.testFileSize))
+            //             .then((newFile) => {
+            //                 return file_store.write(readable, newFile.id, 0);
+            //             }).catch(done);
+            //     });
+            // });
         });
     });
 });

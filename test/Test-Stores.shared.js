@@ -1,38 +1,21 @@
 const assert = require('assert')
-const sinon = require('sinon')
+const should = require('should')
 const fs = require('fs')
 
 const File = require('../lib/models/File')
-const { EVENTS } = require('../lib/constants')
-const DataStore = require('../lib/stores/DataStore')
 
 // https://github.com/mochajs/mocha/wiki/Shared-Behaviours
 // Note: don't use arrow functions for tests: https://mochajs.org/#arrow-functions
 
 exports.shouldHaveStoreMethods = function () {
   describe('the class', function () {
-    it('must inherit from Datastore', function (done) {
-      assert.equal(this.server.datastore instanceof DataStore, true)
-      done()
-    })
-
-    it('must have a create method', function (done) {
-      this.server.datastore.should.have.property('create')
-      done()
-    })
-
-    it('must have a remove method', function (done) {
-      this.server.datastore.should.have.property('remove')
-      done()
-    })
-
     it('must have a write method', function (done) {
-      this.server.datastore.should.have.property('write')
+      this.datastore.should.have.property('write')
       done()
     })
 
     it('must have a getOffset method', function (done) {
-      this.server.datastore.should.have.property('getOffset')
+      this.datastore.should.have.property('getOffset')
       done()
     })
   })
@@ -40,137 +23,114 @@ exports.shouldHaveStoreMethods = function () {
 
 exports.shouldCreateUploads = function () {
   describe('create', function () {
-    const testFileSize = 960244
-    const req = {
-      headers: {
-        'upload-length': testFileSize.toString(),
-        'upload-metadata': 'foo bar',
-      },
-      url: this.storePath,
-    }
+    const file = new File('1234', 1000, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
+    const file_defered = new File('1234', undefined, '1');
+
+    it('should resolve to file', async function () {
+      const newFile = await this.datastore.create(file);
+      assert.equal(newFile instanceof File, true);
+    });
 
     it('should report \'creation\' extension', function () {
-      assert.equal(this.server.datastore.hasExtension('creation'), true);
+      assert.equal(this.datastore.hasExtension('creation'), true);
     })
 
+    it('should create new upload resource', async function () {
+      await this.datastore.create(file);
+      const data = await this.datastore.getOffset(file.id);
+      assert.equal(data.size, 0);
+    });
 
-    it('should reject when namingFunction is invalid', function (done) {
-      const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
-      this.server.datastore.generateFileName = namingFunction
-      assert.rejects(() => this.server.datastore.create(req))
-      done()
-    })
+    it('should store `upload_length` when creating new resource', async function () {
+      await this.datastore.create(file);
+      const data = await this.datastore.getOffset(file.id);
+      assert.equal(data.upload_length, file.upload_length);
+    });
 
-    it('should use custom naming function when provided', async function () {
-      const namingFunction = () => 'hardcoded-name'
+    it('should store `upload_defer_length` when creating new resource', async function () {
+      await this.datastore.create(file_defered);
+      const data = await this.datastore.getOffset(file.id);
+      assert.equal(data.upload_defer_length, file_defered.upload_defer_length);
+    });
 
-      this.server.datastore.generateFileName = namingFunction
-
-      const file = await this.server.datastore.create(req)
-      assert.equal(file instanceof File, true)
-      assert.equal(file.id, 'hardcoded-name')
-      assert.equal(file.upload_length, testFileSize)
-    })
+    it('should store `upload_metadata` when creating new resource', async function () {
+      await this.datastore.create(file);
+      const data = await this.datastore.getOffset(file.id);
+      assert.equal(data.upload_metadata, file.upload_metadata);
+    });
   })
 }
 
 exports.shouldRemoveUploads = function () {
+  const file = new File('1234', 1000);
+
   describe('remove (termination extension)', function () {
     it('should report \'termination\' extension', function () {
-      assert.equal(this.server.datastore.hasExtension('termination'), true);
+      assert.equal(this.datastore.hasExtension('termination'), true);
     })
 
     it('should reject when the file does not exist', function () {
-      const file_id = '1234';
-      return this.server.datastore.remove(file_id).should.be.rejected()
+      return this.datastore.remove('doesnt_exist').should.be.rejected()
     })
 
     it('should delete the file when it does exist', async function () {
-      const fileDeletedEvent = sinon.fake()
-      const file = new File('1234', 1000);
-
-      this.server.datastore.on(EVENTS.EVENT_FILE_DELETED, fileDeletedEvent)
-
-      await this.server.datastore.create(file)
-      await this.server.datastore.remove(file.id)
-      assert.equal(fileDeletedEvent.calledOnce, true)
+      await this.datastore.create(file)
+      return this.datastore.remove(file.id)
     })
   })
 }
 
 exports.shouldWriteUploads = function () {
   describe('write', function () {
-    it('should reject write streams that are not open yet', function () {
+    const file = new File('1234', `${this.testFileSize}`, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
+
+    it('should reject write streams that can not be open', async function () {
       const stream = fs.createReadStream(this.testFilePath)
-      return this.server.datastore.write(stream, null, 0).should.be.rejectedWith(500)
+      return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
 
-    it('should open a stream, resolve the new offset, and emit upload complete', function (done) {
-      const uploadCompleteEvent = sinon.fake()
-      const req = {
-        headers: {
-          'upload-length': this.testFileSize.toString(),
-          'upload-metadata': 'foo bar',
-        },
-        url: this.storePath,
-      }
-
-      this.server.datastore.on(EVENTS.EVENT_UPLOAD_COMPLETE, uploadCompleteEvent)
-
+    it('should not reject whean readable stream has an error', async function () {
       const stream = fs.createReadStream(this.testFilePath)
-      const size = this.testFileSize
-      let id
-
-      stream.once('open', () => {
-        this.server.datastore
-          .create(req)
-          .then((file) => {
-            id = file.id
-            return this.server.datastore.write(stream, file.id, 0)
-          })
-          .then((offset) => {
-            assert.equal(offset, size)
-            assert.equal(uploadCompleteEvent.calledOnce, true)
-            return this.server.datastore.getOffset(id)
-          })
-          .then((stats) => {
-            assert.equal(stats.upload_length, size)
-          })
-          .then(done)
-          .catch(done)
-      })
+      return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
+
+    it('should write a stream and resolve the new offset', async function () {
+      await this.datastore.create(file);
+
+      const readable = fs.createReadStream(this.testFilePath);
+      const offset = await this.datastore.write(readable, file.id, 0);
+      assert.equal(offset, this.testFileSize);
+    });
+
+    // TODO: Does this test make sense? Should the store just report an error, and force the server to get offset via `getOffset`?
+    // it('should report partial offset when stream is destroyed', async function () {
+    //   await this.datastore.create(file);
+
+    //   const readable = new stream.Readable();
+    //   const offset = this.datastore.write(readable, file.id, 0);
+
+    //   readable.push('some data');
+    //   readable.destroy();
+
+    //   return offset.should.be.resolvedWith(9);
+    // });
   })
 }
 
 exports.shouldHandleOffset = function () {
   describe('getOffset', function () {
+    const file = new File('1234', `${this.testFileSize}`, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
+
     it('should reject non-existant files', function () {
-      return this.server.datastore.getOffset('doesnt_exist').should.be.rejectedWith(404)
+      return this.datastore.getOffset('doesnt_exist').should.be.rejected()
     })
 
-    it('should reject directories', function () {
-      return this.server.datastore.getOffset('').should.be.rejectedWith(404)
-    })
+    it('should resolve the stats for existing files', async function () {
+      await this.datastore.create(file);
+      const offset = await this.datastore.write(fs.createReadStream(this.testFilePath), file.id, 0);
+      const data = await this.datastore.getOffset(file.id)
 
-    it('should resolve the stats for existing files', function (done) {
-      const req = {
-        headers: {
-          'upload-length': this.testFileSize.toString(),
-          'upload-metadata': 'foo bar',
-        },
-        url: this.storePath,
-      }
-
-      this.server.datastore
-        .create(req)
-        .then((file) => this.server.datastore.getOffset(file.id))
-        .then((stats) => {
-          // TODO: make sure all stores return a number and not a string
-          assert.strictEqual(Number(stats.upload_length), this.testFileSize)
-        })
-        .then(done)
-        .catch(done)
+      assert.equal(data.size, offset);
     })
   })
 }

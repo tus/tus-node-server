@@ -105,6 +105,42 @@ describe('PatchHandler', () => {
                     assert.equal(res.statusCode, 204);
                 });
         });
+
+        // it('should open a stream, resolve the new offset, and emit upload complete', function (done) {
+        //     const uploadCompleteEvent = sinon.fake()
+        //     const req = {
+        //         headers: {
+        //             'upload-length': this.testFileSize.toString(),
+        //             'upload-metadata': 'foo bar',
+        //         },
+        //         url: this.storePath,
+        //     }
+
+        //     this.server.datastore.on(EVENTS.EVENT_UPLOAD_COMPLETE, uploadCompleteEvent)
+
+        //     const stream = fs.createReadStream(this.testFilePath)
+        //     const size = this.testFileSize
+        //     let id
+
+        //     stream.once('open', () => {
+        //         this.server.datastore
+        //             .create(req)
+        //             .then((file) => {
+        //                 id = file.id
+        //                 return this.server.datastore.write(stream, file.id, 0)
+        //             })
+        //             .then((offset) => {
+        //                 assert.equal(offset, size)
+        //                 assert.equal(uploadCompleteEvent.calledOnce, true)
+        //                 return this.server.datastore.getOffset(id)
+        //             })
+        //             .then((stats) => {
+        //                 assert.equal(stats.upload_length, size)
+        //             })
+        //             .then(done)
+        //             .catch(done)
+        //     })
+        // })
     });
 
 });
