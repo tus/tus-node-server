@@ -23,7 +23,7 @@ exports.shouldHaveStoreMethods = function () {
 
 exports.shouldCreateUploads = function () {
   describe('create', function () {
-    const file = new File('1234', 1000, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
+    const file = new File('1234', '1000', undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
     const file_defered = new File('1234', undefined, '1');
 
     it('should resolve to file', async function () {
@@ -62,7 +62,7 @@ exports.shouldCreateUploads = function () {
 }
 
 exports.shouldRemoveUploads = function () {
-  const file = new File('1234', 1000);
+  const file = new File('1234', '1000');
 
   describe('remove (termination extension)', function () {
     it('should report \'termination\' extension', function () {

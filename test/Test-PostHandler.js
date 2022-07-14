@@ -166,7 +166,7 @@ describe('PostHandler', () => {
             //     const readable = fs.createReadStream(this.testFilePath);
             //     readable.once('open', () => {
             //         const req = { headers: { 'upload-length': this.testFileSize }, url: this.storePath }
-            //         file_store.create(new File('1234', this.testFileSize))
+            //         file_store.create(new File('1234', `${this.testFileSize}`))
             //             .then((newFile) => {
             //                 return file_store.write(readable, newFile.id, 0);
             //             }).catch(done);

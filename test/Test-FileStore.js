@@ -43,7 +43,7 @@ describe.only('FileStore', function () {
   })
 
   describe('create', function () {
-    const file = new File('1234', 1000);
+    const file = new File('1234', '1000');
 
     it('should reject when the directory doesnt exist', function () {
       this.datastore.directory = 'some_new_path';
