@@ -9,8 +9,6 @@ const sinon = require('sinon');
 const DataStore = require('../lib/stores/DataStore');
 const HeadHandler = require('../lib/handlers/HeadHandler');
 const { ERRORS } = require('../lib/constants');
-const File = require('../lib/models/File');
-
 
 const hasHeader = (res, header) => {
     const key = Object.keys(header)[0];
@@ -21,7 +19,7 @@ describe('HeadHandler', () => {
     const path = '/test/output';
     const fake_store = sinon.createStubInstance(DataStore);
     const handler = new HeadHandler(fake_store, { relativeLocation: true, path });
-    
+
     let req = null;
     let res = null;
 
@@ -36,7 +34,7 @@ describe('HeadHandler', () => {
         assert.equal(res.statusCode, 404);
     });
 
-    it('should 404 if no file ID ', (done) => {
+    it('should 404 if no file ID', (done) => {
         req.url = `${path}/`;
         handler.send(req, res);
         assert.equal(res.statusCode, 404);

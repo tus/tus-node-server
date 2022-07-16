@@ -39,6 +39,22 @@ describe('Server', () => {
             server.handlers.should.have.property('DELETE');
             done();
         });
+
+        // TODO: these tests are moved from Test-DataStore.js
+        // it('constructor must require a path', (done) => {
+        //     assert.throws(() => { new DataStore() }, Error);
+        //     done();
+        // });
+
+        // it('constructor must require the namingFunction to be a function, if it is provided', (done) => {
+        //     assert.throws(() => { new DataStore({ path: '/test/output', namingFunction: {} }) }, Error);
+        //     done();
+        // });
+
+        // it('relativeLocation option must be boolean', (done) => {
+        //     assert.equal(typeof datastore.relativeLocation, 'boolean');
+        //     done();
+        // });
     });
     describe('listen', () => {
         let server;
