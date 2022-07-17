@@ -2,17 +2,27 @@ import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as http from "http";
 
+declare interface Configstore {
+    get(key: string) : Promise<IFile | undefined> | IFile | undefined;
+    set(key: string, value: IFile) : Promise<void> | void;
+    delete(key: string) : Promise<boolean> | boolean;
+}
+
+declare interface ServerOptions {
+    path: string;
+    relativeLocation?: boolean;
+    namingFunction?: () => string;
+}
+
 /**
  * arguments of constructor which in class extend DataStore
  */
 declare interface DataStoreOptions {
-    path: string;
-    namingFunction?: (req: http.IncomingMessage) => string;
-    relativeLocation?: boolean;
 }
 
 declare interface FileStoreOptions extends DataStoreOptions {
-    directory?: string;
+    directory: string;
+    configstore?: Configstore;
 }
 
 declare interface GCStoreOptions extends DataStoreOptions {
@@ -26,20 +36,22 @@ declare interface S3StoreOptions extends DataStoreOptions {
     secretAccessKey: string;
     bucket: string;
     region?: string;
-    tmpDirPrefix: string;
     partSize: number;
 }
 
-declare class File {
+declare interface IFile {
     id: string;
-    upload_length: any;
-    upload_defer_length: any;
-    upload_metadata: any;
+    upload_length: string;
+    upload_defer_length: string;
+    upload_metadata: string;
+}
+
+declare class File implements IFile {
     constructor(
         file_id: string,
-        upload_length: any,
-        upload_defer_length: any,
-        upload_metadata: any
+        upload_length: string,
+        upload_defer_length: string,
+        upload_metadata: string
     );
 }
 
@@ -50,13 +62,15 @@ export declare class DataStore extends EventEmitter {
     constructor(options: DataStoreOptions);
     get extensions(): any;
     set extensions(extensions_array: any);
-    create(req: Partial<http.IncomingMessage>): Promise<any>;
+    hasExtension(extension: string): boolean;
+    create(file: File): Promise<any>;
+    remove(file_id: string) : Promise<any>;
     write(
-        req: http.IncomingMessage,
-        file_id?: string,
-        offset?: number
-    ): Promise<any>;
-    getOffset(file_id: string): Promise<any>;
+        stream: stream.Readable,
+        file_id: string,
+        offset: number
+    ): Promise<number>;
+    getOffset(file_id: string): Promise<IFile>;
 }
 
 /**
@@ -64,8 +78,8 @@ export declare class DataStore extends EventEmitter {
  */
 export declare class FileStore extends DataStore {
     constructor(options: FileStoreOptions);
-    read(file_id: string): fs.ReadStream;
-    getOffset(file_id: string): Promise<fs.Stats & File>;
+    read(file_id: string): stream.Readable;
+    getOffset(file_id: string): Promise<fs.Stats & IFile>;
 }
 
 /**
@@ -80,14 +94,13 @@ export declare class GCSDataStore extends DataStore {
  */
 export declare class S3Store extends DataStore {
     constructor(options: S3StoreOptions);
-    getOffset(file_id: string, with_parts?: boolean): Promise<any>;
 }
 
 /**
  * Tus protocol server implements
  */
 export declare class Server extends EventEmitter {
-    constructor();
+    constructor(options: ServerOptions);
     get datastore(): DataStore;
     set datastore(store: DataStore);
     get(path: string, callback: (...args: any[]) => any): any;
@@ -117,6 +130,10 @@ export declare const ERRORS: {
         status_code: number;
         body: string;
     };
+    INVALID_PATH: {
+        status_code: number;
+        body: string;
+    },
     INVALID_OFFSET: {
         status_code: number;
         body: string;
