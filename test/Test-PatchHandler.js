@@ -18,8 +18,8 @@ const hasHeader = (res, header) => {
 describe('PatchHandler', () => {
     const path = '/test/output';
     let res = null;
-    const store = new DataStore({ path });
-    const handler = new PatchHandler(store);
+    const store = new DataStore();
+    const handler = new PatchHandler(store, { path });
     const req = { headers: {} };
 
     beforeEach((done) => {

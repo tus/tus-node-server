@@ -14,7 +14,7 @@ const { ERRORS, EVENTS } = require('../lib/constants')
 
 const shared = require('./Test-Stores.shared')
 
-describe.only('FileStore', function () {
+describe('FileStore', function () {
   before(function () {
     this.testFileSize = 960244
     this.testFileName = 'test.mp4'

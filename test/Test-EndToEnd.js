@@ -13,9 +13,9 @@ const { Storage } = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/test/output';
-const PROJECT_ID = 'tus-node-server';
-const KEYFILE = path.resolve(__dirname, '../keyfile.json');
-const BUCKET = 'tus-node-server-ci';
+const PROJECT_ID = 'supervisor-3dsurvey';
+const KEYFILE = '/home/mitjap/Projects/rune-panorama/supervisor-3dsurvey-editor-b9c28cd4108c.json';
+const BUCKET = 'mitjap-test-tus-node-server';
 
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_SIZE = 960244;
@@ -46,9 +46,11 @@ describe('EndToEnd', () => {
         let file_id;
         let deferred_file_id;
         before(() => {
-            server = new Server();
+            server = new Server({
+                path: STORE_PATH
+            });
             server.datastore = new FileStore({
-                path: STORE_PATH,
+                directory: `./${STORE_PATH}`
             });
             listener = server.listen();
             agent = request.agent(listener);
@@ -251,11 +253,13 @@ describe('EndToEnd', () => {
 
     describe('FileStore with relativeLocation', () => {
         before(() => {
-            server = new Server();
-            server.datastore = new FileStore({
+            server = new Server({
                 path: STORE_PATH,
                 // configure the store to return relative path in Location Header
                 relativeLocation: true
+            });
+            server.datastore = new FileStore({
+                directory: `./${STORE_PATH}`
             });
             listener = server.listen();
             agent = request.agent(listener);
@@ -292,9 +296,10 @@ describe('EndToEnd', () => {
         let deferred_file_id;
         const files_created = [];
         before(() => {
-            server = new Server();
+            server = new Server({
+                path: STORE_PATH
+            });
             server.datastore = new GCSDataStore({
-                path: STORE_PATH,
                 projectId: PROJECT_ID,
                 keyFilename: KEYFILE,
                 bucket: BUCKET,

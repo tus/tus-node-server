@@ -1,6 +1,7 @@
 const assert = require('assert')
-const should = require('should')
 const fs = require('fs')
+
+const should = require('should')
 
 const File = require('../lib/models/File')
 

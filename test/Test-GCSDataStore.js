@@ -15,7 +15,6 @@ describe('GCSDataStore', () => {
 
   beforeEach(function () {
     this.datastore = new GCSDataStore({
-      path: this.storePath,
       projectId: 'tus-node-server',
       keyFilename: path.resolve(__dirname, '../keyfile.json'),
       bucket: 'tus-node-server-ci',
