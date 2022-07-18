@@ -3,15 +3,14 @@
 
 name: Node.js CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    types: [ opened, synchronize, reopened ]
-  pull_request_target:
-    types: [ opened, synchronize, reopened ]
-    paths:
-      - .github/workflows/ci.yml
+push:
+  branches: [ master ]
+pull_request_target:
+  types: [ opened, synchronize, reopened ]
+pull_request:
+  types: [ opened, synchronize, reopened ]
+  paths:
+    - .github/workflows/ci.yml
 
 jobs:
   CI:
