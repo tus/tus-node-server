@@ -1,7 +1,6 @@
 /* eslint-env node, mocha */
 'use strict';
 
-
 const assert = require('assert');
 const http = require('http');
 
@@ -29,25 +28,6 @@ describe('PostHandler', () => {
         done();
     });
 
-    // describe('test naming function', () => {
-    //     it('should reject when namingFunction is invalid', function () {
-    //         const namingFunction = (incomingReq) => incomingReq.doesnotexist.replace(/\//g, '-')
-    //         this.server.datastore.generateFileName = namingFunction
-    //         return assert.rejects(() => this.server.datastore.create(req), { status_code: 500 })
-    //     })
-
-    //     it('should use custom naming function when provided', async function () {
-    //         const namingFunction = () => 'hardcoded-name'
-
-    //         this.server.datastore.generateFileName = namingFunction
-
-    //         const file = await this.server.datastore.create(req)
-    //         assert.equal(file instanceof File, true)
-    //         assert.equal(file.id, 'hardcoded-name')
-    //         assert.equal(file.upload_length, testFileSize)
-    //     })
-    // })
-
     describe('constructor()', () => {
         it('must check for naming function', () => {
             assert.throws(() => { new PostHandler(fake_store); }, Error);
@@ -62,26 +42,19 @@ describe('PostHandler', () => {
                 const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
 
                 req.headers = {};
-                await handler.send(req, res);
-                assert.equal(res.statusCode, 412);
+                return assert.rejects(() => handler.send(req, res), { status_code: 412 });
             });
 
             it('must 412 if the Upload-Length and Upload-Defer-Length headers are both present', async() => {
                 const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
                 req.headers = { 'upload-length': '512', 'upload-defer-length': '1'};
-                await handler.send(req, res);
-                assert.equal(res.statusCode, 412);
+                return assert.rejects(() => handler.send(req, res), { status_code: 412 });
             });
-
-            // it('should reject if both upload-length and upload-defer-length are not provided', async function () {
-            //     return assert.rejects(() => this.server.datastore.create(invalidReq), { status_code: 412 })
-            // })
 
             it('must 501 if the \'concatenation\' extension is not supported', async() => {
                 const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
                 req.headers = { 'upload-concat': 'partial' };
-                await handler.send(req, res);
-                assert.equal(res.statusCode, 501);
+                return assert.rejects(() => handler.send(req, res), { status_code: 501 });
             });
 
             it('should send error when naming function throws', async() => {
@@ -89,34 +62,28 @@ describe('PostHandler', () => {
                 const handler = new PostHandler(fake_store, { namingFunction: sinon.stub().throws() });
 
                 req.headers = { 'upload-length': 1000 };
-                await handler.send(req, res)
-
-                assert.equal(res.statusCode, 500);
+                return assert.rejects(() => handler.send(req, res), { status_code: 500 });
             });
 
-            it('should send error when naming store rejects', async() => {
+            it('should call custom namingFunction', async() => {
                 const fake_store = sinon.createStubInstance(DataStore);
-                fake_store.create.rejects();
+                const namingFunction = sinon.stub().returns('1234');
+                const handler = new PostHandler(fake_store, { namingFunction });
+
+                req.headers = { 'upload-length': 1000 };
+                await handler.send(req, res);
+                assert.equal(namingFunction.calledOnce, true);
+            });
+
+            it('should send error when store rejects', () => {
+                const fake_store = sinon.createStubInstance(DataStore);
+                fake_store.create.rejects({ status_code: 500 });
 
                 const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
 
                 req.headers = { 'upload-length': 1000 };
-                await handler.send(req, res)
-
-                assert.equal(res.statusCode, 500);
+                return assert.rejects(() => handler.send(req, res), { status_code: 500 });
             });
-
-            // it('should use custom naming function when provided', (done) => {
-            //     const namingFunction = (incomingReq) => incomingReq.url.replace(/\//g, '-');
-            //     const file_store = new FileStore({ path: STORE_PATH, namingFunction });
-            //     file_store.create(file)
-            //         .then((newFile) => {
-            //             assert.equal(newFile instanceof File, true);
-            //             assert.equal(newFile.id, '-files');
-            //             return done();
-            //         })
-            //         .catch(done);
-            // });
         })
 
         describe('test successful scenarios', () => {

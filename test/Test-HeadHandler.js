@@ -28,17 +28,14 @@ describe('HeadHandler', () => {
         res = new http.ServerResponse({ method: 'HEAD' });
     });
 
-    it('should 404 if no file id match', async () => {
+    it('should 404 if no file id match', () => {
         fake_store.getOffset.rejects(ERRORS.FILE_NOT_FOUND);
-        await handler.send(req, res);
-        assert.equal(res.statusCode, 404);
+        return assert.rejects(() => handler.send(req, res), { status_code: 404 });
     });
 
-    it('should 404 if no file ID', (done) => {
+    it('should 404 if no file ID', () => {
         req.url = `${path}/`;
-        handler.send(req, res);
-        assert.equal(res.statusCode, 404);
-        done();
+        return assert.rejects(() => handler.send(req, res), { status_code: 404 });
     });
 
     it('should resolve with the offset and cache-control', async () => {

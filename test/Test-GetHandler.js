@@ -38,8 +38,7 @@ describe('GetHandler', () => {
             const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest');
 
             req.url = `${path}/1234`;
-            await handler.send(req, res)
-            assert.equal(res.statusCode, 404);
+            await assert.rejects(() => handler.send(req, res), { status_code: 404 });
             assert.equal(spy_getFileIdFromRequest.calledOnceWith(req), true);
         });
 
@@ -50,9 +49,7 @@ describe('GetHandler', () => {
             const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest');
 
             req.url = `/not_a_valid_file_path`;
-            await handler.send(req, res)
-            assert.equal(res.statusCode, 404);
-
+            await assert.rejects(() => handler.send(req, res), { status_code: 404 });
             assert.equal(spy_getFileIdFromRequest.callCount, 1);
         });
 
@@ -64,23 +61,21 @@ describe('GetHandler', () => {
 
             const fileId = '1234';
             req.url = `${path}/${fileId}`;
-            await handler.send(req, res)
-            assert.equal(res.statusCode, 404);
+            await assert.rejects(() => handler.send(req, res), { status_code: 404 });
             assert.equal(store.getOffset.calledWith(fileId), true);
         });
 
-        it('should 500 on error store.getOffset error', async() => {
+        it('should 500 on error store.getOffset error', () => {
             const store = new DataStore({ path });
             store.read = () => {};
 
             const fakeStore = sinon.stub(store)
-            fakeStore.getOffset.rejects({});
+            fakeStore.getOffset.rejects();
 
             const handler = new GetHandler(fakeStore);
 
             req.url = `${path}/1234`;
-            await handler.send(req, res);
-            assert.equal(res.statusCode, 500);
+            return assert.rejects(() => handler.send(req, res));
         });
 
         it('test invalid stream', async() => {
@@ -189,9 +184,7 @@ describe('GetHandler', () => {
             const handler = new GetHandler(fakeStore);
 
             req.url = `/${path}/1234`;
-            await handler.send(req, res);
-
-            assert.equal(res.statusCode, 404);
+            await assert.rejects(() => handler.send(req, res), { status_code: 404 });
         });
     })
 

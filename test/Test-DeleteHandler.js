@@ -27,17 +27,15 @@ describe('DeleteHandler', () => {
         res = new http.ServerResponse({ method: 'HEAD' });
     });
 
-    it('should 404 if no file id match', async () => {
+    it('should 404 if no file id match', () => {
         fake_store.remove.rejects(ERRORS.FILE_NOT_FOUND);
-        await handler.send(req, res);
-        assert.equal(res.statusCode, 404);
+        return assert.rejects(() => handler.send(req, res), { status_code: 404 });
     });
 
     it('should 404 if no file ID', async () => {
         sinon.stub(handler, "getFileIdFromRequest").returns(false);
-        await handler.send(req, res);
+        await assert.rejects(() => handler.send(req, res), { status_code: 404 });
         assert.equal(fake_store.remove.callCount, 0);
-        assert.equal(res.statusCode, 404);
     });
 
     it('must acknowledge successful DELETE requests with the 204', async () => {
