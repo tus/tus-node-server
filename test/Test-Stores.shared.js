@@ -65,6 +65,38 @@ exports.shouldCreateUploads = function () {
       return assert.rejects(() => this.server.datastore.create(req), { status_code: 500 })
     })
 
+    it('should create a file with upload-length', async function () {
+      const file = await this.server.datastore.create(req)
+
+      assert.equal(file.upload_length, req.headers['upload-length']);
+      assert.equal(file.upload_defer_length, undefined);
+
+    })
+
+    it('should create a file with upload-defer-length', async function () {
+      const req = {
+        headers: {
+          'upload-defer-length': '1',
+          'upload-metadata': 'foo bar',
+        },
+      };
+      const file = await this.server.datastore.create(req);
+
+      assert.equal(file.upload_defer_length, req.headers['upload-defer-length']);
+      assert.equal(file.upload_length, undefined);
+    })
+
+    it('should create a file without upload-metadata', async function () {
+      const req = {
+        headers: {
+          'upload-length': testFileSize.toString()
+        },
+      };
+      const file = await this.server.datastore.create(req);
+
+      assert.equal(file.upload_metadata, undefined);
+    })
+
     it('should create a file, process it, and send file created event', async function () {
       const fileCreatedEvent = sinon.fake()
 
