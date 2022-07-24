@@ -13,9 +13,9 @@ const { Storage } = require('@google-cloud/storage');
 const TUS_RESUMABLE = require('../lib/constants').TUS_RESUMABLE;
 
 const STORE_PATH = '/test/output';
-const PROJECT_ID = 'supervisor-3dsurvey';
-const KEYFILE = '/home/mitjap/Projects/rune-panorama/supervisor-3dsurvey-editor-b9c28cd4108c.json';
-const BUCKET = 'mitjap-test-tus-node-server';
+const PROJECT_ID = 'tus-node-server';
+const KEYFILE = path.resolve(__dirname, '../keyfile.json');
+const BUCKET = 'tus-node-server-ci';
 
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`);
 const TEST_FILE_SIZE = 960244;
