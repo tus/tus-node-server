@@ -31,7 +31,10 @@ describe('Server', () => {
         });
 
         it('should throw on invalid namingFunction', () => {
-            assert.throws(() => { new Server({ path: '/files', namingFunction: '1234' }); }, Error);
+            assert.throws(() => {
+                const server = new Server({ path: '/files', namingFunction: '1234' });
+                server.datastore = new DataStore();
+            }, Error);
         });
 
         it('setting the DataStore should attach handlers', (done) => {
