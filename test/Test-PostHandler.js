@@ -97,48 +97,53 @@ describe('PostHandler', () => {
         })
 
         describe('events', () => {
-            // it('should emit object returned by store', (done) => {
-            //     const fake_store = sinon.createStubInstance(DataStore);
+            it(`must fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
+                const fake_store = sinon.createStubInstance(DataStore);
 
-            //     const file = {};
-            //     fake_store.create.resolves(file);
+                const file = {};
+                fake_store.create.resolves(file);
 
-            //     const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
-            //     handler.on(EVENTS.EVENT_FILE_CREATED, (obj) => {
-            //         assert.strictEqual(obj.file, file);
-            //         done();
-            //     });
+                const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
+                handler.on(EVENTS.EVENT_FILE_CREATED, (obj) => {
+                    assert.strictEqual(obj.file, file);
+                    done();
+                });
 
-            //     req.headers = { 'upload-length': 1000 };
-            //     handler.send(req, res);
-            // })
+                req.headers = { 'upload-length': 1000 };
+                handler.send(req, res);
+            })
 
-            // it(`should fire the ${EVENTS.EVENT_FILE_CREATED} event`, function (done) {
-            //     const file_store = new FileStore({ path: this.storePath });
-            //     file_store.on(EVENTS.EVENT_FILE_CREATED, (event) => {
-            //       event.should.have.property('file');
-            //       assert.equal(event.file instanceof File, true);
-            //       done();
-            //     });
-            //     file_store.create(file);
-            // });
+            it.only(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with absolute URL`, (done) => {
+                const fake_store = sinon.createStubInstance(DataStore);
 
-            // it(`should fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event`, (done) => {
-            //     const file_store = new FileStore({ path: this.storePath });
-            //     file_store.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-            //         event.should.have.property('file');
-            //         done();
-            //     });
+                const file = {};
+                fake_store.create.resolves(file);
 
-            //     const readable = fs.createReadStream(this.testFilePath);
-            //     readable.once('open', () => {
-            //         const req = { headers: { 'upload-length': this.testFileSize }, url: this.storePath }
-            //         file_store.create(new File('1234', `${this.testFileSize}`))
-            //             .then((newFile) => {
-            //                 return file_store.write(readable, newFile.id, 0);
-            //             }).catch(done);
-            //     });
-            // });
+                const handler = new PostHandler(fake_store, { path: '/test/output', namingFunction: () => '1234' });
+                handler.on(EVENTS.EVENT_ENDPOINT_CREATED, (obj) => {
+                    assert.strictEqual(obj.url, '//localhost:3000/test/output/1234');
+                    done();
+                });
+
+                req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
+                handler.send(req, res);
+            })
+
+            it.only(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with relative URL`, (done) => {
+                const fake_store = sinon.createStubInstance(DataStore);
+
+                const file = {};
+                fake_store.create.resolves(file);
+
+                const handler = new PostHandler(fake_store, { path: '/test/output', relativeLocation: true, namingFunction: () => '1234' });
+                handler.on(EVENTS.EVENT_ENDPOINT_CREATED, (obj) => {
+                    assert.strictEqual(obj.url, '/test/output/1234');
+                    done();
+                });
+
+                req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
+                handler.send(req, res);
+            })
         });
     });
 });
