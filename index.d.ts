@@ -22,12 +22,13 @@ declare interface GCStoreOptions extends DataStoreOptions {
 }
 
 declare interface S3StoreOptions extends DataStoreOptions {
-    accessKeyId: string;
-    secretAccessKey: string;
+    accessKeyId?: string;
+    secretAccessKey?: string;
     bucket: string;
     region?: string;
-    tmpDirPrefix: string;
+    tmpDirPrefix?: string;
     partSize: number;
+    credentials?: object;
 }
 
 declare class File {
