@@ -27,7 +27,7 @@ declare interface S3StoreOptions extends DataStoreOptions {
     credentials?: Object;
     bucket: string;
     region?: string;
-    tmpDirPrefix: string;
+    tmpDirPrefix?: string;
     partSize: number;
 }
 
