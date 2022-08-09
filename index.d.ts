@@ -60,10 +60,10 @@ declare class File implements IFile {
  */
 export declare class DataStore extends EventEmitter {
     constructor(options: DataStoreOptions);
-    get extensions(): any;
-    set extensions(extensions_array: any);
+    get extensions(): string;
+    set extensions(extensions_array: string[]);
     hasExtension(extension: string): boolean;
-    create(file: File): Promise<any>;
+    create(file: File): Promise<IFile>;
     remove(file_id: string) : Promise<any>;
     write(
         stream: stream.Readable,

@@ -113,7 +113,7 @@ describe('PostHandler', () => {
                 handler.send(req, res);
             })
 
-            it.only(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with absolute URL`, (done) => {
+            it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with absolute URL`, (done) => {
                 const fake_store = sinon.createStubInstance(DataStore);
 
                 const file = {};
@@ -129,7 +129,7 @@ describe('PostHandler', () => {
                 handler.send(req, res);
             })
 
-            it.only(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with relative URL`, (done) => {
+            it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with relative URL`, (done) => {
                 const fake_store = sinon.createStubInstance(DataStore);
 
                 const file = {};

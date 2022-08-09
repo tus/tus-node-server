@@ -1,5 +1,6 @@
 const assert = require('assert')
 const fs = require('fs')
+const stream = require('stream')
 
 const should = require('should')
 
@@ -90,7 +91,7 @@ exports.shouldWriteUploads = function () {
       return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
 
-    it('should not reject whean readable stream has an error', async function () {
+    it('should reject whean readable stream has an error', async function () {
       const stream = fs.createReadStream(this.testFilePath)
       return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
@@ -103,18 +104,17 @@ exports.shouldWriteUploads = function () {
       assert.equal(offset, this.testFileSize);
     });
 
-    // TODO: Does this test make sense? Should the store just report an error, and force the server to get offset via `getOffset`?
-    // it('should report partial offset when stream is destroyed', async function () {
-    //   await this.datastore.create(file);
+    it('should reject when stream is destroyed', async function () {
+      await this.datastore.create(file);
 
-    //   const readable = new stream.Readable();
-    //   const offset = this.datastore.write(readable, file.id, 0);
+      const readable = new stream.Readable();
+      const offset = this.datastore.write(readable, file.id, 0);
 
-    //   readable.push('some data');
-    //   readable.destroy();
+      readable.push('some data');
+      readable.destroy();
 
-    //   return offset.should.be.resolvedWith(9);
-    // });
+      return offset.should.be.rejected();
+    });
   })
 }
 
