@@ -22,8 +22,9 @@ declare interface GCStoreOptions extends DataStoreOptions {
 }
 
 declare interface S3StoreOptions extends DataStoreOptions {
-    accessKeyId: string;
-    secretAccessKey: string;
+    accessKeyId?: string;
+    secretAccessKey?: string;
+    credentials?: Object;
     bucket: string;
     region?: string;
     tmpDirPrefix: string;
