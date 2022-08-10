@@ -1,6 +1,8 @@
 import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as http from "http";
+import { ECSCredentials } from 'aws-sdk'
+
 
 /**
  * arguments of constructor which in class extend DataStore
@@ -21,10 +23,7 @@ declare interface GCStoreOptions extends DataStoreOptions {
     keyFilename: string;
 }
 
-declare interface S3StoreOptions extends DataStoreOptions {
-    accessKeyId?: string;
-    secretAccessKey?: string;
-    credentials?: Object;
+export interface S3StoreOptions extends DataStoreOptions {
     bucket: string;
     region?: string;
     tmpDirPrefix?: string;
@@ -80,7 +79,8 @@ export declare class GCSDataStore extends DataStore {
  * file store in AWS S3
  */
 export declare class S3Store extends DataStore {
-    constructor(options: S3StoreOptions);
+    constructor(options: S3StoreOptions & { accessKeyId: string, secretAccessKey: string });
+    constructor(options: S3StoreOptions & { credentials: ECSCredentials });
     getOffset(file_id: string, with_parts?: boolean): Promise<any>;
 }
 
