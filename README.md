@@ -31,6 +31,8 @@ $ npm install tus-node-server
     ```
 
 - **Amazon S3**
+    
+    using Key/Secret
     ```js
 
     server.datastore = new tus.S3Store({
@@ -38,6 +40,22 @@ $ npm install tus-node-server
         bucket: 'bucket-name',
         accessKeyId: 'access-key-id',
         secretAccessKey: 'secret-access-key',
+        region: 'eu-west-1',
+        partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+        tmpDirPrefix: 'tus-s3-store',
+    });
+    ```
+
+    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property) (the example below uses [ECSCredentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS.html#ECSCredentials-property))
+    ```js
+
+    server.datastore = new tus.S3Store({
+        path: '/files',
+        bucket: 'bucket-name',
+        credentials: new AWS.ECSCredentials({
+            httpOptions: { timeout: 5000 },
+            maxRetries: 10,
+        }),
         region: 'eu-west-1',
         partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
         tmpDirPrefix: 'tus-s3-store',
