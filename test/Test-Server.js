@@ -174,7 +174,7 @@ describe('Server', () => {
             request(server.listen())
                 .delete("/this/is/wrong/123")
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .expect(404, 'Invalid path name\n', done);
+                .expect(404, 'The file for this url was not found\n', done);
         });
 
         it('DELETE should return 204 on proper deletion', (done) => {
