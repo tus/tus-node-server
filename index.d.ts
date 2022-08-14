@@ -23,7 +23,7 @@ declare interface GCStoreOptions extends DataStoreOptions {
     keyFilename: string;
 }
 
-export interface S3StoreOptions extends DataStoreOptions {
+declare interface S3StoreOptions extends DataStoreOptions {
     bucket: string;
     region?: string;
     tmpDirPrefix?: string;
