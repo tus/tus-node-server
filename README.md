@@ -46,7 +46,26 @@ $ npm install tus-node-server
     });
     ```
 
-    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property) (the example below uses [ECSCredentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS.html#ECSCredentials-property))
+    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property)
+
+    You can also use other subclass of of AWS.Credentials
+    - AWS.ChainableTemporaryCredentials
+    - AWS.CognitoIdentityCredentials
+    - AWS.CredentialProviderChain
+    - AWS.ECSCredentials
+    - AWS.EC2MetadataCredentials
+    - AWS.EnvironmentCredentials
+    - AWS.FileSystemCredentials
+    - AWS.ProcessCredentials
+    - AWS.RemoteCredentials
+    - AWS.SAMLCredentials
+    - AWS.SharedIniFileCredentials
+    - AWS.SsoCredentials
+    - AWS.TemporaryCredentials
+    - AWS.TokenFileWebIdentityCredentials
+    - AWS.WebIdentityCredentials
+
+    (the example below uses [AWS.ECSCredentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS.html#ECSCredentials-property))
     ```js
 
     server.datastore = new tus.S3Store({
