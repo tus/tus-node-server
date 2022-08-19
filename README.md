@@ -48,24 +48,9 @@ $ npm install tus-node-server
 
     using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property)
 
-    You can also use other subclass of of AWS.Credentials
-    - AWS.ChainableTemporaryCredentials
-    - AWS.CognitoIdentityCredentials
-    - AWS.CredentialProviderChain
-    - AWS.ECSCredentials
-    - AWS.EC2MetadataCredentials
-    - AWS.EnvironmentCredentials
-    - AWS.FileSystemCredentials
-    - AWS.ProcessCredentials
-    - AWS.RemoteCredentials
-    - AWS.SAMLCredentials
-    - AWS.SharedIniFileCredentials
-    - AWS.SsoCredentials
-    - AWS.TemporaryCredentials
-    - AWS.TokenFileWebIdentityCredentials
-    - AWS.WebIdentityCredentials
+    You can refer to the AWS docs for the supported values for `credentials`.
 
-    (the example below uses [AWS.ECSCredentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS.html#ECSCredentials-property))
+    (the example below uses [AWS.ECSCredentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS.html#ECSCredentials-property), to fetch credentials inside a AWS container, such as an ECS container, which will inject the required environment variables. The `credentials` config is directly passed into the AWS SDK so.)
     ```js
 
     server.datastore = new tus.S3Store({
