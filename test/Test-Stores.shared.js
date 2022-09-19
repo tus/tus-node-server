@@ -46,19 +46,19 @@ exports.shouldCreateUploads = function () {
     it('should store `upload_length` when creating new resource', async function () {
       await this.datastore.create(file);
       const data = await this.datastore.getOffset(file.id);
-      assert.equal(data.upload_length, file.upload_length);
+      assert.strictEqual(data.upload_length, file.upload_length);
     });
 
     it('should store `upload_defer_length` when creating new resource', async function () {
       await this.datastore.create(file_defered);
       const data = await this.datastore.getOffset(file.id);
-      assert.equal(data.upload_defer_length, file_defered.upload_defer_length);
+      assert.strictEqual(data.upload_defer_length, file_defered.upload_defer_length);
     });
 
     it('should store `upload_metadata` when creating new resource', async function () {
       await this.datastore.create(file);
       const data = await this.datastore.getOffset(file.id);
-      assert.equal(data.upload_metadata, file.upload_metadata);
+      assert.strictEqual(data.upload_metadata, file.upload_metadata);
     });
   })
 }
