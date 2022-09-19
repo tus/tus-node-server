@@ -104,7 +104,7 @@ exports.shouldWriteUploads = function () {
       assert.equal(offset, this.testFileSize);
     });
 
-    it.only('should reject when stream is destroyed', async function () {
+    it('should reject when stream is destroyed', async function () {
       await this.datastore.create(file);
 
       const readable = new stream.Readable({ read(size) {
