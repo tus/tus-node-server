@@ -107,11 +107,11 @@ exports.shouldWriteUploads = function () {
     it.only('should reject when stream is destroyed', async function () {
       await this.datastore.create(file);
 
-      const readable = new stream.Readable();
+      const readable = new stream.Readable({ read(size) {
+        this.push('some data');
+        this.destroy();
+      }});
       const offset = this.datastore.write(readable, file.id, 0);
-
-      readable.push('some data');
-      readable.destroy();
 
       return offset.should.be.rejected();
     });
