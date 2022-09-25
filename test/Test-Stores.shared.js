@@ -84,7 +84,6 @@ exports.shouldRemoveUploads = function () {
 
 exports.shouldWriteUploads = function () {
   describe('write', function () {
-    const file = new File('1234', `${this.testFileSize}`, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
 
     it('should reject write streams that can not be open', async function () {
       const stream = fs.createReadStream(this.testFilePath)
@@ -97,6 +96,7 @@ exports.shouldWriteUploads = function () {
     })
 
     it('should write a stream and resolve the new offset', async function () {
+      const file = new File('1234', `${this.testFileSize}`, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
       await this.datastore.create(file);
 
       const readable = fs.createReadStream(this.testFilePath);
@@ -105,6 +105,7 @@ exports.shouldWriteUploads = function () {
     });
 
     it('should reject when stream is destroyed', async function () {
+      const file = new File('1234', `${this.testFileSize}`, undefined, 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
       await this.datastore.create(file);
 
       const readable = new stream.Readable({ read(size) {
