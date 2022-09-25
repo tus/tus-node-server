@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server",
   "description": "Node.js tus server",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tus/tus-node-server.git"
@@ -57,7 +57,7 @@
     "should": "^13.2.3",
     "sinon": "^13.0.1",
     "supertest": "^6.2.2",
-    "tus-js-client": "^2.3.0"
+    "tus-js-client": "^3.0.0"
   },
   "dependencies": {
     "@google-cloud/storage": "^6.2.2",
