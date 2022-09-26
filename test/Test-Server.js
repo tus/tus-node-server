@@ -304,11 +304,36 @@ describe('Server', () => {
                         .patch(res.headers.location)
                         .send('test')
                         .set('Tus-Resumable', TUS_RESUMABLE)
-                        .set('Upload-Offset', 0)
+                        .set('Upload-Offset', '0')
                         .set('Content-Type', 'application/offset+octet-stream')
                         .end((err) => { if (err) done(err) });
                 })
         });
+
+        it('should fire when an upload is finished with upload-defer-length', (done) => {
+            server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+                event.should.have.property('file');
+                done();
+            });
+
+            request(server.listen())
+                .post(server.options.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Defer-Length', 1)
+                .then((res) => {
+                    request(server.listen())
+                        .patch(res.headers.location)
+                        .send('test')
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .set('Upload-Offset', '0')
+                        .set('Upload-Length', Buffer.byteLength('test', 'utf8'))
+                        .set('Content-Type', 'application/offset+octet-stream')
+                        .end((err) => { 
+                            if (err) done(err)
+                            console.log('done')
+                        });
+                })
+        });
     })
     });
-});
+  });
