@@ -5,7 +5,7 @@ const GCSDataStore = require('../lib/stores/GCSDataStore')
 
 const shared = require('./Test-Stores.shared')
 
-describe.skip('GCSDataStore', () => {
+describe('GCSDataStore', () => {
   before(function () {
     this.testFileSize = 960244
     this.testFileName = 'test.mp4'
