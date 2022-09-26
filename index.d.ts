@@ -44,6 +44,7 @@ declare interface IFile {
     upload_length: string;
     upload_defer_length: string;
     upload_metadata: string;
+    size: number
 }
 
 declare class File implements IFile {
@@ -73,13 +74,17 @@ export declare class DataStore extends EventEmitter {
     getOffset(file_id: string): Promise<IFile>;
 }
 
+export interface DeferableLengthDatastore {
+    declareUploadLength(file_id: string, upload_length: string) : Promise<undefined>;
+
+}
+
 /**
  * file store in local storage
  */
-export declare class FileStore extends DataStore {
+export declare class FileStore extends DataStore implements DeferableLengthDatastore {
     constructor(options: FileStoreOptions);
     read(file_id: string): stream.Readable;
-    getOffset(file_id: string): Promise<fs.Stats & IFile>;
 }
 
 /**

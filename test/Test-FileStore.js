@@ -86,4 +86,5 @@ describe('FileStore', function () {
   shared.shouldRemoveUploads() // termination extension
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
+  shared.shouldDeclareUploadLength() // creation-defer-length extension
 })
