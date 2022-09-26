@@ -3,8 +3,7 @@
 
 const assert = require('assert');
 const http = require('http');
-const sinon = require('sinon')
-const should = require('should')
+const should = require('should');
 const PatchHandler = require('../lib/handlers/PatchHandler');
 const DataStore = require('../lib/stores/DataStore');
 
@@ -88,15 +87,12 @@ describe('PatchHandler', () => {
                 'content-type': 'application/offset+octet-stream',
             };
             req.url = `${path}/1234`;
-            const fake = sinon.fake()
-            handler.emit = fake
 
             await handler.send(req, res)
 
             assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
             assert.equal(hasHeader(res, 'Content-Length'), false);
             assert.equal(res.statusCode, 204);
-            assert.equal(fake.calledOnce, true)
         });
     });
 });

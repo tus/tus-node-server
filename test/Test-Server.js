@@ -304,7 +304,7 @@ describe('Server', () => {
                         .patch(res.headers.location)
                         .send('test')
                         .set('Tus-Resumable', TUS_RESUMABLE)
-                        .set('Upload-Offset', '0')
+                        .set('Upload-Offset', 0)
                         .set('Content-Type', 'application/offset+octet-stream')
                         .end((err) => { if (err) done(err) });
                 })
@@ -325,7 +325,7 @@ describe('Server', () => {
                         .patch(res.headers.location)
                         .send('test')
                         .set('Tus-Resumable', TUS_RESUMABLE)
-                        .set('Upload-Offset', '0')
+                        .set('Upload-Offset', 0)
                         .set('Upload-Length', Buffer.byteLength('test', 'utf8'))
                         .set('Content-Type', 'application/offset+octet-stream')
                         .end((err) => { 
