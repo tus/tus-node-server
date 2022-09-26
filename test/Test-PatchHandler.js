@@ -18,8 +18,8 @@ const hasHeader = (res, header) => {
 describe('PatchHandler', () => {
     const path = '/test/output';
     let res = null;
-    const store = new DataStore({ path });
-    const handler = new PatchHandler(store);
+    const store = new DataStore();
+    const handler = new PatchHandler(store, { path });
     const req = { headers: {} };
 
     beforeEach((done) => {
@@ -27,28 +27,23 @@ describe('PatchHandler', () => {
         done();
     });
 
-    it('should 403 if no Content-Type header', (done) => {
+    it('should 403 if no Content-Type header', () => {
         req.headers = {};
         req.url = `${path}/1234`;
-        handler.send(req, res);
-        assert.equal(res.statusCode, 403);
-        done();
+        return assert.rejects(() => handler.send(req, res), { status_code: 403 });
     });
 
-    it('should 403 if no Upload-Offset header', (done) => {
+    it('should 403 if no Upload-Offset header', () => {
         req.headers = { 'content-type': 'application/offset+octet-stream' };
         req.url = `${path}/1234`;
-        handler.send(req, res);
-        assert.equal(res.statusCode, 403);
-        done();
+        return assert.rejects(() => handler.send(req, res), { status_code: 403 });
     });
 
     describe('send()', () => {
 
         it('should 404 urls without a path', () => {
             req.url = `${path}/`;
-            handler.send(req, res);
-            assert.equal(res.statusCode, 404);
+            return assert.rejects(() => handler.send(req, res), { status_code: 404 });
         });
 
         it('should 403 if the offset is omitted', () => {
@@ -56,8 +51,7 @@ describe('PatchHandler', () => {
                 'content-type': 'application/offset+octet-stream',
             };
             req.url = `${path}/file`;
-            handler.send(req, res);
-            assert.equal(res.statusCode, 403);
+            return assert.rejects(() => handler.send(req, res), { status_code: 403 });
         });
 
         it('should 403 the content-type is omitted', () => {
@@ -65,8 +59,7 @@ describe('PatchHandler', () => {
                 'upload-offset': 0,
             };
             req.url = `${path}/file`;
-            handler.send(req, res);
-            assert.equal(res.statusCode, 403);
+            return assert.rejects(() => handler.send(req, res), { status_code: 403 });
         });
 
         it('must return a promise if the headers validate', () => {
@@ -85,26 +78,21 @@ describe('PatchHandler', () => {
             };
             req.url = `${path}/1234`;
 
-            return handler.send(req, res)
-                .then(() => {
-                    assert.equal(res.statusCode, 409);
-                });
+            return assert.rejects(() => handler.send(req, res), { status_code: 409 });
         });
 
-        it('must acknowledge successful PATCH requests with the 204', () => {
+        it('must acknowledge successful PATCH requests with the 204', async () => {
             req.headers = {
                 'upload-offset': 0,
                 'content-type': 'application/offset+octet-stream',
             };
             req.url = `${path}/1234`;
 
-            return handler.send(req, res)
-                .then(() => {
-                    assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
-                    assert.equal(hasHeader(res, 'Content-Length'), false);
-                    assert.equal(res.statusCode, 204);
-                });
+            await handler.send(req, res)
+
+            assert.equal(hasHeader(res, { 'Upload-Offset': 0 }), true);
+            assert.equal(hasHeader(res, 'Content-Length'), false);
+            assert.equal(res.statusCode, 204);
         });
     });
-
 });

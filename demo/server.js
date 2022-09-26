@@ -10,14 +10,15 @@ const GCSDataStore = require('../index').GCSDataStore;
 const S3Store = require('../index').S3Store;
 const EVENTS = require('../index').EVENTS;
 
-const server = new Server();
+const options = { path: '/files' };
+
+const server = new Server(options);
 
 const data_store = process.env.DATA_STORE || 'FileStore';
 
 switch (data_store) {
     case 'GCSDataStore':
         server.datastore = new GCSDataStore({
-            path: '/files',
             projectId: 'vimeo-open-source',
             keyFilename: path.resolve(__dirname, '../keyfile.json'),
             bucket: 'tus-node-server',
@@ -31,7 +32,6 @@ switch (data_store) {
         assert.ok(process.env.AWS_REGION, 'environment variable `AWS_REGION` must be set');
 
         server.datastore = new S3Store({
-            path: '/files',
             bucket: process.env.AWS_BUCKET,
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -41,9 +41,7 @@ switch (data_store) {
         break;
 
     default:
-        server.datastore = new FileStore({
-            path: '/files',
-        });
+        server.datastore = new FileStore({ directory: './files' });
 }
 
 /**

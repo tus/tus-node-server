@@ -10,21 +10,6 @@ const File = require('../lib/models/File');
 describe('DataStore', () => {
     const datastore = new DataStore({path: '/test/output'});
 
-    it('constructor must require a path', (done) => {
-        assert.throws(() => { new DataStore() }, Error);
-        done();
-    });
-
-    it('constructor must require the namingFunction to be a function, if it is provided', (done) => {
-        assert.throws(() => { new DataStore({ path: '/test/output', namingFunction: {} }) }, Error);
-        done();
-    });
-
-    it('relativeLocation option must be boolean', (done) => {
-        assert.equal(typeof datastore.relativeLocation, 'boolean');
-        done();
-    });
-
     it('should provide extensions', (done) => {
         datastore.should.have.property('extensions');
         assert.equal(datastore.extensions, null);

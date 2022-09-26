@@ -1,7 +1,6 @@
 'use strict'
 const path = require('path')
 
-const Server = require('../lib/Server')
 const GCSDataStore = require('../lib/stores/GCSDataStore')
 
 const shared = require('./Test-Stores.shared')
@@ -15,9 +14,7 @@ describe('GCSDataStore', () => {
   })
 
   beforeEach(function () {
-    this.server = new Server()
-    this.server.datastore = new GCSDataStore({
-      path: this.storePath,
+    this.datastore = new GCSDataStore({
       projectId: 'tus-node-server',
       keyFilename: path.resolve(__dirname, '../keyfile.json'),
       bucket: 'tus-node-server-ci',
