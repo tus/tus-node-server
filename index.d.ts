@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import * as fs from "fs";
 import * as http from "http";
 
 declare interface Configstore {
@@ -17,8 +16,7 @@ declare interface ServerOptions {
 /**
  * arguments of constructor which in class extend DataStore
  */
-declare interface DataStoreOptions {
-}
+declare interface DataStoreOptions {}
 
 declare interface FileStoreOptions extends DataStoreOptions {
     directory: string;
@@ -47,7 +45,7 @@ declare interface IFile {
     size: number
 }
 
-declare class File implements IFile {
+declare class File {
     constructor(
         file_id: string,
         upload_length: string,
@@ -61,30 +59,31 @@ declare class File implements IFile {
  */
 export declare class DataStore extends EventEmitter {
     constructor(options: DataStoreOptions);
+    // TODO: get and set should both be string[]
+    // @ts-expect-error The return type of a 'get' accessor must be assignable to its 'set' accessor type
     get extensions(): string;
     set extensions(extensions_array: string[]);
     hasExtension(extension: string): boolean;
     create(file: File): Promise<IFile>;
     remove(file_id: string) : Promise<any>;
     write(
-        stream: stream.Readable,
+        stream: ReadableStream,
         file_id: string,
         offset: number
     ): Promise<number>;
     getOffset(file_id: string): Promise<IFile>;
 }
 
-export interface DeferableLengthDatastore {
+export declare class DeferableLengthDatastore extends DataStore {
     declareUploadLength(file_id: string, upload_length: string) : Promise<undefined>;
-
 }
 
 /**
  * file store in local storage
  */
-export declare class FileStore extends DataStore implements DeferableLengthDatastore {
+export declare class FileStore extends DeferableLengthDatastore {
     constructor(options: FileStoreOptions);
-    read(file_id: string): stream.Readable;
+    read(file_id: string): ReadableStream;
 }
 
 /**
