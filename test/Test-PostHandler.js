@@ -38,17 +38,17 @@ describe('PostHandler', () => {
     describe('send()', () => {
 
         describe('test errors', () => {
-            it('must 412 if the Upload-Length and Upload-Defer-Length headers are both missing', async() => {
+            it('must 400 if the Upload-Length and Upload-Defer-Length headers are both missing', async() => {
                 const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
 
                 req.headers = {};
-                return assert.rejects(() => handler.send(req, res), { status_code: 412 });
+                return assert.rejects(() => handler.send(req, res), { status_code: 400 });
             });
 
-            it('must 412 if the Upload-Length and Upload-Defer-Length headers are both present', async() => {
+            it('must 400 if the Upload-Length and Upload-Defer-Length headers are both present', async() => {
                 const handler = new PostHandler(fake_store, { namingFunction: () => '1234' });
                 req.headers = { 'upload-length': '512', 'upload-defer-length': '1'};
-                return assert.rejects(() => handler.send(req, res), { status_code: 412 });
+                return assert.rejects(() => handler.send(req, res), { status_code: 400 });
             });
 
             it('must 501 if the \'concatenation\' extension is not supported', async() => {

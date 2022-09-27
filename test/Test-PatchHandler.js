@@ -1,6 +1,7 @@
 /* eslint-env node, mocha */
 'use strict';
 
+require('should');
 const assert = require('assert');
 const http = require('http');
 const sinon = require('sinon');
@@ -64,7 +65,7 @@ describe('PatchHandler', () => {
             return assert.rejects(() => handler.send(req, res), { status_code: 403 });
         });
 
-        it('should 412 if upload-defer-length is present when it upload-length is known', () => {
+        it('should 400 if upload-defer-length is present when it upload-length is known', () => {
             req.headers = {
                 'upload-offset': '0',
                 'upload-defer-length': '1',
@@ -74,7 +75,7 @@ describe('PatchHandler', () => {
 
             store.getOffset.resolves({ size: 0, upload_length: '512' });
 
-            return assert.rejects(() => handler.send(req, res), { status_code: 412 });
+            return assert.rejects(() => handler.send(req, res), { status_code: 400 });
         });
 
         it('should declare upload-length once it is send', async () => {
@@ -94,7 +95,7 @@ describe('PatchHandler', () => {
             assert.equal(store.declareUploadLength.calledOnceWith('file', '10'), true);
         });
         
-        it('should 412 if upload-length does not match', () => {
+        it('should 400 if upload-length does not match', () => {
             req.headers = {
                 'upload-offset': '0',
                 'upload-length': '10',
@@ -104,7 +105,7 @@ describe('PatchHandler', () => {
 
             store.getOffset.resolves({ size: 0, upload_length: '20' });
 
-            return assert.rejects(() => handler.send(req, res), { status_code: 412 });
+            return assert.rejects(() => handler.send(req, res), { status_code: 400 });
         });
 
         it('must return a promise if the headers validate', () => {

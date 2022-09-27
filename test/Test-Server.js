@@ -144,7 +144,7 @@ describe('Server', () => {
             request(listener)
               .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
-              .expect(412, {}, done);
+              .expect(400, {}, done);
         });
 
         it('POST should require non negative Upload-Length number', (done) => {
@@ -152,7 +152,7 @@ describe('Server', () => {
               .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', -3)
-              .expect(412, 'Invalid upload-length\n', done);
+              .expect(400, 'Invalid upload-length\n', done);
         });
 
         it('POST should validate the metadata header', (done) => {
@@ -160,7 +160,7 @@ describe('Server', () => {
               .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Metadata', '')
-              .expect(412, 'Invalid upload-metadata\n', done);
+              .expect(400, 'Invalid upload-metadata\n', done);
         });
 
         it('DELETE should return 404 when file does not exist', (done) => {
@@ -329,10 +329,7 @@ describe('Server', () => {
                         .set('Upload-Offset', 0)
                         .set('Upload-Length', Buffer.byteLength('test', 'utf8'))
                         .set('Content-Type', 'application/offset+octet-stream')
-                        .end((err) => { 
-                            if (err) done(err)
-                            console.log('done')
-                        });
+                        .end((err) => { if (err) done(err) });
                 })
             });
         })
