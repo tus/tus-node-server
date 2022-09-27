@@ -30,4 +30,5 @@ describe('S3DataStore', function () {
   // shared.shouldRemoveUploads()
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
+  shared.shouldDeclareUploadLength() // creation-defer-length extension
 })

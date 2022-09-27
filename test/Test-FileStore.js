@@ -9,7 +9,6 @@ const should = require('should')
 const FileStore = require('../lib/stores/FileStore')
 const MemoryConfigstore = require('../lib/configstores/MemoryConfigstore')
 const File = require('../lib/models/File')
-const { ERRORS, EVENTS } = require('../lib/constants')
 
 
 const shared = require('./Test-Stores.shared')
