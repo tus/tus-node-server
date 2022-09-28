@@ -196,6 +196,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', TEST_FILE_SIZE)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -206,6 +207,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/dont_exist`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', TEST_FILE_SIZE)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -217,9 +219,11 @@ describe('EndToEnd', () => {
                 const write_stream = agent.patch(`${STORE_PATH}/${file_id}`)
                     .set('Tus-Resumable', TUS_RESUMABLE)
                     .set('Upload-Offset', 0)
+                    .set('Upload-Length', TEST_FILE_SIZE)
                     .set('Content-Type', 'application/offset+octet-stream');
 
                 write_stream.on('response', (res) => {
+                    // TODO: this is not called when request fails
                     assert.equal(res.statusCode, 204);
                     assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
                     assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
@@ -444,6 +448,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', `${TEST_FILE_SIZE}`)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -454,6 +459,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/dont_exist`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', `${TEST_FILE_SIZE}`)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -465,6 +471,7 @@ describe('EndToEnd', () => {
                 const write_stream = agent.patch(`${STORE_PATH}/${file_id}`)
                     .set('Tus-Resumable', TUS_RESUMABLE)
                     .set('Upload-Offset', 0)
+                    .set('Upload-Length', `${TEST_FILE_SIZE}`)
                     .set('Content-Type', 'application/offset+octet-stream');
 
                 write_stream.on('response', (res) => {

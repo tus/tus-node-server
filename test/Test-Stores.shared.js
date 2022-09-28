@@ -136,3 +136,28 @@ exports.shouldHandleOffset = function () {
     })
   })
 }
+
+exports.shouldDeclareUploadLength = function () {
+  describe('declareUploadLength', function () {
+    const file = new File('1234', undefined, '1', 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential');
+
+    it('should reject non-existant files', function () {
+      return this.datastore.declareUploadLength('doesnt_exist', '10').should.be.rejected()
+    })
+
+    it('should update upload_length after declaring upload length', async function () {
+      await this.datastore.create(file);
+      let data = await this.datastore.getOffset(file.id)
+
+      assert.equal(data.upload_length, undefined);
+      assert.equal(data.upload_defer_length, '1');
+
+      await this.datastore.declareUploadLength(file.id, '10')
+
+      data = await this.datastore.getOffset(file.id)
+
+      assert.equal(data.upload_length, '10');
+      assert.equal(data.upload_defer_length, undefined);
+    })
+  })
+}
