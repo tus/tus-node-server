@@ -1,15 +1,18 @@
-import stream from "stream";
-import BaseHandler from "./BaseHandler.js";
-import { ERRORS as ERRORS$0 } from "../constants.js";
-import * as debug from "debug";
+// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
+import stream from 'stream';
+import BaseHandler from './BaseHandler';
+import { ERRORS as ERRORS$0 } from '../constants';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
+import * as debug from 'debug';
 const ERRORS = { ERRORS: ERRORS$0 }.ERRORS;
 const log = debug('tus-node-server:handlers:get');
 class GetHandler extends BaseHandler {
-    constructor(store, options) {
+    paths: any;
+    constructor(store: any, options: any) {
         super(store, options);
         this.paths = new Map();
     }
-    registerPath(path, handler) {
+    registerPath(path: any, handler: any) {
         this.paths.set(path, handler);
     }
     /**
@@ -19,7 +22,7 @@ class GetHandler extends BaseHandler {
      * @param  {object} res http.ServerResponse
      * @return {function}
      */
-    async send(req, res) {
+    async send(req: any, res: any) {
         // Check if this url has been added to allow GET requests, with an
         // appropriate callback to handle the request
         if (this.paths.has(req.url)) {
@@ -44,7 +47,7 @@ class GetHandler extends BaseHandler {
             'Content-Length': stats.size,
         };
         res.writeHead(200, headers);
-        return stream.pipeline(file_stream, res, (err) => {
+        return stream.pipeline(file_stream, res, (err: any) => {
             // we have no need to handle streaming errors
         });
     }

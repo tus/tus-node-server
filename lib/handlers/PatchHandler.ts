@@ -1,9 +1,11 @@
-import BaseHandler from "./BaseHandler.js";
-import File from "../models/File.js";
-import { ERRORS, EVENTS } from "../constants.js";
-import * as debug from "debug";
+import BaseHandler from './BaseHandler';
+import File from '../models/File';
+import { ERRORS, EVENTS } from '../constants';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
+import * as debug from 'debug';
 const log = debug('tus-node-server:handlers:patch');
 class PatchHandler extends BaseHandler {
+    emit: any;
     /**
      * Write data to the DataStore and return the new offset.
      *
@@ -11,7 +13,7 @@ class PatchHandler extends BaseHandler {
      * @param  {object} res http.ServerResponse
      * @return {function}
      */
-    async send(req, res) {
+    async send(req: any, res: any) {
         const file_id = this.getFileIdFromRequest(req);
         if (file_id === false) {
             throw ERRORS.FILE_NOT_FOUND;
@@ -60,6 +62,7 @@ class PatchHandler extends BaseHandler {
             'Upload-Offset': new_offset,
         };
         // The Server MUST acknowledge successful PATCH requests with the 204
+        // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
         return this.write(res, 204, headers);
     }
 }

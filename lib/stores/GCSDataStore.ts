@@ -1,7 +1,9 @@
-import DataStore from "./DataStore.js";
+import DataStore from "./DataStore";
 import * as storage from "@google-cloud/storage";
+// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
 import stream from "stream";
-import { ERRORS, TUS_RESUMABLE } from "../constants.js";
+import { ERRORS, TUS_RESUMABLE } from "../constants";
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
 import * as debug from "debug";
 const { Storage } = storage;
 const DEFAULT_CONFIG = {
@@ -15,7 +17,12 @@ const log = debug('tus-node-server:stores:gcsstore');
  * @author Ben Stahl <bhstahl@gmail.com>
  */
 class GCSDataStore extends DataStore {
-    constructor(options) {
+    authConfig: any;
+    bucket: any;
+    bucket_name: any;
+    gcs: any;
+    constructor(options: any) {
+        // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
         super(options);
         this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length'];
         if (!options.bucket) {
@@ -38,7 +45,7 @@ class GCSDataStore extends DataStore {
      */
     _getBucket() {
         const bucket = this.gcs.bucket(this.bucket_name);
-        bucket.exists((error, exists) => {
+        bucket.exists((error: any, exists: any) => {
             // ignore insufficient access error, assume bucket exists
             if (error.code === 403) {
                 return;
@@ -59,7 +66,7 @@ class GCSDataStore extends DataStore {
      * @param  {File} file
      * @return {Promise}
      */
-    create(file) {
+    create(file: any) {
         return new Promise((resolve, reject) => {
             if (!file.id) {
                 reject(ERRORS.FILE_NOT_FOUND);
@@ -91,7 +98,7 @@ class GCSDataStore extends DataStore {
      *
      * @return {stream.Readable}
      */
-    read(file_id) {
+    read(file_id: any) {
         return this.bucket.file(file_id).createReadStream();
     }
     /**
@@ -103,35 +110,36 @@ class GCSDataStore extends DataStore {
      * @param  {integer} offset starting offset
      * @return {Promise}
      */
-    write(readable, file_id, offset) {
+    // @ts-expect-error TS(2416): Property 'write' in type 'GCSDataStore' is not ass... Remove this comment to see the full error message
+    write(readable: any, file_id: any, offset: any) {
         // GCS Doesn't persist metadata within versions,
         // get that metadata first
         return this.getOffset(file_id)
             .then((data) => {
             return new Promise((resolve, reject) => {
                 const file = this.bucket.file(file_id);
-                const destination = data.size === 0 ? file : this.bucket.file(`${file_id}_patch`);
+                const destination = (data as any).size === 0 ? file : this.bucket.file(`${file_id}_patch`);
                 const options = {
-                    offset,
-                    metadata: {
-                        metadata: {
-                            upload_length: data.upload_length,
-                            tus_version: TUS_RESUMABLE,
-                            upload_metadata: data.upload_metadata,
-                            upload_defer_length: data.upload_defer_length,
-                        },
-                    },
-                };
+    offset,
+    metadata: {
+        metadata: {
+            upload_length: (data as any).upload_length,
+            tus_version: TUS_RESUMABLE,
+            upload_metadata: (data as any).upload_metadata,
+            upload_defer_length: (data as any).upload_defer_length,
+        },
+    },
+};
                 const write_stream = destination.createWriteStream(options);
                 if (!write_stream || readable.destroyed) {
                     reject(ERRORS.FILE_WRITE_ERROR);
                     return;
                 }
-                let bytes_received = data.size;
-                readable.on('data', (buffer) => {
+                let bytes_received = (data as any).size;
+                readable.on('data', (buffer: any) => {
                     bytes_received += buffer.length;
                 });
-                stream.pipeline(readable, write_stream, async (e) => {
+                stream.pipeline(readable, write_stream, async (e: any) => {
                     if (e) {
                         log(e);
                         try {
@@ -165,46 +173,47 @@ class GCSDataStore extends DataStore {
      * @param  {string} file_id     name of the file
      * @return {object}
      */
-    getOffset(file_id) {
+    // @ts-expect-error TS(2416): Property 'getOffset' in type 'GCSDataStore' is not... Remove this comment to see the full error message
+    getOffset(file_id: any) {
         return new Promise((resolve, reject) => {
             if (!file_id) {
                 reject(ERRORS.FILE_NOT_FOUND);
                 return;
             }
             const file = this.bucket.file(file_id);
-            file.getMetadata((error, metadata) => {
-                if (error && error.code === 404) {
-                    return reject(ERRORS.FILE_NOT_FOUND);
-                }
-                if (error) {
-                    log('[GCSDataStore] getFileMetadata', error);
-                    return reject(error);
-                }
-                const data = {
-                    size: parseInt(metadata.size, 10),
-                };
-                if (!('metadata' in metadata)) {
-                    return resolve(data);
-                }
-                if (metadata.metadata.upload_length) {
-                    data.upload_length = metadata.metadata.upload_length;
-                }
-                if (metadata.metadata.upload_defer_length) {
-                    data.upload_defer_length = metadata.metadata.upload_defer_length;
-                }
-                if (metadata.metadata.upload_metadata) {
-                    data.upload_metadata = metadata.metadata.upload_metadata;
-                }
-                return resolve(data);
-            });
+            file.getMetadata((error: any, metadata: any) => {
+    if (error && error.code === 404) {
+        return reject(ERRORS.FILE_NOT_FOUND);
+    }
+    if (error) {
+        log('[GCSDataStore] getFileMetadata', error);
+        return reject(error);
+    }
+    const data = {
+        size: parseInt(metadata.size, 10),
+    };
+    if (!('metadata' in metadata)) {
+        return resolve(data);
+    }
+    if (metadata.metadata.upload_length) {
+        (data as any).upload_length = metadata.metadata.upload_length;
+    }
+    if (metadata.metadata.upload_defer_length) {
+        (data as any).upload_defer_length = metadata.metadata.upload_defer_length;
+    }
+    if (metadata.metadata.upload_metadata) {
+        (data as any).upload_metadata = metadata.metadata.upload_metadata;
+    }
+    return resolve(data);
+});
         });
     }
-    async declareUploadLength(file_id, upload_length) {
+    async declareUploadLength(file_id: any, upload_length: any) {
         const metadata = await this.getOffset(file_id);
-        metadata.upload_length = upload_length;
+        (metadata as any).upload_length = upload_length;
         // NOTE: this needs to be `null` and not `undefined`,
-        // GCS has logic that if it's the latter, it will keep the previous value ¯\_(ツ)_/¯
-        metadata.upload_defer_length = null;
+// GCS has logic that if it's the latter, it will keep the previous value ¯\_(ツ)_/¯
+(metadata as any).upload_defer_length = null;
         await this.bucket.file(file_id).setMetadata({ metadata });
     }
 }

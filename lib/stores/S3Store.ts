@@ -1,11 +1,16 @@
+// @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
 import assert from "assert";
+// @ts-expect-error TS(2307): Cannot find module 'os' or its corresponding type ... Remove this comment to see the full error message
 import os from "os";
-import DataStore from "./DataStore.js";
-import { FileStreamSplitter } from "../models/StreamSplitter.js";
+import DataStore from "./DataStore";
+import { FileStreamSplitter } from "../models/StreamSplitter";
 import aws from "aws-sdk";
-import { ERRORS, TUS_RESUMABLE } from "../constants.js";
+import { ERRORS, TUS_RESUMABLE } from "../constants";
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
 import * as debug from "debug";
+// @ts-expect-error TS(2307): Cannot find module 'fs' or its corresponding type ... Remove this comment to see the full error message
 import fs from "fs";
+// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
 import stream from "stream";
 const log = debug('tus-node-server:stores:s3store');
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
@@ -42,7 +47,12 @@ const log = debug('tus-node-server:stores:s3store');
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
 class S3Store extends DataStore {
-    constructor(options) {
+    bucket_name: any;
+    cache: any;
+    client: any;
+    part_size: any;
+    constructor(options: any) {
+        // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
         super(options);
         this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length'];
         assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set');
@@ -69,14 +79,14 @@ class S3Store extends DataStore {
         return this.client
             .headBucket({ Bucket: this.bucket_name })
             .promise()
-            .then((data) => {
+            .then((data: any) => {
             if (!data) {
                 throw new Error(`bucket "${this.bucket_name}" does not exist`);
             }
             log(`bucket "${this.bucket_name}" exists`);
             return data;
         })
-            .catch((err) => {
+            .catch((err: any) => {
             if (err.statusCode === 404) {
                 throw new Error(`[S3Store] bucket "${this.bucket_name}" does not exist`);
             }
@@ -93,7 +103,7 @@ class S3Store extends DataStore {
    * @param  {Object}          file file instance
    * @return {Promise<Object>}      upload data
    */
-    _initMultipartUpload(file) {
+    _initMultipartUpload(file: any) {
         log(`[${file.id}] initializing multipart upload`);
         const parsedMetadata = this._parseMetadataString(file.upload_metadata);
         const upload_data = {
@@ -104,31 +114,31 @@ class S3Store extends DataStore {
             },
         };
         if (file.upload_length !== undefined) {
-            upload_data.Metadata.upload_length = file.upload_length;
+            (upload_data.Metadata as any).upload_length = file.upload_length;
         }
         if (file.upload_defer_length !== undefined) {
-            upload_data.Metadata.upload_defer_length = file.upload_defer_length;
+            (upload_data.Metadata as any).upload_defer_length = file.upload_defer_length;
         }
         if (file.upload_metadata !== undefined) {
-            upload_data.Metadata.upload_metadata = file.upload_metadata;
+            (upload_data.Metadata as any).upload_metadata = file.upload_metadata;
         }
         if (parsedMetadata.contentType) {
-            upload_data.ContentType = parsedMetadata.contentType.decoded;
+            (upload_data as any).ContentType = parsedMetadata.contentType.decoded;
         }
         if (parsedMetadata.filename) {
-            upload_data.Metadata.original_name = parsedMetadata.filename.encoded;
+            (upload_data.Metadata as any).original_name = parsedMetadata.filename.encoded;
         }
         return this.client
             .createMultipartUpload(upload_data)
             .promise()
-            .then((data) => {
+            .then((data: any) => {
             log(`[${file.id}] multipart upload created (${data.UploadId})`);
             return data.UploadId;
         })
-            .then((upload_id) => {
+            .then((upload_id: any) => {
             return this._saveMetadata(file, upload_id);
         })
-            .catch((err) => {
+            .catch((err: any) => {
             throw err;
         });
     }
@@ -142,7 +152,7 @@ class S3Store extends DataStore {
    * @param  {String}          upload_id S3 upload id
    * @return {Promise<Object>}           upload data
    */
-    _saveMetadata(file, upload_id) {
+    _saveMetadata(file: any, upload_id: any) {
         log(`[${file.id}] saving metadata`);
         const metadata = {
             file: JSON.stringify(file),
@@ -164,7 +174,7 @@ class S3Store extends DataStore {
                 upload_id,
             };
         })
-            .catch((err) => {
+            .catch((err: any) => {
             throw err;
         });
     }
@@ -176,7 +186,7 @@ class S3Store extends DataStore {
    * @param  {String} file_id id of the file
    * @return {Promise<Object>}        which resolves with the metadata
    */
-    _getMetadata(file_id) {
+    _getMetadata(file_id: any) {
         log(`[${file_id}] retrieving metadata`);
         if (this.cache[file_id] && this.cache[file_id].file) {
             log(`[${file_id}] metadata from cache`);
@@ -189,7 +199,7 @@ class S3Store extends DataStore {
             Key: `${file_id}.info`,
         })
             .promise()
-            .then((data) => {
+            .then((data: any) => {
             this.cache[file_id] = Object.assign({}, data.Metadata, {
                 file: JSON.parse(data.Metadata.file),
                 // Patch for Digital Ocean: if key upload_id (AWS, standard) doesn't exist in Metadata object, fallback to upload-id (DO)
@@ -197,7 +207,7 @@ class S3Store extends DataStore {
             });
             return this.cache[file_id];
         })
-            .catch((err) => {
+            .catch((err: any) => {
             throw err;
         });
     }
@@ -207,15 +217,16 @@ class S3Store extends DataStore {
    * @param  {String} metadata_string tus' standard upload metadata
    * @return {Object}                 metadata as key-value pair
    */
-    _parseMetadataString(metadata_string) {
+    _parseMetadataString(metadata_string: any) {
         if (!metadata_string) {
             return {};
         }
         const kv_pair_list = metadata_string.split(',');
-        return kv_pair_list.reduce((metadata, kv_pair) => {
+        return kv_pair_list.reduce((metadata: any, kv_pair: any) => {
             const [key, base64_value] = kv_pair.split(' ');
             metadata[key] = {
                 encoded: base64_value,
+                // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
                 decoded: base64_value === undefined ? undefined : Buffer.from(base64_value, 'base64').toString('ascii'),
             };
             return metadata;
@@ -229,7 +240,7 @@ class S3Store extends DataStore {
    * @param  {Number}          current_part_number number of the current part/chunk
    * @return {Promise<String>}                     which resolves with the parts' etag
    */
-    _uploadPart(metadata, read_stream, current_part_number) {
+    _uploadPart(metadata: any, read_stream: any, current_part_number: any) {
         return this.client
             .uploadPart({
             Bucket: this.bucket_name,
@@ -239,7 +250,7 @@ class S3Store extends DataStore {
             Body: read_stream,
         })
             .promise()
-            .then((data) => {
+            .then((data: any) => {
             log(`[${metadata.file.id}] finished uploading part #${current_part_number}`);
             return data.ETag;
         });
@@ -254,17 +265,18 @@ class S3Store extends DataStore {
    * @return {Promise<Number>} which resolves with the current offset
    * @memberof S3Store
    */
-    _processUpload(metadata, readStream, currentPartNumber, current_size) {
+    _processUpload(metadata: any, readStream: any, currentPartNumber: any, current_size: any) {
         return new Promise((resolve, reject) => {
+            // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
             const splitterStream = new FileStreamSplitter({
                 maxChunkSize: this.part_size,
                 directory: os.tmpdir(),
             });
-            const promises = [];
-            let pendingChunkFilepath = null;
-            stream.pipeline(readStream, splitterStream, (pipelineErr) => {
+            const promises: any = [];
+            let pendingChunkFilepath: any = null;
+            stream.pipeline(readStream, splitterStream, (pipelineErr: any) => {
                 if (pipelineErr && pendingChunkFilepath !== null) {
-                    fs.rm(pendingChunkFilepath, (fileRemoveErr) => {
+                    fs.rm(pendingChunkFilepath, (fileRemoveErr: any) => {
                         if (fileRemoveErr) {
                             log(`[${metadata.file.id}] failed to remove chunk ${pendingChunkFilepath}`);
                         }
@@ -273,10 +285,13 @@ class S3Store extends DataStore {
                 promises.push(pipelineErr ? Promise.reject(pipelineErr) : Promise.resolve());
                 resolve(promises);
             });
-            splitterStream.on('chunkStarted', (filepath) => {
+            splitterStream.on('chunkStarted', (filepath: any) => {
                 pendingChunkFilepath = filepath;
             });
-            splitterStream.on('chunkFinished', ({ path, size }) => {
+            splitterStream.on('chunkFinished', ({
+                path,
+                size
+            }: any) => {
                 pendingChunkFilepath = null;
                 current_size += size;
                 const partNumber = currentPartNumber++;
@@ -290,8 +305,9 @@ class S3Store extends DataStore {
                     }
                     return this._uploadPart(metadata, fs.createReadStream(path), partNumber);
                 })
+                    // @ts-expect-error TS(2550): Property 'finally' does not exist on type 'Promise... Remove this comment to see the full error message
                     .finally(() => {
-                    fs.rm(path, (err) => {
+                    fs.rm(path, (err: any) => {
                         if (err) {
                             log(`[${metadata.file.id}] failed to remove file ${path}`, err);
                         }
@@ -309,14 +325,14 @@ class S3Store extends DataStore {
    * @param  {Array}           parts    data of each part
    * @return {Promise<String>}          which resolves with the file location on S3
    */
-    _finishMultipartUpload(metadata, parts) {
+    _finishMultipartUpload(metadata: any, parts: any) {
         return this.client
             .completeMultipartUpload({
             Bucket: this.bucket_name,
             Key: metadata.file.id,
             UploadId: metadata.upload_id,
             MultipartUpload: {
-                Parts: parts.map((part) => {
+                Parts: parts.map((part: any) => {
                     return {
                         ETag: part.ETag,
                         PartNumber: part.PartNumber,
@@ -325,8 +341,8 @@ class S3Store extends DataStore {
             },
         })
             .promise()
-            .then((result) => result.Location)
-            .catch((err) => {
+            .then((result: any) => result.Location)
+            .catch((err: any) => {
             throw err;
         });
     }
@@ -338,31 +354,31 @@ class S3Store extends DataStore {
    * @param  {String}          part_number_marker optional part number marker
    * @return {Promise<Array>}                    upload parts
    */
-    _retrieveParts(file_id, part_number_marker) {
+    _retrieveParts(file_id: any, part_number_marker: any) {
         const params = {
             Bucket: this.bucket_name,
             Key: file_id,
             UploadId: this.cache[file_id].upload_id,
         };
         if (part_number_marker) {
-            params.PartNumberMarker = part_number_marker;
+            (params as any).PartNumberMarker = part_number_marker;
         }
         return this.client
             .listParts(params)
             .promise()
-            .then((data) => {
+            .then((data: any) => {
             if (data.NextPartNumberMarker) {
-                return this._retrieveParts(file_id, data.NextPartNumberMarker).then((val) => [].concat(data.Parts, val));
+                return this._retrieveParts(file_id, data.NextPartNumberMarker).then((val: any) => [].concat(data.Parts, val));
             }
             return data.Parts;
         })
-            .then((parts) => {
+            .then((parts: any) => {
             // sort and filter only for call where `part_number_marker` is not set
             if (part_number_marker === undefined) {
-                parts.sort((a, b) => {
+                parts.sort((a: any, b: any) => {
                     return a.PartNumber - b.PartNumber;
                 });
-                parts = parts.filter((value, index) => {
+                parts = parts.filter((value: any, index: any) => {
                     return value.PartNumber === index + 1;
                 });
             }
@@ -376,25 +392,26 @@ class S3Store extends DataStore {
    * @param  {String}          file_id            id of the file
    * @return {Promise<Number>}                    number of parts
    */
-    async _countParts(file_id) {
-        return await this._retrieveParts(file_id).then((parts) => parts.length);
+    async _countParts(file_id: any) {
+        // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
+        return await this._retrieveParts(file_id).then((parts: any) => parts.length);
     }
     /**
    * Removes cached data for a given file.
    * @param  {String} file_id id of the file
    * @return {undefined}
    */
-    _clearCache(file_id) {
+    _clearCache(file_id: any) {
         log(`[${file_id}] removing cached data`);
         delete this.cache[file_id];
     }
-    create(file) {
+    create(file: any) {
         return this._bucketExists()
             .then(() => {
             return this._initMultipartUpload(file);
         })
             .then(() => file)
-            .catch((err) => {
+            .catch((err: any) => {
             this._clearCache(file.id);
             throw err;
         });
@@ -407,14 +424,15 @@ class S3Store extends DataStore {
      * @param {integer} offset starting offset
      * @return {Promise}
      */
-    write(readable, file_id) {
+    write(readable: any, file_id: any) {
         return this._getMetadata(file_id)
-            .then((metadata) => {
+            .then((metadata: any) => {
             return Promise.all([metadata, this._countParts(file_id), this.getOffset(file_id)]);
         })
-            .then(async (results) => {
+            .then(async (results: any) => {
             const [metadata, part_number, initial_offset] = results;
             const next_part_number = part_number + 1;
+            // @ts-expect-error TS(2769): No overload matches this call.
             return Promise.all(await this._processUpload(metadata, readable, next_part_number, initial_offset.size))
                 .then(() => this.getOffset(file_id))
                 .then((current_offset) => {
@@ -424,7 +442,7 @@ class S3Store extends DataStore {
                         this._clearCache(file_id);
                         return current_offset.size;
                     })
-                        .catch((err) => {
+                        .catch((err: any) => {
                         log(`[${file_id}] failed to finish upload`, err);
                         throw err;
                     });
@@ -447,7 +465,7 @@ class S3Store extends DataStore {
             });
         });
     }
-    async getOffset(id) {
+    async getOffset(id: any) {
         let metadata;
         try {
             metadata = await this._getMetadata(id);
@@ -457,17 +475,18 @@ class S3Store extends DataStore {
             throw ERRORS.FILE_NOT_FOUND;
         }
         try {
+            // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
             const parts = await this._retrieveParts(id);
             return {
                 ...this.cache[id].file,
-                size: parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0,
+                size: parts.length > 0 ? parts.reduce((a: any, b: any) => a + b.Size, 0) : 0,
                 upload_length: metadata.file.upload_length,
                 upload_defer_length: metadata.file.upload_defer_length,
                 parts,
             };
         }
         catch (err) {
-            if (err.code !== 'NoSuchUpload') {
+            if ((err as any).code !== 'NoSuchUpload') {
                 log(err);
                 throw err;
             }
@@ -482,7 +501,7 @@ class S3Store extends DataStore {
             };
         }
     }
-    async declareUploadLength(file_id, upload_length) {
+    async declareUploadLength(file_id: any, upload_length: any) {
         const { file, upload_id } = await this._getMetadata(file_id);
         if (!file) {
             throw ERRORS.FILE_NOT_FOUND;

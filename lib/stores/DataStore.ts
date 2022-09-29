@@ -1,5 +1,7 @@
-import EventEmitter from "events";
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'even... Remove this comment to see the full error message
+import EventEmitter from 'events';
 class DataStore extends EventEmitter {
+    _extensions: any;
     get extensions() {
         if (!this._extensions) {
             return null;
@@ -12,7 +14,7 @@ class DataStore extends EventEmitter {
         }
         this._extensions = extensions_array;
     }
-    hasExtension(extension) {
+    hasExtension(extension: any) {
         return this._extensions && this._extensions.indexOf(extension) !== -1;
     }
     /**
@@ -24,7 +26,7 @@ class DataStore extends EventEmitter {
      * @param  {File} file
      * @return {Promise} offset
      */
-    async create(file) {
+    async create(file: any) {
         return file;
     }
     /**
@@ -34,7 +36,7 @@ class DataStore extends EventEmitter {
      * @param {string} file_id Name of the file
      * @return {Promise}
      */
-    async remove(file_id) {
+    async remove(file_id: any) {
     }
     /**
      * Called in PATCH requests. This method should write data
@@ -48,7 +50,7 @@ class DataStore extends EventEmitter {
      * @param {integer} offset starting offset
      * @return {Promise}
      */
-    async write(stream, file_id, offset) {
+    async write(stream: any, file_id: any, offset: any) {
         return 0;
     }
     /**
@@ -59,7 +61,7 @@ class DataStore extends EventEmitter {
      * @param {string} file_id Name of file
      * @return {Promise} bytes written
      */
-    async getOffset(file_id) {
+    async getOffset(file_id: any) {
         return { size: 0, upload_length: 0 };
     }
     /**
@@ -69,7 +71,7 @@ class DataStore extends EventEmitter {
      * @param {number} upload_length Declared upload length
      * @return {Promise}
      */
-    async declareUploadLength(file_id, upload_length) {
+    async declareUploadLength(file_id: any, upload_length: any) {
     }
 }
 export default DataStore;

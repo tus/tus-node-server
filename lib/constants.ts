@@ -98,5 +98,5 @@ export default {
     MAX_AGE,
     REQUEST_METHODS,
     TUS_RESUMABLE,
-    TUS_VERSION
+    TUS_VERSION,
 };

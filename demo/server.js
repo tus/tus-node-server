@@ -1,4 +1,4 @@
-
+'use strict';
 
 const path = require('path');
 const fs = require('fs');
@@ -106,3 +106,4 @@ const port = 1080;
 server.listen({ host, port }, () => {
     console.log(`[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port} using ${data_store}`);
 });
+

@@ -7,7 +7,7 @@
 const ASCII_SPACE = ' '.codePointAt(0);
 const ASCII_COMMA = ','.codePointAt(0);
 const BASE64_REGEX = /^[a-zA-Z0-9+/]*[=]{0,2}$/;
-function validateKey(key) {
+function validateKey(key: any) {
     if (key.length === 0) {
         return false;
     }
@@ -21,20 +21,22 @@ function validateKey(key) {
     }
     return true;
 }
-function validateValue(value) {
+function validateValue(value: any) {
     if (value.length % 4 !== 0) {
         return false;
     }
     return BASE64_REGEX.test(value);
 }
-function parse(str) {
+function parse(str: any) {
     const meta = {};
     for (const pair of str.split(',')) {
         const tokens = pair.split(' ');
         const [key, value] = tokens;
         if (((tokens.length === 1 && validateKey(key)) ||
             (tokens.length === 2 && validateKey(key) && validateValue(value))) && (!(key in meta))) {
+            // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
             const decodedValue = value ? Buffer.from(value, 'base64').toString('utf8') : undefined;
+            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             meta[key] = decodedValue;
         }
         else {
@@ -43,11 +45,13 @@ function parse(str) {
     }
     return meta;
 }
-function stringify(obj) {
+function stringify(obj: any) {
+    // @ts-expect-error TS(2550): Property 'entries' does not exist on type 'ObjectC... Remove this comment to see the full error message
     return Object.entries(obj).map(([key, value]) => {
         if (value === undefined) {
             return key;
         }
+        // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
         const encodedValue = Buffer.from(value, 'utf8').toString('base64');
         return `${key} ${encodedValue}`;
     }).join(',');
@@ -56,5 +60,5 @@ export { parse };
 export { stringify };
 export default {
     parse,
-    stringify
+    stringify,
 };

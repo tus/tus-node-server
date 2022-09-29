@@ -1,5 +1,5 @@
-import BaseHandler from "./BaseHandler.js";
-import { ERRORS as ERRORS$0 } from "../constants.js";
+import BaseHandler from './BaseHandler';
+import { ERRORS as ERRORS$0 } from '../constants';
 const ERRORS = { ERRORS: ERRORS$0 }.ERRORS;
 class HeadHandler extends BaseHandler {
     /**
@@ -9,7 +9,7 @@ class HeadHandler extends BaseHandler {
      * @param  {object} res http.ServerResponse
      * @return {function}
      */
-    async send(req, res) {
+    async send(req: any, res: any) {
         const file_id = this.getFileIdFromRequest(req);
         if (file_id === false) {
             throw ERRORS.FILE_NOT_FOUND;

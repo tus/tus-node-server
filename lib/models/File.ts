@@ -5,7 +5,11 @@
  * @author Ben Stahl <bhstahl@gmail.com>
  */
 class File {
-    constructor(file_id, upload_length, upload_defer_length, upload_metadata) {
+    id: any;
+    upload_defer_length: any;
+    upload_length: any;
+    upload_metadata: any;
+    constructor(file_id: any, upload_length: any, upload_defer_length: any, upload_metadata: any) {
         if (!file_id) {
             throw new Error('[File] constructor must be given a file_id');
         }

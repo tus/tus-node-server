@@ -1,17 +1,23 @@
-import http from "http";
-import EventEmitter from "events";
-import GetHandler from "./handlers/GetHandler.js";
-import HeadHandler from "./handlers/HeadHandler.js";
-import OptionsHandler from "./handlers/OptionsHandler.js";
-import PatchHandler from "./handlers/PatchHandler.js";
-import PostHandler from "./handlers/PostHandler.js";
-import DeleteHandler from "./handlers/DeleteHandler.js";
-import RequestValidator from "./validators/RequestValidator.js";
-import { ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE } from "./constants.js";
-import * as debug from "debug";
+// @ts-expect-error TS(2307): Cannot find module 'http' or its corresponding typ... Remove this comment to see the full error message
+import http from 'http';
+import { EventEmitter } from 'node:events';
+import GetHandler from './handlers/GetHandler';
+import HeadHandler from './handlers/HeadHandler';
+import OptionsHandler from './handlers/OptionsHandler';
+import PatchHandler from './handlers/PatchHandler';
+import PostHandler from './handlers/PostHandler';
+import DeleteHandler from './handlers/DeleteHandler';
+import RequestValidator from './validators/RequestValidator';
+import { ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE } from './constants';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
+import * as debug from 'debug';
 const log = debug('tus-node-server');
 class TusServer extends EventEmitter {
-    constructor(options) {
+    _datastore: any;
+    handlers: any;
+    on: any;
+    options: any;
+    constructor(options: any) {
         super();
         if (!options) {
             throw new Error('\'options\' must be defined');
@@ -27,7 +33,7 @@ class TusServer extends EventEmitter {
         // Remove any event listeners from each handler as they are removed
         // from the server. This must come before adding a 'newListener' listener,
         // to not add a 'removeListener' event listener to all request handlers.
-        this.on('removeListener', (event, listener) => {
+        this.on('removeListener', (event: any, listener: any) => {
             this.datastore.removeListener(event, listener);
             REQUEST_METHODS.forEach((method) => {
                 this.handlers[method].removeListener(event, listener);
@@ -35,7 +41,7 @@ class TusServer extends EventEmitter {
         });
         // As event listeners are added to the server, make sure they are
         // bubbled up from request handlers to fire on the server level.
-        this.on('newListener', (event, listener) => {
+        this.on('newListener', (event: any, listener: any) => {
             this.datastore.on(event, listener);
             REQUEST_METHODS.forEach((method) => {
                 this.handlers[method].on(event, listener);
@@ -78,7 +84,7 @@ class TusServer extends EventEmitter {
      * @param  {String}   path     Path for the GET request
      * @param  {Function} callback Request listener
      */
-    get(path, callback) {
+    get(path: any, callback: any) {
         // Add this handler callback to the GET method handler list.
         this.handlers.GET.registerPath(path, callback);
     }
@@ -89,7 +95,7 @@ class TusServer extends EventEmitter {
      * @param  {object} res http.ServerResponse
      * @return {ServerResponse}
      */
-    handle(req, res) {
+    handle(req: any, res: any) {
         log(`[TusServer] handle: ${req.method} ${req.url}`);
         // Allow overriding the HTTP method. The reason for this is
         // that some libraries/environments to not support PATCH and
@@ -100,12 +106,12 @@ class TusServer extends EventEmitter {
         if (req.method === 'GET') {
             const handler = this.handlers.GET;
             return handler.send(req, res)
-                .catch((error) => {
-                log(`[${handler.constructor.name}]`, error);
-                const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code;
-                const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`;
-                return handler.write(res, status_code, {}, body);
-            });
+                .catch((error: any) => {
+                    log(`[${handler.constructor.name}]`, error);
+                    const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code;
+                    const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`;
+                    return handler.write(res, status_code, {}, body);
+                });
         }
         // The Tus-Resumable header MUST be included in every request and
         // response except for OPTIONS requests. The value MUST be the version
@@ -148,12 +154,12 @@ class TusServer extends EventEmitter {
         const handler = this.handlers[req.method];
         if (handler) {
             return handler.send(req, res)
-                .catch((error) => {
-                log(`[${handler.constructor.name}]`, error);
-                const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code;
-                const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`;
-                return handler.write(res, status_code, {}, body);
-            });
+                .catch((error: any) => {
+                    log(`[${handler.constructor.name}]`, error);
+                    const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code;
+                    const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`;
+                    return handler.write(res, status_code, {}, body);
+                });
         }
         // 404 Anything else
         res.writeHead(404, {});

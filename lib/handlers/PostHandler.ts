@@ -1,12 +1,14 @@
-import BaseHandler from "./BaseHandler.js";
-import File from "../models/File.js";
-import Uid from "../models/Uid.js";
-import RequestValidator from "../validators/RequestValidator.js";
-import { EVENTS, ERRORS } from "../constants.js";
-import * as debug from "debug";
+import BaseHandler from './BaseHandler';
+import File from '../models/File';
+import Uid from '../models/Uid';
+import RequestValidator from '../validators/RequestValidator';
+import { EVENTS, ERRORS } from '../constants';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
+import * as debug from 'debug';
 const log = debug('tus-node-server:handlers:post');
 class PostHandler extends BaseHandler {
-    constructor(store, options) {
+    emit: any;
+    constructor(store: any, options: any) {
         if (options.namingFunction && typeof options.namingFunction !== 'function') {
             throw new Error('\'namingFunction\' must be a function');
         }
@@ -22,7 +24,7 @@ class PostHandler extends BaseHandler {
      * @param  {object} res http.ServerResponse
      * @return {function}
      */
-    async send(req, res) {
+    async send(req: any, res: any) {
         if ('upload-concat' in req.headers && !this.store.hasExtension('concatentation')) {
             throw ERRORS.UNSUPPORTED_CONCATENATION_EXTENSION;
         }
@@ -49,8 +51,10 @@ class PostHandler extends BaseHandler {
         // The request MIGHT include a Content-Type header when using creation-with-upload extension
         if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
             const new_offset = await this.store.write(req, file.id, 0);
+            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             optional_headers['Upload-Offset'] = new_offset;
         }
+        // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
         return this.write(res, 201, { Location: url, ...optional_headers });
     }
 }

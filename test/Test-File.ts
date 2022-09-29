@@ -1,15 +1,27 @@
-import assert from "assert";
-import should from "should";
-import File from "../lib/models/File.js";
-import Uid from "../lib/models/Uid.js";
+// @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
+import assert from 'node:assert';
+import should from 'should';
+import File from '../lib/models/File.js';
+import Uid from '../lib/models/Uid.js';
+// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('File', () => {
+    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
     describe('constructor', () => {
+        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('must require a file_name', () => {
-            assert.throws(() => { new File(); }, Error);
+            assert.throws(() => {
+                // @ts-expect-error TS(2554): Expected 4 arguments, but got 0.
+                new File();
+            }, Error);
         });
+        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('must be given either a upload_length or upload_defer_length', () => {
-            assert.throws(() => { new File(Uid.rand()); }, Error);
+            assert.throws(() => {
+                // @ts-expect-error TS(2554): Expected 4 arguments, but got 1.
+                new File(Uid.rand());
+            }, Error);
         });
+        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should set properties given', () => {
             const file_id = Uid.rand();
             const upload_length = 1234;

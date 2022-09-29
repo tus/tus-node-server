@@ -1,6 +1,9 @@
-import EventEmitter from "events";
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'even... Remove this comment to see the full error message
+import EventEmitter from 'events';
 class BaseHandler extends EventEmitter {
-    constructor(store, options) {
+    options: any;
+    store: any;
+    constructor(store: any, options: any) {
         super();
         if (!store) {
             throw new Error('Store must be defined');
@@ -17,14 +20,14 @@ class BaseHandler extends EventEmitter {
      * @param  {string} body
      * @return {ServerResponse}
      */
-    write(res, status, headers = {}, body) {
+    write(res: any, status: any, headers = {}, body: any) {
         body = body ? body : '';
         headers = status === 204 ? headers : { ...headers, 'Content-Length': body.length };
         res.writeHead(status, headers);
         res.write(body);
         return res.end();
     }
-    generateUrl(req, file_id) {
+    generateUrl(req: any, file_id: any) {
         return this.options.relativeLocation ? `${req.baseUrl || ''}${this.options.path}/${file_id}` : `//${req.headers.host}${req.baseUrl || ''}${this.options.path}/${file_id}`;
     }
     /**
@@ -33,7 +36,7 @@ class BaseHandler extends EventEmitter {
      * @param  {object} req http.incomingMessage
      * @return {bool|string}
      */
-    getFileIdFromRequest(req) {
+    getFileIdFromRequest(req: any) {
         const re = new RegExp(`${req.baseUrl || ''}${this.options.path}\\/(\\S+)\\/?`); // eslint-disable-line prefer-template
         const match = (req.originalUrl || req.url).match(re);
         if (!match) {
