@@ -1,5 +1,5 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'even... Remove this comment to see the full error message
 import EventEmitter from 'events';
+
 class DataStore extends EventEmitter {
     _extensions: any;
     get extensions() {

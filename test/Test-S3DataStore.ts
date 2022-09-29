@@ -1,7 +1,7 @@
 // @ts-expect-error TS(2307): Cannot find module 'path' or its corresponding typ... Remove this comment to see the full error message
 import path from 'path';
-import Server from '../lib/Server.js';
-import S3Store from '../lib/stores/S3Store.js';
+import Server from '../lib/Server';
+import S3Store from '../lib/stores/S3Store';
 import * as shared from './Test-Stores.shared';
 // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('S3DataStore', () => {

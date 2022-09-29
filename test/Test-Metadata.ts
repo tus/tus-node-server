@@ -1,9 +1,6 @@
-// @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from 'assert';
-import Metadata from '../lib/models/Metadata.js';
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+import assert from 'node:assert/strict';
+import Metadata from '../lib/models/Metadata';
 describe('Metadata', () => {
-    // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
     it('parse valid metadata string', () => {
         const str = 'file/name dGVzdC5tcDQ=,size OTYwMjQ0,type! dmlkZW8vbXA0,video,withWhitespace ';
         const obj = {
@@ -16,7 +13,7 @@ describe('Metadata', () => {
         const decoded = Metadata.parse(str);
         assert.deepStrictEqual(decoded, obj);
     });
-    // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
     it('check length of metadata string', () => {
         const obj = {
             filename: 'test.mp4',
@@ -26,10 +23,10 @@ describe('Metadata', () => {
             withWhitespace: undefined,
         };
         const encoded = Metadata.stringify(obj);
-        // @ts-expect-error TS(2550): Property 'entries' does not exist on type 'ObjectC... Remove this comment to see the full error message
+
         assert.strictEqual(encoded.split(',').length, Object.entries(obj).length);
     });
-    // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
     it('verify metadata stringification', () => {
         assert.strictEqual(Metadata.stringify({ filename: 'test.mp4' }), 'filename dGVzdC5tcDQ=');
         assert.strictEqual(Metadata.stringify({ size: '960244' }), 'size OTYwMjQ0');
@@ -38,7 +35,7 @@ describe('Metadata', () => {
         assert.notStrictEqual(['video', 'video '].indexOf(Metadata.stringify({ video: undefined })), -1);
         assert.notStrictEqual(['withWhitespace', 'withWhitespace '].indexOf(Metadata.stringify({ withWhitespace: undefined })), -1);
     });
-    // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
     it('verify metadata parsing', () => {
         assert.deepStrictEqual(Metadata.parse('filename dGVzdC5tcDQ='), { filename: 'test.mp4' });
         assert.deepStrictEqual(Metadata.parse('size OTYwMjQ0'), { size: '960244' });
@@ -48,7 +45,7 @@ describe('Metadata', () => {
         assert.deepStrictEqual(Metadata.parse('withWhitespace'), { withWhitespace: undefined });
         assert.deepStrictEqual(Metadata.parse('withWhitespace '), { withWhitespace: undefined });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
     it('cyclic test', () => {
         const obj = {
             filename: 'world_domination_plan.pdf',
@@ -57,9 +54,8 @@ describe('Metadata', () => {
         // object -> string -> object
         assert.deepStrictEqual(Metadata.parse(Metadata.stringify(obj)), obj);
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('verify invalid metadata string', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('duplicate keys', () => {
             assert.throws(() => {
                 Metadata.parse('filename dGVzdC5tcDQ=, filename cGFja2FnZS5qc29u');
@@ -71,7 +67,7 @@ describe('Metadata', () => {
                 Metadata.parse('size,size ');
             });
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('invalid key', () => {
             assert.throws(() => {
                 Metadata.parse('🦁 ZW1vamk=');
@@ -86,7 +82,7 @@ describe('Metadata', () => {
                 Metadata.parse('test,,test');
             });
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('invalid base64 value', () => {
             assert.throws(() => {
                 Metadata.parse('key ZW1vamk');

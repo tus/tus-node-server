@@ -1,6 +1,6 @@
 // @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from 'assert';
-import Uid from '../lib/models/Uid.js';
+import assert from 'node:assert/strict';
+import Uid from '../lib/models/Uid';
 // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Uid', () => {
     // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message

@@ -34,7 +34,6 @@ function parse(str: any) {
         const [key, value] = tokens;
         if (((tokens.length === 1 && validateKey(key)) ||
             (tokens.length === 2 && validateKey(key) && validateValue(value))) && (!(key in meta))) {
-            // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
             const decodedValue = value ? Buffer.from(value, 'base64').toString('utf8') : undefined;
             // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             meta[key] = decodedValue;
@@ -46,7 +45,6 @@ function parse(str: any) {
     return meta;
 }
 function stringify(obj: any) {
-    // @ts-expect-error TS(2550): Property 'entries' does not exist on type 'ObjectC... Remove this comment to see the full error message
     return Object.entries(obj).map(([key, value]) => {
         if (value === undefined) {
             return key;

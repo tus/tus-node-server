@@ -1,5 +1,4 @@
-// @ts-expect-error TS(2307): Cannot find module 'http' or its corresponding typ... Remove this comment to see the full error message
-import http from 'http';
+import http from 'node:http';
 import { EventEmitter } from 'node:events';
 import GetHandler from './handlers/GetHandler';
 import HeadHandler from './handlers/HeadHandler';
@@ -9,8 +8,7 @@ import PostHandler from './handlers/PostHandler';
 import DeleteHandler from './handlers/DeleteHandler';
 import RequestValidator from './validators/RequestValidator';
 import { ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE } from './constants';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
-import * as debug from 'debug';
+import debug from 'debug';
 const log = debug('tus-node-server');
 class TusServer extends EventEmitter {
     _datastore: any;
@@ -168,6 +166,7 @@ class TusServer extends EventEmitter {
     }
     listen() {
         const server = http.createServer(this.handle.bind(this));
+        // @ts-expect-error
         return server.listen.apply(server, arguments);
     }
 }

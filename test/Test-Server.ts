@@ -1,15 +1,15 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'supe... Remove this comment to see the full error message
 import request from 'supertest';
 // @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from 'assert';
+import assert from 'node:assert/strict';
 // @ts-expect-error TS(2307): Cannot find module 'http' or its corresponding typ... Remove this comment to see the full error message
 import http from 'http';
 import should from 'should';
-import Server from '../lib/Server.js';
-import FileStore from '../lib/stores/FileStore.js';
-import DataStore from '../lib/stores/DataStore.js';
-import { TUS_RESUMABLE as TUS_RESUMABLE$0 } from '../lib/constants.js';
-import { EVENTS as EVENTS$0 } from '../lib/constants.js';
+import Server from '../lib/Server';
+import FileStore from '../lib/stores/FileStore';
+import DataStore from '../lib/stores/DataStore';
+import { TUS_RESUMABLE as TUS_RESUMABLE$0 } from '../lib/constants';
+import { EVENTS as EVENTS$0 } from '../lib/constants';
 const TUS_RESUMABLE = { TUS_RESUMABLE: TUS_RESUMABLE$0 }.TUS_RESUMABLE;
 const EVENTS = { EVENTS: EVENTS$0 }.EVENTS;
 const hasHeader = (res: any, header: any) => {

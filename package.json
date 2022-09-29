@@ -34,21 +34,27 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit",
+    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
     "test:local": "env-cmd npm run test",
     "coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
-    "lint": "eslint ."
+    "lint": "eslint --fix ."
   },
   "devDependencies": {
-    "@vimeo/eslint-config-player": "^5.0.1",
-    "babel-eslint": "^10.1.0",
+    "@types/configstore": "^6.0.0",
+    "@types/debug": "^4.1.7",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^18.7.23",
+    "@types/rimraf": "^3.0.2",
+    "@types/sinon": "^10.0.13",
+    "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/parser": "^5.38.1",
     "cross-env": "^7.0.3",
     "env-cmd": "^10.1.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-promise": "^6.0.0",
+    "eslint": "^8.24.0",
     "istanbul": "^0.4.5",
     "mocha": "^9.2.0",
     "node-mocks-http": "^1.11.0",
@@ -57,7 +63,9 @@
     "should": "^13.2.3",
     "sinon": "^13.0.1",
     "supertest": "^6.2.2",
-    "tus-js-client": "^3.0.0"
+    "ts-node": "^10.9.1",
+    "tus-js-client": "^3.0.0",
+    "typescript": "^4.8.4"
   },
   "dependencies": {
     "@google-cloud/storage": "^6.2.2",

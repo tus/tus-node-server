@@ -1,5 +1,5 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'even... Remove this comment to see the full error message
-import EventEmitter from 'events';
+import EventEmitter from 'node:events';
+
 class BaseHandler extends EventEmitter {
     options: any;
     store: any;

@@ -1,37 +1,35 @@
-// @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from "assert";
-// @ts-expect-error TS(2307): Cannot find module 'fs' or its corresponding type ... Remove this comment to see the full error message
-import fs from "fs";
-// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
-import stream from "stream";
-// @ts-expect-error TS(2307): Cannot find module 'http' or its corresponding typ... Remove this comment to see the full error message
-import http from "http";
-import should from "should";
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'sino... Remove this comment to see the full error message
+import "should";
+
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import stream from "node:stream";
+import http from "node:http";
+
 import sinon from "sinon";
-import GetHandler from "../lib/handlers/GetHandler.js";
-import DataStore from "../lib/stores/DataStore.js";
-import FileStore from "../lib/stores/FileStore.js";
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'sino... Remove this comment to see the full error message
-import { spy } from "sinon";
+
+import GetHandler from "../lib/handlers/GetHandler";
+import DataStore from "../lib/stores/DataStore";
+import FileStore from "../lib/stores/FileStore";
+
 const hasHeader = (res: any, header: any) => {
     const key = Object.keys(header)[0];
     return res._header.indexOf(`${key}: ${header[key]}`) > -1;
 };
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
 describe('GetHandler', () => {
     const path = '/test/output';
-    let req: any = null;
-    let res: any = null;
-    // @ts-expect-error TS(2304): Cannot find name 'beforeEach'.
+    let req: { url: string, headers: Record<string, string> } = { headers: {}, url: '/' };
+    // @ts-expect-error
+    let res: http.ServerResponse<http.IncomingMessage> = new http.ServerResponse({ method: 'GET' });
+   
     beforeEach((done: any) => {
         req = { headers: {}, url: '/' };
+        // @ts-expect-error
         res = new http.ServerResponse({ method: 'GET' });
         done();
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+    
     describe('test error responses', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should 404 when file does not exist', async () => {
             const store = sinon.createStubInstance(FileStore);
             store.getOffset.rejects({ status_code: 404 });
@@ -41,7 +39,7 @@ describe('GetHandler', () => {
             await assert.rejects(() => handler.send(req, res), { status_code: 404 });
             assert.equal(spy_getFileIdFromRequest.calledOnceWith(req), true);
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+        
         it('should 404 for non registered path', async () => {
             const store = sinon.createStubInstance(FileStore);
             const handler = new GetHandler(store, { path });
@@ -50,17 +48,17 @@ describe('GetHandler', () => {
             await assert.rejects(() => handler.send(req, res), { status_code: 404 });
             assert.equal(spy_getFileIdFromRequest.callCount, 1);
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should 404 when file is not complete', async () => {
             const store = sinon.createStubInstance(FileStore);
-            store.getOffset.resolves({ size: 512, upload_length: '1024' });
+            store.getOffset.resolves({ size: 512, upload_length: 1024 });
             const handler = new GetHandler(store, { path });
             const fileId = '1234';
             req.url = `${path}/${fileId}`;
             await assert.rejects(() => handler.send(req, res), { status_code: 404 });
             assert.equal(store.getOffset.calledWith(fileId), true);
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should 500 on error store.getOffset error', () => {
             // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
             const store = new DataStore({ path });
@@ -72,11 +70,12 @@ describe('GetHandler', () => {
             req.url = `${path}/1234`;
             return assert.rejects(() => handler.send(req, res));
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('test invalid stream', async () => {
             const store = sinon.createStubInstance(FileStore);
             const size = 512;
-            store.getOffset.resolves({ size, upload_length: size.toString() });
+            store.getOffset.resolves({ size, upload_length: size });
+            // @ts-expect-error
             store.read.returns(stream.Readable.from(fs.createReadStream('invalid_path')));
             const handler = new GetHandler(store, { path });
             const fileId = '1234';
@@ -87,13 +86,12 @@ describe('GetHandler', () => {
             assert.equal(store.read.calledWith(fileId), true);
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('send()', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('test if `file_id` is properly passed to store', async () => {
             const store = sinon.createStubInstance(FileStore);
-            store.getOffset.resolves({ size: 512, upload_length: '512' });
-            // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
+            store.getOffset.resolves({ size: 512, upload_length: 512 });
+            // @ts-expect-error
             store.read.returns(stream.Readable.from(Buffer.alloc(512)));
             const handler = new GetHandler(store, { path });
             const fileId = '1234';
@@ -102,26 +100,25 @@ describe('GetHandler', () => {
             assert.equal(store.getOffset.calledWith(fileId), true);
             assert.equal(store.read.calledWith(fileId), true);
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('test successful response', async () => {
             const store = sinon.createStubInstance(FileStore);
             const size = 512;
-            store.getOffset.resolves({ size, upload_length: size.toString() });
-            // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
+            store.getOffset.resolves({ size, upload_length: size });
+            // @ts-expect-error
             store.read.returns(stream.Readable.from(Buffer.alloc(size), { objectMode: false }));
             const handler = new GetHandler(store, { path });
             const fileId = '1234';
             req.url = `${path}/${fileId}`;
             await handler.send(req, res);
-            assert(res.statusCode, 200);
-            assert(hasHeader(res, { 'Content-Length': size }), true);
-            assert(store.getOffset.calledOnceWith(fileId), true);
-            assert(store.read.calledOnceWith(fileId), true);
+            assert.equal(res.statusCode, 200);
+            assert.equal(hasHeader(res, { 'Content-Length': size }), true);
+            assert.equal(store.getOffset.calledOnceWith(fileId), true);
+            assert.equal(store.read.calledOnceWith(fileId), true);
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('registerPath()', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should call registered path handler', async () => {
             const fakeStore = sinon.stub(new DataStore());
             // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
@@ -141,7 +138,7 @@ describe('GetHandler', () => {
             assert.equal(pathHandler1.callCount, 1);
             assert.equal(pathHandler2.calledOnceWith(req, res), true);
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should not call DataStore when path matches registered path', async () => {
             const fakeStore = sinon.stub(new DataStore());
             // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
@@ -155,12 +152,11 @@ describe('GetHandler', () => {
             assert.equal(fakeStore.getOffset.callCount, 0);
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('DataStore without `read` method', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should 404 if not implemented', async () => {
             const fakeStore = sinon.stub(new DataStore());
-            fakeStore.getOffset.resolves({ size: 512, upload_length: '512' });
+            fakeStore.getOffset.resolves({ size: 512, upload_length: 512 });
             // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
             const handler = new GetHandler(fakeStore);
             req.url = `/${path}/1234`;

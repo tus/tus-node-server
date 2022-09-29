@@ -1,8 +1,7 @@
 import BaseHandler from './BaseHandler';
 import File from '../models/File';
 import { ERRORS, EVENTS } from '../constants';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
-import * as debug from 'debug';
+import debug from 'debug';
 const log = debug('tus-node-server:handlers:patch');
 class PatchHandler extends BaseHandler {
     emit: any;

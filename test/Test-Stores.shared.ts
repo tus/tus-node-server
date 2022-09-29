@@ -1,11 +1,11 @@
 // @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from 'assert';
+import assert from 'node:assert/strict';
 // @ts-expect-error TS(2307): Cannot find module 'fs' or its corresponding type ... Remove this comment to see the full error message
 import fs from 'fs';
 // @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
 import stream from 'stream';
 import should from 'should';
-import File from '../lib/models/File.js';
+import File from '../lib/models/File';
 export const shouldHaveStoreMethods = function() {
     // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
     describe('the class', () => {

@@ -1,7 +1,7 @@
 // @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from 'assert';
-import RequestValidator from '../lib/validators/RequestValidator.js';
-import CONSTANTS from '../lib/constants.js';
+import assert from 'node:assert/strict';
+import RequestValidator from '../lib/validators/RequestValidator';
+import CONSTANTS from '../lib/constants';
 // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('RequestValidator', () => {
     // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message

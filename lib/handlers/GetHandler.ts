@@ -1,11 +1,11 @@
-// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
-import stream from 'stream';
+import stream from 'node:stream';
+import debug from 'debug';
+
 import BaseHandler from './BaseHandler';
-import { ERRORS as ERRORS$0 } from '../constants';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
-import * as debug from 'debug';
-const ERRORS = { ERRORS: ERRORS$0 }.ERRORS;
+import { ERRORS } from '../constants';
+
 const log = debug('tus-node-server:handlers:get');
+
 class GetHandler extends BaseHandler {
     paths: any;
     constructor(store: any, options: any) {

@@ -3,8 +3,7 @@ import File from '../models/File';
 import Uid from '../models/Uid';
 import RequestValidator from '../validators/RequestValidator';
 import { EVENTS, ERRORS } from '../constants';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
-import * as debug from 'debug';
+import debug from 'debug';
 const log = debug('tus-node-server:handlers:post');
 class PostHandler extends BaseHandler {
     emit: any;
