@@ -1,15 +1,22 @@
-'use strict';
-
-const Server = require('./lib/Server');
-const DataStore = require('./lib/stores/DataStore');
-const FileStore = require('./lib/stores/FileStore');
-const GCSDataStore = require('./lib/stores/GCSDataStore');
-const S3Store = require('./lib/stores/S3Store');
-const Metadata = require('./lib/models/Metadata');
-const ERRORS = require('./lib/constants').ERRORS;
-const EVENTS = require('./lib/constants').EVENTS;
-
-module.exports = {
+import Server from "./lib/Server.js";
+import DataStore from "./lib/stores/DataStore.js";
+import FileStore from "./lib/stores/FileStore.js";
+import GCSDataStore from "./lib/stores/GCSDataStore.js";
+import S3Store from "./lib/stores/S3Store.js";
+import Metadata from "./lib/models/Metadata.js";
+import { ERRORS as ERRORS$0 } from "./lib/constants.js";
+import { EVENTS as EVENTS$0 } from "./lib/constants.js";
+const ERRORS = { ERRORS: ERRORS$0 }.ERRORS;
+const EVENTS = { EVENTS: EVENTS$0 }.EVENTS;
+export { Server };
+export { DataStore };
+export { FileStore };
+export { GCSDataStore };
+export { S3Store };
+export { Metadata };
+export { ERRORS };
+export { EVENTS };
+export default {
     Server,
     DataStore,
     FileStore,
@@ -17,5 +24,5 @@ module.exports = {
     S3Store,
     Metadata,
     ERRORS,
-    EVENTS,
+    EVENTS
 };

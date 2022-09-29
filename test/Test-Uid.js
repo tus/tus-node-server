@@ -1,7 +1,5 @@
-'use strict';
-const assert = require('assert');
-const Uid = require('../lib/models/Uid');
-
+import assert from "assert";
+import Uid from "../lib/models/Uid.js";
 describe('Uid', () => {
     it('returns a 32 char string', (done) => {
         const id = Uid.rand();
@@ -11,7 +9,7 @@ describe('Uid', () => {
     });
     it('returns a different string every time', (done) => {
         let ids = {};
-        for(let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++) {
             const id = Uid.rand();
             assert(!ids[id], 'id was encountered multiple times');
             ids[id] = true;

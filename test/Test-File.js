@@ -1,23 +1,15 @@
-/* eslint-env node, mocha */
-
-'use strict';
-
-const assert = require('assert');
-const should = require('should');
-const File = require('../lib/models/File');
-const Uid = require('../lib/models/Uid');
-
+import assert from "assert";
+import should from "should";
+import File from "../lib/models/File.js";
+import Uid from "../lib/models/Uid.js";
 describe('File', () => {
-
     describe('constructor', () => {
         it('must require a file_name', () => {
             assert.throws(() => { new File(); }, Error);
         });
-
         it('must be given either a upload_length or upload_defer_length', () => {
             assert.throws(() => { new File(Uid.rand()); }, Error);
         });
-
         it('should set properties given', () => {
             const file_id = Uid.rand();
             const upload_length = 1234;
