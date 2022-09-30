@@ -144,6 +144,42 @@ describe('PostHandler', () => {
                 req.headers = { 'upload-length': 1000, host: 'localhost:3000' };
                 handler.send(req, res);
             })
+
+            it(`must fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event when upload is complete with single request`, (done) => {
+                const fake_store = sinon.createStubInstance(DataStore);
+
+                const upload_length = 1000;
+                
+                fake_store.create.resolvesArg(0);
+                fake_store.write.resolves(upload_length);
+
+                const handler = new PostHandler(fake_store, { path: '/test/output' });
+                handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
+                    done();
+                });
+
+                req.headers = { 'upload-length': `${upload_length}`, host: 'localhost:3000', 'content-type': 'application/offset+octet-stream' };
+                handler.send(req, res);
+            })
+
+            it(`must not fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event when upload-length is defered`, (done) => {
+                const fake_store = sinon.createStubInstance(DataStore);
+
+                const upload_length = 1000;
+                
+                fake_store.create.resolvesArg(0);
+                fake_store.write.resolves(upload_length);
+
+                const handler = new PostHandler(fake_store, { path: '/test/output' });
+                handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
+                    done(new Error());
+                });
+
+                req.headers = { 'upload-defer-length': '1', host: 'localhost:3000', 'content-type': 'application/offset+octet-stream' };
+                handler.send(req, res)
+                .then(() => done())
+                .catch(done);
+            })
         });
     });
 });
