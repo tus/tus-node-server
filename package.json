@@ -57,7 +57,7 @@
     "should": "^13.2.3",
     "sinon": "^13.0.1",
     "supertest": "^6.2.2",
-    "tus-js-client": "^3.0.0"
+    "tus-js-client": "^2.3.0"
   },
   "dependencies": {
     "@google-cloud/storage": "^6.2.2",
