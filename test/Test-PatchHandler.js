@@ -65,19 +65,6 @@ describe('PatchHandler', () => {
             return assert.rejects(() => handler.send(req, res), { status_code: 403 });
         });
 
-        it('should 400 if upload-defer-length is present when it upload-length is known', () => {
-            req.headers = {
-                'upload-offset': '0',
-                'upload-defer-length': '1',
-                'content-type': 'application/offset+octet-stream',
-            };
-            req.url = `${path}/file`;
-
-            store.getOffset.resolves({ size: 0, upload_length: '512' });
-
-            return assert.rejects(() => handler.send(req, res), { status_code: 400 });
-        });
-
         it('should declare upload-length once it is send', async () => {
             req.headers = {
                 'upload-offset': '0',
@@ -86,6 +73,7 @@ describe('PatchHandler', () => {
             };
             req.url = `${path}/file`;
 
+            store.hasExtension.withArgs('creation-defer-length').returns(true);
             store.getOffset.resolves({ size: 0, upload_defer_length: '1' });
             store.write.resolves(5);
             store.declareUploadLength.resolves();
@@ -95,7 +83,7 @@ describe('PatchHandler', () => {
             assert.equal(store.declareUploadLength.calledOnceWith('file', '10'), true);
         });
         
-        it('should 400 if upload-length does not match', () => {
+        it('should 400 if upload-length is already set', () => {
             req.headers = {
                 'upload-offset': '0',
                 'upload-length': '10',
@@ -104,6 +92,7 @@ describe('PatchHandler', () => {
             req.url = `${path}/file`;
 
             store.getOffset.resolves({ size: 0, upload_length: '20' });
+            store.hasExtension.withArgs('creation-defer-length').returns(true);
 
             return assert.rejects(() => handler.send(req, res), { status_code: 400 });
         });
@@ -134,7 +123,6 @@ describe('PatchHandler', () => {
         it('must acknowledge successful PATCH requests with the 204', async () => {
             req.headers = {
                 'upload-offset': '0',
-                'upload-length': '1024',
                 'content-type': 'application/offset+octet-stream',
             };
             req.url = `${path}/1234`;

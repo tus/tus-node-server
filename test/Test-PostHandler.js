@@ -21,6 +21,7 @@ describe('PostHandler', () => {
     let res = null;
 
     const fake_store = sinon.createStubInstance(DataStore);
+    fake_store.hasExtension.withArgs('creation-defer-length').returns(true);
 
     beforeEach((done) => {
         req = { headers: {}, url: '/files', host: 'localhost:3000' };
