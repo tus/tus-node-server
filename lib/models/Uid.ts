@@ -1,9 +1,9 @@
-import crypto from 'node:crypto';
+import crypto from 'node:crypto'
 
 class Uid {
-    static rand() {
-        return crypto.randomBytes(16).toString('hex');
-    }
+  static rand() {
+    return crypto.randomBytes(16).toString('hex')
+  }
 }
 
-export default Uid;
+export default Uid

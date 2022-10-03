@@ -1,11 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/eslintrc.json",
   "root": true,
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
     "@typescript-eslint/no-explicit-any": ["warn"],
-    "@typescript-eslint/ban-ts-comment": ["warn"]
+    "@typescript-eslint/ban-ts-comment": ["warn"],
+    "prettier/prettier": "error"
   },
   "ignorePatterns": ["demo", "node_modules"]
 }
