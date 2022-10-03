@@ -1,28 +1,20 @@
-import DataStore from "./DataStore";
 import * as storage from "@google-cloud/storage";
-// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
-import stream from "stream";
+import stream from "node:stream";
+import debug from "debug";
+
 import { ERRORS, TUS_RESUMABLE } from "../constants";
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
-import * as debug from "debug";
+import DataStore from "./DataStore";
+
 const { Storage } = storage;
-const DEFAULT_CONFIG = {
-    scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
-};
+const DEFAULT_CONFIG = { scopes: ['https://www.googleapis.com/auth/devstorage.full_control'] };
 const log = debug('tus-node-server:stores:gcsstore');
-/**
- * @fileOverview
- * Store using local filesystem.
- *
- * @author Ben Stahl <bhstahl@gmail.com>
- */
+
 class GCSDataStore extends DataStore {
     authConfig: any;
     bucket: any;
     bucket_name: any;
     gcs: any;
     constructor(options: any) {
-        // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
         super(options);
         this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length'];
         if (!options.bucket) {

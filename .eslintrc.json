@@ -4,8 +4,8 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "@typescript-eslint/no-explicit-any": 0,
-    "@typescript-eslint/ban-ts-comment": 0
+    "@typescript-eslint/no-explicit-any": ["warn"],
+    "@typescript-eslint/ban-ts-comment": ["warn"]
   },
   "ignorePatterns": ["demo", "node_modules"]
 }

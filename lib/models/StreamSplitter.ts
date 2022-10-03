@@ -1,14 +1,12 @@
-// @ts-expect-error TS(2307): Cannot find module 'crypto' or its corresponding t... Remove this comment to see the full error message
-import crypto from 'crypto';
-// @ts-expect-error TS(2307): Cannot find module 'fs' or its corresponding type ... Remove this comment to see the full error message
-import fs from 'fs';
-// @ts-expect-error TS(2307): Cannot find module 'path' or its corresponding typ... Remove this comment to see the full error message
-import path from 'path';
-// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
-import stream from 'stream';
-function randomString(size: any) {
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import stream from 'node:stream';
+
+function randomString(size: number) {
     return crypto.randomBytes(size).toString('base64url').slice(0, size);
 }
+
 class FileStreamSplitter extends stream.Writable {
     currentChunkPath: any;
     currentChunkSize: any;

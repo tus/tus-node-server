@@ -1,17 +1,16 @@
-// @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
-import assert from "assert";
-// @ts-expect-error TS(2307): Cannot find module 'os' or its corresponding type ... Remove this comment to see the full error message
-import os from "os";
+import assert from "node:assert";
+import os from "node:os";
+import fs from "node:fs";
+import stream from "node:stream";
+
+import aws from "aws-sdk";
+
 import DataStore from "./DataStore";
 import { FileStreamSplitter } from "../models/StreamSplitter";
-import aws from "aws-sdk";
 import { ERRORS, TUS_RESUMABLE } from "../constants";
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'debu... Remove this comment to see the full error message
-import * as debug from "debug";
-// @ts-expect-error TS(2307): Cannot find module 'fs' or its corresponding type ... Remove this comment to see the full error message
-import fs from "fs";
-// @ts-expect-error TS(2307): Cannot find module 'stream' or its corresponding t... Remove this comment to see the full error message
-import stream from "stream";
+
+import debug from "debug";
+
 const log = debug('tus-node-server:stores:s3store');
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
@@ -52,7 +51,6 @@ class S3Store extends DataStore {
     client: any;
     part_size: any;
     constructor(options: any) {
-        // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
         super(options);
         this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length'];
         assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set');
@@ -226,7 +224,6 @@ class S3Store extends DataStore {
             const [key, base64_value] = kv_pair.split(' ');
             metadata[key] = {
                 encoded: base64_value,
-                // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
                 decoded: base64_value === undefined ? undefined : Buffer.from(base64_value, 'base64').toString('ascii'),
             };
             return metadata;
@@ -305,7 +302,6 @@ class S3Store extends DataStore {
                     }
                     return this._uploadPart(metadata, fs.createReadStream(path), partNumber);
                 })
-                    // @ts-expect-error TS(2550): Property 'finally' does not exist on type 'Promise... Remove this comment to see the full error message
                     .finally(() => {
                     fs.rm(path, (err: any) => {
                         if (err) {

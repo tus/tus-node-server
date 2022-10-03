@@ -1,94 +1,89 @@
-// @ts-expect-error TS(2307): Cannot find module 'assert' or its corresponding t... Remove this comment to see the full error message
 import assert from 'node:assert/strict';
+
 import RequestValidator from '../lib/validators/RequestValidator';
 import CONSTANTS from '../lib/constants';
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
 describe('RequestValidator', () => {
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
     describe('_invalidUploadOffsetHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should validate a number', (done: any) => {
             const value = '1234';
             assert.equal(RequestValidator._invalidUploadOffsetHeader(value), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate a negative number', (done: any) => {
             const value = '-4';
             assert.equal(RequestValidator._invalidUploadOffsetHeader(value), true);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate a non number', (done: any) => {
             const value = 'hello';
             assert.equal(RequestValidator._invalidUploadOffsetHeader(value), true);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidUploadLengthHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should validate a number', (done: any) => {
             const value = '1234';
             assert.equal(RequestValidator._invalidUploadLengthHeader(value), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate a number < 1', (done: any) => {
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader('0'), true);
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader('-1'), true);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate a non number', (done: any) => {
             const value = 'hello';
             assert.equal(RequestValidator._invalidUploadLengthHeader(value), true);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidUploadDeferLengthHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should validate 1', (done: any) => {
             const value = '1';
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader(value), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate a number !== 1', (done: any) => {
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader('0'), true);
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader('1234'), true);
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader('-1'), true);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate a non number', (done: any) => {
             const value = 'hello';
             assert.equal(RequestValidator._invalidUploadDeferLengthHeader(value), true);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidUploadMetadataHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should validate a comma separated list', (done: any) => {
             const value = 'hello world, tus rules';
             assert.equal(RequestValidator._invalidUploadMetadataHeader(value), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should validate a singe value', (done: any) => {
             const value = 'hello world';
             assert.equal(RequestValidator._invalidUploadMetadataHeader(value), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should validate keys without a value', (done: any) => {
             assert.equal(RequestValidator._invalidUploadMetadataHeader('hello'), false);
             assert.equal(RequestValidator._invalidUploadMetadataHeader('hello world, tusrules'), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should fail on non comma separated list', (done: any) => {
             assert.equal(RequestValidator._invalidUploadMetadataHeader('too-many   spaces'), true);
             assert.equal(RequestValidator._invalidUploadMetadataHeader(''), true);
@@ -96,15 +91,14 @@ describe('RequestValidator', () => {
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidUploadConcatHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should validate partial and final', (done: any) => {
             assert.equal(RequestValidator._invalidUploadConcatHeader('partial'), false);
             assert.equal(RequestValidator._invalidUploadConcatHeader('final;/files/a /files/b'), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate everything else', (done: any) => {
             assert.equal(RequestValidator._invalidUploadConcatHeader(''), true);
             assert.equal(RequestValidator._invalidUploadConcatHeader('PARTIAL'), true);
@@ -112,100 +106,91 @@ describe('RequestValidator', () => {
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidXRequestedWithHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('always validate ', (done: any) => {
             assert.equal(RequestValidator._invalidXRequestedWithHeader(), false);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidTusVersionHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should validate tus version', (done: any) => {
             assert.equal(RequestValidator._invalidTusVersionHeader(CONSTANTS.TUS_RESUMABLE), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate tus version', (done: any) => {
             assert.equal(RequestValidator._invalidTusVersionHeader('0.0.0'), true);
             assert.equal(RequestValidator._invalidTusVersionHeader('0.1.0'), true);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidTusResumableHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should validate tus version', (done: any) => {
             assert.equal(RequestValidator._invalidTusResumableHeader(CONSTANTS.TUS_RESUMABLE), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate tus version', (done: any) => {
             assert.equal(RequestValidator._invalidTusResumableHeader('0.0.0'), true);
             assert.equal(RequestValidator._invalidTusResumableHeader('0.1.0'), true);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidTusExtensionHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('always validate ', (done: any) => {
             // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
             assert.equal(RequestValidator._invalidTusExtensionHeader(), false);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidTusMaxSizeHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('always validate ', (done: any) => {
             assert.equal(RequestValidator._invalidTusMaxSizeHeader(), false);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidXHttpMethodOverrideHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('always validate ', (done: any) => {
             assert.equal(RequestValidator._invalidXHttpMethodOverrideHeader(), false);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidAuthorizationHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('always validate ', (done: any) => {
             assert.equal(RequestValidator._invalidAuthorizationHeader(), false);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('_invalidContentTypeHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should validate octet-stream', (done: any) => {
             assert.equal(RequestValidator._invalidContentTypeHeader('application/offset+octet-stream'), false);
             done();
         });
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
+
         it('should invalidate everything except octet-stream', (done: any) => {
             assert.equal(RequestValidator._invalidContentTypeHeader('video/mp4'), true);
             assert.equal(RequestValidator._invalidContentTypeHeader('application/json'), true);
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
+
     describe('capitalizeHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should capitalize a header ', (done: any) => {
             assert.equal(RequestValidator.capitalizeHeader('upload-length'), 'UploadLength');
             done();
         });
     });
-    // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
     describe('isInvalidHeader', () => {
-        // @ts-expect-error TS(2582): Cannot find name 'it'. Do you need to install type... Remove this comment to see the full error message
         it('should invalidate a header ', (done: any) => {
             assert.equal(RequestValidator.isInvalidHeader('upload-length', '-1'), true);
             done();

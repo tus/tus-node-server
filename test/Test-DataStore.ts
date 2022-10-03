@@ -1,8 +1,7 @@
+import 'should';
 import assert from 'node:assert/strict';
-import should from 'should';
 
 import DataStore from '../lib/stores/DataStore';
-import File from '../lib/models/File';
 
 describe('DataStore', () => {
     // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
