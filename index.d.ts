@@ -16,20 +16,19 @@ declare interface ServerOptions {
 /**
  * arguments of constructor which in class extend DataStore
  */
-declare interface DataStoreOptions {}
 
-declare interface FileStoreOptions extends DataStoreOptions {
+declare interface FileStoreOptions {
   directory: string
   configstore?: Configstore
 }
 
-declare interface GCStoreOptions extends DataStoreOptions {
+declare interface GCStoreOptions {
   bucket: string
   projectId: string
   keyFilename: string
 }
 
-declare interface S3StoreOptions extends DataStoreOptions {
+declare interface S3StoreOptions {
   accessKeyId: string
   secretAccessKey: string
   bucket: string
@@ -58,7 +57,7 @@ declare class File {
  * Based store for all DataStore classes.
  */
 export declare class DataStore extends EventEmitter {
-  constructor(options: DataStoreOptions)
+  constructor()
   // TODO: get and set should both be string[]
   // @ts-expect-error The return type of a 'get' accessor must be assignable to its 'set' accessor type
   get extensions(): string

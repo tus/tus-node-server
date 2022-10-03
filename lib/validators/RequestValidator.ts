@@ -54,9 +54,10 @@ class RequestValidator {
     const valid_final = value.startsWith('final;')
     return !valid_partial && !valid_final
   }
-  static capitalizeHeader(header_name: any) {
+  static capitalizeHeader(header_name: string) {
     return header_name
       .replace(/\b[a-z]/g, function () {
+        // eslint-disable-next-line
         return arguments[0].toUpperCase()
       })
       .replace(/-/g, '')

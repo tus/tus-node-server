@@ -7,7 +7,9 @@
   "rules": {
     "@typescript-eslint/no-explicit-any": ["warn"],
     "@typescript-eslint/ban-ts-comment": ["warn"],
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-empty-function": 0,
+    "@typescript-eslint/no-extra-semi": 0
   },
   "ignorePatterns": ["demo", "node_modules"]
 }

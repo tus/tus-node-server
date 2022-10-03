@@ -32,11 +32,9 @@ class DataStore extends EventEmitter {
   /**
    * Called in DELETE requests. This method just deletes the file from the store.
    * http://tus.io/protocols/resumable-upload.html#termination
-   *
-   * @param {string} file_id Name of the file
-   * @return {Promise}
    */
-  async remove(file_id: any) {}
+  // eslint-disable-next-line
+  async remove(file_id: string) {}
   /**
    * Called in PATCH requests. This method should write data
    * to the DataStore file, and possibly implement the
@@ -70,6 +68,7 @@ class DataStore extends EventEmitter {
    * @param {number} upload_length Declared upload length
    * @return {Promise}
    */
+  // eslint-disable-next-line
   async declareUploadLength(file_id: any, upload_length: any) {}
 }
 export default DataStore

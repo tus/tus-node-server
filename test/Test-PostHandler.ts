@@ -35,8 +35,8 @@ describe('PostHandler', () => {
 
   describe('constructor()', () => {
     it('must check for naming function', () => {
-      // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
       assert.throws(() => {
+        // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
         new PostHandler(fake_store)
       }, Error)
       assert.doesNotThrow(() => {

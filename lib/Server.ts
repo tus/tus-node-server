@@ -164,7 +164,8 @@ class TusServer extends EventEmitter {
   }
   listen() {
     const server = http.createServer(this.handle.bind(this))
-    // @ts-expect-error
+    // @ts-expect-error todo
+    // eslint-disable-next-line
     return server.listen.apply(server, arguments)
   }
 }

@@ -441,8 +441,8 @@ class S3Store extends DataStore {
       .then(async (results: any) => {
         const [metadata, part_number, initial_offset] = results
         const next_part_number = part_number + 1
-        // @ts-expect-error TS(2769): No overload matches this call.
         return Promise.all(
+          // @ts-expect-error TS(2769): No overload matches this call.
           await this._processUpload(
             metadata,
             readable,

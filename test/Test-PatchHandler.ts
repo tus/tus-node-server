@@ -19,7 +19,7 @@ describe('PatchHandler', () => {
   const path = '/test/output'
   let store: any = null
   let handler: any = null
-  const req: { headers: Record<string, string> } = { headers: {} }
+  const req: { headers: Record<string, string>; url: string } = { headers: {}, url: '' }
   // @ts-expect-error
   let res: http.ServerResponse<http.IncomingMessage> = new http.ServerResponse({
     method: 'PATCH',
@@ -47,7 +47,7 @@ describe('PatchHandler', () => {
 
   describe('send()', () => {
     it('should 404 urls without a path', () => {
-      ;(req as any).url = `${path}/`
+      req.url = `${path}/`
       return assert.rejects(() => handler.send(req, res), { status_code: 404 })
     })
 
