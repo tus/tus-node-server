@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert'
 
 import RequestValidator from '../lib/validators/RequestValidator'
-import CONSTANTS from '../lib/constants'
+import { TUS_RESUMABLE } from '../lib/constants'
 
 describe('RequestValidator', () => {
   describe('_invalidUploadOffsetHeader', () => {
@@ -125,10 +125,7 @@ describe('RequestValidator', () => {
 
   describe('_invalidTusVersionHeader', () => {
     it('should validate tus version', (done: any) => {
-      assert.equal(
-        RequestValidator._invalidTusVersionHeader(CONSTANTS.TUS_RESUMABLE),
-        false
-      )
+      assert.equal(RequestValidator._invalidTusVersionHeader(TUS_RESUMABLE), false)
       done()
     })
 
@@ -141,10 +138,7 @@ describe('RequestValidator', () => {
 
   describe('_invalidTusResumableHeader', () => {
     it('should validate tus version', (done: any) => {
-      assert.equal(
-        RequestValidator._invalidTusResumableHeader(CONSTANTS.TUS_RESUMABLE),
-        false
-      )
+      assert.equal(RequestValidator._invalidTusResumableHeader(TUS_RESUMABLE), false)
       done()
     })
 

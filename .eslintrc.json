@@ -1,15 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/eslintrc.json",
   "root": true,
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "prettier"],
+  "env": {
+    "es6": true,
+    "node": true
+  },
   "rules": {
     "@typescript-eslint/no-explicit-any": ["warn"],
     "@typescript-eslint/ban-ts-comment": ["warn"],
     "prettier/prettier": "error",
-    "@typescript-eslint/no-empty-function": 0,
-    "@typescript-eslint/no-extra-semi": 0
+    "@typescript-eslint/no-empty-function": 0
   },
   "ignorePatterns": ["demo", "node_modules"]
 }

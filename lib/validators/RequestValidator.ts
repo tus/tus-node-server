@@ -1,4 +1,5 @@
-import CONSTANTS from '../constants'
+import { HEADERS_LOWERCASE, TUS_VERSION, TUS_RESUMABLE } from '../constants'
+
 class RequestValidator {
   // All PATCH requests MUST include a Upload-Offset header
   static _invalidUploadOffsetHeader(value: any) {
@@ -28,10 +29,10 @@ class RequestValidator {
     return false
   }
   static _invalidTusVersionHeader(value: any) {
-    return CONSTANTS.TUS_VERSION.indexOf(value) === -1
+    return TUS_VERSION.indexOf(value) === -1
   }
   static _invalidTusResumableHeader(value: any) {
-    return value !== CONSTANTS.TUS_RESUMABLE
+    return value !== TUS_RESUMABLE
   }
   static _invalidTusExtensionHeader(value: any) {
     return false
@@ -63,7 +64,7 @@ class RequestValidator {
       .replace(/-/g, '')
   }
   static isInvalidHeader(header_name: any, header_value: any) {
-    if (CONSTANTS.HEADERS_LOWERCASE.indexOf(header_name) === -1) {
+    if (HEADERS_LOWERCASE.indexOf(header_name) === -1) {
       return false
     }
     const method = `_invalid${this.capitalizeHeader(header_name)}Header`
