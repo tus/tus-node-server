@@ -71,7 +71,7 @@
     "sinon": "^13.0.1",
     "supertest": "^6.2.2",
     "ts-node": "^10.9.1",
-    "tus-js-client": "^3.0.0",
+    "tus-js-client": "^2.3.0",
     "typescript": "^4.8.4"
   },
   "engines": {

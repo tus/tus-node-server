@@ -20,7 +20,7 @@ class BaseHandler extends EventEmitter {
    * @param  {string} body
    * @return {ServerResponse}
    */
-  write(res: any, status: any, headers = {}, body: any) {
+  write(res: any, status: any, headers = {}, body?: any) {
     body = body ? body : ''
     headers = status === 204 ? headers : { ...headers, 'Content-Length': body.length }
     res.writeHead(status, headers)

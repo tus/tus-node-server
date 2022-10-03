@@ -326,7 +326,6 @@ describe('Server', () => {
               .send('test')
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Offset', '0')
-              .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
               .set('Content-Type', 'application/offset+octet-stream')
               .end((err) => {
                 if (err) {

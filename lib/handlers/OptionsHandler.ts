@@ -18,7 +18,6 @@ class OptionsHandler extends BaseHandler {
     if (this.store.extensions) {
       res.setHeader('Tus-Extension', this.store.extensions)
     }
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 2.
     return this.write(res, 204)
   }
 }

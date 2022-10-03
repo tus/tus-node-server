@@ -24,13 +24,11 @@ describe('BaseHandler', () => {
     done()
   })
   it('write() should end the response', (done: any) => {
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
     handler.write(res, 200, {})
     assert.equal(res.finished, true)
     done()
   })
   it('write() should set a response code', (done: any) => {
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
     handler.write(res, 201, {})
     assert.equal(res.statusCode, 201)
     done()
@@ -39,7 +37,6 @@ describe('BaseHandler', () => {
     const headers = {
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
     }
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
     handler.write(res, 200, headers)
     for (const header of Object.keys(headers)) {
       // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message

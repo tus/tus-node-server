@@ -53,6 +53,10 @@ const ERRORS = {
     status_code: 501,
     body: 'Concatenation extension is not (yet) supported. Disable parallel uploads in the tus client.\n',
   },
+  UNSUPPORTED_CREATION_DEFER_LENGTH_EXTENSION: {
+    status_code: 501,
+    body: 'creation-defer-length extension is not (yet) supported.\n',
+  },
 }
 const EVENT_ENDPOINT_CREATED = 'EVENT_ENDPOINT_CREATED'
 const EVENT_FILE_CREATED = 'EVENT_FILE_CREATED'

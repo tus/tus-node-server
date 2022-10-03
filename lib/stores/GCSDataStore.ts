@@ -41,7 +41,7 @@ class GCSDataStore extends DataStore {
     const bucket = this.gcs.bucket(this.bucket_name)
     bucket.exists((error: any, exists: any) => {
       // ignore insufficient access error, assume bucket exists
-      if (error.code === 403) {
+      if (error && error.code === 403) {
         return
       }
       if (error) {

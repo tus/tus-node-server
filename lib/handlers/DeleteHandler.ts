@@ -16,7 +16,6 @@ class DeleteHandler extends BaseHandler {
     }
     await this.store.remove(file_id)
     this.emit(EVENTS.EVENT_FILE_DELETED, { file_id })
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
     return this.write(res, 204, {})
   }
 }

@@ -227,7 +227,6 @@ describe('EndToEnd', () => {
           .patch(`${STORE_PATH}/${file_id}`)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Offset', 0)
-          .set('Upload-Length', TEST_FILE_SIZE)
           .set('Content-Type', 'application/offset+octet-stream')
         write_stream.on('response', (res: any) => {
           // TODO: this is not called when request fails
@@ -487,7 +486,6 @@ describe('EndToEnd', () => {
           .patch(`${STORE_PATH}/${file_id}`)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Offset', 0)
-          .set('Upload-Length', `${TEST_FILE_SIZE}`)
           .set('Content-Type', 'application/offset+octet-stream')
         write_stream.on('response', (res: any) => {
           assert.equal(res.statusCode, 204)
