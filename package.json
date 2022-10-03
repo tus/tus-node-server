@@ -1,11 +1,8 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "tus-node-server",
-  "description": "Node.js tus server",
   "version": "0.8.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tus/tus-node-server.git"
-  },
+  "description": "Node.js tus server",
   "keywords": [
     "tus",
     "framework",
@@ -16,15 +13,17 @@
     "api",
     "server"
   ],
-  "author": "Ben Stahl <bhstahl@gmail.com>",
-  "license": "MIT",
+  "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": {
     "url": "https://github.com/tus/tus-node-server/issues"
   },
-  "homepage": "https://github.com/tus/tus-node-server#readme",
-  "engines": {
-    "node": ">=10.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tus/tus-node-server.git"
   },
+  "license": "MIT",
+  "author": "Ben Stahl <bhstahl@gmail.com>",
+  "main": "index.js",
   "files": [
     "LICENSE",
     "README.md",
@@ -32,16 +31,21 @@
     "index.d.ts",
     "lib/"
   ],
-  "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
-    "test:local": "env-cmd npm run test",
     "coverage": "nyc npm test",
     "demo": "node demo/server.js",
+    "format": "prettier --write .",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
-    "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
+    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
+    "test:local": "env-cmd npm run test"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^6.2.2",
+    "aws-sdk": "^2.1064.0",
+    "configstore": "^5.0.1",
+    "debug": "^4.3.3"
   },
   "devDependencies": {
     "@types/configstore": "^6.0.0",
@@ -70,10 +74,7 @@
     "tus-js-client": "^3.0.0",
     "typescript": "^4.8.4"
   },
-  "dependencies": {
-    "@google-cloud/storage": "^6.2.2",
-    "aws-sdk": "^2.1064.0",
-    "configstore": "^5.0.1",
-    "debug": "^4.3.3"
+  "engines": {
+    "node": ">=14.14"
   }
 }
