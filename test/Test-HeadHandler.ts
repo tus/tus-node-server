@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 import http from 'http'
 import sinon from 'sinon'
 import DataStore from '../lib/stores/DataStore'

@@ -1,5 +1,5 @@
 import 'should'
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 
 import File from '../lib/models/File'
 import Uid from '../lib/models/Uid'

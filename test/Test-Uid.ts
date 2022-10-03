@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 
 import Uid from '../lib/models/Uid'
 

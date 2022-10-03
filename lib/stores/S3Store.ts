@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import { strict as assert } from 'node:assert'
 import os from 'node:os'
 import fs from 'node:fs'
 import stream from 'node:stream'

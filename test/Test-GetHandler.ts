@@ -1,6 +1,6 @@
 import 'should'
 
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
 import http from 'node:http'

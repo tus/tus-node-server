@@ -1,6 +1,6 @@
 import path from 'node:path'
 import fs from 'node:fs'
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 
 import rimraf from 'rimraf'
 import request from 'supertest'

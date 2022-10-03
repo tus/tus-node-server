@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 
 import RequestValidator from '../lib/validators/RequestValidator'
 import CONSTANTS from '../lib/constants'

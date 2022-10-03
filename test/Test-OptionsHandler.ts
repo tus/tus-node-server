@@ -1,6 +1,6 @@
 import 'should'
 
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 import http from 'node:http'
 
 import OptionsHandler from '../lib/handlers/OptionsHandler'

@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict'
+import { strict as assert } from 'node:assert'
 import * as httpMocks from 'node-mocks-http'
 
 import BaseHandler from '../lib/handlers/BaseHandler'
