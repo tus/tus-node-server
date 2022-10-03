@@ -219,7 +219,6 @@ describe('EndToEnd', () => {
                 const write_stream = agent.patch(`${STORE_PATH}/${file_id}`)
                     .set('Tus-Resumable', TUS_RESUMABLE)
                     .set('Upload-Offset', 0)
-                    .set('Upload-Length', TEST_FILE_SIZE)
                     .set('Content-Type', 'application/offset+octet-stream');
 
                 write_stream.on('response', (res) => {
@@ -471,7 +470,6 @@ describe('EndToEnd', () => {
                 const write_stream = agent.patch(`${STORE_PATH}/${file_id}`)
                     .set('Tus-Resumable', TUS_RESUMABLE)
                     .set('Upload-Offset', 0)
-                    .set('Upload-Length', `${TEST_FILE_SIZE}`)
                     .set('Content-Type', 'application/offset+octet-stream');
 
                 write_stream.on('response', (res) => {
