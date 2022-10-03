@@ -170,6 +170,7 @@ describe('PostHandler', () => {
                 
                 fake_store.create.resolvesArg(0);
                 fake_store.write.resolves(upload_length);
+                fake_store.hasExtension.withArgs('creation-defer-length').returns(true);
 
                 const handler = new PostHandler(fake_store, { path: '/test/output' });
                 handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
