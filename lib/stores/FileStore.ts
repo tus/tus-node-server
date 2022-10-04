@@ -7,7 +7,7 @@ import debug from 'debug'
 import Configstore from 'configstore'
 import DataStore from './DataStore'
 import pkg from '../../package.json'
-import { ERRORS } from '../constants'
+import {ERRORS} from '../constants'
 
 const MASK = '0777'
 const IGNORED_MKDIR_ERROR = 'EEXIST'
@@ -153,7 +153,7 @@ class FileStore extends DataStore {
    * @param  {string} file_id name of the file
    * @return {object}           fs stats
    */
-  async getOffset(file_id: string): Promise<{ size: number; upload_length: number }> {
+  async getOffset(file_id: string): Promise<{size: number; upload_length: number}> {
     const config = await this.configstore.get(file_id)
     return new Promise((resolve, reject) => {
       const file_path = `${this.directory}/${file_id}`

@@ -1,13 +1,13 @@
 import 'should'
 
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import http from 'node:http'
 
 import sinon from 'sinon'
 
 import DataStore from '../lib/stores/DataStore'
 import DeleteHandler from '../lib/handlers/DeleteHandler'
-import { ERRORS, EVENTS } from '../lib/constants'
+import {ERRORS, EVENTS} from '../lib/constants'
 
 describe('DeleteHandler', () => {
   const path = '/test/output'
@@ -18,20 +18,20 @@ describe('DeleteHandler', () => {
 
   beforeEach(() => {
     fake_store.remove.resetHistory()
-    handler = new DeleteHandler(fake_store, { relativeLocation: true, path })
-    req = { headers: {}, url: handler.generateUrl({}, '1234') }
+    handler = new DeleteHandler(fake_store, {relativeLocation: true, path})
+    req = {headers: {}, url: handler.generateUrl({}, '1234')}
     // @ts-expect-error
-    res = new http.ServerResponse({ method: 'HEAD' })
+    res = new http.ServerResponse({method: 'HEAD'})
   })
 
   it('should 404 if no file id match', () => {
     fake_store.remove.rejects(ERRORS.FILE_NOT_FOUND)
-    return assert.rejects(() => handler.send(req, res), { status_code: 404 })
+    return assert.rejects(() => handler.send(req, res), {status_code: 404})
   })
 
   it('should 404 if no file ID', async () => {
     sinon.stub(handler, 'getFileIdFromRequest').returns(false)
-    await assert.rejects(() => handler.send(req, res), { status_code: 404 })
+    await assert.rejects(() => handler.send(req, res), {status_code: 404})
     assert.equal(fake_store.remove.callCount, 0)
   })
 

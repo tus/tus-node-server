@@ -5,7 +5,7 @@ import * as shared from './Test-Stores.shared'
 
 describe('S3DataStore', () => {
   before(function (this: any) {
-    this.testFileSize = 960244
+    this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
     this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
@@ -16,7 +16,7 @@ describe('S3DataStore', () => {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION,
-      partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
     })
   })
   shared.shouldHaveStoreMethods()
@@ -25,5 +25,5 @@ describe('S3DataStore', () => {
   // shared.shouldRemoveUploads()
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
-  shared.shouldDeclareUploadLength() // creation-defer-length extension
+  shared.shouldDeclareUploadLength() // Creation-defer-length extension
 })

@@ -10,7 +10,7 @@ const GCSDataStore = require('../index').GCSDataStore
 const S3Store = require('../index').S3Store
 const EVENTS = require('../index').EVENTS
 
-const options = { path: '/files' }
+const options = {path: '/files'}
 
 const server = new Server(options)
 
@@ -47,7 +47,7 @@ switch (data_store) {
     break
 
   default:
-    server.datastore = new FileStore({ directory: './files' })
+    server.datastore = new FileStore({directory: './files'})
 }
 
 /**
@@ -68,7 +68,7 @@ const writeFile = (req, res) => {
   filename = path.join(process.cwd(), '/node_modules/tus-js-client', filename)
   fs.readFile(filename, 'binary', (err, file) => {
     if (err) {
-      res.writeHead(500, { 'Content-Type': 'text/plain' })
+      res.writeHead(500, {'Content-Type': 'text/plain'})
       res.write(err)
       res.end()
       return
@@ -116,7 +116,7 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
 
 const host = '127.0.0.1'
 const port = 1080
-server.listen({ host, port }, () => {
+server.listen({host, port}, () => {
   console.log(
     `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port} using ${data_store}`
   )

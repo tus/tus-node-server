@@ -1,6 +1,6 @@
 import 'should'
 
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import http from 'node:http'
 
 import sinon from 'sinon'
@@ -9,10 +9,11 @@ import DataStore from '../lib/stores/DataStore'
 
 const hasHeader = (res: any, header: any) => {
   if (typeof header === 'string') {
-    return res._header.indexOf(`${header}:`) > -1
+    return res._header.includes(`${header}:`)
   }
+
   const key = Object.keys(header)[0]
-  return res._header.indexOf(`${key}: ${header[key]}`) > -1
+  return res._header.includes(`${key}: ${header[key]}`)
 }
 
 describe('PatchHandler', () => {
@@ -20,14 +21,14 @@ describe('PatchHandler', () => {
   let res: any = null
   let store: any = null
   let handler: any = null
-  const req = { headers: {} }
+  const req = {headers: {}}
 
   beforeEach((done) => {
     store = sinon.createStubInstance(DataStore)
 
-    handler = new PatchHandler(store, { path })
+    handler = new PatchHandler(store, {path})
     // @ts-expect-error todo
-    res = new http.ServerResponse({ method: 'PATCH' })
+    res = new http.ServerResponse({method: 'PATCH'})
     done()
   })
 
@@ -35,21 +36,21 @@ describe('PatchHandler', () => {
     req.headers = {}
     // @ts-expect-error todo
     req.url = `${path}/1234`
-    return assert.rejects(() => handler.send(req, res), { status_code: 403 })
+    return assert.rejects(() => handler.send(req, res), {status_code: 403})
   })
 
   it('should 403 if no Upload-Offset header', () => {
-    req.headers = { 'content-type': 'application/offset+octet-stream' }
+    req.headers = {'content-type': 'application/offset+octet-stream'}
     // @ts-expect-error todo
     req.url = `${path}/1234`
-    return assert.rejects(() => handler.send(req, res), { status_code: 403 })
+    return assert.rejects(() => handler.send(req, res), {status_code: 403})
   })
 
   describe('send()', () => {
     it('should 404 urls without a path', () => {
       // @ts-expect-error todo
       req.url = `${path}/`
-      return assert.rejects(() => handler.send(req, res), { status_code: 404 })
+      return assert.rejects(() => handler.send(req, res), {status_code: 404})
     })
 
     it('should 403 if the offset is omitted', () => {
@@ -58,7 +59,7 @@ describe('PatchHandler', () => {
       }
       // @ts-expect-error todo
       req.url = `${path}/file`
-      return assert.rejects(() => handler.send(req, res), { status_code: 403 })
+      return assert.rejects(() => handler.send(req, res), {status_code: 403})
     })
 
     it('should 403 the content-type is omitted', () => {
@@ -67,7 +68,7 @@ describe('PatchHandler', () => {
       }
       // @ts-expect-error todo
       req.url = `${path}/file`
-      return assert.rejects(() => handler.send(req, res), { status_code: 403 })
+      return assert.rejects(() => handler.send(req, res), {status_code: 403})
     })
 
     it('should declare upload-length once it is send', async () => {
@@ -80,7 +81,7 @@ describe('PatchHandler', () => {
       req.url = `${path}/file`
 
       store.hasExtension.withArgs('creation-defer-length').returns(true)
-      store.getOffset.resolves({ size: 0, upload_defer_length: '1' })
+      store.getOffset.resolves({size: 0, upload_defer_length: '1'})
       store.write.resolves(5)
       store.declareUploadLength.resolves()
 
@@ -98,10 +99,10 @@ describe('PatchHandler', () => {
       // @ts-expect-error todo
       req.url = `${path}/file`
 
-      store.getOffset.resolves({ size: 0, upload_length: '20' })
+      store.getOffset.resolves({size: 0, upload_length: '20'})
       store.hasExtension.withArgs('creation-defer-length').returns(true)
 
-      return assert.rejects(() => handler.send(req, res), { status_code: 400 })
+      return assert.rejects(() => handler.send(req, res), {status_code: 400})
     })
 
     it('must return a promise if the headers validate', () => {
@@ -124,9 +125,9 @@ describe('PatchHandler', () => {
       // @ts-expect-error todo
       req.url = `${path}/1234`
 
-      store.getOffset.resolves({ size: 0, upload_length: '512' })
+      store.getOffset.resolves({size: 0, upload_length: '512'})
 
-      return assert.rejects(() => handler.send(req, res), { status_code: 409 })
+      return assert.rejects(() => handler.send(req, res), {status_code: 409})
     })
 
     it('must acknowledge successful PATCH requests with the 204', async () => {
@@ -137,12 +138,12 @@ describe('PatchHandler', () => {
       // @ts-expect-error todo
       req.url = `${path}/1234`
 
-      store.getOffset.resolves({ size: 0, upload_length: '1024' })
+      store.getOffset.resolves({size: 0, upload_length: '1024'})
       store.write.resolves(10)
 
       await handler.send(req, res)
 
-      assert.equal(hasHeader(res, { 'Upload-Offset': '10' }), true)
+      assert.equal(hasHeader(res, {'Upload-Offset': '10'}), true)
       assert.equal(hasHeader(res, 'Content-Length'), false)
       assert.equal(res.statusCode, 204)
     })

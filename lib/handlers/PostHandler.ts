@@ -5,7 +5,7 @@ import BaseHandler from './BaseHandler'
 import File from '../models/File'
 import Uid from '../models/Uid'
 import RequestValidator from '../validators/RequestValidator'
-import { EVENTS, ERRORS } from '../constants'
+import {EVENTS, ERRORS} from '../constants'
 
 const log = debug('tus-node-server:handlers:post')
 
@@ -34,11 +34,11 @@ class PostHandler extends BaseHandler {
     const upload_defer_length = req.headers['upload-defer-length']
     const upload_metadata = req.headers['upload-metadata']
 
-    if (upload_defer_length !== undefined) {
-      // Throw error if extension is not supported
-      if (!this.store.hasExtension('creation-defer-length')) {
-        throw ERRORS.UNSUPPORTED_CREATION_DEFER_LENGTH_EXTENSION
-      }
+    if (
+      upload_defer_length !== undefined && // Throw error if extension is not supported
+      !this.store.hasExtension('creation-defer-length')
+    ) {
+      throw ERRORS.UNSUPPORTED_CREATION_DEFER_LENGTH_EXTENSION
     }
 
     if ((upload_length === undefined) === (upload_defer_length === undefined)) {
@@ -49,20 +49,20 @@ class PostHandler extends BaseHandler {
 
     try {
       file_id = this.options.namingFunction(req)
-    } catch (err) {
-      log('create: check your `namingFunction`. Error', err)
+    } catch (error) {
+      log('create: check your `namingFunction`. Error', error)
       throw ERRORS.FILE_WRITE_ERROR
     }
 
     const file = new File(file_id, upload_length, upload_defer_length, upload_metadata)
 
     const obj = await this.store.create(file)
-    this.emit(EVENTS.EVENT_FILE_CREATED, { file: obj })
+    this.emit(EVENTS.EVENT_FILE_CREATED, {file: obj})
 
     const url = this.generateUrl(req, file.id)
-    this.emit(EVENTS.EVENT_ENDPOINT_CREATED, { url })
+    this.emit(EVENTS.EVENT_ENDPOINT_CREATED, {url})
 
-    const optional_headers: { 'Upload-Offset'?: string } = {}
+    const optional_headers: {'Upload-Offset'?: string} = {}
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
     if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
@@ -70,7 +70,7 @@ class PostHandler extends BaseHandler {
       optional_headers['Upload-Offset'] = new_offset
 
       // @ts-expect-error todo
-      if (new_offset === parseInt(upload_length, 10)) {
+      if (new_offset === Number.parseInt(upload_length, 10)) {
         this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {
           file: new File(
             file_id,
@@ -82,7 +82,7 @@ class PostHandler extends BaseHandler {
       }
     }
 
-    return this.write(res, 201, { Location: url, ...optional_headers })
+    return this.write(res, 201, {Location: url, ...optional_headers})
   }
 }
 

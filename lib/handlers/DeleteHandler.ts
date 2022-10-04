@@ -1,5 +1,5 @@
 import BaseHandler from './BaseHandler'
-import { ERRORS, EVENTS } from '../constants'
+import {ERRORS, EVENTS} from '../constants'
 class DeleteHandler extends BaseHandler {
   emit: any
   /**
@@ -14,8 +14,9 @@ class DeleteHandler extends BaseHandler {
     if (file_id === false) {
       throw ERRORS.FILE_NOT_FOUND
     }
+
     await this.store.remove(file_id)
-    this.emit(EVENTS.EVENT_FILE_DELETED, { file_id })
+    this.emit(EVENTS.EVENT_FILE_DELETED, {file_id})
     return this.write(res, 204, {})
   }
 }

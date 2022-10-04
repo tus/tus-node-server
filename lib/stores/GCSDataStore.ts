@@ -2,10 +2,10 @@ import * as storage from '@google-cloud/storage'
 import stream from 'node:stream'
 import debug from 'debug'
 
-import { ERRORS, TUS_RESUMABLE } from '../constants'
+import {ERRORS, TUS_RESUMABLE} from '../constants'
 import DataStore from './DataStore'
 
-const { Storage } = storage
+const {Storage} = storage
 const DEFAULT_CONFIG = {
   scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
 }
@@ -22,6 +22,7 @@ class GCSDataStore extends DataStore {
     if (!options.bucket) {
       throw new Error('GCSDataStore must have a bucket')
     }
+
     this.bucket_name = options.bucket
     this.gcs = new Storage({
       projectId: options.projectId,
@@ -32,6 +33,7 @@ class GCSDataStore extends DataStore {
       keyFilename: options.keyFilename,
     })
   }
+
   /**
    * Check the bucket exists in GCS.
    *
@@ -44,10 +46,12 @@ class GCSDataStore extends DataStore {
       if (error && error.code === 403) {
         return
       }
+
       if (error) {
         log(error)
         throw new Error(`[GCSDataStore] _getBucket: ${error.message}`)
       }
+
       if (!exists) {
         throw new Error(
           `[GCSDataStore] _getBucket: ${this.bucket_name} bucket does not exist`
@@ -56,6 +60,7 @@ class GCSDataStore extends DataStore {
     })
     return bucket
   }
+
   /**
    * Create an empty file in GCS to store the metatdata.
    *
@@ -68,6 +73,7 @@ class GCSDataStore extends DataStore {
         reject(ERRORS.FILE_NOT_FOUND)
         return
       }
+
       const gcs_file = this.bucket.file(file.id)
       const options = {
         metadata: {
@@ -89,6 +95,7 @@ class GCSDataStore extends DataStore {
         })
     })
   }
+
   /** Get file from GCS storage
    *
    * @param {string} file_id    Name of the file
@@ -98,6 +105,7 @@ class GCSDataStore extends DataStore {
   read(file_id: any) {
     return this.bucket.file(file_id).createReadStream()
   }
+
   /**
    * Get the file metatata from the object in GCS, then upload a new version
    * passing through the metadata to the new version.
@@ -132,6 +140,7 @@ class GCSDataStore extends DataStore {
           reject(ERRORS.FILE_WRITE_ERROR)
           return
         }
+
         let bytes_received = (data as any).size
         readable.on('data', (buffer: any) => {
           bytes_received += buffer.length
@@ -140,7 +149,7 @@ class GCSDataStore extends DataStore {
           if (e) {
             log(e)
             try {
-              await destination.delete({ ignoreNotFound: true })
+              await destination.delete({ignoreNotFound: true})
             } finally {
               reject(ERRORS.FILE_WRITE_ERROR)
             }
@@ -151,12 +160,13 @@ class GCSDataStore extends DataStore {
                 await this.bucket.combine([file, destination], file)
                 await Promise.all([
                   file.setMetadata(options.metadata),
-                  destination.delete({ ignoreNotFound: true }),
+                  destination.delete({ignoreNotFound: true}),
                 ])
               }
+
               resolve(bytes_received)
-            } catch (err) {
-              log(err)
+            } catch (error) {
+              log(error)
               reject(ERRORS.FILE_WRITE_ERROR)
             }
           }
@@ -164,6 +174,7 @@ class GCSDataStore extends DataStore {
       })
     })
   }
+
   /**
    * Get file metadata from the GCS Object.
    *
@@ -177,41 +188,49 @@ class GCSDataStore extends DataStore {
         reject(ERRORS.FILE_NOT_FOUND)
         return
       }
+
       const file = this.bucket.file(file_id)
       file.getMetadata((error: any, metadata: any) => {
         if (error && error.code === 404) {
           return reject(ERRORS.FILE_NOT_FOUND)
         }
+
         if (error) {
           log('[GCSDataStore] getFileMetadata', error)
           return reject(error)
         }
+
         const data = {
-          size: parseInt(metadata.size, 10),
+          size: Number.parseInt(metadata.size, 10),
         }
         if (!('metadata' in metadata)) {
           return resolve(data)
         }
+
         if (metadata.metadata.upload_length) {
           ;(data as any).upload_length = metadata.metadata.upload_length
         }
+
         if (metadata.metadata.upload_defer_length) {
           ;(data as any).upload_defer_length = metadata.metadata.upload_defer_length
         }
+
         if (metadata.metadata.upload_metadata) {
           ;(data as any).upload_metadata = metadata.metadata.upload_metadata
         }
+
         return resolve(data)
       })
     })
   }
+
   async declareUploadLength(file_id: any, upload_length: any) {
     const metadata = await this.getOffset(file_id)
     ;(metadata as any).upload_length = upload_length
     // NOTE: this needs to be `null` and not `undefined`,
     // GCS has logic that if it's the latter, it will keep the previous value ¯\_(ツ)_/¯
     ;(metadata as any).upload_defer_length = null
-    await this.bucket.file(file_id).setMetadata({ metadata })
+    await this.bucket.file(file_id).setMetadata({metadata})
   }
 }
 export default GCSDataStore

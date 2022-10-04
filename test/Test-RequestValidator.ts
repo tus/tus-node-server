@@ -1,7 +1,7 @@
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 
 import RequestValidator from '../lib/validators/RequestValidator'
-import { TUS_RESUMABLE } from '../lib/constants'
+import {TUS_RESUMABLE} from '../lib/constants'
 
 describe('RequestValidator', () => {
   describe('_invalidUploadOffsetHeader', () => {

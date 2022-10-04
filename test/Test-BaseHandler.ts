@@ -1,4 +1,4 @@
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import * as httpMocks from 'node-mocks-http'
 
 import BaseHandler from '../lib/handlers/BaseHandler'
@@ -14,13 +14,13 @@ describe('BaseHandler', () => {
   })
   let res: any = null
   // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-  const store = new DataStore({ path: '/test/output' })
+  const store = new DataStore({path: '/test/output'})
   // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
   const handler = new BaseHandler(store)
   beforeEach((done: any) => {
     const METHOD = 'GET'
     // @ts-expect-error TS(2345): Argument of type '{ method: string; }' is not assi... Remove this comment to see the full error message
-    res = httpMocks.createResponse({ method: METHOD })
+    res = httpMocks.createResponse({method: METHOD})
     done()
   })
   it('write() should end the response', (done: any) => {
@@ -42,6 +42,7 @@ describe('BaseHandler', () => {
       // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       assert.equal(res.getHeader(header), headers[header])
     }
+
     done()
   })
   it('write() should write the body', (done: any) => {

@@ -3,7 +3,7 @@ import type http from 'node:http'
 
 import BaseHandler from './BaseHandler'
 import File from '../models/File'
-import { ERRORS, EVENTS } from '../constants'
+import {ERRORS, EVENTS} from '../constants'
 
 const log = debug('tus-node-server:handlers:patch')
 
@@ -21,7 +21,8 @@ class PatchHandler extends BaseHandler {
     if (req.headers['upload-offset'] === undefined) {
       throw ERRORS.MISSING_OFFSET
     }
-    const offset = parseInt(req.headers['upload-offset'] as string, 10)
+
+    const offset = Number.parseInt(req.headers['upload-offset'] as string, 10)
 
     // The request MUST include a Content-Type header
     const content_type = req.headers['content-type']
@@ -52,7 +53,7 @@ class PatchHandler extends BaseHandler {
         throw ERRORS.INVALID_LENGTH
       }
 
-      if (parseInt(upload_length, 10) < file.size) {
+      if (Number.parseInt(upload_length, 10) < file.size) {
         throw ERRORS.INVALID_LENGTH
       }
 
@@ -61,7 +62,7 @@ class PatchHandler extends BaseHandler {
     }
 
     const new_offset = await this.store.write(req, file_id, offset)
-    if (new_offset === parseInt(file.upload_length, 10)) {
+    if (new_offset === Number.parseInt(file.upload_length, 10)) {
       this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {
         file: new File(
           file_id,

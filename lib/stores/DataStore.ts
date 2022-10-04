@@ -1,4 +1,4 @@
-import EventEmitter from 'events'
+import EventEmitter from 'node:events'
 
 class DataStore extends EventEmitter {
   _extensions: any
@@ -6,17 +6,22 @@ class DataStore extends EventEmitter {
     if (!this._extensions) {
       return null
     }
-    return this._extensions.join()
+
+    return this._extensions.join(',')
   }
+
   set extensions(extensions_array) {
     if (!Array.isArray(extensions_array)) {
-      throw new Error('DataStore extensions must be an array')
+      throw new TypeError('DataStore extensions must be an array')
     }
+
     this._extensions = extensions_array
   }
+
   hasExtension(extension: any) {
-    return this._extensions && this._extensions.indexOf(extension) !== -1
+    return this._extensions && this._extensions.includes(extension)
   }
+
   /**
    * Called in POST requests. This method just creates a
    * file, implementing the creation extension.
@@ -50,6 +55,7 @@ class DataStore extends EventEmitter {
   async write(stream: any, file_id: any, offset: any) {
     return 0
   }
+
   /**
    * Called in HEAD requests. This method should return the bytes
    * writen to the DataStore, for the client to know where to resume
@@ -59,7 +65,7 @@ class DataStore extends EventEmitter {
    * @return {Promise} bytes written
    */
   async getOffset(file_id: any) {
-    return { size: 0, upload_length: 0 }
+    return {size: 0, upload_length: 0}
   }
   /**
    * Called in PATCH requests when upload length is known after being defered.

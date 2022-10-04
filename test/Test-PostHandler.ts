@@ -1,17 +1,17 @@
 import 'should'
 
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import http from 'node:http'
 
 import sinon from 'sinon'
 
 import DataStore from '../lib/stores/DataStore'
 import PostHandler from '../lib/handlers/PostHandler'
-import { EVENTS } from '../lib/constants'
+import {EVENTS} from '../lib/constants'
 
 const hasHeader = (res: any, header: any) => {
   const key = Object.keys(header)[0]
-  return res._header.indexOf(`${key}: ${header[key]}`) > -1
+  return res._header.includes(`${key}: ${header[key]}`)
 }
 
 describe('PostHandler', () => {
@@ -22,9 +22,9 @@ describe('PostHandler', () => {
   fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
   beforeEach((done) => {
-    req = { headers: {}, url: '/files', host: 'localhost:3000' }
+    req = {headers: {}, url: '/files', host: 'localhost:3000'}
     // @ts-expect-error todo
-    res = new http.ServerResponse({ method: 'POST' })
+    res = new http.ServerResponse({method: 'POST'})
     done()
   })
 
@@ -35,7 +35,7 @@ describe('PostHandler', () => {
         new PostHandler(fake_store)
       }, Error)
       assert.doesNotThrow(() => {
-        new PostHandler(fake_store, { namingFunction: () => '1234' })
+        new PostHandler(fake_store, {namingFunction: () => '1234'})
       })
     })
   })
@@ -43,22 +43,22 @@ describe('PostHandler', () => {
   describe('send()', () => {
     describe('test errors', () => {
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both missing', async () => {
-        const handler = new PostHandler(fake_store, { namingFunction: () => '1234' })
+        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
 
         req.headers = {}
-        return assert.rejects(() => handler.send(req, res), { status_code: 400 })
+        return assert.rejects(() => handler.send(req, res), {status_code: 400})
       })
 
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both present', async () => {
-        const handler = new PostHandler(fake_store, { namingFunction: () => '1234' })
-        req.headers = { 'upload-length': '512', 'upload-defer-length': '1' }
-        return assert.rejects(() => handler.send(req, res), { status_code: 400 })
+        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        req.headers = {'upload-length': '512', 'upload-defer-length': '1'}
+        return assert.rejects(() => handler.send(req, res), {status_code: 400})
       })
 
       it("must 501 if the 'concatenation' extension is not supported", async () => {
-        const handler = new PostHandler(fake_store, { namingFunction: () => '1234' })
-        req.headers = { 'upload-concat': 'partial' }
-        return assert.rejects(() => handler.send(req, res), { status_code: 501 })
+        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        req.headers = {'upload-concat': 'partial'}
+        return assert.rejects(() => handler.send(req, res), {status_code: 501})
       })
 
       it('should send error when naming function throws', async () => {
@@ -67,28 +67,28 @@ describe('PostHandler', () => {
           namingFunction: sinon.stub().throws(),
         })
 
-        req.headers = { 'upload-length': 1000 }
-        return assert.rejects(() => handler.send(req, res), { status_code: 500 })
+        req.headers = {'upload-length': 1000}
+        return assert.rejects(() => handler.send(req, res), {status_code: 500})
       })
 
       it('should call custom namingFunction', async () => {
         const fake_store = sinon.createStubInstance(DataStore)
         const namingFunction = sinon.stub().returns('1234')
-        const handler = new PostHandler(fake_store, { namingFunction })
+        const handler = new PostHandler(fake_store, {namingFunction})
 
-        req.headers = { 'upload-length': 1000 }
+        req.headers = {'upload-length': 1000}
         await handler.send(req, res)
         assert.equal(namingFunction.calledOnce, true)
       })
 
       it('should send error when store rejects', () => {
         const fake_store = sinon.createStubInstance(DataStore)
-        fake_store.create.rejects({ status_code: 500 })
+        fake_store.create.rejects({status_code: 500})
 
-        const handler = new PostHandler(fake_store, { namingFunction: () => '1234' })
+        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
 
-        req.headers = { 'upload-length': 1000 }
-        return assert.rejects(() => handler.send(req, res), { status_code: 500 })
+        req.headers = {'upload-length': 1000}
+        return assert.rejects(() => handler.send(req, res), {status_code: 500})
       })
     })
 
@@ -98,10 +98,10 @@ describe('PostHandler', () => {
           path: '/test/output',
           namingFunction: () => '1234',
         })
-        req.headers = { 'upload-length': 1000, host: 'localhost:3000' }
+        req.headers = {'upload-length': 1000, host: 'localhost:3000'}
         await handler.send(req, res)
         assert.equal(
-          hasHeader(res, { Location: '//localhost:3000/test/output/1234' }),
+          hasHeader(res, {Location: '//localhost:3000/test/output/1234'}),
           true
         )
         assert.equal(res.statusCode, 201)
@@ -115,13 +115,13 @@ describe('PostHandler', () => {
         const file = {}
         fake_store.create.resolves(file)
 
-        const handler = new PostHandler(fake_store, { namingFunction: () => '1234' })
+        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
         handler.on(EVENTS.EVENT_FILE_CREATED, (obj) => {
           assert.strictEqual(obj.file, file)
           done()
         })
 
-        req.headers = { 'upload-length': 1000 }
+        req.headers = {'upload-length': 1000}
         handler.send(req, res)
       })
 
@@ -140,7 +140,7 @@ describe('PostHandler', () => {
           done()
         })
 
-        req.headers = { 'upload-length': 1000, host: 'localhost:3000' }
+        req.headers = {'upload-length': 1000, host: 'localhost:3000'}
         handler.send(req, res)
       })
 
@@ -160,7 +160,7 @@ describe('PostHandler', () => {
           done()
         })
 
-        req.headers = { 'upload-length': 1000, host: 'localhost:3000' }
+        req.headers = {'upload-length': 1000, host: 'localhost:3000'}
         handler.send(req, res)
       })
 
@@ -172,7 +172,7 @@ describe('PostHandler', () => {
         fake_store.create.resolvesArg(0)
         fake_store.write.resolves(upload_length)
 
-        const handler = new PostHandler(fake_store, { path: '/test/output' })
+        const handler = new PostHandler(fake_store, {path: '/test/output'})
         handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
           done()
         })
@@ -194,7 +194,7 @@ describe('PostHandler', () => {
         fake_store.write.resolves(upload_length)
         fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
-        const handler = new PostHandler(fake_store, { path: '/test/output' })
+        const handler = new PostHandler(fake_store, {path: '/test/output'})
         handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
           done(new Error())
         })

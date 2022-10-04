@@ -1,5 +1,5 @@
 import BaseHandler from './BaseHandler'
-import { ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE } from '../constants'
+import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../constants'
 // A successful response indicated by the 204 No Content status MUST contain
 // the Tus-Version header. It MAY include the Tus-Extension and Tus-Max-Size headers.
 class OptionsHandler extends BaseHandler {
@@ -18,6 +18,7 @@ class OptionsHandler extends BaseHandler {
     if (this.store.extensions) {
       res.setHeader('Tus-Extension', this.store.extensions)
     }
+
     return this.write(res, 204)
   }
 }

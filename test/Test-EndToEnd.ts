@@ -1,15 +1,15 @@
 import path from 'node:path'
 import fs from 'node:fs'
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 
 import rimraf from 'rimraf'
 import request from 'supertest'
-import { Storage } from '@google-cloud/storage'
+import {Storage} from '@google-cloud/storage'
 
 import Server from '../lib/Server'
 import FileStore from '../lib/stores/FileStore'
 import GCSDataStore from '../lib/stores/GCSDataStore'
-import { TUS_RESUMABLE } from '../lib/constants'
+import {TUS_RESUMABLE} from '../lib/constants'
 
 const STORE_PATH = '/test/output'
 const PROJECT_ID = 'tus-node-server'
@@ -17,7 +17,7 @@ const PROJECT_ID = 'tus-node-server'
 const KEYFILE = path.resolve(__dirname, '../keyfile.json')
 const BUCKET = 'tus-node-server-ci'
 const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`)
-const TEST_FILE_SIZE = 960244
+const TEST_FILE_SIZE = 960_244
 const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4')
 const TEST_METADATA = 'some data, for you'
 const gcs = new Storage({
@@ -62,7 +62,8 @@ describe('EndToEnd', () => {
         if (err) {
           return done(err)
         }
-        // clear the config
+
+        // Clear the config
         server.datastore.configstore.clear()
         listener.close()
         return done()
@@ -265,7 +266,7 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
-        // configure the store to return relative path in Location Header
+        // Configure the store to return relative path in Location Header
         relativeLocation: true,
       })
       server.datastore = new FileStore({
@@ -291,10 +292,10 @@ describe('EndToEnd', () => {
           .end((err: any, res: any) => {
             assert.equal('location' in res.headers, true)
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
-            // the location header is not absolute
-            assert.equal(res.headers.location.indexOf('//') === -1, true)
-            // and contains the store path
-            assert.equal(res.headers.location.indexOf(STORE_PATH) > -1, true)
+            // The location header is not absolute
+            assert.equal(!res.headers.location.includes('//'), true)
+            // And contains the store path
+            assert.equal(res.headers.location.includes(STORE_PATH), true)
             done()
           })
       })
@@ -343,7 +344,7 @@ describe('EndToEnd', () => {
     })
 
     describe('POST', () => {
-      // it('should create a file that will be deleted', (done) => {
+      // It('should create a file that will be deleted', (done) => {
       //     agent.post(STORE_PATH)
       //     .set('Tus-Resumable', TUS_RESUMABLE)
       //     .set('Upload-Defer-Length', 1)
@@ -423,7 +424,7 @@ describe('EndToEnd', () => {
       before(() => {
         // Remove the file to delete for 410 Gone test
       })
-      // it('should return 410 Gone for the file that has been deleted', (done) => {
+      // It('should return 410 Gone for the file that has been deleted', (done) => {
       //     agent.head(`${STORE_PATH}/${file_to_delete}`)
       //     .set('Tus-Resumable', TUS_RESUMABLE)
       //     .expect(410)

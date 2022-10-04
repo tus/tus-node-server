@@ -1,11 +1,11 @@
 import 'should'
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 
 import DataStore from '../lib/stores/DataStore'
 
 describe('DataStore', () => {
   // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-  const datastore = new DataStore({ path: '/test/output' })
+  const datastore = new DataStore({path: '/test/output'})
   it('should provide extensions', (done: any) => {
     datastore.should.have.property('extensions')
     assert.equal(datastore.extensions, null)
@@ -24,7 +24,7 @@ describe('DataStore', () => {
     assert.equal(datastore.hasExtension('creation'), true)
     assert.equal(datastore.hasExtension('expiration'), true)
     assert.equal(datastore.hasExtension('concatentation'), false)
-    assert.equal(datastore.hasExtension('CREATION'), false) // test case sensitivity
+    assert.equal(datastore.hasExtension('CREATION'), false) // Test case sensitivity
     done()
   })
   it('must have a create method', (done: any) => {

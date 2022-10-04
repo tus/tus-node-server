@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import {EventEmitter} from 'events'
 import * as http from 'http'
 
 declare interface Configstore {
@@ -14,7 +14,7 @@ declare interface ServerOptions {
 }
 
 /**
- * arguments of constructor which in class extend DataStore
+ * Arguments of constructor which in class extend DataStore
  */
 
 declare interface FileStoreOptions {
@@ -74,7 +74,7 @@ export declare class DeferableLengthDatastore extends DataStore {
 }
 
 /**
- * file store in local storage
+ * File store in local storage
  */
 export declare class FileStore extends DeferableLengthDatastore {
   constructor(options: FileStoreOptions)
@@ -82,14 +82,14 @@ export declare class FileStore extends DeferableLengthDatastore {
 }
 
 /**
- * file store in Google Cloud
+ * File store in Google Cloud
  */
 export declare class GCSDataStore extends DataStore {
   constructor(options: GCStoreOptions)
 }
 
 /**
- * file store in AWS S3
+ * File store in AWS S3
  */
 export declare class S3Store extends DataStore {
   constructor(options: S3StoreOptions)

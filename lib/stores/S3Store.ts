@@ -1,4 +1,4 @@
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import os from 'node:os'
 import fs from 'node:fs'
 import stream from 'node:stream'
@@ -6,8 +6,8 @@ import stream from 'node:stream'
 import aws from 'aws-sdk'
 
 import DataStore from './DataStore'
-import { FileStreamSplitter } from '../models/StreamSplitter'
-import { ERRORS, TUS_RESUMABLE } from '../constants'
+import {FileStreamSplitter} from '../models/StreamSplitter'
+import {ERRORS, TUS_RESUMABLE} from '../constants'
 
 import debug from 'debug'
 
@@ -58,22 +58,18 @@ class S3Store extends DataStore {
     assert.ok(options.bucket, '[S3Store] `bucket` must be set')
     this.bucket_name = options.bucket
     this.part_size = options.partSize || 8 * 1024 * 1024
-    // cache object to save upload data
+    // Cache object to save upload data
     // avoiding multiple http calls to s3
     this.cache = {}
     delete options.partSize
-    this.client = new aws.S3(
-      Object.assign(
-        {},
-        {
-          apiVersion: '2006-03-01',
-          region: 'eu-west-1',
-        },
-        options
-      )
-    )
+    this.client = new aws.S3({
+      apiVersion: '2006-03-01',
+      region: 'eu-west-1',
+      ...options,
+    })
     log('init')
   }
+
   /**
    * Check if the bucket exists in S3.
    *
@@ -81,23 +77,25 @@ class S3Store extends DataStore {
    */
   _bucketExists() {
     return this.client
-      .headBucket({ Bucket: this.bucket_name })
+      .headBucket({Bucket: this.bucket_name})
       .promise()
       .then((data: any) => {
         if (!data) {
           throw new Error(`bucket "${this.bucket_name}" does not exist`)
         }
+
         log(`bucket "${this.bucket_name}" exists`)
         return data
       })
-      .catch((err: any) => {
-        if (err.statusCode === 404) {
-          throw new Error(`[S3Store] bucket "${this.bucket_name}" does not exist`)
-        } else {
-          throw new Error(err)
-        }
+      .catch((error_: any) => {
+        const error =
+          error_.statusCode === 404
+            ? new Error(`[S3Store] bucket "${this.bucket_name}" does not exist`)
+            : new Error(error_)
+        throw error
       })
   }
+
   /**
    * Creates a multipart upload on S3 attaching any metadata to it.
    * Also, a `${file_id}.info` file is created which holds some information
@@ -119,18 +117,23 @@ class S3Store extends DataStore {
     if (file.upload_length !== undefined) {
       ;(upload_data.Metadata as any).upload_length = file.upload_length
     }
+
     if (file.upload_defer_length !== undefined) {
       ;(upload_data.Metadata as any).upload_defer_length = file.upload_defer_length
     }
+
     if (file.upload_metadata !== undefined) {
       ;(upload_data.Metadata as any).upload_metadata = file.upload_metadata
     }
+
     if (parsedMetadata.contentType) {
       ;(upload_data as any).ContentType = parsedMetadata.contentType.decoded
     }
+
     if (parsedMetadata.filename) {
       ;(upload_data.Metadata as any).original_name = parsedMetadata.filename.encoded
     }
+
     return this.client
       .createMultipartUpload(upload_data)
       .promise()
@@ -141,10 +144,11 @@ class S3Store extends DataStore {
       .then((upload_id: any) => {
         return this._saveMetadata(file, upload_id)
       })
-      .catch((err: any) => {
-        throw err
+      .catch((error: any) => {
+        throw error
       })
   }
+
   /**
    * Saves upload metadata to a `${file_id}.info` file on S3.
    * Please note that the file is empty and the metadata is saved
@@ -177,10 +181,11 @@ class S3Store extends DataStore {
           upload_id,
         }
       })
-      .catch((err: any) => {
-        throw err
+      .catch((error: any) => {
+        throw error
       })
   }
+
   /**
    * Retrieves upload metadata previously saved in `${file_id}.info`.
    * There's a small and simple caching mechanism to avoid multiple
@@ -195,6 +200,7 @@ class S3Store extends DataStore {
       log(`[${file_id}] metadata from cache`)
       return Promise.resolve(this.cache[file_id])
     }
+
     log(`[${file_id}] metadata from s3`)
     return this.client
       .headObject({
@@ -203,17 +209,19 @@ class S3Store extends DataStore {
       })
       .promise()
       .then((data: any) => {
-        this.cache[file_id] = Object.assign({}, data.Metadata, {
+        this.cache[file_id] = {
+          ...data.Metadata,
           file: JSON.parse(data.Metadata.file),
           // Patch for Digital Ocean: if key upload_id (AWS, standard) doesn't exist in Metadata object, fallback to upload-id (DO)
           upload_id: data.Metadata.upload_id || data.Metadata['upload-id'],
-        })
+        }
         return this.cache[file_id]
       })
-      .catch((err: any) => {
-        throw err
+      .catch((error: any) => {
+        throw error
       })
   }
+
   /**
    * Parses the Base64 encoded metadata received from the client.
    *
@@ -224,6 +232,7 @@ class S3Store extends DataStore {
     if (!metadata_string) {
       return {}
     }
+
     const kv_pair_list = metadata_string.split(',')
     return kv_pair_list.reduce((metadata: any, kv_pair: any) => {
       const [key, base64_value] = kv_pair.split(' ')
@@ -237,6 +246,7 @@ class S3Store extends DataStore {
       return metadata
     }, {})
   }
+
   /**
    * Uploads a part/chunk to S3 from a temporary part file.
    *
@@ -260,8 +270,9 @@ class S3Store extends DataStore {
         return data.ETag
       })
   }
+
   /**
-   * uploads a stream to s3 using multiple parts
+   * Uploads a stream to s3 using multiple parts
    *
    * @param {Object}         metadata upload metadata
    * @param {fs<ReadStream>} readStream incoming request
@@ -292,25 +303,27 @@ class S3Store extends DataStore {
             }
           })
         }
+
         promises.push(pipelineErr ? Promise.reject(pipelineErr) : Promise.resolve())
         resolve(promises)
       })
       splitterStream.on('chunkStarted', (filepath: any) => {
         pendingChunkFilepath = filepath
       })
-      splitterStream.on('chunkFinished', ({ path, size }: any) => {
+      splitterStream.on('chunkFinished', ({path, size}: any) => {
         pendingChunkFilepath = null
         current_size += size
         const partNumber = currentPartNumber++
         const p = Promise.resolve()
           .then(() => {
-            // skip chunk if it is not last and is smaller than 5MB
+            // Skip chunk if it is not last and is smaller than 5MB
             const is_last_chunk =
-              parseInt(metadata.file.upload_length, 10) === current_size
+              Number.parseInt(metadata.file.upload_length, 10) === current_size
             if (!is_last_chunk && size < 5 * 1024 * 1024) {
               log(`[${metadata.file.id}] ignoring chuck smaller than 5MB`)
-              return undefined
+              return
             }
+
             return this._uploadPart(metadata, fs.createReadStream(path), partNumber)
           })
           .finally(() => {
@@ -324,6 +337,7 @@ class S3Store extends DataStore {
       })
     })
   }
+
   /**
    * Completes a multipart upload on S3.
    * This is where S3 concatenates all the uploaded parts.
@@ -349,10 +363,11 @@ class S3Store extends DataStore {
       })
       .promise()
       .then((result: any) => result.Location)
-      .catch((err: any) => {
-        throw err
+      .catch((error: any) => {
+        throw error
       })
   }
+
   /**
    * Gets the number of complete parts/chunks already uploaded to S3.
    * Retrieves only consecutive parts.
@@ -370,6 +385,7 @@ class S3Store extends DataStore {
     if (part_number_marker) {
       ;(params as any).PartNumberMarker = part_number_marker
     }
+
     return this.client
       .listParts(params)
       .promise()
@@ -379,10 +395,11 @@ class S3Store extends DataStore {
             (val: any) => [].concat(data.Parts, val)
           )
         }
+
         return data.Parts
       })
       .then((parts: any) => {
-        // sort and filter only for call where `part_number_marker` is not set
+        // Sort and filter only for call where `part_number_marker` is not set
         if (part_number_marker === undefined) {
           parts.sort((a: any, b: any) => {
             return a.PartNumber - b.PartNumber
@@ -391,9 +408,11 @@ class S3Store extends DataStore {
             return value.PartNumber === index + 1
           })
         }
+
         return parts
       })
   }
+
   /**
    * Gets the number of parts/chunks
    * already uploaded to S3.
@@ -405,6 +424,7 @@ class S3Store extends DataStore {
     // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
     return await this._retrieveParts(file_id).then((parts: any) => parts.length)
   }
+
   /**
    * Removes cached data for a given file.
    * @param  {String} file_id id of the file
@@ -414,17 +434,19 @@ class S3Store extends DataStore {
     log(`[${file_id}] removing cached data`)
     delete this.cache[file_id]
   }
+
   create(file: any) {
     return this._bucketExists()
       .then(() => {
         return this._initMultipartUpload(file)
       })
       .then(() => file)
-      .catch((err: any) => {
+      .catch((error: any) => {
         this._clearCache(file.id)
-        throw err
+        throw error
       })
   }
+
   /**
    * Write to the file, starting at the provided offset
    *
@@ -452,47 +474,55 @@ class S3Store extends DataStore {
         )
           .then(() => this.getOffset(file_id))
           .then((current_offset) => {
-            if (parseInt(metadata.file.upload_length, 10) === current_offset.size) {
+            if (
+              Number.parseInt(metadata.file.upload_length, 10) === current_offset.size
+            ) {
               return this._finishMultipartUpload(metadata, current_offset.parts)
                 .then(() => {
                   this._clearCache(file_id)
                   return current_offset.size
                 })
-                .catch((err: any) => {
-                  log(`[${file_id}] failed to finish upload`, err)
-                  throw err
+                .catch((error: any) => {
+                  log(`[${file_id}] failed to finish upload`, error)
+                  throw error
                 })
             }
+
             return current_offset.size
           })
-          .catch((err) => {
-            if (['RequestTimeout', 'NoSuchUpload'].includes(err.code)) {
-              if (err.code === 'RequestTimeout') {
+          .catch((error) => {
+            if (['RequestTimeout', 'NoSuchUpload'].includes(error.code)) {
+              if (error.code === 'RequestTimeout') {
                 log(
                   'Request "close" event was emitted, however S3 was expecting more data. Failing gracefully.'
                 )
               }
-              if (err.code === 'NoSuchUpload') {
+
+              if (error.code === 'NoSuchUpload') {
                 log(
                   'Request "close" event was emitted, however S3 was expecting more data. Most likely the upload is already finished/aborted. Failing gracefully.'
                 )
               }
+
               return this.getOffset(file_id).then((current_offset) => current_offset.size)
             }
+
             this._clearCache(file_id)
-            log(`[${file_id}] failed to write file`, err)
-            throw err
+            log(`[${file_id}] failed to write file`, error)
+            throw error
           })
       })
   }
+
   async getOffset(id: any) {
     let metadata
     try {
       metadata = await this._getMetadata(id)
-    } catch (err) {
-      log('getOffset: No file found.', err)
+    } catch (error) {
+      log('getOffset: No file found.', error)
       throw ERRORS.FILE_NOT_FOUND
     }
+
     try {
       // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
       const parts = await this._retrieveParts(id)
@@ -503,11 +533,12 @@ class S3Store extends DataStore {
         upload_defer_length: metadata.file.upload_defer_length,
         parts,
       }
-    } catch (err) {
-      if ((err as any).code !== 'NoSuchUpload') {
-        log(err)
-        throw err
+    } catch (error) {
+      if ((error as any).code !== 'NoSuchUpload') {
+        log(error)
+        throw error
       }
+
       // When the last part of an upload is finished and the file is successfully written to S3,
       // the upload will no longer be present and requesting it will result in a 404.
       // In that case we return the upload_length as size.
@@ -519,11 +550,13 @@ class S3Store extends DataStore {
       }
     }
   }
+
   async declareUploadLength(file_id: any, upload_length: any) {
-    const { file, upload_id } = await this._getMetadata(file_id)
+    const {file, upload_id} = await this._getMetadata(file_id)
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
+
     file.upload_length = upload_length
     file.upload_defer_length = undefined
     this._saveMetadata(file, upload_id)

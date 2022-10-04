@@ -1,6 +1,6 @@
 import 'should'
 
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import http from 'node:http'
 
 import request from 'supertest'
@@ -8,11 +8,11 @@ import request from 'supertest'
 import Server from '../lib/Server'
 import FileStore from '../lib/stores/FileStore'
 import DataStore from '../lib/stores/DataStore'
-import { TUS_RESUMABLE, EVENTS } from '../lib/constants'
+import {TUS_RESUMABLE, EVENTS} from '../lib/constants'
 
 const hasHeader = (res: any, header: any) => {
   const key = Object.keys(header)[0]
-  return res._header.indexOf(`${key}: ${header[key]}`) > -1
+  return res._header.includes(`${key}: ${header[key]}`)
 }
 
 describe('Server', () => {
@@ -29,12 +29,12 @@ describe('Server', () => {
 
     it('should accept valid options', () => {
       assert.doesNotThrow(() => {
-        new Server({ path: '/files' })
+        new Server({path: '/files'})
       })
       assert.doesNotThrow(() => {
         new Server({
           path: '/files',
-          namingFunction: () => {
+          namingFunction() {
             return '1234'
           },
         })
@@ -43,13 +43,13 @@ describe('Server', () => {
 
     it('should throw on invalid namingFunction', () => {
       assert.throws(() => {
-        const server = new Server({ path: '/files', namingFunction: '1234' })
+        const server = new Server({path: '/files', namingFunction: '1234'})
         server.datastore = new DataStore()
       }, Error)
     })
 
     it('setting the DataStore should attach handlers', (done: any) => {
-      const server = new Server({ path: '/files' })
+      const server = new Server({path: '/files'})
       server.handlers.should.be.empty()
       server.datastore = new DataStore()
       server.handlers.should.have.property('HEAD')
@@ -65,7 +65,7 @@ describe('Server', () => {
     let server: any
 
     before(() => {
-      server = new Server({ path: '/test/output' })
+      server = new Server({path: '/test/output'})
       server.datastore = new DataStore()
     })
 
@@ -82,7 +82,7 @@ describe('Server', () => {
     let listener: any
 
     before(() => {
-      server = new Server({ path: '/test/output' })
+      server = new Server({path: '/test/output'})
       server.datastore = new DataStore()
       server.get('/some_url', (req: any, res: any) => {
         res.writeHead(200)
@@ -110,7 +110,7 @@ describe('Server', () => {
     let listener: any
 
     before(() => {
-      server = new Server({ path: '/test/output' })
+      server = new Server({path: '/test/output'})
       server.datastore = new FileStore({
         directory: './test/output',
       })
@@ -216,11 +216,11 @@ describe('Server', () => {
 
       it('should allow overriding the HTTP method', (done: any) => {
         const req = {
-          headers: { 'x-http-method-override': 'OPTIONS' },
+          headers: {'x-http-method-override': 'OPTIONS'},
           method: 'GET',
         }
         // @ts-expect-error todo
-        const res = new http.ServerResponse({ method: 'OPTIONS' })
+        const res = new http.ServerResponse({method: 'OPTIONS'})
         server.handle(req, res)
         assert.equal(req.method, 'OPTIONS')
         done()
@@ -228,9 +228,9 @@ describe('Server', () => {
 
       it('should allow overriding the HTTP method', (done: any) => {
         const origin = 'vimeo.com'
-        const req = { headers: { origin }, method: 'OPTIONS', url: '/' }
+        const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
         // @ts-expect-error todo
-        const res = new http.ServerResponse({ method: 'OPTIONS' })
+        const res = new http.ServerResponse({method: 'OPTIONS'})
         server.handle(req, res)
         assert.equal(
           hasHeader(res, {
@@ -247,7 +247,7 @@ describe('Server', () => {
       let listener: any
 
       beforeEach(() => {
-        server = new Server({ path: '/test/output' })
+        server = new Server({path: '/test/output'})
         server.datastore = new FileStore({
           directory: './test/output',
         })

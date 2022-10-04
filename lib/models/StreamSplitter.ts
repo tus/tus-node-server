@@ -17,7 +17,7 @@ class FileStreamSplitter extends stream.Writable {
   maxChunkSize: any
   on: any
   part: any
-  constructor({ maxChunkSize, directory }: any, options: any) {
+  constructor({maxChunkSize, directory}: any, options: any) {
     super(options)
     this.maxChunkSize = maxChunkSize
     this.currentChunkPath = null
@@ -28,6 +28,7 @@ class FileStreamSplitter extends stream.Writable {
     this.part = 0
     this.on('error', this._finishChunk.bind(this))
   }
+
   _write(chunk: any, encoding: any, callback: any) {
     Promise.resolve()
       .then(() => {
@@ -36,7 +37,6 @@ class FileStreamSplitter extends stream.Writable {
         if (this.fileDescriptor === null) {
           return this._newChunk()
         }
-        return undefined
       })
       .then(() => {
         const overflow = this.currentChunkSize + chunk.length - this.maxChunkSize
@@ -52,6 +52,7 @@ class FileStreamSplitter extends stream.Writable {
             .then(() => callback())
             .catch(callback)
         }
+
         // The chunk fits in the max chunk size
         return this._writeChunk(chunk)
           .then(() => callback())
@@ -59,6 +60,7 @@ class FileStreamSplitter extends stream.Writable {
       })
       .catch(callback)
   }
+
   _final(callback: any) {
     if (this.fileDescriptor === null) {
       callback()
@@ -68,27 +70,32 @@ class FileStreamSplitter extends stream.Writable {
         .catch(callback)
     }
   }
+
   _writeChunk(chunk: any) {
     return new Promise((resolve, reject) => {
       fs.write(this.fileDescriptor, chunk, (err: any) => {
         if (err) {
           return reject(err)
         }
+
         this.currentChunkSize += chunk.length
         // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
         return resolve()
       })
     })
   }
+
   _finishChunk() {
     if (this.fileDescriptor === null) {
       return Promise.resolve()
     }
+
     return new Promise((resolve, reject) => {
       fs.close(this.fileDescriptor, (err: any) => {
         if (err) {
           return reject(err)
         }
+
         this.emit('chunkFinished', {
           path: this.currentChunkPath,
           size: this.currentChunkSize,
@@ -102,6 +109,7 @@ class FileStreamSplitter extends stream.Writable {
       })
     })
   }
+
   _newChunk() {
     return new Promise((resolve, reject) => {
       this.currentChunkPath = path.join(
@@ -112,6 +120,7 @@ class FileStreamSplitter extends stream.Writable {
         if (err) {
           return reject(err)
         }
+
         this.emit('chunkStarted', this.currentChunkPath)
         this.currentChunkSize = 0
         this.fileDescriptor = fd
@@ -121,7 +130,7 @@ class FileStreamSplitter extends stream.Writable {
     })
   }
 }
-export { FileStreamSplitter }
+export {FileStreamSplitter}
 export default {
   FileStreamSplitter,
 }

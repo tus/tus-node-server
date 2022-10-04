@@ -1,5 +1,5 @@
 import 'should'
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
 
@@ -18,6 +18,7 @@ export const shouldHaveStoreMethods = function () {
     })
   })
 }
+
 export const shouldCreateUploads = function () {
   describe('create', () => {
     const file = new File(
@@ -63,6 +64,7 @@ export const shouldCreateUploads = function () {
     })
   })
 }
+
 export const shouldRemoveUploads = function () {
   // @ts-expect-error TS(2554): Expected 4 arguments, but got 2.
   const file = new File('1234', '1000')
@@ -82,6 +84,7 @@ export const shouldRemoveUploads = function () {
     })
   })
 }
+
 export const shouldWriteUploads = function () {
   describe('write', () => {
     it('should reject write streams that can not be open', async function (this: any) {
@@ -126,6 +129,7 @@ export const shouldWriteUploads = function () {
     })
   })
 }
+
 export const shouldHandleOffset = function () {
   describe('getOffset', function (this: any) {
     const file = new File(
@@ -151,6 +155,7 @@ export const shouldHandleOffset = function () {
     })
   })
 }
+
 export const shouldDeclareUploadLength = function () {
   describe('declareUploadLength', () => {
     const file = new File(

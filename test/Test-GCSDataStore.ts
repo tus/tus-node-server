@@ -6,7 +6,7 @@ import * as shared from './Test-Stores.shared'
 
 describe('GCSDataStore', () => {
   before(function (this: any) {
-    this.testFileSize = 960244
+    this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
     this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
@@ -26,5 +26,5 @@ describe('GCSDataStore', () => {
   // shared.shouldRemoveUploads()
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
-  shared.shouldDeclareUploadLength() // creation-defer-length extension
+  shared.shouldDeclareUploadLength() // Creation-defer-length extension
 })

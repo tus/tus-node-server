@@ -1,4 +1,4 @@
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 
 import Uid from '../lib/models/Uid'
 
@@ -19,6 +19,7 @@ describe('Uid', () => {
       // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       ids[id] = true
     }
+
     done()
   })
 })

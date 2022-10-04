@@ -1,6 +1,6 @@
 import 'should'
 
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import http from 'node:http'
 
 import OptionsHandler from '../lib/handlers/OptionsHandler'
@@ -14,15 +14,15 @@ import {
 
 const hasHeader = (res: any, header: any) => {
   const key = Object.keys(header)[0]
-  return res._header.indexOf(`${key}: ${header[key]}`) > -1
+  return res._header.includes(`${key}: ${header[key]}`)
 }
 
 describe('OptionsHandler', () => {
   // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-  const store = new DataStore({ path: '/test/output' })
+  const store = new DataStore({path: '/test/output'})
   // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
   const handler = new OptionsHandler(store)
-  const req: { headers: Record<string, string> } = { headers: {} }
+  const req: {headers: Record<string, string>} = {headers: {}}
   // @ts-expect-error
   let res: http.ServerResponse<http.IncomingMessage> = new http.ServerResponse({
     method: 'OPTIONS',
@@ -31,7 +31,7 @@ describe('OptionsHandler', () => {
   beforeEach((done: any) => {
     const METHOD = 'OPTIONS'
     // @ts-expect-error
-    res = new http.ServerResponse({ method: METHOD })
+    res = new http.ServerResponse({method: METHOD})
     done()
   })
 

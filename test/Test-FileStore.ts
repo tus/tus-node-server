@@ -1,6 +1,6 @@
 import 'should'
 
-import { strict as assert } from 'node:assert'
+import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -14,7 +14,7 @@ import * as shared from './Test-Stores.shared'
 
 describe('FileStore', function (this: any) {
   before(function (this: any) {
-    this.testFileSize = 960244
+    this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
     this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
@@ -24,7 +24,7 @@ describe('FileStore', function (this: any) {
   beforeEach(function (this: any) {
     sinon.spy(fs, 'mkdir')
     this.datastore = new FileStore({
-      directory: `${this.storePath.substring(1)}`,
+      directory: `${this.storePath.slice(1)}`,
       configstore: new MemoryConfigstore(),
     })
   })
@@ -88,8 +88,8 @@ describe('FileStore', function (this: any) {
 
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
-  shared.shouldRemoveUploads() // termination extension
+  shared.shouldRemoveUploads() // Termination extension
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
-  shared.shouldDeclareUploadLength() // creation-defer-length extension
+  shared.shouldDeclareUploadLength() // Creation-defer-length extension
 })
