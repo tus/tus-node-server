@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
-  "include": ["lib/**/*"],
+  "include": ["index.ts", "lib/**/*"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "lib": ["es2020"],

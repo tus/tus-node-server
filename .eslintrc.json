@@ -21,5 +21,5 @@
     "unicorn/no-null": "off",
     "unicorn/filename-case": "off"
   },
-  "ignorePatterns": ["demo", "node_modules", "index.d.ts"]
+  "ignorePatterns": ["demo", "dist", "node_modules", "index.d.ts"]
 }

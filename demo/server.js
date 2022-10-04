@@ -4,11 +4,11 @@ const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
 
-const Server = require('../index').Server
-const FileStore = require('../index').FileStore
-const GCSDataStore = require('../index').GCSDataStore
-const S3Store = require('../index').S3Store
-const EVENTS = require('../index').EVENTS
+const Server = require('../dist/index').Server
+const FileStore = require('../dist/index').FileStore
+const GCSDataStore = require('../dist/index').GCSDataStore
+const S3Store = require('../dist/index').S3Store
+const EVENTS = require('../dist/index').EVENTS
 
 const options = {path: '/files'}
 

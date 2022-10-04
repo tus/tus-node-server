@@ -32,10 +32,12 @@
     "lib/"
   ],
   "scripts": {
+    "build": "tsc",
     "lint": "eslint --cache .",
     "format": "eslint --cache --fix . && prettier --write .",
     "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
     "test:local": "env-cmd npm run test",
+    "test:build": "tsc --noEmit",
     "test:with-coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "demo:gcs": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
@@ -74,6 +76,7 @@
     "sinon": "^13.0.1",
     "supertest": "^6.2.2",
     "ts-node": "^10.9.1",
+    "tsc": "^2.0.4",
     "tus-js-client": "^2.3.0",
     "typescript": "^4.8.4"
   },
