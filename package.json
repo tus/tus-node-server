@@ -3,6 +3,7 @@
   "name": "tus-node-server",
   "version": "0.8.1",
   "description": "Node.js tus server",
+  "packageManager": "yarn@3.2.3",
   "keywords": [
     "tus",
     "framework",

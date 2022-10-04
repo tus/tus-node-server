@@ -254,7 +254,7 @@ const server = new tus.Server({
 })
 ```
 
-## Development
+## Demo 
 
 Start the demo server using Local File Storage
 
@@ -269,3 +269,19 @@ $ npm run gcs_demo
 ```
 
 Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client)
+
+## Development
+
+We are using [Corepack][] so you don’t have to worry about installing the right package manager and to manage the version of [Yarn][].
+Corepack comes pre-installed with Node.js >=16.x, or can be installed through `npm`.
+You can run `corepack enable` to install a `yarn` executable in your `$PATH`, or prefix all yarn commands with `corepack yarn`.
+
+```sh
+corepack -v || npm i -g corepack
+yarn -v || corepack enable
+yarn install || corepack yarn install
+```
+
+[Corepack]: https://nodejs.org/api/corepack.html
+
+[Yarn]: https://yarnpkg.com/
