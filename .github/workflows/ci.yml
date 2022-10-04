@@ -59,10 +59,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Run linters
-      - run: npm run lint
+      - run: yarn lint
 
       - name: Run tests
-      - run: npm run test
+      - run: yarn test
         env:
           AWS_BUCKET: ${{secrets.AWS_BUCKET}}
           AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
