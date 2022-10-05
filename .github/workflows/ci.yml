@@ -39,16 +39,12 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-      - name: Install Node.js
+      - name: Use Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{matrix.node-version}}
       - name: Install dependencies
-        run: corepack yarn
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
+        run: corepack yarn install
       - name: Run linters
       - run: yarn lint
       - name: Run tests
