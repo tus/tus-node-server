@@ -1,7 +1,7 @@
 name: Node.js CI
 on:
   push:
-    branches: [master]
+    branches: [master, 1.x]
   pull_request_target:
     types: [opened, synchronize, reopened]
   pull_request:
@@ -29,8 +29,6 @@ jobs:
         run: ./.github/scripts/decrypt_secret.sh
         env:
           KEYFILE_PASSPHRASE: ${{secrets.KEYFILE_PASSPHRASE}}
-      - name: Checkout sources
-        uses: actions/checkout@v3
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(corepack yarn config get cacheFolder)"
