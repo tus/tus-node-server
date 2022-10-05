@@ -1,11 +1,9 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "tus-node-server",
-  "description": "Node.js tus server",
   "version": "0.8.1",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tus/tus-node-server.git"
-  },
+  "description": "Node.js tus server",
+  "packageManager": "yarn@3.2.3",
   "keywords": [
     "tus",
     "framework",
@@ -16,15 +14,17 @@
     "api",
     "server"
   ],
-  "author": "Ben Stahl <bhstahl@gmail.com>",
-  "license": "MIT",
+  "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": {
     "url": "https://github.com/tus/tus-node-server/issues"
   },
-  "homepage": "https://github.com/tus/tus-node-server#readme",
-  "engines": {
-    "node": ">=10.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tus/tus-node-server.git"
   },
+  "license": "MIT",
+  "author": "Ben Stahl <bhstahl@gmail.com>",
+  "main": "index.js",
   "files": [
     "LICENSE",
     "README.md",
@@ -32,37 +32,56 @@
     "index.d.ts",
     "lib/"
   ],
-  "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit",
+    "build": "tsc",
+    "lint": "eslint --cache .",
+    "format": "eslint --cache --fix . && prettier --write .",
+    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
     "test:local": "env-cmd npm run test",
-    "coverage": "nyc npm test",
+    "test:build": "tsc --noEmit",
+    "test:with-coverage": "nyc npm test",
     "demo": "node demo/server.js",
-    "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
-    "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
-    "lint": "eslint ."
-  },
-  "devDependencies": {
-    "@vimeo/eslint-config-player": "^5.0.1",
-    "babel-eslint": "^10.1.0",
-    "cross-env": "^7.0.3",
-    "env-cmd": "^10.1.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "istanbul": "^0.4.5",
-    "mocha": "^9.2.0",
-    "node-mocks-http": "^1.11.0",
-    "nyc": "^15.1.0",
-    "rimraf": "^3.0.2",
-    "should": "^13.2.3",
-    "sinon": "^13.0.1",
-    "supertest": "^6.2.2",
-    "tus-js-client": "^2.3.0"
+    "demo:gcs": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
+    "demo:s3": "cross-env DATA_STORE=S3Store node demo/server.js"
   },
   "dependencies": {
     "@google-cloud/storage": "^6.2.2",
     "aws-sdk": "^2.1064.0",
     "configstore": "^5.0.1",
     "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/configstore": "^6.0.0",
+    "@types/debug": "^4.1.7",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^18.7.23",
+    "@types/rimraf": "^3.0.2",
+    "@types/sinon": "^10.0.13",
+    "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/parser": "^5.38.1",
+    "cross-env": "^7.0.3",
+    "env-cmd": "^10.1.0",
+    "eslint": "^8.24.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-xo": "^0.42.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-unicorn": "^44.0.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^9.2.0",
+    "node-mocks-http": "^1.11.0",
+    "nyc": "^15.1.0",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "should": "^13.2.3",
+    "sinon": "^13.0.1",
+    "supertest": "^6.2.2",
+    "ts-node": "^10.9.1",
+    "tsc": "^2.0.4",
+    "tus-js-client": "^2.3.0",
+    "typescript": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=14.14"
   }
 }
