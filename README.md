@@ -126,7 +126,7 @@ const fastify = require('fastify')({ logger: true });
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
 fastify.addContentTypeParser(
-    'application/offset+octet-stream', async () => true
+    'application/offset+octet-stream', (request, payload, done) => done(null)
 );
 
 /**
