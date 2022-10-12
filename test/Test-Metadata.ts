@@ -1,5 +1,6 @@
 import {strict as assert} from 'node:assert'
-import Metadata from '../lib/models/Metadata'
+import {parse, stringify} from '../lib/models/Metadata'
+
 describe('Metadata', () => {
   it('parse valid metadata string', () => {
     const str =
@@ -11,7 +12,7 @@ describe('Metadata', () => {
       video: undefined,
       withWhitespace: undefined,
     }
-    const decoded = Metadata.parse(str)
+    const decoded = parse(str)
     assert.deepStrictEqual(decoded, obj)
   })
 
@@ -23,45 +24,39 @@ describe('Metadata', () => {
       video: undefined,
       withWhitespace: undefined,
     }
-    const encoded = Metadata.stringify(obj)
+    const encoded = stringify(obj)
 
     assert.strictEqual(encoded.split(',').length, Object.entries(obj).length)
   })
 
   it('verify metadata stringification', () => {
-    assert.strictEqual(
-      Metadata.stringify({filename: 'test.mp4'}),
-      'filename dGVzdC5tcDQ='
-    )
-    assert.strictEqual(Metadata.stringify({size: '960244'}), 'size OTYwMjQ0')
-    assert.strictEqual(Metadata.stringify({type: 'video/mp4'}), 'type dmlkZW8vbXA0')
+    assert.strictEqual(stringify({filename: 'test.mp4'}), 'filename dGVzdC5tcDQ=')
+    assert.strictEqual(stringify({size: '960244'}), 'size OTYwMjQ0')
+    assert.strictEqual(stringify({type: 'video/mp4'}), 'type dmlkZW8vbXA0')
     // Multiple valid options
-    assert.notStrictEqual(
-      ['video', 'video '].indexOf(Metadata.stringify({video: undefined})),
-      -1
-    )
+    assert.notStrictEqual(['video', 'video '].indexOf(stringify({video: undefined})), -1)
     assert.notStrictEqual(
       ['withWhitespace', 'withWhitespace '].indexOf(
-        Metadata.stringify({withWhitespace: undefined})
+        stringify({withWhitespace: undefined})
       ),
       -1
     )
   })
 
   it('verify metadata parsing', () => {
-    assert.deepStrictEqual(Metadata.parse('filename dGVzdC5tcDQ='), {
+    assert.deepStrictEqual(parse('filename dGVzdC5tcDQ='), {
       filename: 'test.mp4',
     })
-    assert.deepStrictEqual(Metadata.parse('size OTYwMjQ0'), {size: '960244'})
-    assert.deepStrictEqual(Metadata.parse('type dmlkZW8vbXA0'), {
+    assert.deepStrictEqual(parse('size OTYwMjQ0'), {size: '960244'})
+    assert.deepStrictEqual(parse('type dmlkZW8vbXA0'), {
       type: 'video/mp4',
     })
-    assert.deepStrictEqual(Metadata.parse('video'), {video: undefined})
-    assert.deepStrictEqual(Metadata.parse('video '), {video: undefined})
-    assert.deepStrictEqual(Metadata.parse('withWhitespace'), {
+    assert.deepStrictEqual(parse('video'), {video: undefined})
+    assert.deepStrictEqual(parse('video '), {video: undefined})
+    assert.deepStrictEqual(parse('withWhitespace'), {
       withWhitespace: undefined,
     })
-    assert.deepStrictEqual(Metadata.parse('withWhitespace '), {
+    assert.deepStrictEqual(parse('withWhitespace '), {
       withWhitespace: undefined,
     })
   })
@@ -72,49 +67,49 @@ describe('Metadata', () => {
       is_confidential: undefined,
     }
     // Object -> string -> object
-    assert.deepStrictEqual(Metadata.parse(Metadata.stringify(obj)), obj)
+    assert.deepStrictEqual(parse(stringify(obj)), obj)
   })
 
   describe('verify invalid metadata string', () => {
     it('duplicate keys', () => {
       assert.throws(() => {
-        Metadata.parse('filename dGVzdC5tcDQ=, filename cGFja2FnZS5qc29u')
+        parse('filename dGVzdC5tcDQ=, filename cGFja2FnZS5qc29u')
       })
       assert.throws(() => {
-        Metadata.parse('video ,video dHJ1ZQ==')
+        parse('video ,video dHJ1ZQ==')
       })
       assert.throws(() => {
-        Metadata.parse('size,size ')
+        parse('size,size ')
       })
     })
 
     it('invalid key', () => {
       assert.throws(() => {
-        Metadata.parse('🦁 ZW1vamk=')
+        parse('🦁 ZW1vamk=')
       })
       assert.throws(() => {
-        Metadata.parse('€¢ß')
+        parse('€¢ß')
       })
       assert.throws(() => {
-        Metadata.parse('test, te st ')
+        parse('test, te st ')
       })
       assert.throws(() => {
-        Metadata.parse('test,,test')
+        parse('test,,test')
       })
     })
 
     it('invalid base64 value', () => {
       assert.throws(() => {
-        Metadata.parse('key ZW1vamk')
+        parse('key ZW1vamk')
       }) // Value is not a multiple of 4 characters
       assert.throws(() => {
-        Metadata.parse('key invalid-base64==')
+        parse('key invalid-base64==')
       })
       assert.throws(() => {
-        Metadata.parse('key =ZW1vamk')
+        parse('key =ZW1vamk')
       }) // Padding can not be at the beginning
       assert.throws(() => {
-        Metadata.parse('key  ')
+        parse('key  ')
       }) // Only single whitespace is allowed
     })
   })

@@ -12,7 +12,7 @@ import type {SetRequired} from 'type-fest'
 
 const log = debug('tus-node-server:handlers:post')
 
-class PostHandler extends BaseHandler {
+export default class PostHandler extends BaseHandler {
   // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
   options!: SetRequired<ServerOptions, 'namingFunction'>
 
@@ -60,7 +60,6 @@ class PostHandler extends BaseHandler {
       throw ERRORS.FILE_WRITE_ERROR
     }
 
-    // TODO: what is the point of the File model if it just returns an object?
     const file = new File(file_id, upload_length, upload_defer_length, upload_metadata)
 
     const obj = await this.store.create(file)
@@ -92,5 +91,3 @@ class PostHandler extends BaseHandler {
     return this.write(res, 201, {Location: url, ...optional_headers})
   }
 }
-
-export default PostHandler

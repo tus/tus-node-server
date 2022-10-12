@@ -1,19 +1,14 @@
-/**
- * @fileOverview
- * Utility function for metdata manipulation
- *
- * @author Mitja Puzigaća <mitjap@gmail.com>
- */
 const ASCII_SPACE = ' '.codePointAt(0)
 const ASCII_COMMA = ','.codePointAt(0)
 const BASE64_REGEX = /^[\d+/A-Za-z]*={0,2}$/
-function validateKey(key: any) {
+
+export function validateKey(key: string) {
   if (key.length === 0) {
     return false
   }
 
   for (let i = 0; i < key.length; ++i) {
-    const charCodePoint = key.codePointAt(i)
+    const charCodePoint = key.codePointAt(i) as number
     if (
       charCodePoint > 127 ||
       charCodePoint === ASCII_SPACE ||
@@ -26,7 +21,7 @@ function validateKey(key: any) {
   return true
 }
 
-function validateValue(value: any) {
+export function validateValue(value: string) {
   if (value.length % 4 !== 0) {
     return false
   }
@@ -34,8 +29,9 @@ function validateValue(value: any) {
   return BASE64_REGEX.test(value)
 }
 
-function parse(str: any) {
-  const meta = {}
+export function parse(str: string) {
+  const meta: Record<string, string | undefined> = {}
+
   for (const pair of str.split(',')) {
     const tokens = pair.split(' ')
     const [key, value] = tokens
@@ -47,7 +43,6 @@ function parse(str: any) {
       const decodedValue = value
         ? Buffer.from(value, 'base64').toString('utf8')
         : undefined
-      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       meta[key] = decodedValue
     } else {
       throw new Error('Metadata string is not valid')
@@ -57,23 +52,15 @@ function parse(str: any) {
   return meta
 }
 
-function stringify(obj: any) {
+export function stringify(obj: Record<string, string | undefined>) {
   return Object.entries(obj)
     .map(([key, value]) => {
       if (value === undefined) {
         return key
       }
 
-      // @ts-expect-error TS(2580): Cannot find name 'Buffer'. Do you need to install ... Remove this comment to see the full error message
       const encodedValue = Buffer.from(value, 'utf8').toString('base64')
       return `${key} ${encodedValue}`
     })
     .join(',')
-}
-
-export {parse}
-export {stringify}
-export default {
-  parse,
-  stringify,
 }

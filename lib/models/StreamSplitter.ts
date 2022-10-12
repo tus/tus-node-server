@@ -7,17 +7,21 @@ function randomString(size: number) {
   return crypto.randomBytes(size).toString('base64url').slice(0, size)
 }
 
-class FileStreamSplitter extends stream.Writable {
-  currentChunkPath: any
-  currentChunkSize: any
-  directory: any
-  emit: any
-  fileDescriptor: any
-  filenameTemplate: any
-  maxChunkSize: any
-  on: any
-  part: any
-  constructor({maxChunkSize, directory}: any, options: any) {
+type Options = {
+  maxChunkSize: number
+  directory: string
+}
+
+export default class FileStreamSplitter extends stream.Writable {
+  directory: Options['directory']
+  currentChunkPath: string | null
+  currentChunkSize: number | null
+  fileDescriptor: number | null
+  filenameTemplate: string
+  maxChunkSize: Options['maxChunkSize']
+  part: number
+
+  constructor({maxChunkSize, directory}: Options, options: stream.WritableOptions) {
     super(options)
     this.maxChunkSize = maxChunkSize
     this.currentChunkPath = null
@@ -29,7 +33,12 @@ class FileStreamSplitter extends stream.Writable {
     this.on('error', this._finishChunk.bind(this))
   }
 
-  _write(chunk: any, encoding: any, callback: any) {
+  _write(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chunk: any,
+    _: globalThis.BufferEncoding,
+    callback: (error: Error | null) => void
+  ) {
     Promise.resolve()
       .then(() => {
         // In order to start writing a chunk, we must first create
@@ -49,19 +58,19 @@ class FileStreamSplitter extends stream.Writable {
             .then(() => {
               return this._writeChunk(chunk.slice(chunk.length - overflow, chunk.length))
             })
-            .then(() => callback())
+            .then(() => callback(null))
             .catch(callback)
         }
 
         // The chunk fits in the max chunk size
         return this._writeChunk(chunk)
-          .then(() => callback())
+          .then(() => callback(null))
           .catch(callback)
       })
       .catch(callback)
   }
 
-  _final(callback: any) {
+  _final(callback: () => void) {
     if (this.fileDescriptor === null) {
       callback()
     } else {
@@ -71,27 +80,27 @@ class FileStreamSplitter extends stream.Writable {
     }
   }
 
-  _writeChunk(chunk: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _writeChunk(chunk: any): Promise<void> {
     return new Promise((resolve, reject) => {
-      fs.write(this.fileDescriptor, chunk, (err: any) => {
+      fs.write(this.fileDescriptor as number, chunk, (err) => {
         if (err) {
           return reject(err)
         }
 
         this.currentChunkSize += chunk.length
-        // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
         return resolve()
       })
     })
   }
 
-  _finishChunk() {
+  _finishChunk(): Promise<void> {
     if (this.fileDescriptor === null) {
       return Promise.resolve()
     }
 
     return new Promise((resolve, reject) => {
-      fs.close(this.fileDescriptor, (err: any) => {
+      fs.close(this.fileDescriptor as number, (err) => {
         if (err) {
           return reject(err)
         }
@@ -104,19 +113,18 @@ class FileStreamSplitter extends stream.Writable {
         this.fileDescriptor = null
         this.currentChunkSize = null
         this.part += 1
-        // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
         return resolve()
       })
     })
   }
 
-  _newChunk() {
+  _newChunk(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.currentChunkPath = path.join(
         this.directory,
         `${this.filenameTemplate}-${this.part}`
       )
-      fs.open(this.currentChunkPath, 'w', (err: any, fd: any) => {
+      fs.open(this.currentChunkPath, 'w', (err, fd) => {
         if (err) {
           return reject(err)
         }
@@ -124,13 +132,8 @@ class FileStreamSplitter extends stream.Writable {
         this.emit('chunkStarted', this.currentChunkPath)
         this.currentChunkSize = 0
         this.fileDescriptor = fd
-        // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
         return resolve()
       })
     })
   }
-}
-export {FileStreamSplitter}
-export default {
-  FileStreamSplitter,
 }

@@ -6,7 +6,7 @@ import type {File} from '../../types'
  *
  * @author Mitja Puzigaća <mitjap@gmail.com>
  */
-class MemoryConfigstore {
+export default class MemoryConfigstore {
   data: Map<string, File> = new Map()
 
   get(key: string): File | undefined {
@@ -21,4 +21,3 @@ class MemoryConfigstore {
     return this.data.delete(key)
   }
 }
-export default MemoryConfigstore

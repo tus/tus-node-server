@@ -38,7 +38,7 @@
     "format": "eslint --cache --fix . && prettier --write .",
     "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
     "test:local": "env-cmd npm run test",
-    "test:build": "tsc --noEmit",
+    "test:build": "tsc --project tsconfig.dev.json",
     "test:with-coverage": "nyc npm test",
     "demo": "node demo/server.js",
     "demo:gcs": "cross-env DATA_STORE=GCSDataStore node demo/server.js",

@@ -6,7 +6,7 @@ import stream from 'node:stream'
 import aws from 'aws-sdk'
 
 import DataStore from './DataStore'
-import {FileStreamSplitter} from '../models/StreamSplitter'
+import FileStreamSplitter from '../models/StreamSplitter'
 import {ERRORS, TUS_RESUMABLE} from '../constants'
 
 import debug from 'debug'

@@ -7,7 +7,7 @@ import {ERRORS, EVENTS} from '../constants'
 
 const log = debug('tus-node-server:handlers:patch')
 
-class PatchHandler extends BaseHandler {
+export default class PatchHandler extends BaseHandler {
   /**
    * Write data to the DataStore and return the new offset.
    */
@@ -83,4 +83,3 @@ class PatchHandler extends BaseHandler {
   }
 }
 
-export default PatchHandler
