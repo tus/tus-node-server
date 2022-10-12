@@ -4,7 +4,6 @@
   "env": {"es6": true, "node": true, "mocha": true},
   "parser": "@typescript-eslint/parser",
   "extends": [
-    "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "xo",
     "plugin:unicorn/recommended",
@@ -12,7 +11,10 @@
   ],
   "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
+    "no-new":"off",
     "camelcase": "off",
+    "no-unused-vars": "off",
+    "no-warning-comments":"off",
     "prettier/prettier": "error",
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/ban-ts-comment": "warn",
@@ -21,5 +23,5 @@
     "unicorn/no-null": "off",
     "unicorn/filename-case": "off"
   },
-  "ignorePatterns": ["demo", "dist", "node_modules", "index.d.ts"]
+  "ignorePatterns": ["demo", "dist", "node_modules"]
 }

@@ -43,7 +43,6 @@ describe('FileStore', function (this: any) {
   })
 
   describe('create', () => {
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 2.
     const file = new File('1234', '1000')
 
     it('should reject when the directory doesnt exist', function (this: any) {

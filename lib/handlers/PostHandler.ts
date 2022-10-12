@@ -1,5 +1,4 @@
 import debug from 'debug'
-import type http from 'node:http'
 
 import BaseHandler from './BaseHandler'
 import File from '../models/File'
@@ -7,10 +6,17 @@ import Uid from '../models/Uid'
 import RequestValidator from '../validators/RequestValidator'
 import {EVENTS, ERRORS} from '../constants'
 
+import type http from 'node:http'
+import type {DataStore, ServerOptions} from '../../types'
+import type {SetRequired} from 'type-fest'
+
 const log = debug('tus-node-server:handlers:post')
 
 class PostHandler extends BaseHandler {
-  constructor(store: any, options: any) {
+  // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
+  options!: SetRequired<ServerOptions, 'namingFunction'>
+
+  constructor(store: DataStore, options: ServerOptions) {
     if (options.namingFunction && typeof options.namingFunction !== 'function') {
       throw new Error("'namingFunction' must be a function")
     }
@@ -30,9 +36,9 @@ class PostHandler extends BaseHandler {
       throw ERRORS.UNSUPPORTED_CONCATENATION_EXTENSION
     }
 
-    const upload_length = req.headers['upload-length']
-    const upload_defer_length = req.headers['upload-defer-length']
-    const upload_metadata = req.headers['upload-metadata']
+    const upload_length = req.headers['upload-length'] as string | undefined
+    const upload_defer_length = req.headers['upload-defer-length'] as string | undefined
+    const upload_metadata = req.headers['upload-metadata'] as string | undefined
 
     if (
       upload_defer_length !== undefined && // Throw error if extension is not supported
@@ -54,6 +60,7 @@ class PostHandler extends BaseHandler {
       throw ERRORS.FILE_WRITE_ERROR
     }
 
+    // TODO: what is the point of the File model if it just returns an object?
     const file = new File(file_id, upload_length, upload_defer_length, upload_metadata)
 
     const obj = await this.store.create(file)

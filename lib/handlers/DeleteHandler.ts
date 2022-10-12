@@ -1,15 +1,13 @@
+import type http from 'node:http'
+
 import BaseHandler from './BaseHandler'
 import {ERRORS, EVENTS} from '../constants'
-class DeleteHandler extends BaseHandler {
-  emit: any
-  /**
-   * Removes a file in the DataStore.
-   *
-   * @param  {object} req http.incomingMessage
-   * @param  {object} res http.ServerResponse
-   * @return {function}
-   */
-  async send(req: any, res: any) {
+
+export default class DeleteHandler extends BaseHandler {
+  async send(
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ): Promise<http.ServerResponse> {
     const file_id = this.getFileIdFromRequest(req)
     if (file_id === false) {
       throw ERRORS.FILE_NOT_FOUND
@@ -20,4 +18,3 @@ class DeleteHandler extends BaseHandler {
     return this.write(res, 204, {})
   }
 }
-export default DeleteHandler

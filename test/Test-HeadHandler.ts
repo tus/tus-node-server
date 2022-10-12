@@ -17,14 +17,15 @@ describe('HeadHandler', () => {
     headers: {},
     url: '',
   }
-  // @ts-expect-error
+  // @ts-expect-error todo
   let res: http.ServerResponse<http.IncomingMessage> = new http.ServerResponse({
     method: 'HEAD',
   })
 
   beforeEach(() => {
+    // @ts-expect-error this would return an incorrect url?
     req = {headers: {}, url: handler.generateUrl({}, '1234')}
-    // @ts-expect-error
+    // @ts-expect-error todo
     res = new http.ServerResponse({method: 'HEAD'})
   })
 
@@ -54,7 +55,6 @@ describe('HeadHandler', () => {
       upload_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
     assert.equal(hasHeader(res, {'Upload-Length': file.upload_length}), true)
@@ -68,7 +68,6 @@ describe('HeadHandler', () => {
       upload_defer_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
     assert.equal(hasHeader(res, {'Upload-Defer-Length': file.upload_defer_length}), true)
@@ -82,7 +81,6 @@ describe('HeadHandler', () => {
       upload_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
     assert.equal(hasHeader(res, {'Upload-Metadata': file.upload_metadata}), true)
@@ -90,7 +88,6 @@ describe('HeadHandler', () => {
 
   it('should resolve without metadata', async () => {
     const file = {id: '1234', size: 0, upload_length: '1'}
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
     assert.equal(res.hasHeader('Upload-Metadata'), false)

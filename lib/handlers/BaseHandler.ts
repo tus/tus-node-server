@@ -1,9 +1,13 @@
 import EventEmitter from 'node:events'
 
-class BaseHandler extends EventEmitter {
-  options: any
-  store: any
-  constructor(store: any, options: any) {
+import type {DataStore, ServerOptions} from '../../types'
+import type http from 'node:http'
+
+export default class BaseHandler extends EventEmitter {
+  options: ServerOptions
+  store: DataStore
+
+  constructor(store: DataStore, options: ServerOptions) {
     super()
     if (!store) {
       throw new Error('Store must be defined')
@@ -13,37 +17,33 @@ class BaseHandler extends EventEmitter {
     this.options = options
   }
 
-  /**
-   * Wrapper on http.ServerResponse.
-   *
-   * @param  {object} res http.ServerResponse
-   * @param  {integer} status
-   * @param  {object} headers
-   * @param  {string} body
-   * @return {ServerResponse}
-   */
-  write(res: any, status: any, headers = {}, body?: any) {
-    body = body ? body : ''
+  write(
+    res: http.ServerResponse,
+    status: number,
+    headers = {},
+    body = ''
+  ): http.ServerResponse {
     headers = status === 204 ? headers : {...headers, 'Content-Length': body.length}
     res.writeHead(status, headers)
     res.write(body)
     return res.end()
   }
 
-  generateUrl(req: any, file_id: any) {
-    return this.options.relativeLocation
-      ? `${req.baseUrl || ''}${this.options.path}/${file_id}`
-      : `//${req.headers.host}${req.baseUrl || ''}${this.options.path}/${file_id}`
+  generateUrl(req: http.IncomingMessage, file_id: string) {
+    if (this.options.relativeLocation) {
+      // TODO
+      // @ts-expect-error baseUrl doesn't exist? Should this be `.url`?
+      return `${req.baseUrl || ''}${this.options.path}/${file_id}`
+    }
+
+    // @ts-expect-error baseUrl doesn't exist? Should this be `.url`?
+    return `//${req.headers.host}${req.baseUrl || ''}${this.options.path}/${file_id}`
   }
 
-  /**
-   * Extract the file id from the request
-   *
-   * @param  {object} req http.incomingMessage
-   * @return {bool|string}
-   */
-  getFileIdFromRequest(req: any) {
+  getFileIdFromRequest(req: http.IncomingMessage) {
+    // @ts-expect-error baseUrl doesn't exist? Should this be `.url`?
     const re = new RegExp(`${req.baseUrl || ''}${this.options.path}\\/(\\S+)\\/?`)
+    // @ts-expect-error originalUrl doesn't exist?
     const match = (req.originalUrl || req.url).match(re)
     if (!match) {
       return false
@@ -53,4 +53,3 @@ class BaseHandler extends EventEmitter {
     return file_id
   }
 }
-export default BaseHandler

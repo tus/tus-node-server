@@ -9,6 +9,11 @@ import DataStore from '../lib/stores/DataStore'
 import PostHandler from '../lib/handlers/PostHandler'
 import {EVENTS} from '../lib/constants'
 
+const SERVER_OPTIONS = {
+  path: '/test',
+  namingFunction: () => '1234',
+}
+
 const hasHeader = (res: any, header: any) => {
   const key = Object.keys(header)[0]
   return res._header.includes(`${key}: ${header[key]}`)
@@ -35,7 +40,7 @@ describe('PostHandler', () => {
         new PostHandler(fake_store)
       }, Error)
       assert.doesNotThrow(() => {
-        new PostHandler(fake_store, {namingFunction: () => '1234'})
+        new PostHandler(fake_store, SERVER_OPTIONS)
       })
     })
   })
@@ -43,20 +48,20 @@ describe('PostHandler', () => {
   describe('send()', () => {
     describe('test errors', () => {
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both missing', async () => {
-        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {}
         return assert.rejects(() => handler.send(req, res), {status_code: 400})
       })
 
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both present', async () => {
-        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-length': '512', 'upload-defer-length': '1'}
         return assert.rejects(() => handler.send(req, res), {status_code: 400})
       })
 
       it("must 501 if the 'concatenation' extension is not supported", async () => {
-        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-concat': 'partial'}
         return assert.rejects(() => handler.send(req, res), {status_code: 501})
       })
@@ -64,6 +69,7 @@ describe('PostHandler', () => {
       it('should send error when naming function throws', async () => {
         const fake_store = sinon.createStubInstance(DataStore)
         const handler = new PostHandler(fake_store, {
+          path: '/test',
           namingFunction: sinon.stub().throws(),
         })
 
@@ -74,7 +80,7 @@ describe('PostHandler', () => {
       it('should call custom namingFunction', async () => {
         const fake_store = sinon.createStubInstance(DataStore)
         const namingFunction = sinon.stub().returns('1234')
-        const handler = new PostHandler(fake_store, {namingFunction})
+        const handler = new PostHandler(fake_store, {path: '/test/', namingFunction})
 
         req.headers = {'upload-length': 1000}
         await handler.send(req, res)
@@ -85,7 +91,7 @@ describe('PostHandler', () => {
         const fake_store = sinon.createStubInstance(DataStore)
         fake_store.create.rejects({status_code: 500})
 
-        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {'upload-length': 1000}
         return assert.rejects(() => handler.send(req, res), {status_code: 500})
@@ -113,9 +119,10 @@ describe('PostHandler', () => {
         const fake_store = sinon.createStubInstance(DataStore)
 
         const file = {}
+        // @ts-expect-error todo
         fake_store.create.resolves(file)
 
-        const handler = new PostHandler(fake_store, {namingFunction: () => '1234'})
+        const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         handler.on(EVENTS.EVENT_FILE_CREATED, (obj) => {
           assert.strictEqual(obj.file, file)
           done()
@@ -129,6 +136,7 @@ describe('PostHandler', () => {
         const fake_store = sinon.createStubInstance(DataStore)
 
         const file = {}
+        // @ts-expect-error todo
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
@@ -148,6 +156,7 @@ describe('PostHandler', () => {
         const fake_store = sinon.createStubInstance(DataStore)
 
         const file = {}
+        // @ts-expect-error todo
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
@@ -173,7 +182,7 @@ describe('PostHandler', () => {
         fake_store.write.resolves(upload_length)
 
         const handler = new PostHandler(fake_store, {path: '/test/output'})
-        handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
+        handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, () => {
           done()
         })
 
@@ -195,8 +204,8 @@ describe('PostHandler', () => {
         fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
         const handler = new PostHandler(fake_store, {path: '/test/output'})
-        handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, (obj) => {
-          done(new Error())
+        handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, () => {
+          done(new Error('test'))
         })
 
         req.headers = {

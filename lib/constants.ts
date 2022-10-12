@@ -1,4 +1,4 @@
-export const REQUEST_METHODS = ['POST', 'HEAD', 'PATCH', 'OPTIONS', 'DELETE']
+export const REQUEST_METHODS = ['POST', 'HEAD', 'PATCH', 'OPTIONS', 'DELETE'] as const
 export const HEADERS = [
   'Authorization',
   'Content-Type',
@@ -14,8 +14,10 @@ export const HEADERS = [
   'Upload-Offset',
   'X-HTTP-Method-Override',
   'X-Requested-With',
-]
-export const HEADERS_LOWERCASE = HEADERS.map((header) => header.toLowerCase())
+] as const
+export const HEADERS_LOWERCASE = HEADERS.map((header) => {
+  return header.toLowerCase()
+}) as Array<Lowercase<typeof HEADERS[number]>>
 export const ERRORS = {
   MISSING_OFFSET: {
     status_code: 403,
@@ -57,20 +59,20 @@ export const ERRORS = {
     status_code: 501,
     body: 'creation-defer-length extension is not (yet) supported.\n',
   },
-}
-export const EVENT_ENDPOINT_CREATED = 'EVENT_ENDPOINT_CREATED'
-export const EVENT_FILE_CREATED = 'EVENT_FILE_CREATED'
-export const EVENT_UPLOAD_COMPLETE = 'EVENT_UPLOAD_COMPLETE'
-export const EVENT_FILE_DELETED = 'EVENT_FILE_DELETED'
+} as const
+export const EVENT_ENDPOINT_CREATED = 'EVENT_ENDPOINT_CREATED' as const
+export const EVENT_FILE_CREATED = 'EVENT_FILE_CREATED' as const
+export const EVENT_UPLOAD_COMPLETE = 'EVENT_UPLOAD_COMPLETE' as const
+export const EVENT_FILE_DELETED = 'EVENT_FILE_DELETED' as const
 export const EVENTS = {
   EVENT_ENDPOINT_CREATED,
   EVENT_FILE_CREATED,
   EVENT_UPLOAD_COMPLETE,
   EVENT_FILE_DELETED,
-}
+} as const
 export const ALLOWED_HEADERS = HEADERS.join(', ')
 export const ALLOWED_METHODS = REQUEST_METHODS.join(', ')
 export const EXPOSED_HEADERS = HEADERS.join(', ')
-export const MAX_AGE = 86_400
-export const TUS_RESUMABLE = '1.0.0'
-export const TUS_VERSION = ['1.0.0']
+export const MAX_AGE = 86_400 as const
+export const TUS_RESUMABLE = '1.0.0' as const
+export const TUS_VERSION = ['1.0.0'] as const

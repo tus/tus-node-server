@@ -27,7 +27,6 @@ export const shouldCreateUploads = function () {
       undefined,
       'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
     )
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 3.
     const file_defered = new File('1234', undefined, '1')
 
     it('should resolve to file', async function () {
@@ -39,25 +38,25 @@ export const shouldCreateUploads = function () {
       assert.equal(this.datastore.hasExtension('creation'), true)
     })
 
-    it('should create new upload resource', async function (this: any) {
+    it('should create new upload resource', async function () {
       await this.datastore.create(file)
       const data = await this.datastore.getOffset(file.id)
       assert.equal(data.size, 0)
     })
 
-    it('should store `upload_length` when creating new resource', async function (this: any) {
+    it('should store `upload_length` when creating new resource', async function () {
       await this.datastore.create(file)
       const data = await this.datastore.getOffset(file.id)
       assert.strictEqual(data.upload_length, file.upload_length)
     })
 
-    it('should store `upload_defer_length` when creating new resource', async function (this: any) {
+    it('should store `upload_defer_length` when creating new resource', async function () {
       await this.datastore.create(file_defered)
       const data = await this.datastore.getOffset(file.id)
       assert.strictEqual(data.upload_defer_length, file_defered.upload_defer_length)
     })
 
-    it('should store `upload_metadata` when creating new resource', async function (this: any) {
+    it('should store `upload_metadata` when creating new resource', async function () {
       await this.datastore.create(file)
       const data = await this.datastore.getOffset(file.id)
       assert.strictEqual(data.upload_metadata, file.upload_metadata)
@@ -66,19 +65,18 @@ export const shouldCreateUploads = function () {
 }
 
 export const shouldRemoveUploads = function () {
-  // @ts-expect-error TS(2554): Expected 4 arguments, but got 2.
   const file = new File('1234', '1000')
 
   describe('remove (termination extension)', () => {
-    it("should report 'termination' extension", function (this: any) {
+    it("should report 'termination' extension", function () {
       assert.equal(this.datastore.hasExtension('termination'), true)
     })
 
-    it('should reject when the file does not exist', function (this: any) {
+    it('should reject when the file does not exist', function () {
       return this.datastore.remove('doesnt_exist').should.be.rejected()
     })
 
-    it('should delete the file when it does exist', async function (this: any) {
+    it('should delete the file when it does exist', async function () {
       await this.datastore.create(file)
       return this.datastore.remove(file.id)
     })
@@ -87,17 +85,17 @@ export const shouldRemoveUploads = function () {
 
 export const shouldWriteUploads = function () {
   describe('write', () => {
-    it('should reject write streams that can not be open', async function (this: any) {
+    it('should reject write streams that can not be open', async function () {
       const stream = fs.createReadStream(this.testFilePath)
       return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
 
-    it('should reject whean readable stream has an error', async function (this: any) {
+    it('should reject whean readable stream has an error', async function () {
       const stream = fs.createReadStream(this.testFilePath)
       return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
 
-    it('should write a stream and resolve the new offset', async function (this: any) {
+    it('should write a stream and resolve the new offset', async function () {
       const file = new File(
         '1234',
         `${this.testFileSize}`,
@@ -110,7 +108,7 @@ export const shouldWriteUploads = function () {
       assert.equal(offset, this.testFileSize)
     })
 
-    it('should reject when stream is destroyed', async function (this: any) {
+    it('should reject when stream is destroyed', async function () {
       const file = new File(
         '1234',
         `${this.testFileSize}`,
@@ -131,19 +129,20 @@ export const shouldWriteUploads = function () {
 }
 
 export const shouldHandleOffset = function () {
-  describe('getOffset', function (this: any) {
+  describe('getOffset', function () {
     const file = new File(
       '1234',
+      // @ts-expect-error todo
       `${this.testFileSize}`,
       undefined,
       'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
     )
 
-    it('should reject non-existant files', function (this: any) {
+    it('should reject non-existant files', function () {
       return this.datastore.getOffset('doesnt_exist').should.be.rejected()
     })
 
-    it('should resolve the stats for existing files', async function (this: any) {
+    it('should resolve the stats for existing files', async function () {
       await this.datastore.create(file)
       const offset = await this.datastore.write(
         fs.createReadStream(this.testFilePath),
@@ -165,11 +164,11 @@ export const shouldDeclareUploadLength = function () {
       'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
     )
 
-    it('should reject non-existant files', function (this: any) {
+    it('should reject non-existant files', function () {
       return this.datastore.declareUploadLength('doesnt_exist', '10').should.be.rejected()
     })
 
-    it('should update upload_length after declaring upload length', async function (this: any) {
+    it('should update upload_length after declaring upload length', async function () {
       await this.datastore.create(file)
       let data = await this.datastore.getOffset(file.id)
       assert.equal(data.upload_length, undefined)

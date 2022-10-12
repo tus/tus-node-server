@@ -1,24 +1,23 @@
 import EventEmitter from 'node:events'
+import type stream from 'node:stream'
+import type {File} from '../../types'
 
-class DataStore extends EventEmitter {
-  _extensions: any
+export default class DataStore extends EventEmitter {
+  private _extensions: string[] = []
+
   get extensions() {
-    if (!this._extensions) {
-      return null
-    }
-
-    return this._extensions.join(',')
+    return this._extensions
   }
 
-  set extensions(extensions_array) {
-    if (!Array.isArray(extensions_array)) {
+  set extensions(extensionsArray: string[]) {
+    if (!Array.isArray(extensionsArray)) {
       throw new TypeError('DataStore extensions must be an array')
     }
 
-    this._extensions = extensions_array
+    this._extensions = extensionsArray
   }
 
-  hasExtension(extension: any) {
+  hasExtension(extension: string) {
     return this._extensions && this._extensions.includes(extension)
   }
 
@@ -27,32 +26,27 @@ class DataStore extends EventEmitter {
    * file, implementing the creation extension.
    *
    * http://tus.io/protocols/resumable-upload.html#creation
-   *
-   * @param  {File} file
-   * @return {Promise} offset
    */
-  async create(file: any) {
+  async create(file: File) {
     return file
   }
+
   /**
    * Called in DELETE requests. This method just deletes the file from the store.
    * http://tus.io/protocols/resumable-upload.html#termination
    */
-  // eslint-disable-next-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async remove(file_id: string) {}
+
   /**
    * Called in PATCH requests. This method should write data
    * to the DataStore file, and possibly implement the
    * concatenation extension.
    *
    * http://tus.io/protocols/resumable-upload.html#concatenation
-   *
-   * @param {object} stream stream.Readable
-   * @param {string} file_id Name of file
-   * @param {integer} offset starting offset
-   * @return {Promise}
    */
-  async write(stream: any, file_id: any, offset: any) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async write(stream: stream.Readable, file_id: string, offset: number) {
     return 0
   }
 
@@ -60,21 +54,14 @@ class DataStore extends EventEmitter {
    * Called in HEAD requests. This method should return the bytes
    * writen to the DataStore, for the client to know where to resume
    * the upload.
-   *
-   * @param {string} file_id Name of file
-   * @return {Promise} bytes written
    */
-  async getOffset(file_id: any) {
-    return {size: 0, upload_length: 0}
+  async getOffset(file_id: string): Promise<File> {
+    return {id: file_id, size: 0, upload_length: '0'}
   }
+
   /**
    * Called in PATCH requests when upload length is known after being defered.
-   *
-   * @param {string} file_id Name of file
-   * @param {number} upload_length Declared upload length
-   * @return {Promise}
    */
-  // eslint-disable-next-line
-  async declareUploadLength(file_id: any, upload_length: any) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async declareUploadLength(file_id: string, upload_length: string) {}
 }
-export default DataStore

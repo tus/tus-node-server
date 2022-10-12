@@ -8,13 +8,15 @@ describe('DataStore', () => {
   const datastore = new DataStore({path: '/test/output'})
   it('should provide extensions', (done: any) => {
     datastore.should.have.property('extensions')
-    assert.equal(datastore.extensions, null)
+    assert.equal(Array.isArray(datastore.extensions), true)
+    assert.equal(datastore.extensions.length, 0)
     datastore.extensions = ['creation', 'expiration']
-    assert.equal(datastore.extensions, 'creation,expiration')
+    assert.deepStrictEqual(datastore.extensions, ['creation', 'expiration'])
     done()
   })
   it('extensions must be an array', (done: any) => {
     assert.throws(() => {
+      // @ts-expect-error wrong type
       datastore.extensions = 'creation, expiration'
     }, Error)
     done()

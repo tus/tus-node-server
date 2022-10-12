@@ -42,6 +42,7 @@ describe('OptionsHandler', () => {
       'Access-Control-Expose-Headers': EXPOSED_HEADERS,
       'Access-Control-Max-Age': MAX_AGE,
     }
+    // @ts-ignore todo
     handler.send(req, res)
     assert.equal(hasHeader(res, headers), true)
     assert.equal(res.statusCode, 204)
@@ -55,6 +56,7 @@ describe('OptionsHandler', () => {
     store.extensions = ['creation', 'expiration']
     // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
     const handler = new OptionsHandler(store)
+    // @ts-ignore todo
     handler.send(req, res)
     assert.equal(hasHeader(res, headers), true)
     done()

@@ -5301,6 +5301,7 @@ __metadata:
     ts-node: ^10.9.1
     tsc: ^2.0.4
     tus-js-client: ^2.3.0
+    type-fest: ^3.1.0
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
@@ -5348,6 +5349,13 @@ __metadata:
   version: 0.8.1
   resolution: "type-fest@npm:0.8.1"
   checksum: d61c4b2eba24009033ae4500d7d818a94fd6d1b481a8111612ee141400d5f1db46f199c014766b9fa9b31a6a7374d96fc748c6d688a78a3ce5a33123839becb7
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "type-fest@npm:3.1.0"
+  checksum: 22a0402afafab05edb7b45456d6ebfdcfc616f84a98266857e89bd656a14b5007e86d1a50b12746624b6aafb17dad3f437065df8adfa1b04bb970894db1fe940
   languageName: node
   linkType: hard
 
