@@ -21,6 +21,7 @@ declare interface DataStoreOptions {}
 declare interface FileStoreOptions extends DataStoreOptions {
     directory: string;
     configstore?: Configstore;
+    expirationPeriodMinutes?: number;
 }
 
 declare interface GCStoreOptions extends DataStoreOptions {
@@ -52,6 +53,7 @@ declare class File {
         upload_defer_length: string,
         upload_metadata: string
     );
+    creation_date: Date;
 }
 
 /**
@@ -72,6 +74,7 @@ export declare class DataStore extends EventEmitter {
         offset: number
     ): Promise<number>;
     getOffset(file_id: string): Promise<IFile>;
+    deleteExpired(): Promise<void>;
 }
 
 export declare class DeferableLengthDatastore extends DataStore {
@@ -113,6 +116,7 @@ export declare class Server extends EventEmitter {
         res: http.ServerResponse
     ): http.ServerResponse;
     listen(): http.Server;
+    cleanUpExpiredUploads(): Promise<void>;
 }
 
 export declare const EVENTS: {
