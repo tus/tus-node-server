@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as http from "http";
-import { Credentials } from 'aws-sdk'
+import { RemoteCredentials } from 'aws-sdk'
 
 
 declare interface Configstore {
@@ -99,7 +99,7 @@ export declare class GCSDataStore extends DataStore {
  */
 export declare class S3Store extends DataStore {
     constructor(options: S3StoreOptions & { accessKeyId: string, secretAccessKey: string });
-    constructor(options: S3StoreOptions & { credentials: Credentials });
+    constructor(options: S3StoreOptions & { credentials: RemoteCredentials });
     getOffset(file_id: string, with_parts?: boolean): Promise<any>;
 }
 
