@@ -15,7 +15,7 @@ $ npm install tus-node-server
 - **Local File Storage**
     ```js
     server.datastore = new tus.FileStore({
-        path: '/files'
+        directory: './files'
     });
     ```
 
@@ -23,7 +23,6 @@ $ npm install tus-node-server
     ```js
 
     server.datastore = new tus.GCSDataStore({
-        path: '/files',
         projectId: 'project-id',
         keyFilename: 'path/to/your/keyfile.json',
         bucket: 'bucket-name',
@@ -36,13 +35,11 @@ $ npm install tus-node-server
     ```js
 
     server.datastore = new tus.S3Store({
-        path: '/files',
         bucket: 'bucket-name',
         accessKeyId: 'access-key-id',
         secretAccessKey: 'secret-access-key',
         region: 'eu-west-1',
         partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
-        tmpDirPrefix: 'tus-s3-store',
     });
     ```
 
@@ -78,10 +75,8 @@ $ docker run -p 1080:8080 -d bhstahl/tus-node-deploy
 ```js
 const tus = require('tus-node-server');
 
-const server = new tus.Server();
-server.datastore = new tus.FileStore({
-    path: '/files'
-});
+const server = new tus.Server({ path: '/files' });
+server.datastore = new tus.FileStore({ directory: './files' });
 
 const host = '127.0.0.1';
 const port = 1080;
@@ -94,10 +89,8 @@ server.listen({ host, port }, () => {
 
 ```js
 const tus = require('tus-node-server');
-const server = new tus.Server();
-server.datastore = new tus.FileStore({
-    path: '/files'
-});
+const server = new tus.Server({ path: '/files' });
+server.datastore = new tus.FileStore({ directory: './files' });
 
 const express = require('express');
 const app = express();
@@ -117,15 +110,14 @@ const http = require('http');
 const url = require('url');
 const Koa = require('koa')
 const tus = require('tus-node-server');
-const tusServer = new tus.Server();
+
+const tusServer = new tus.Server({ path: '/files' });
+tusServer.datastore = new tus.FileStore({ directory: './files' });
 
 const app = new Koa();
 const appCallback = app.callback();
 const port = 1080;
 
-tusServer.datastore = new tus.FileStore({
-    path: '/files',
-});
 
 const server = http.createServer((req, res) => {
     const urlPath = url.parse(req.url).pathname;
@@ -145,24 +137,22 @@ server.listen(port)
 
 ```js
 const tus = require('tus-node-server');
-const tusServer = new tus.Server();
-tusServer.datastore = new tus.FileStore({
-    path: '/files',
-});
+const tusServer = new tus.Server({ path: '/files' });
+tusServer.datastore = new tus.FileStore({ directory: './files' });
 
 const fastify = require('fastify')({ logger: true });
 
 /**
- * add new content-type to fastify forewards request 
+ * add new content-type to fastify forewards request
  * without any parser to leave body untouched
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
 fastify.addContentTypeParser(
-    'application/offset+octet-stream', async () => true
+    'application/offset+octet-stream', (request, payload, done) => done(null)
 );
 
 /**
- * let tus handle preparation and filehandling requests 
+ * let tus handle preparation and filehandling requests
  * fastify exposes raw nodejs http req/res via .raw property
  * @see https://www.fastify.io/docs/latest/Reference/Request/
  * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
@@ -188,10 +178,12 @@ fastify.listen(3000, (err) => {
 Execute code when lifecycle events happen by adding event handlers to your server.
 
 ```js
-const Server = require('tus-node-server').Server;
+const tus = require('tus-node-server');
 const EVENTS = require('tus-node-server').EVENTS;
 
-const server = new Server();
+const server = new tus.Server({ path: '/files' });
+server.datastore = new tus.FileStore({ directory: './files' });
+
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     console.log(`Upload complete for file ${event.file.id}`);
 });
@@ -231,24 +223,26 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
         }
     }
     ```
-    
+
 - `EVENT_FILE_DELETED`: Fired when a `DELETE` request finishes deleting the file
 
     _Example payload:_
     ```
     {
         file_id: '7b26bf4d22cf7198d3b3706bf0379794'
-           
+
     }
     ```
 
 #### Custom `GET` handlers:
 Add custom `GET` handlers to suit your needs, similar to [Express routing](https://expressjs.com/en/guide/routing.html).
 ```js
-const server = new Server();
+const server = new tus.Server({ path: '/files' });
+server.datastore = new tus.FileStore({ directory: './files' });
+
 server.get('/uploads', (req, res) => {
     // Read from your DataStore
-    fs.readdir(server.datastore.path, (err, files) => {
+    fs.readdir(server.datastore.directory, (err, files) => {
         // Format the JSON response and send it
     }
 });
@@ -257,7 +251,6 @@ server.get('/uploads', (req, res) => {
 #### Custom file names:
 
 The default naming of files is a random crypto hex string. When using your own `namingFunction`, make sure to create URL friendly names such as removing spaces.
-
 ```js
 const crypto = require('crypto');
 
@@ -267,9 +260,9 @@ const randomString = (req) => {
     return crypto.randomBytes(16).toString('hex');
 }
 
-server.datastore = new tus.FileStore({
+const server = new tus.Server({
     path: '/files',
-    namingFunction: randomString
+    namingFunction: randomString,
 });
 ```
 

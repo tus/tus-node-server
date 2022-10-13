@@ -15,9 +15,7 @@ describe('S3DataStore', function () {
   })
 
   beforeEach(function() {
-    this.server = new Server()
-    this.server.datastore = new S3Store({
-      path: this.storePath,
+    this.datastore = new S3Store({
       bucket: process.env.AWS_BUCKET,
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -32,4 +30,5 @@ describe('S3DataStore', function () {
   // shared.shouldRemoveUploads()
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
+  shared.shouldDeclareUploadLength() // creation-defer-length extension
 })

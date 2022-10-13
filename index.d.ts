@@ -1,20 +1,28 @@
 import { EventEmitter } from "events";
-import * as fs from "fs";
 import * as http from "http";
 import { Credentials } from 'aws-sdk'
 
 
+declare interface Configstore {
+    get(key: string) : Promise<IFile | undefined> | IFile | undefined;
+    set(key: string, value: IFile) : Promise<void> | void;
+    delete(key: string) : Promise<boolean> | boolean;
+}
+
+declare interface ServerOptions {
+    path: string;
+    relativeLocation?: boolean;
+    namingFunction?: () => string;
+}
+
 /**
  * arguments of constructor which in class extend DataStore
  */
-declare interface DataStoreOptions {
-    path: string;
-    namingFunction?: (req: http.IncomingMessage) => string;
-    relativeLocation?: boolean;
-}
+declare interface DataStoreOptions {}
 
 declare interface FileStoreOptions extends DataStoreOptions {
-    directory?: string;
+    directory: string;
+    configstore?: Configstore;
 }
 
 declare interface GCStoreOptions extends DataStoreOptions {
@@ -30,16 +38,20 @@ declare interface S3StoreOptions extends DataStoreOptions {
     partSize: number;
 }
 
-declare class File {
+declare interface IFile {
     id: string;
-    upload_length: any;
-    upload_defer_length: any;
-    upload_metadata: any;
+    upload_length: string;
+    upload_defer_length: string;
+    upload_metadata: string;
+    size: number
+}
+
+declare class File {
     constructor(
         file_id: string,
-        upload_length: any,
-        upload_defer_length: any,
-        upload_metadata: any
+        upload_length: string,
+        upload_defer_length: string,
+        upload_metadata: string
     );
 }
 
@@ -48,24 +60,31 @@ declare class File {
  */
 export declare class DataStore extends EventEmitter {
     constructor(options: DataStoreOptions);
-    get extensions(): any;
-    set extensions(extensions_array: any);
-    create(req: Partial<http.IncomingMessage>): Promise<any>;
+    // TODO: get and set should both be string[]
+    // @ts-expect-error The return type of a 'get' accessor must be assignable to its 'set' accessor type
+    get extensions(): string;
+    set extensions(extensions_array: string[]);
+    hasExtension(extension: string): boolean;
+    create(file: File): Promise<IFile>;
+    remove(file_id: string) : Promise<any>;
     write(
-        req: http.IncomingMessage,
-        file_id?: string,
-        offset?: number
-    ): Promise<any>;
-    getOffset(file_id: string): Promise<any>;
+        stream: ReadableStream,
+        file_id: string,
+        offset: number
+    ): Promise<number>;
+    getOffset(file_id: string): Promise<IFile>;
+}
+
+export declare class DeferableLengthDatastore extends DataStore {
+    declareUploadLength(file_id: string, upload_length: string) : Promise<undefined>;
 }
 
 /**
  * file store in local storage
  */
-export declare class FileStore extends DataStore {
+export declare class FileStore extends DeferableLengthDatastore {
     constructor(options: FileStoreOptions);
-    read(file_id: string): fs.ReadStream;
-    getOffset(file_id: string): Promise<fs.Stats & File>;
+    read(file_id: string): ReadableStream;
 }
 
 /**
@@ -88,7 +107,7 @@ export declare class S3Store extends DataStore {
  * Tus protocol server implements
  */
 export declare class Server extends EventEmitter {
-    constructor();
+    constructor(options: ServerOptions);
     get datastore(): DataStore;
     set datastore(store: DataStore);
     get(path: string, callback: (...args: any[]) => any): any;
@@ -118,6 +137,10 @@ export declare const ERRORS: {
         status_code: number;
         body: string;
     };
+    INVALID_PATH: {
+        status_code: number;
+        body: string;
+    },
     INVALID_OFFSET: {
         status_code: number;
         body: string;

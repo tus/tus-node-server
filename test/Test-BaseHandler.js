@@ -28,23 +28,23 @@ describe('BaseHandler', () => {
         done();
     });
 
-    it('send() should end the response', (done) => {
-        handler.send(res, 200, {});
+    it('write() should end the response', (done) => {
+        handler.write(res, 200, {});
         assert.equal(res.finished, true)
         done();
     });
 
-    it('send() should set a response code', (done) => {
-        handler.send(res, 201, {});
+    it('write() should set a response code', (done) => {
+        handler.write(res, 201, {});
         assert.equal(res.statusCode, 201)
         done();
     });
 
-    it('send() should set headers', (done) => {
+    it('write() should set headers', (done) => {
         let headers = {
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
         };
-        handler.send(res, 200, headers);
+        handler.write(res, 200, headers);
         for (let header of Object.keys(headers)) {
             assert.equal(res.getHeader(header), headers[header]);
         }
@@ -52,9 +52,9 @@ describe('BaseHandler', () => {
     });
 
 
-    it('send() should write the body', (done) => {
+    it('write() should write the body', (done) => {
         const body = 'Hello tus!'
-        handler.send(res, 200, {}, body);
+        handler.write(res, 200, {}, body);
         let output = res._getData();
         assert.equal(output.match(/Hello tus!$/).index, output.length - body.length)
         done();

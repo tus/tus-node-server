@@ -46,9 +46,11 @@ describe('EndToEnd', () => {
         let file_id;
         let deferred_file_id;
         before(() => {
-            server = new Server();
+            server = new Server({
+                path: STORE_PATH
+            });
             server.datastore = new FileStore({
-                path: STORE_PATH,
+                directory: `./${STORE_PATH}`
             });
             listener = server.listen();
             agent = request.agent(listener);
@@ -194,6 +196,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', TEST_FILE_SIZE)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -204,6 +207,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/dont_exist`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', TEST_FILE_SIZE)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -218,6 +222,7 @@ describe('EndToEnd', () => {
                     .set('Content-Type', 'application/offset+octet-stream');
 
                 write_stream.on('response', (res) => {
+                    // TODO: this is not called when request fails
                     assert.equal(res.statusCode, 204);
                     assert.equal(res.header['tus-resumable'], TUS_RESUMABLE);
                     assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`);
@@ -251,11 +256,13 @@ describe('EndToEnd', () => {
 
     describe('FileStore with relativeLocation', () => {
         before(() => {
-            server = new Server();
-            server.datastore = new FileStore({
+            server = new Server({
                 path: STORE_PATH,
                 // configure the store to return relative path in Location Header
                 relativeLocation: true
+            });
+            server.datastore = new FileStore({
+                directory: `./${STORE_PATH}`
             });
             listener = server.listen();
             agent = request.agent(listener);
@@ -292,9 +299,10 @@ describe('EndToEnd', () => {
         let deferred_file_id;
         const files_created = [];
         before(() => {
-            server = new Server();
+            server = new Server({
+                path: STORE_PATH
+            });
             server.datastore = new GCSDataStore({
-                path: STORE_PATH,
                 projectId: PROJECT_ID,
                 keyFilename: KEYFILE,
                 bucket: BUCKET,
@@ -439,6 +447,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', `${TEST_FILE_SIZE}`)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)
@@ -449,6 +458,7 @@ describe('EndToEnd', () => {
                 agent.patch(`${STORE_PATH}/dont_exist`)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Offset', 0)
+                .set('Upload-Length', `${TEST_FILE_SIZE}`)
                 .set('Content-Type', 'application/offset+octet-stream')
                 .expect(404)
                 .expect('Tus-Resumable', TUS_RESUMABLE)

@@ -4,7 +4,9 @@
 const request = require('supertest');
 const assert = require('assert');
 const http = require('http');
-const fs = require('fs');
+
+const should = require('should');
+
 const Server = require('../lib/Server');
 const FileStore = require('../lib/stores/FileStore');
 const DataStore = require('../lib/stores/DataStore');
@@ -18,20 +20,27 @@ const hasHeader = (res, header) => {
 
 describe('Server', () => {
     describe('instantiation', () => {
-        it('datastore setter must require a DataStore subclass', (done) => {
+        it('constructor must require options', () => {
+            assert.throws(() => { new Server(); }, Error);
+            assert.throws(() => { new Server({}); }, Error);
+        });
+
+        it('should accept valid options', () => {
+            assert.doesNotThrow(() => { new Server({ path: '/files' }); });
+            assert.doesNotThrow(() => { new Server({ path: '/files', namingFunction: () => { return "1234"; } }); });
+        });
+
+        it('should throw on invalid namingFunction', () => {
             assert.throws(() => {
-                const server = new Server();
-                server.datastore = {};
+                const server = new Server({ path: '/files', namingFunction: '1234' });
+                server.datastore = new DataStore();
             }, Error);
-            done();
         });
 
         it('setting the DataStore should attach handlers', (done) => {
-            const server = new Server();
+            const server = new Server({ path: '/files' });
             server.handlers.should.be.empty();
-            server.datastore = new DataStore({
-                path: '/test/output',
-            });
+            server.datastore = new DataStore();
             server.handlers.should.have.property('HEAD');
             server.handlers.should.have.property('OPTIONS');
             server.handlers.should.have.property('POST');
@@ -40,13 +49,12 @@ describe('Server', () => {
             done();
         });
     });
+
     describe('listen', () => {
         let server;
         before(() => {
-            server = new Server();
-            server.datastore = new DataStore({
-                path: '/test/output',
-            });
+            server = new Server({ path: '/test/output' });
+            server.datastore = new DataStore();
         });
 
         it('should create an instance of http.Server', (done) => {
@@ -61,10 +69,8 @@ describe('Server', () => {
         let server;
         let listener;
         before(() => {
-            server = new Server();
-            server.datastore = new DataStore({
-                path: '/test/output',
-            });
+            server = new Server({ path: '/test/output' });
+            server.datastore = new DataStore();
 
             server.get('/some_url', (req, res) => {
                 res.writeHead(200);
@@ -96,9 +102,9 @@ describe('Server', () => {
         let server;
         let listener;
         before(() => {
-            server = new Server();
+            server = new Server({ path: '/test/output' });
             server.datastore = new FileStore({
-                path: '/test/output',
+                directory: './test/output',
             });
 
             listener = server.listen();
@@ -136,30 +142,30 @@ describe('Server', () => {
 
         it('POST should require Upload-Length header', (done) => {
             request(listener)
-              .post(server.datastore.path)
+              .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
-              .expect(412, {}, done);
+              .expect(400, {}, done);
         });
 
         it('POST should require non negative Upload-Length number', (done) => {
             request(listener)
-              .post(server.datastore.path)
+              .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', -3)
-              .expect(412, 'Invalid upload-length\n', done);
+              .expect(400, 'Invalid upload-length\n', done);
         });
 
         it('POST should validate the metadata header', (done) => {
             request(listener)
-              .post(server.datastore.path)
+              .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Metadata', '')
-              .expect(412, 'Invalid upload-metadata\n', done);
+              .expect(400, 'Invalid upload-metadata\n', done);
         });
 
         it('DELETE should return 404 when file does not exist', (done) => {
             request(server.listen())
-                .delete(server.datastore.path + "/123")
+                .delete(server.options.path + "/123")
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .expect(404, 'The file for this url was not found\n', done);
         });
@@ -168,12 +174,12 @@ describe('Server', () => {
             request(server.listen())
                 .delete("/this/is/wrong/123")
                 .set('Tus-Resumable', TUS_RESUMABLE)
-                .expect(404, 'Invalid path name\n', done);
+                .expect(404, 'The file for this url was not found\n', done);
         });
 
         it('DELETE should return 204 on proper deletion', (done) => {
             request(server.listen())
-                .post(server.datastore.path)
+                .post(server.options.path)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Length', 12345678)
                 .then((res)=>{
@@ -185,7 +191,7 @@ describe('Server', () => {
 
         it('POST should ignore invalid Content-Type header', (done) => {
             request(listener)
-              .post(server.datastore.path)
+              .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', 300)
               .set('Upload-Metadata', 'foo aGVsbG8=, bar d29ynGQ=')
@@ -227,9 +233,9 @@ describe('Server', () => {
         let server;
         let listener;
         beforeEach(() => {
-            server = new Server();
+            server = new Server({ path: '/test/output' });
             server.datastore = new FileStore({
-                path: '/test/output',
+                directory: './test/output',
             });
 
             listener = server.listen();
@@ -246,7 +252,7 @@ describe('Server', () => {
             });
 
             request(listener)
-              .post(server.datastore.path)
+              .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', 12345678)
               .end((err) => { if(err) done(err) });
@@ -259,10 +265,10 @@ describe('Server', () => {
             });
 
             request(listener)
-              .post(server.datastore.path)
+              .post(server.options.path)
               .set('Tus-Resumable', TUS_RESUMABLE)
               .set('Upload-Length', 12345678)
-              .end((err) => { if(err) done(err) });
+              .end((err) => { if (err) done(err) });
         });
 
         it('should fire when a file is deleted', (done) => {
@@ -272,14 +278,14 @@ describe('Server', () => {
             });
 
             request(server.listen())
-                .post(server.datastore.path)
+                .post(server.options.path)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Length', 12345678)
                 .then((res)=>{
                     request(server.listen())
                         .delete(res.headers.location)
                         .set('Tus-Resumable', TUS_RESUMABLE)
-                        .end((err,res)=>{});
+                        .end((err) => { if (err) done(err) });
                 });
         });
 
@@ -290,7 +296,7 @@ describe('Server', () => {
             });
 
             request(server.listen())
-                .post(server.datastore.path)
+                .post(server.options.path)
                 .set('Tus-Resumable', TUS_RESUMABLE)
                 .set('Upload-Length', Buffer.byteLength('test', 'utf8'))
                 .then((res) => {
@@ -300,9 +306,31 @@ describe('Server', () => {
                         .set('Tus-Resumable', TUS_RESUMABLE)
                         .set('Upload-Offset', 0)
                         .set('Content-Type', 'application/offset+octet-stream')
-                        .end((err,res)=>{});
+                        .end((err) => { if (err) done(err) });
                 })
         });
-    })
+
+        it('should fire when an upload is finished with upload-defer-length', (done) => {
+            server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+                event.should.have.property('file');
+                done();
+            });
+
+            request(server.listen())
+                .post(server.options.path)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Defer-Length', 1)
+                .then((res) => {
+                    request(server.listen())
+                        .patch(res.headers.location)
+                        .send('test')
+                        .set('Tus-Resumable', TUS_RESUMABLE)
+                        .set('Upload-Offset', 0)
+                        .set('Upload-Length', Buffer.byteLength('test', 'utf8'))
+                        .set('Content-Type', 'application/offset+octet-stream')
+                        .end((err) => { if (err) done(err) });
+                })
+            });
+        })
     });
 });
