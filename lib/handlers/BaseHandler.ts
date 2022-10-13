@@ -17,12 +17,7 @@ export default class BaseHandler extends EventEmitter {
     this.options = options
   }
 
-  write(
-    res: http.ServerResponse,
-    status: number,
-    headers = {},
-    body = ''
-  ): http.ServerResponse {
+  write(res: http.ServerResponse, status: number, headers = {}, body = '') {
     headers = status === 204 ? headers : {...headers, 'Content-Length': body.length}
     res.writeHead(status, headers)
     res.write(body)

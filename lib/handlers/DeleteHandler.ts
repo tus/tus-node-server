@@ -1,13 +1,10 @@
-import type http from 'node:http'
-
 import BaseHandler from './BaseHandler'
 import {ERRORS, EVENTS} from '../constants'
 
+import type http from 'node:http'
+
 export default class DeleteHandler extends BaseHandler {
-  async send(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-  ): Promise<http.ServerResponse> {
+  async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const file_id = this.getFileIdFromRequest(req)
     if (file_id === false) {
       throw ERRORS.FILE_NOT_FOUND

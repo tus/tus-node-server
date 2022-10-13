@@ -139,7 +139,12 @@ export default class Server extends EventEmitter {
         continue
       }
 
-      if (RequestValidator.isInvalidHeader(header_name, req.headers[header_name])) {
+      if (
+        RequestValidator.isInvalidHeader(
+          header_name,
+          req.headers[header_name] as string | undefined
+        )
+      ) {
         log(`Invalid ${header_name} header: ${req.headers[header_name]}`)
         invalid_headers.push(header_name)
       }

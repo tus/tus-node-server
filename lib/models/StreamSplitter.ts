@@ -21,7 +21,7 @@ export default class FileStreamSplitter extends stream.Writable {
   maxChunkSize: Options['maxChunkSize']
   part: number
 
-  constructor({maxChunkSize, directory}: Options, options: stream.WritableOptions) {
+  constructor({maxChunkSize, directory}: Options, options?: stream.WritableOptions) {
     super(options)
     this.maxChunkSize = maxChunkSize
     this.currentChunkPath = null

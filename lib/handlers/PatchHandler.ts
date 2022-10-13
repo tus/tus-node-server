@@ -1,9 +1,10 @@
 import debug from 'debug'
-import type http from 'node:http'
 
 import BaseHandler from './BaseHandler'
 import File from '../models/File'
 import {ERRORS, EVENTS} from '../constants'
+
+import type http from 'node:http'
 
 const log = debug('tus-node-server:handlers:patch')
 
