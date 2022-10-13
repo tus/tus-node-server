@@ -43,13 +43,11 @@ $ npm install tus-node-server
     });
     ```
 
-    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property)
-
-    You can refer to the AWS docs for the supported values for `credentials`.
-
-    (the example below uses [AWS.ECSCredentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS.html#ECSCredentials-property), to fetch credentials inside a AWS container, such as an ECS container, which will inject the required environment variables. The `credentials` config is directly passed into the AWS SDK so.)
+    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property) to fetch credentials inside a AWS container, such as an ECS container, which will inject the required environment variables. The `credentials` config is directly passed into the AWS SDK so you can refer to the AWS docs for the supported values for `credentials`.
+    
+    For example, with `ECSCredentials`:
+    
     ```js
-
     server.datastore = new tus.S3Store({
         path: '/files',
         bucket: 'bucket-name',
@@ -62,7 +60,6 @@ $ npm install tus-node-server
         tmpDirPrefix: 'tus-s3-store',
     });
     ```
-
 ## Quick Start
 
 #### Use the [tus-node-deploy](https://hub.docker.com/r/bhstahl/tus-node-deploy/) Docker image
