@@ -113,6 +113,7 @@ describe('PatchHandler', () => {
       }
       // @ts-expect-error todo
       req.url = `${path}/1234`
+      // eslint-disable-next-line new-cap
       handler.send(req, res).should.be.a.Promise()
     })
 

@@ -1,19 +1,23 @@
+/* eslint-disable unicorn/prefer-number-properties */
 import {HEADERS_LOWERCASE, TUS_VERSION, TUS_RESUMABLE} from '../constants'
 
 const RequestValidator = {
   // All PATCH requests MUST include a Upload-Offset header
   _invalidUploadOffsetHeader(value: string | undefined) {
-    return Number.isNaN(value) || Number.parseInt(value as string, 10) < 0
+    // @ts-expect-error isNan can in fact expect non-number args
+    return isNaN(value) || Number.parseInt(value as string, 10) < 0
   },
 
   // The value MUST be a non-negative integer.
   _invalidUploadLengthHeader(value: string | undefined) {
-    return Number.isNaN(value) || Number.parseInt(value as string, 10) < 0
+    // @ts-expect-error isNan can in fact expect non-number args
+    return isNaN(value) || Number.parseInt(value as string, 10) < 0
   },
 
   // The Upload-Defer-Length value MUST be 1.
   _invalidUploadDeferLengthHeader(value: string | undefined) {
-    return Number.isNaN(value) || Number.parseInt(value as string, 10) !== 1
+    // @ts-expect-error isNan can in fact expect non-number args
+    return isNaN(value) || Number.parseInt(value as string, 10) !== 1
   },
 
   // The Upload-Metadata request and response header MUST consist of one
@@ -70,8 +74,8 @@ const RequestValidator = {
 
   capitalizeHeader(header_name: string) {
     return header_name
-      .replace(/\b[a-z]/g, function () {
-        return arguments[0].toUpperCase()
+      .replace(/\b[a-z]/g, function (substring) {
+        return substring.toUpperCase()
       })
       .replace(/-/g, '')
   },

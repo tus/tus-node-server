@@ -9,13 +9,13 @@ describe('GCSDataStore', () => {
     this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
-    this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
+    this.testFilePath = path.resolve('test', 'fixtures', this.testFileName)
   })
 
   beforeEach(function (this: any) {
     this.datastore = new GCSDataStore({
       projectId: 'tus-node-server',
-      keyFilename: path.resolve(__dirname, '../keyfile.json'),
+      keyFilename: path.resolve('test', '../keyfile.json'),
       bucket: 'tus-node-server-ci',
     })
   })

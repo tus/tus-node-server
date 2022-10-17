@@ -14,11 +14,11 @@ import {TUS_RESUMABLE} from '../lib/constants'
 const STORE_PATH = '/test/output'
 const PROJECT_ID = 'tus-node-server'
 
-const KEYFILE = path.resolve(__dirname, '../keyfile.json')
+const KEYFILE = path.resolve('test', '../keyfile.json')
 const BUCKET = 'tus-node-server-ci'
-const FILES_DIRECTORY = path.resolve(__dirname, `..${STORE_PATH}`)
+const FILES_DIRECTORY = path.resolve('test', `..${STORE_PATH}`)
 const TEST_FILE_SIZE = 960_244
-const TEST_FILE_PATH = path.resolve(__dirname, 'fixtures', 'test.mp4')
+const TEST_FILE_PATH = path.resolve('test', 'fixtures', 'test.mp4')
 const TEST_METADATA = 'some data, for you'
 const gcs = new Storage({
   projectId: PROJECT_ID,
