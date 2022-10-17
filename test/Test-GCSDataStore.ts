@@ -5,14 +5,14 @@ import GCSDataStore from '../lib/stores/GCSDataStore'
 import * as shared from './Test-Stores.shared'
 
 describe('GCSDataStore', () => {
-  before(function (this: any) {
+  before(function () {
     this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
     this.testFilePath = path.resolve('test', 'fixtures', this.testFileName)
   })
 
-  beforeEach(function (this: any) {
+  beforeEach(function () {
     this.datastore = new GCSDataStore({
       projectId: 'tus-node-server',
       keyFilename: path.resolve('test', '../keyfile.json'),

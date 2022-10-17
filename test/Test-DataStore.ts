@@ -4,9 +4,9 @@ import {strict as assert} from 'node:assert'
 import DataStore from '../lib/stores/DataStore'
 
 describe('DataStore', () => {
-  // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-  const datastore = new DataStore({path: '/test/output'})
-  it('should provide extensions', (done: any) => {
+  const datastore = new DataStore()
+
+  it('should provide extensions', (done) => {
     datastore.should.have.property('extensions')
     assert.equal(Array.isArray(datastore.extensions), true)
     assert.equal(datastore.extensions.length, 0)
@@ -14,14 +14,16 @@ describe('DataStore', () => {
     assert.deepStrictEqual(datastore.extensions, ['creation', 'expiration'])
     done()
   })
-  it('extensions must be an array', (done: any) => {
+
+  it('extensions must be an array', (done) => {
     assert.throws(() => {
       // @ts-expect-error wrong type
       datastore.extensions = 'creation, expiration'
     }, Error)
     done()
   })
-  it('should check for an extension', (done: any) => {
+
+  it('should check for an extension', (done) => {
     datastore.extensions = ['creation', 'expiration']
     assert.equal(datastore.hasExtension('creation'), true)
     assert.equal(datastore.hasExtension('expiration'), true)
@@ -29,23 +31,25 @@ describe('DataStore', () => {
     assert.equal(datastore.hasExtension('CREATION'), false) // Test case sensitivity
     done()
   })
-  it('must have a create method', (done: any) => {
+
+  it('must have a create method', (done) => {
     datastore.should.have.property('create')
     datastore.create.should.be.type('function')
     done()
   })
-  it('must have a remove method', (done: any) => {
+
+  it('must have a remove method', (done) => {
     datastore.should.have.property('remove')
-    // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-    datastore.remove()
     done()
   })
-  it('must have a write method', (done: any) => {
+
+  it('must have a write method', (done) => {
     datastore.should.have.property('write')
     datastore.write.should.be.type('function')
     done()
   })
-  it('must have a getOffset method', (done: any) => {
+
+  it('must have a getOffset method', (done) => {
     datastore.should.have.property('getOffset')
     datastore.getOffset.should.be.type('function')
     done()

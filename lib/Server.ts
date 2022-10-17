@@ -179,7 +179,7 @@ export default class Server extends EventEmitter {
     return res.end()
   }
 
-  listen() {
+  listen(): http.Server {
     const server = http.createServer(this.handle.bind(this))
     return server.listen.apply(server)
   }

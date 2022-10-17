@@ -2,63 +2,50 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
+import net from 'node:net'
 
 import OptionsHandler from '../lib/handlers/OptionsHandler'
 import DataStore from '../lib/stores/DataStore'
-import {
-  ALLOWED_METHODS,
-  ALLOWED_HEADERS,
-  EXPOSED_HEADERS,
-  MAX_AGE,
-} from '../lib/constants'
-
-const hasHeader = (res: any, header: any) => {
-  const key = Object.keys(header)[0]
-  return res._header.includes(`${key}: ${header[key]}`)
-}
+import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../lib/constants'
 
 describe('OptionsHandler', () => {
-  // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-  const store = new DataStore({path: '/test/output'})
-  // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
-  const handler = new OptionsHandler(store)
-  const req: {headers: Record<string, string>} = {headers: {}}
-  // @ts-expect-error
-  let res: http.ServerResponse<http.IncomingMessage> = new http.ServerResponse({
-    method: 'OPTIONS',
+  const options = {path: '/test/output'}
+  const store = new DataStore()
+  const handler = new OptionsHandler(store, options)
+
+  let req: http.IncomingMessage
+  let res: http.ServerResponse
+
+  beforeEach(() => {
+    req = new http.IncomingMessage(new net.Socket())
+    req.url = handler.generateUrl(req, '1234')
+    req.method = 'OPTIONS'
+    res = new http.ServerResponse(req)
   })
 
-  beforeEach((done: any) => {
-    const METHOD = 'OPTIONS'
-    // @ts-expect-error
-    res = new http.ServerResponse({method: METHOD})
-    done()
-  })
-
-  it('send() should set headers and 204', (done: any) => {
+  it('send() should set headers and 204', async () => {
     const headers = {
       'Access-Control-Allow-Methods': ALLOWED_METHODS,
       'Access-Control-Allow-Headers': ALLOWED_HEADERS,
-      'Access-Control-Expose-Headers': EXPOSED_HEADERS,
       'Access-Control-Max-Age': MAX_AGE,
     }
-    // @ts-ignore todo
-    handler.send(req, res)
-    assert.equal(hasHeader(res, headers), true)
+    await handler.send(req, res)
+    // eslint-disable-next-line guard-for-in
+    for (const header in headers) {
+      assert.equal(res.getHeader(header), headers[header as keyof typeof headers])
+    }
+
     assert.equal(res.statusCode, 204)
-    done()
   })
 
-  it('send() should set extensions header if they exist', (done: any) => {
-    const headers = {
-      'Tus-Extension': 'creation,expiration',
-    }
+  it('send() should set extensions header if they exist', async () => {
+    const headers = {'Tus-Extension': 'creation,expiration'}
     store.extensions = ['creation', 'expiration']
-    // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
-    const handler = new OptionsHandler(store)
-    // @ts-ignore todo
-    handler.send(req, res)
-    assert.equal(hasHeader(res, headers), true)
-    done()
+    const handler = new OptionsHandler(store, options)
+    await handler.send(req, res)
+    // eslint-disable-next-line guard-for-in
+    for (const header in headers) {
+      assert.equal(res.getHeader(header), headers[header as keyof typeof headers])
+    }
   })
 })

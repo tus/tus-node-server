@@ -2,6 +2,7 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
+import net from 'node:net'
 
 import sinon from 'sinon'
 
@@ -12,16 +13,17 @@ import {ERRORS, EVENTS} from '../lib/constants'
 describe('DeleteHandler', () => {
   const path = '/test/output'
   const fake_store = sinon.createStubInstance(DataStore)
-  let handler: any
-  let req: any = null
-  let res: any = null
+  let handler: InstanceType<typeof DeleteHandler>
+  let req: http.IncomingMessage
+  let res: http.ServerResponse
 
   beforeEach(() => {
     fake_store.remove.resetHistory()
     handler = new DeleteHandler(fake_store, {relativeLocation: true, path})
-    req = {headers: {}, url: handler.generateUrl({}, '1234')}
-    // @ts-expect-error
-    res = new http.ServerResponse({method: 'HEAD'})
+    req = new http.IncomingMessage(new net.Socket())
+    req.url = handler.generateUrl(req, '1234')
+    req.method = 'HEAD'
+    res = new http.ServerResponse(req)
   })
 
   it('should 404 if no file id match', () => {
@@ -41,9 +43,9 @@ describe('DeleteHandler', () => {
     assert.equal(res.statusCode, 204)
   })
 
-  it(`must fire the ${EVENTS.EVENT_FILE_DELETED} event`, (done: any) => {
+  it(`must fire the ${EVENTS.EVENT_FILE_DELETED} event`, (done) => {
     fake_store.remove.resolves()
-    handler.on(EVENTS.EVENT_FILE_DELETED, (event: any) => {
+    handler.on(EVENTS.EVENT_FILE_DELETED, (event) => {
       assert.equal(event.file_id, '1234')
       done()
     })

@@ -18,7 +18,7 @@ export default class HeadHandler extends BaseHandler {
     res.setHeader('Cache-Control', 'no-store')
     // The Server MUST always include the Upload-Offset header in
     // the response for a HEAD request, even if the offset is 0
-    res.setHeader('Upload-Offset', file.size)
+    res.setHeader('Upload-Offset', file.size?.toString() as string)
     if (file.upload_length !== undefined) {
       // If the size of the upload is known, the Server MUST include
       // the Upload-Length header in the response.

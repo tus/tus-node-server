@@ -1,7 +1,7 @@
 import type http from 'node:http'
 import FileModel from '../lib/models/File'
 
-import BaseStore from '../lib/stores/DataStore'
+import BaseStore from '../lib/stores/BaseStore'
 import FileStore from '../lib/stores/FileStore'
 import GCSDataStore from '../lib/stores/GCSDataStore'
 import S3Store from '../lib/stores/S3Store'
@@ -13,15 +13,6 @@ export type ServerOptions = {
 }
 
 export type File = InstanceType<typeof FileModel>
-
-// TODO: rename keys
-// export type File = {
-//   id: string
-//   upload_length: string
-//   upload_defer_length?: string // Can be isDeferred: boolean
-//   upload_metadata?: string
-//   size: number
-// }
 
 export type DataStore =
   | InstanceType<typeof BaseStore>

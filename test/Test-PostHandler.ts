@@ -1,36 +1,34 @@
+/* eslint-disable max-nested-callbacks */
 import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
+import net from 'node:net'
 
 import sinon from 'sinon'
 
 import DataStore from '../lib/stores/DataStore'
 import PostHandler from '../lib/handlers/PostHandler'
 import {EVENTS} from '../lib/constants'
+import File from '../lib/models/File'
 
 const SERVER_OPTIONS = {
   path: '/test',
   namingFunction: () => '1234',
 }
 
-const hasHeader = (res: any, header: any) => {
-  const key = Object.keys(header)[0]
-  return res._header.includes(`${key}: ${header[key]}`)
-}
-
 describe('PostHandler', () => {
-  let req: any = null
-  let res: any = null
+  let req: http.IncomingMessage
+  let res: http.ServerResponse
 
   const fake_store = sinon.createStubInstance(DataStore)
   fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
-  beforeEach((done) => {
-    req = {headers: {}, url: '/files', host: 'localhost:3000'}
-    // @ts-expect-error todo
-    res = new http.ServerResponse({method: 'POST'})
-    done()
+  beforeEach(() => {
+    req = new http.IncomingMessage(new net.Socket())
+    req.method = 'POST'
+    req.url = '/files'
+    res = new http.ServerResponse(req)
   })
 
   describe('constructor()', () => {
@@ -73,7 +71,7 @@ describe('PostHandler', () => {
           namingFunction: sinon.stub().throws(),
         })
 
-        req.headers = {'upload-length': 1000}
+        req.headers = {'upload-length': '1000'}
         return assert.rejects(() => handler.send(req, res), {status_code: 500})
       })
 
@@ -82,7 +80,7 @@ describe('PostHandler', () => {
         const namingFunction = sinon.stub().returns('1234')
         const handler = new PostHandler(fake_store, {path: '/test/', namingFunction})
 
-        req.headers = {'upload-length': 1000}
+        req.headers = {'upload-length': '1000'}
         await handler.send(req, res)
         assert.equal(namingFunction.calledOnce, true)
       })
@@ -93,7 +91,7 @@ describe('PostHandler', () => {
 
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
-        req.headers = {'upload-length': 1000}
+        req.headers = {'upload-length': '1000'}
         return assert.rejects(() => handler.send(req, res), {status_code: 500})
       })
     })
@@ -104,12 +102,9 @@ describe('PostHandler', () => {
           path: '/test/output',
           namingFunction: () => '1234',
         })
-        req.headers = {'upload-length': 1000, host: 'localhost:3000'}
+        req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         await handler.send(req, res)
-        assert.equal(
-          hasHeader(res, {Location: '//localhost:3000/test/output/1234'}),
-          true
-        )
+        assert.equal(res.getHeader('Location'), '//localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
     })
@@ -118,8 +113,7 @@ describe('PostHandler', () => {
       it(`must fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = {}
-        // @ts-expect-error todo
+        const file = new File('1234', '10')
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
@@ -128,15 +122,14 @@ describe('PostHandler', () => {
           done()
         })
 
-        req.headers = {'upload-length': 1000}
+        req.headers = {'upload-length': '1000'}
         handler.send(req, res)
       })
 
       it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with absolute URL`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = {}
-        // @ts-expect-error todo
+        const file = new File('1234', '10')
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
@@ -148,15 +141,14 @@ describe('PostHandler', () => {
           done()
         })
 
-        req.headers = {'upload-length': 1000, host: 'localhost:3000'}
+        req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         handler.send(req, res)
       })
 
       it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with relative URL`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = {}
-        // @ts-expect-error todo
+        const file = new File('1234', '10')
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
@@ -169,7 +161,7 @@ describe('PostHandler', () => {
           done()
         })
 
-        req.headers = {'upload-length': 1000, host: 'localhost:3000'}
+        req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         handler.send(req, res)
       })
 
