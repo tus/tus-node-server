@@ -13,13 +13,9 @@ type Options = {
   keyFilename: string
 }
 
-const DEFAULT_CONFIG = {
-  scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
-}
 const log = debug('tus-node-server:stores:gcsstore')
 
 export default class GCSDataStore extends DataStore {
-  authConfig: any
   bucket: Bucket
   bucket_name: string
   gcs: Storage
@@ -39,10 +35,6 @@ export default class GCSDataStore extends DataStore {
     })
     // TODO: this can't be called async in constructor
     this.bucket = this._getBucket()
-    // TODO: this isnt' used?
-    this.authConfig = Object.assign(DEFAULT_CONFIG, {
-      keyFilename: options.keyFilename,
-    })
   }
 
   _getBucket() {
