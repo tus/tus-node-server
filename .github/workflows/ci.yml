@@ -2,12 +2,8 @@ name: Node.js CI
 on:
   push:
     branches: ['master', '1.x']
-  pull_request_target:
-    types: [opened, synchronize, reopened]
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - .github/workflows/ci.yml
 
 concurrency: ${{ github.workflow }}--${{ github.ref }}
 
