@@ -3,6 +3,7 @@ import {strict as assert} from 'node:assert'
 import os from 'node:os'
 import fs from 'node:fs'
 import stream from 'node:stream'
+import http from 'node:http'
 
 import aws from 'aws-sdk'
 
@@ -281,7 +282,7 @@ class S3Store extends DataStore {
    */
   _processUpload(
     metadata: MetadataValue,
-    readStream: fs.ReadStream,
+    readStream: http.IncomingMessage | fs.ReadStream,
     currentPartNumber: number,
     current_size: number
   ): Promise<Promise<void | string>[]> {
@@ -435,7 +436,10 @@ class S3Store extends DataStore {
   /**
    * Write to the file, starting at the provided offset
    */
-  write(readable: fs.ReadStream, file_id: string): Promise<number> {
+  write(
+    readable: http.IncomingMessage | fs.ReadStream,
+    file_id: string
+  ): Promise<number> {
     return this._getMetadata(file_id)
       .then((metadata) => {
         return Promise.all([metadata, this._countParts(file_id), this.getOffset(file_id)])

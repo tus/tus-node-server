@@ -104,7 +104,11 @@ describe('PostHandler', () => {
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         await handler.send(req, res)
-        assert.equal(res.getHeader('Location'), '//localhost:3000/test/output/1234')
+        assert.equal(
+          // @ts-expect-error works but not in types
+          res._header.includes('Location: //localhost:3000/test/output/1234'),
+          true
+        )
         assert.equal(res.statusCode, 201)
       })
     })

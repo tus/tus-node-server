@@ -1,5 +1,6 @@
 import {Storage, Bucket} from '@google-cloud/storage'
 import stream from 'node:stream'
+import http from 'node:http'
 import debug from 'debug'
 
 import {ERRORS, TUS_RESUMABLE} from '../constants'
@@ -97,7 +98,11 @@ export default class GCSDataStore extends DataStore {
    * Get the file metatata from the object in GCS, then upload a new version
    * passing through the metadata to the new version.
    */
-  write(readable: stream.Readable, file_id: string, offset: number): Promise<number> {
+  write(
+    readable: http.IncomingMessage | stream.Readable,
+    file_id: string,
+    offset: number
+  ): Promise<number> {
     // GCS Doesn't persist metadata within versions,
     // get that metadata first
     return this.getOffset(file_id).then((data) => {

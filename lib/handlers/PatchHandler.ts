@@ -62,7 +62,6 @@ export default class PatchHandler extends BaseHandler {
       file.upload_length = upload_length
     }
 
-    // TODO: req should be a stream?
     const new_offset = await this.store.write(req, file_id, offset)
     if (new_offset === Number.parseInt(file.upload_length as string, 10)) {
       this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {

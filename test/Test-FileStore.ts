@@ -18,7 +18,7 @@ describe('FileStore', function () {
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
     this.testFilePath = path.resolve('test', 'fixtures', this.testFileName)
-    this.filesDirectory = path.resolve('test', `..${this.storePath}`)
+    this.filesDirectory = path.resolve(this.storePath)
   })
 
   beforeEach(function () {

@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import EventEmitter from 'node:events'
+
 import type stream from 'node:stream'
+import type http from 'node:http'
 import type {File} from '../../types'
 
 export default class DataStore extends EventEmitter {
@@ -35,7 +38,6 @@ export default class DataStore extends EventEmitter {
    * Called in DELETE requests. This method just deletes the file from the store.
    * http://tus.io/protocols/resumable-upload.html#termination
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async remove(file_id: string) {}
 
   /**
@@ -45,8 +47,11 @@ export default class DataStore extends EventEmitter {
    *
    * http://tus.io/protocols/resumable-upload.html#concatenation
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async write(stream: stream.Readable, file_id: string, offset: number) {
+  async write(
+    stream: http.IncomingMessage | stream.Readable,
+    file_id: string,
+    offset: number
+  ) {
     return 0
   }
 
@@ -62,6 +67,5 @@ export default class DataStore extends EventEmitter {
   /**
    * Called in PATCH requests when upload length is known after being defered.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async declareUploadLength(file_id: string, upload_length: string) {}
 }

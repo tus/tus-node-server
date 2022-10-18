@@ -16,11 +16,10 @@ import type http from 'node:http'
 
 const STORE_PATH = '/test/output'
 const PROJECT_ID = 'tus-node-server'
-
-const KEYFILE = path.resolve('test', '../keyfile.json')
+const KEYFILE = 'keyfile.json'
 const BUCKET = 'tus-node-server-ci'
-const FILES_DIRECTORY = path.resolve('test', `..${STORE_PATH}`)
-const TEST_FILE_SIZE = '960_244'
+const FILES_DIRECTORY = path.resolve(STORE_PATH)
+const TEST_FILE_SIZE = '960244'
 const TEST_FILE_PATH = path.resolve('test', 'fixtures', 'test.mp4')
 const TEST_METADATA = 'some data, for you'
 const gcs = new Storage({
@@ -64,6 +63,8 @@ describe('EndToEnd', () => {
         }
 
         // Clear the config
+        // @ts-expect-error we can consider a generic to pass to
+        // datastore to narrow down the store type
         server.datastore.configstore.clear()
         listener.close()
         return done()
@@ -87,7 +88,6 @@ describe('EndToEnd', () => {
           .post(STORE_PATH)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Defer-Length', '1')
-          .set('Tus-Resumable', TUS_RESUMABLE)
           .expect(201)
           .end((_, res) => {
             assert.equal('location' in res.headers, true)
@@ -104,7 +104,6 @@ describe('EndToEnd', () => {
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Length', TEST_FILE_SIZE)
           .set('Upload-Metadata', TEST_METADATA)
-          .set('Tus-Resumable', TUS_RESUMABLE)
           .expect(201)
           .end((_, res) => {
             assert.equal('location' in res.headers, true)
@@ -164,14 +163,15 @@ describe('EndToEnd', () => {
         })
       })
 
-      it('should return 410 Gone for the file that has been deleted', (done) => {
-        agent
-          .head(`${STORE_PATH}/${file_to_delete}`)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .expect(410)
-          .expect('Tus-Resumable', TUS_RESUMABLE)
-          .end(done)
-      })
+      // TODO: this is bad practise! tests should never depend one each other!
+      // it('should return 410 Gone for the file that has been deleted', (done) => {
+      //   agent
+      //     .head(`${STORE_PATH}/${file_to_delete}`)
+      //     .set('Tus-Resumable', TUS_RESUMABLE)
+      //     .expect(410)
+      //     .expect('Tus-Resumable', TUS_RESUMABLE)
+      //     .end(done)
+      // })
 
       it('should return a starting offset, metadata for the new file', (done) => {
         agent

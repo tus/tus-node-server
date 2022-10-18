@@ -123,7 +123,8 @@ describe('PatchHandler', () => {
 
       await handler.send(req, res)
 
-      assert.equal(res.getHeader('Upload-Offset'), '10')
+      // @ts-expect-error works but not in types
+      assert.equal(res._header.includes('Upload-Offset: 10'), true)
       assert.equal(res.hasHeader('Content-Length'), false)
       assert.equal(res.statusCode, 204)
     })

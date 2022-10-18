@@ -72,12 +72,10 @@ export default class PostHandler extends BaseHandler {
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
     if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
-      // TODO: req should be a stream?
       const new_offset = await this.store.write(req, file.id, 0)
       optional_headers['Upload-Offset'] = new_offset.toString()
 
-      // @ts-expect-error todo
-      if (new_offset === Number.parseInt(upload_length, 10)) {
+      if (new_offset === Number.parseInt(upload_length as string, 10)) {
         this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {
           file: new File(
             file_id,

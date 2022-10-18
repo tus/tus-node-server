@@ -50,7 +50,7 @@ export default class Server extends EventEmitter {
     // Remove any event listeners from each handler as they are removed
     // from the server. This must come before adding a 'newListener' listener,
     // to not add a 'removeListener' event listener to all request handlers.
-    this.on('removeListener', (event, listener) => {
+    this.on('removeListener', (event: string, listener) => {
       this.datastore.removeListener(event, listener)
       for (const method of REQUEST_METHODS) {
         this.handlers[method].removeListener(event, listener)
@@ -58,7 +58,7 @@ export default class Server extends EventEmitter {
     })
     // As event listeners are added to the server, make sure they are
     // bubbled up from request handlers to fire on the server level.
-    this.on('newListener', (event, listener) => {
+    this.on('newListener', (event: string, listener) => {
       this.datastore.on(event, listener)
       for (const method of REQUEST_METHODS) {
         this.handlers[method].on(event, listener)

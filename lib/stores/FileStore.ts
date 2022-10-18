@@ -2,6 +2,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import stream from 'node:stream'
+import http from 'node:http'
 
 import debug from 'debug'
 import Configstore from 'configstore'
@@ -104,7 +105,11 @@ export default class FileStore extends DataStore {
     })
   }
 
-  write(readable: stream.Readable, file_id: string, offset: number): Promise<number> {
+  write(
+    readable: http.IncomingMessage | stream.Readable,
+    file_id: string,
+    offset: number
+  ): Promise<number> {
     const writeable = fs.createWriteStream(path.join(this.directory, file_id), {
       flags: 'r+',
       start: offset,
