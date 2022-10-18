@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import 'should'
 
 import {strict as assert} from 'node:assert'
@@ -191,169 +190,166 @@ describe('Server', () => {
             .set('Tus-Resumable', TUS_RESUMABLE)
             .expect(204, done)
         })
-
-      it('POST should ignore invalid Content-Type header', (done) => {
-        request(listener)
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', '300')
-          .set('Upload-Metadata', 'foo aGVsbG8=, bar d29ynGQ=')
-          .set('Content-Type', 'application/false')
-          .expect(201, {}, (err, res) => {
-            res.headers.should.have.property('location')
-            done(err)
-          })
-      })
-
-      it('should 404 other requests', (done) => {
-        request(listener)
-          .get('/')
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .expect(404, {}, done)
-      })
-
-      it('should allow overriding the HTTP method', (done) => {
-        const req = {
-          headers: {'x-http-method-override': 'OPTIONS'},
-          method: 'GET',
-        }
-        // @ts-expect-error todo
-        const res = new http.ServerResponse({method: 'OPTIONS'})
-        // @ts-expect-error todo
-        server.handle(req, res)
-        assert.equal(req.method, 'OPTIONS')
-        done()
-      })
-
-      it('should allow overriding the HTTP method', (done) => {
-        const origin = 'vimeo.com'
-        const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
-        // @ts-expect-error todo
-        const res = new http.ServerResponse({method: 'OPTIONS'})
-        // @ts-expect-error todo
-        server.handle(req, res)
-        assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
-        done()
-      })
     })
 
-    describe('hooks', () => {
-      let server: InstanceType<typeof Server>
-      let listener: http.Server
-
-      beforeEach(() => {
-        server = new Server({path: '/test/output'})
-        server.datastore = new FileStore({
-          directory: './test/output',
+    it('POST should ignore invalid Content-Type header', (done) => {
+      request(listener)
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '300')
+        .set('Upload-Metadata', 'foo aGVsbG8=, bar d29ynGQ=')
+        .set('Content-Type', 'application/false')
+        .expect(201, {}, (err, res) => {
+          res.headers.should.have.property('location')
+          done(err)
         })
-        listener = server.listen()
-      })
+    })
 
-      afterEach(() => {
-        listener.close()
-      })
+    it('should 404 other requests', (done) => {
+      request(listener).get('/').set('Tus-Resumable', TUS_RESUMABLE).expect(404, {}, done)
+    })
 
-      it('should fire when an endpoint is created', (done) => {
-        server.on(EVENTS.EVENT_ENDPOINT_CREATED, (event) => {
-          event.should.have.property('url')
-          done()
+    it('should allow overriding the HTTP method', (done) => {
+      const req = {
+        headers: {'x-http-method-override': 'OPTIONS'},
+        method: 'GET',
+      }
+      // @ts-expect-error todo
+      const res = new http.ServerResponse({method: 'OPTIONS'})
+      // @ts-expect-error todo
+      server.handle(req, res)
+      assert.equal(req.method, 'OPTIONS')
+      done()
+    })
+
+    it('should allow overriding the HTTP method', (done) => {
+      const origin = 'vimeo.com'
+      const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
+      // @ts-expect-error todo
+      const res = new http.ServerResponse({method: 'OPTIONS'})
+      // @ts-expect-error todo
+      server.handle(req, res)
+      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+      done()
+    })
+  })
+
+  describe('hooks', () => {
+    let server: InstanceType<typeof Server>
+    let listener: http.Server
+
+    beforeEach(() => {
+      server = new Server({path: '/test/output'})
+      server.datastore = new FileStore({
+        directory: './test/output',
+      })
+      listener = server.listen()
+    })
+
+    afterEach(() => {
+      listener.close()
+    })
+
+    it('should fire when an endpoint is created', (done) => {
+      server.on(EVENTS.EVENT_ENDPOINT_CREATED, (event) => {
+        event.should.have.property('url')
+        done()
+      })
+      request(listener)
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '12345678')
+        .end((err) => {
+          if (err) {
+            done(err)
+          }
         })
-        request(listener)
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', '12345678')
-          .end((err) => {
-            if (err) {
-              done(err)
-            }
-          })
-      })
+    })
 
-      it('should fire when a file is created', (done) => {
-        server.on(EVENTS.EVENT_FILE_CREATED, (event) => {
-          event.should.have.property('file')
-          done()
-        })
-        request(listener)
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', '12345678')
-          .end((err) => {
-            if (err) {
-              done(err)
-            }
-          })
+    it('should fire when a file is created', (done) => {
+      server.on(EVENTS.EVENT_FILE_CREATED, (event) => {
+        event.should.have.property('file')
+        done()
       })
+      request(listener)
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '12345678')
+        .end((err) => {
+          if (err) {
+            done(err)
+          }
+        })
+    })
 
-      it('should fire when a file is deleted', (done) => {
-        server.on(EVENTS.EVENT_FILE_DELETED, (event) => {
-          event.should.have.property('file_id')
-          done()
-        })
-        request(server.listen())
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', '12345678')
-          .then((res) => {
-            request(server.listen())
-              .delete(res.headers.location)
-              .set('Tus-Resumable', TUS_RESUMABLE)
-              .end((err) => {
-                if (err) {
-                  done(err)
-                }
-              })
-          })
+    it('should fire when a file is deleted', (done) => {
+      server.on(EVENTS.EVENT_FILE_DELETED, (event) => {
+        event.should.have.property('file_id')
+        done()
       })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '12345678')
+        .then((res) => {
+          request(server.listen())
+            .delete(res.headers.location)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .end((err) => {
+              if (err) {
+                done(err)
+              }
+            })
+        })
+    })
 
-      it('should fire when an upload is finished', (done) => {
-        server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-          event.should.have.property('file')
-          done()
-        })
-        request(server.listen())
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
-          .then((res) => {
-            request(server.listen())
-              .patch(res.headers.location)
-              .send('test')
-              .set('Tus-Resumable', TUS_RESUMABLE)
-              .set('Upload-Offset', '0')
-              .set('Content-Type', 'application/offset+octet-stream')
-              .end((err) => {
-                if (err) {
-                  done(err)
-                }
-              })
-          })
+    it('should fire when an upload is finished', (done) => {
+      server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+        event.should.have.property('file')
+        done()
       })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
+        .then((res) => {
+          request(server.listen())
+            .patch(res.headers.location)
+            .send('test')
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .end((err) => {
+              if (err) {
+                done(err)
+              }
+            })
+        })
+    })
 
-      it('should fire when an upload is finished with upload-defer-length', (done) => {
-        server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-          event.should.have.property('file')
-          done()
-        })
-        request(server.listen())
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Defer-Length', '1')
-          .then((res) => {
-            request(server.listen())
-              .patch(res.headers.location)
-              .send('test')
-              .set('Tus-Resumable', TUS_RESUMABLE)
-              .set('Upload-Offset', '0')
-              .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
-              .set('Content-Type', 'application/offset+octet-stream')
-              .end((err) => {
-                if (err) {
-                  done(err)
-                }
-              })
-          })
+    it('should fire when an upload is finished with upload-defer-length', (done) => {
+      server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
+        event.should.have.property('file')
+        done()
       })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Defer-Length', '1')
+        .then((res) => {
+          request(server.listen())
+            .patch(res.headers.location)
+            .send('test')
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
+            .set('Content-Type', 'application/offset+octet-stream')
+            .end((err) => {
+              if (err) {
+                done(err)
+              }
+            })
+        })
     })
   })
 })
