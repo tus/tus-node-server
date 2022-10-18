@@ -20,6 +20,11 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+      - name: Decrypt keyfile
+        run: ./.github/scripts/decrypt_secret.sh
+        env:
+          KEYFILE_PASSPHRASE: ${{secrets.KEYFILE_PASSPHRASE}}
+
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(corepack yarn config get cacheFolder)"
