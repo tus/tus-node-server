@@ -11,7 +11,7 @@ describe('Uid', () => {
   })
 
   it('returns a different string every time', (done) => {
-    const ids = {}
+    const ids: Record<string, boolean> = {}
     for (let i = 0; i < 16; i++) {
       const id = Uid.rand()
       assert(!ids[id], 'id was encountered multiple times')

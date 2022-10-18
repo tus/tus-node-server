@@ -305,7 +305,7 @@ describe('EndToEnd', () => {
   describe('GCSDataStore', () => {
     let file_id: string
     let deferred_file_id: string
-    const files_created = []
+    const files_created: string[] = []
 
     before(() => {
       server = new Server({

@@ -36,7 +36,7 @@
     "build": "tsc",
     "lint": "eslint --cache .",
     "format": "eslint --cache --fix . && prettier --write .",
-    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register",
+    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit --extension ts --require ts-node/register --project tsconfig.json",
     "test:local": "env-cmd npm run test",
     "test:build": "tsc --project tsconfig.dev.json",
     "test:with-coverage": "nyc npm test",
