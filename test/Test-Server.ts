@@ -5,7 +5,7 @@ import http from 'node:http'
 
 import request from 'supertest'
 
-import Server from '../lib/Server'
+import {Server} from '../lib/Server'
 import FileStore from '../lib/stores/FileStore'
 import DataStore from '../lib/stores/DataStore'
 import {TUS_RESUMABLE, EVENTS} from '../lib/constants'

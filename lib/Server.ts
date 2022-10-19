@@ -14,9 +14,9 @@ import RequestValidator from './validators/RequestValidator'
 import {ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants'
 
 import type stream from 'node:stream'
-import type {DataStore, ServerOptions, RouteHandler} from '../types'
+import type {DataStore, ServerOptions, RouteHandler, File} from '../types'
 
-export type Handlers = {
+type Handlers = {
   GET: InstanceType<typeof GetHandler>
   HEAD: InstanceType<typeof HeadHandler>
   OPTIONS: InstanceType<typeof OptionsHandler>
@@ -24,10 +24,22 @@ export type Handlers = {
   POST: InstanceType<typeof PostHandler>
   DELETE: InstanceType<typeof DeleteHandler>
 }
+interface TusEvents {
+  EVENT_FILE_CREATED: (event: {file: File}) => void
+  EVENT_ENDPOINT_CREATED: (event: {url: string}) => void
+  EVENT_UPLOAD_COMPLETE: (event: {file: File}) => void
+  EVENT_FILE_DELETED: (event: {file_id: string}) => void
+}
+export declare interface Server {
+  on<U extends keyof TusEvents>(event: U, listener: TusEvents[U]): this
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this
+}
 
 const log = debug('tus-node-server')
 
-export default class Server extends EventEmitter {
+// eslint-disable-next-line no-redeclare
+export class Server extends EventEmitter {
   _datastore!: DataStore // Using ! to say this can never be undefined
   handlers: Handlers | Record<string, never> = {}
   options: ServerOptions

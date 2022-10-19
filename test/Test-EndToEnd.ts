@@ -7,7 +7,7 @@ import rimraf from 'rimraf'
 import request from 'supertest'
 import {Storage} from '@google-cloud/storage'
 
-import Server from '../lib/Server'
+import {Server} from '../lib/Server'
 import FileStore from '../lib/stores/FileStore'
 import GCSDataStore from '../lib/stores/GCSDataStore'
 import {TUS_RESUMABLE} from '../lib/constants'
