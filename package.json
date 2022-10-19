@@ -28,10 +28,9 @@
   "files": [
     "LICENSE",
     "README.md",
-    "index.js",
-    "index.d.ts",
-    "lib/"
+    "dist/"
   ],
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint --cache .",
