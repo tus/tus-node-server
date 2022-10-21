@@ -171,8 +171,7 @@ export default class FileStore extends DataStore {
           return reject(ERRORS.FILE_NOT_FOUND)
         }
 
-        file.size = stats.size
-        return resolve(file)
+        return resolve({...file, size: stats.size})
       })
     })
   }
