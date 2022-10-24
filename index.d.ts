@@ -12,7 +12,7 @@ declare interface Configstore {
 declare interface ServerOptions {
     path: string;
     relativeLocation?: boolean;
-    namingFunction?: () => string;
+    namingFunction?: (req: http.IncomingMessage) => string;
 }
 
 /**
