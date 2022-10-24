@@ -1,15 +1,11 @@
 import BaseHandler from './BaseHandler'
-import {ERRORS as ERRORS$0} from '../constants'
-const {ERRORS} = {ERRORS: ERRORS$0}
-class HeadHandler extends BaseHandler {
-  /**
-   * Send the bytes received for a given file.
-   *
-   * @param  {object} req http.incomingMessage
-   * @param  {object} res http.ServerResponse
-   * @return {function}
-   */
-  async send(req: any, res: any) {
+
+import {ERRORS} from '../constants'
+
+import type http from 'node:http'
+
+export default class HeadHandler extends BaseHandler {
+  async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const file_id = this.getFileIdFromRequest(req)
     if (file_id === false) {
       throw ERRORS.FILE_NOT_FOUND
@@ -22,7 +18,7 @@ class HeadHandler extends BaseHandler {
     res.setHeader('Cache-Control', 'no-store')
     // The Server MUST always include the Upload-Offset header in
     // the response for a HEAD request, even if the offset is 0
-    res.setHeader('Upload-Offset', file.size)
+    res.setHeader('Upload-Offset', file.size?.toString() as string)
     if (file.upload_length !== undefined) {
       // If the size of the upload is known, the Server MUST include
       // the Upload-Length header in the response.
@@ -44,4 +40,3 @@ class HeadHandler extends BaseHandler {
     return res.end()
   }
 }
-export default HeadHandler

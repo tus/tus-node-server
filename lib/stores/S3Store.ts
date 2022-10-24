@@ -1,17 +1,30 @@
+// TODO: refactor to fs/promises and S3 with async/await
 import {strict as assert} from 'node:assert'
 import os from 'node:os'
 import fs from 'node:fs'
 import stream from 'node:stream'
+import http from 'node:http'
 
 import aws from 'aws-sdk'
 
 import DataStore from './DataStore'
-import {FileStreamSplitter} from '../models/StreamSplitter'
+import FileStreamSplitter from '../models/StreamSplitter'
 import {ERRORS, TUS_RESUMABLE} from '../constants'
 
 import debug from 'debug'
+import {File} from '../../types'
 
 const log = debug('tus-node-server:stores:s3store')
+
+type Options = {
+  accessKeyId: string
+  secretAccessKey: string
+  bucket: string
+  region?: string
+  partSize?: number
+}
+
+type MetadataValue = {file: File; upload_id: string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -46,40 +59,34 @@ const log = debug('tus-node-server:stores:s3store')
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
 class S3Store extends DataStore {
-  bucket_name: any
-  cache: any
-  client: any
-  part_size: any
-  constructor(options: any) {
-    super(options)
-    this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
+  bucket_name: string
+  // TODO: is a `WeakMap` better here?
+  cache: Map<string, MetadataValue> = new Map()
+  client: aws.S3
+  part_size: number
+
+  constructor(options: Options) {
+    super()
     assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
     assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
     assert.ok(options.bucket, '[S3Store] `bucket` must be set')
+
+    this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket_name = options.bucket
     this.part_size = options.partSize || 8 * 1024 * 1024
-    // Cache object to save upload data
-    // avoiding multiple http calls to s3
-    this.cache = {}
-    delete options.partSize
+    delete options.partSize // TODO: what is the point of passing `partSize` when it is deleted immediately?
     this.client = new aws.S3({
       apiVersion: '2006-03-01',
       region: 'eu-west-1',
       ...options,
     })
-    log('init')
   }
 
-  /**
-   * Check if the bucket exists in S3.
-   *
-   * @return {Promise}
-   */
   _bucketExists() {
     return this.client
       .headBucket({Bucket: this.bucket_name})
       .promise()
-      .then((data: any) => {
+      .then((data) => {
         if (!data) {
           throw new Error(`bucket "${this.bucket_name}" does not exist`)
         }
@@ -87,12 +94,12 @@ class S3Store extends DataStore {
         log(`bucket "${this.bucket_name}" exists`)
         return data
       })
-      .catch((error_: any) => {
-        const error =
-          error_.statusCode === 404
-            ? new Error(`[S3Store] bucket "${this.bucket_name}" does not exist`)
-            : new Error(error_)
-        throw error
+      .catch((error_) => {
+        if (error_.statusCode === 404) {
+          throw new Error(`[S3Store] bucket "${this.bucket_name}" does not exist`)
+        }
+
+        throw new Error(error_)
       })
   }
 
@@ -100,14 +107,23 @@ class S3Store extends DataStore {
    * Creates a multipart upload on S3 attaching any metadata to it.
    * Also, a `${file_id}.info` file is created which holds some information
    * about the upload itself like: `upload_id`, `upload_length`, etc.
-   *
-   * @param  {Object}          file file instance
-   * @return {Promise<Object>}      upload data
    */
-  _initMultipartUpload(file: any) {
+  _initMultipartUpload(file: File) {
     log(`[${file.id}] initializing multipart upload`)
     const parsedMetadata = this._parseMetadataString(file.upload_metadata)
-    const upload_data = {
+    type Data = {
+      Bucket: string
+      Key: string
+      ContentType?: string
+      Metadata: {
+        tus_version: string
+        original_name?: string
+        upload_length?: string
+        upload_defer_length?: string
+        upload_metadata?: string
+      }
+    }
+    const upload_data: Data = {
       Bucket: this.bucket_name,
       Key: file.id,
       Metadata: {
@@ -115,36 +131,36 @@ class S3Store extends DataStore {
       },
     }
     if (file.upload_length !== undefined) {
-      ;(upload_data.Metadata as any).upload_length = file.upload_length
+      upload_data.Metadata.upload_length = file.upload_length
     }
 
     if (file.upload_defer_length !== undefined) {
-      ;(upload_data.Metadata as any).upload_defer_length = file.upload_defer_length
+      upload_data.Metadata.upload_defer_length = file.upload_defer_length
     }
 
     if (file.upload_metadata !== undefined) {
-      ;(upload_data.Metadata as any).upload_metadata = file.upload_metadata
+      upload_data.Metadata.upload_metadata = file.upload_metadata
     }
 
     if (parsedMetadata.contentType) {
-      ;(upload_data as any).ContentType = parsedMetadata.contentType.decoded
+      upload_data.ContentType = parsedMetadata.contentType.decoded
     }
 
     if (parsedMetadata.filename) {
-      ;(upload_data.Metadata as any).original_name = parsedMetadata.filename.encoded
+      upload_data.Metadata.original_name = parsedMetadata.filename.encoded
     }
 
     return this.client
       .createMultipartUpload(upload_data)
       .promise()
-      .then((data: any) => {
+      .then((data) => {
         log(`[${file.id}] multipart upload created (${data.UploadId})`)
         return data.UploadId
       })
-      .then((upload_id: any) => {
-        return this._saveMetadata(file, upload_id)
+      .then((upload_id) => {
+        return this._saveMetadata(file, upload_id as string)
       })
-      .catch((error: any) => {
+      .catch((error) => {
         throw error
       })
   }
@@ -154,12 +170,8 @@ class S3Store extends DataStore {
    * Please note that the file is empty and the metadata is saved
    * on the S3 object's `Metadata` field, so that only a `headObject`
    * is necessary to retrieve the data.
-   *
-   * @param  {Object}          file      file instance
-   * @param  {String}          upload_id S3 upload id
-   * @return {Promise<Object>}           upload data
    */
-  _saveMetadata(file: any, upload_id: any) {
+  _saveMetadata(file: File, upload_id: string) {
     log(`[${file.id}] saving metadata`)
     const metadata = {
       file: JSON.stringify(file),
@@ -181,7 +193,7 @@ class S3Store extends DataStore {
           upload_id,
         }
       })
-      .catch((error: any) => {
+      .catch((error) => {
         throw error
       })
   }
@@ -190,15 +202,13 @@ class S3Store extends DataStore {
    * Retrieves upload metadata previously saved in `${file_id}.info`.
    * There's a small and simple caching mechanism to avoid multiple
    * HTTP calls to S3.
-   *
-   * @param  {String} file_id id of the file
-   * @return {Promise<Object>}        which resolves with the metadata
    */
-  _getMetadata(file_id: any) {
+  _getMetadata(file_id: string): Promise<MetadataValue> {
     log(`[${file_id}] retrieving metadata`)
-    if (this.cache[file_id] && this.cache[file_id].file) {
+    const cached = this.cache.get(file_id)
+    if (cached?.file) {
       log(`[${file_id}] metadata from cache`)
-      return Promise.resolve(this.cache[file_id])
+      return Promise.resolve(cached)
     }
 
     log(`[${file_id}] metadata from s3`)
@@ -208,54 +218,50 @@ class S3Store extends DataStore {
         Key: `${file_id}.info`,
       })
       .promise()
-      .then((data: any) => {
-        this.cache[file_id] = {
-          ...data.Metadata,
-          file: JSON.parse(data.Metadata.file),
+      .then(({Metadata}) => {
+        this.cache.set(file_id, {
+          ...Metadata,
+          file: JSON.parse(Metadata?.file as string),
           // Patch for Digital Ocean: if key upload_id (AWS, standard) doesn't exist in Metadata object, fallback to upload-id (DO)
-          upload_id: data.Metadata.upload_id || data.Metadata['upload-id'],
-        }
-        return this.cache[file_id]
+          upload_id:
+            (Metadata?.upload_id as string) || (Metadata?.['upload-id'] as string),
+        })
+        return this.cache.get(file_id) as MetadataValue
       })
-      .catch((error: any) => {
+      .catch((error) => {
         throw error
       })
   }
 
   /**
    * Parses the Base64 encoded metadata received from the client.
-   *
-   * @param  {String} metadata_string tus' standard upload metadata
-   * @return {Object}                 metadata as key-value pair
    */
-  _parseMetadataString(metadata_string: any) {
+  _parseMetadataString(metadata_string?: string) {
+    const pairs: Record<string, {encoded: string; decoded?: string}> = {}
+
     if (!metadata_string) {
-      return {}
+      return pairs
     }
 
-    const kv_pair_list = metadata_string.split(',')
-    return kv_pair_list.reduce((metadata: any, kv_pair: any) => {
-      const [key, base64_value] = kv_pair.split(' ')
-      metadata[key] = {
-        encoded: base64_value,
-        decoded:
-          base64_value === undefined
-            ? undefined
-            : Buffer.from(base64_value, 'base64').toString('ascii'),
+    for (const pair of metadata_string.split(',')) {
+      const [key, encoded] = pair.split(' ')
+      pairs[key] = {
+        encoded,
+        decoded: encoded ? Buffer.from(encoded, 'base64').toString('ascii') : undefined,
       }
-      return metadata
-    }, {})
+    }
+
+    return pairs
   }
 
   /**
    * Uploads a part/chunk to S3 from a temporary part file.
-   *
-   * @param  {Object}          metadata            upload metadata
-   * @param  {Stream}          read_stream         incoming request read stream
-   * @param  {Number}          current_part_number number of the current part/chunk
-   * @return {Promise<String>}                     which resolves with the parts' etag
    */
-  _uploadPart(metadata: any, read_stream: any, current_part_number: any) {
+  _uploadPart(
+    metadata: MetadataValue,
+    read_stream: fs.ReadStream,
+    current_part_number: number
+  ) {
     return this.client
       .uploadPart({
         Bucket: this.bucket_name,
@@ -265,7 +271,7 @@ class S3Store extends DataStore {
         Body: read_stream,
       })
       .promise()
-      .then((data: any) => {
+      .then((data) => {
         log(`[${metadata.file.id}] finished uploading part #${current_part_number}`)
         return data.ETag
       })
@@ -273,31 +279,23 @@ class S3Store extends DataStore {
 
   /**
    * Uploads a stream to s3 using multiple parts
-   *
-   * @param {Object}         metadata upload metadata
-   * @param {fs<ReadStream>} readStream incoming request
-   * @param {Number}         currentPartNumber number of the current part/chunk
-   * @param {Number}         current_size current size of uploaded data
-   * @return {Promise<Number>} which resolves with the current offset
-   * @memberof S3Store
    */
   _processUpload(
-    metadata: any,
-    readStream: any,
-    currentPartNumber: any,
-    current_size: any
-  ) {
-    return new Promise((resolve, reject) => {
-      // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
+    metadata: MetadataValue,
+    readStream: http.IncomingMessage | fs.ReadStream,
+    currentPartNumber: number,
+    current_size: number
+  ): Promise<Promise<void | string>[]> {
+    return new Promise((resolve) => {
       const splitterStream = new FileStreamSplitter({
         maxChunkSize: this.part_size,
         directory: os.tmpdir(),
       })
-      const promises: any = []
-      let pendingChunkFilepath: any = null
-      stream.pipeline(readStream, splitterStream, (pipelineErr: any) => {
+      const promises: Promise<void | string>[] = []
+      let pendingChunkFilepath: string | null = null
+      stream.pipeline(readStream, splitterStream, (pipelineErr) => {
         if (pipelineErr && pendingChunkFilepath !== null) {
-          fs.rm(pendingChunkFilepath, (fileRemoveErr: any) => {
+          fs.rm(pendingChunkFilepath, (fileRemoveErr) => {
             if (fileRemoveErr) {
               log(`[${metadata.file.id}] failed to remove chunk ${pendingChunkFilepath}`)
             }
@@ -307,10 +305,10 @@ class S3Store extends DataStore {
         promises.push(pipelineErr ? Promise.reject(pipelineErr) : Promise.resolve())
         resolve(promises)
       })
-      splitterStream.on('chunkStarted', (filepath: any) => {
+      splitterStream.on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
       })
-      splitterStream.on('chunkFinished', ({path, size}: any) => {
+      splitterStream.on('chunkFinished', ({path, size}) => {
         pendingChunkFilepath = null
         current_size += size
         const partNumber = currentPartNumber++
@@ -318,7 +316,7 @@ class S3Store extends DataStore {
           .then(() => {
             // Skip chunk if it is not last and is smaller than 5MB
             const is_last_chunk =
-              Number.parseInt(metadata.file.upload_length, 10) === current_size
+              Number.parseInt(metadata?.file?.upload_length ?? '', 10) === current_size
             if (!is_last_chunk && size < 5 * 1024 * 1024) {
               log(`[${metadata.file.id}] ignoring chuck smaller than 5MB`)
               return
@@ -327,7 +325,7 @@ class S3Store extends DataStore {
             return this._uploadPart(metadata, fs.createReadStream(path), partNumber)
           })
           .finally(() => {
-            fs.rm(path, (err: any) => {
+            fs.rm(path, (err) => {
               if (err) {
                 log(`[${metadata.file.id}] failed to remove file ${path}`, err)
               }
@@ -341,19 +339,15 @@ class S3Store extends DataStore {
   /**
    * Completes a multipart upload on S3.
    * This is where S3 concatenates all the uploaded parts.
-   *
-   * @param  {Object}          metadata upload metadata
-   * @param  {Array}           parts    data of each part
-   * @return {Promise<String>}          which resolves with the file location on S3
    */
-  _finishMultipartUpload(metadata: any, parts: any) {
+  _finishMultipartUpload(metadata: MetadataValue, parts: aws.S3.Parts) {
     return this.client
       .completeMultipartUpload({
         Bucket: this.bucket_name,
         Key: metadata.file.id,
         UploadId: metadata.upload_id,
         MultipartUpload: {
-          Parts: parts.map((part: any) => {
+          Parts: parts.map((part) => {
             return {
               ETag: part.ETag,
               PartNumber: part.PartNumber,
@@ -362,8 +356,8 @@ class S3Store extends DataStore {
         },
       })
       .promise()
-      .then((result: any) => result.Location)
-      .catch((error: any) => {
+      .then((result) => result.Location)
+      .catch((error) => {
         throw error
       })
   }
@@ -371,42 +365,40 @@ class S3Store extends DataStore {
   /**
    * Gets the number of complete parts/chunks already uploaded to S3.
    * Retrieves only consecutive parts.
-   *
-   * @param  {String}          file_id            id of the file
-   * @param  {String}          part_number_marker optional part number marker
-   * @return {Promise<Array>}                    upload parts
    */
-  _retrieveParts(file_id: any, part_number_marker: any) {
-    const params = {
+  _retrieveParts(
+    file_id: string,
+    part_number_marker?: number
+  ): Promise<aws.S3.Parts | undefined> {
+    const params: aws.S3.ListPartsRequest = {
       Bucket: this.bucket_name,
       Key: file_id,
-      UploadId: this.cache[file_id].upload_id,
+      UploadId: this.cache.get(file_id)?.upload_id as string,
     }
     if (part_number_marker) {
-      ;(params as any).PartNumberMarker = part_number_marker
+      params.PartNumberMarker = part_number_marker
     }
 
     return this.client
       .listParts(params)
       .promise()
-      .then((data: any) => {
+      .then((data) => {
         if (data.NextPartNumberMarker) {
-          return this._retrieveParts(file_id, data.NextPartNumberMarker).then(
-            (val: any) => [].concat(data.Parts, val)
-          )
+          return this._retrieveParts(file_id, data.NextPartNumberMarker).then((parts) => {
+            return [...(data.Parts as aws.S3.Parts), ...(parts as aws.S3.Parts)]
+          })
         }
 
         return data.Parts
       })
-      .then((parts: any) => {
-        // Sort and filter only for call where `part_number_marker` is not set
-        if (part_number_marker === undefined) {
-          parts.sort((a: any, b: any) => {
-            return a.PartNumber - b.PartNumber
-          })
-          parts = parts.filter((value: any, index: any) => {
-            return value.PartNumber === index + 1
-          })
+      .then((parts) => {
+        if (parts && !part_number_marker) {
+          return (
+            parts
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              .sort((a, b) => a.PartNumber! - b.PartNumber!)
+              .filter((value, index) => value.PartNumber === index + 1)
+          )
         }
 
         return parts
@@ -416,32 +408,26 @@ class S3Store extends DataStore {
   /**
    * Gets the number of parts/chunks
    * already uploaded to S3.
-   *
-   * @param  {String}          file_id            id of the file
-   * @return {Promise<Number>}                    number of parts
    */
-  async _countParts(file_id: any) {
-    // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
-    return await this._retrieveParts(file_id).then((parts: any) => parts.length)
+  async _countParts(file_id: string) {
+    return this._retrieveParts(file_id).then((parts) => parts?.length ?? 0)
   }
 
   /**
    * Removes cached data for a given file.
-   * @param  {String} file_id id of the file
-   * @return {undefined}
    */
-  _clearCache(file_id: any) {
+  _clearCache(file_id: string) {
     log(`[${file_id}] removing cached data`)
-    delete this.cache[file_id]
+    this.cache.delete(file_id)
   }
 
-  create(file: any) {
+  create(file: File) {
     return this._bucketExists()
       .then(() => {
         return this._initMultipartUpload(file)
       })
       .then(() => file)
-      .catch((error: any) => {
+      .catch((error) => {
         this._clearCache(file.id)
         throw error
       })
@@ -449,22 +435,19 @@ class S3Store extends DataStore {
 
   /**
    * Write to the file, starting at the provided offset
-   *
-   * @param {object} readable stream.Readable
-   * @param {string} file_id Name of file
-   * @param {integer} offset starting offset
-   * @return {Promise}
    */
-  write(readable: any, file_id: any) {
+  write(
+    readable: http.IncomingMessage | fs.ReadStream,
+    file_id: string
+  ): Promise<number> {
     return this._getMetadata(file_id)
-      .then((metadata: any) => {
+      .then((metadata) => {
         return Promise.all([metadata, this._countParts(file_id), this.getOffset(file_id)])
       })
-      .then(async (results: any) => {
+      .then(async (results) => {
         const [metadata, part_number, initial_offset] = results
         const next_part_number = part_number + 1
         return Promise.all(
-          // @ts-expect-error TS(2769): No overload matches this call.
           await this._processUpload(
             metadata,
             readable,
@@ -475,14 +458,18 @@ class S3Store extends DataStore {
           .then(() => this.getOffset(file_id))
           .then((current_offset) => {
             if (
-              Number.parseInt(metadata.file.upload_length, 10) === current_offset.size
+              Number.parseInt(metadata.file.upload_length as string, 10) ===
+              current_offset.size
             ) {
-              return this._finishMultipartUpload(metadata, current_offset.parts)
+              return this._finishMultipartUpload(
+                metadata,
+                current_offset.parts as aws.S3.Parts
+              )
                 .then(() => {
                   this._clearCache(file_id)
                   return current_offset.size
                 })
-                .catch((error: any) => {
+                .catch((error) => {
                   log(`[${file_id}] failed to finish upload`, error)
                   throw error
                 })
@@ -514,8 +501,8 @@ class S3Store extends DataStore {
       })
   }
 
-  async getOffset(id: any) {
-    let metadata
+  async getOffset(id: string): Promise<File & {parts?: aws.S3.Parts; size: number}> {
+    let metadata: MetadataValue | undefined
     try {
       metadata = await this._getMetadata(id)
     } catch (error) {
@@ -524,17 +511,19 @@ class S3Store extends DataStore {
     }
 
     try {
-      // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
       const parts = await this._retrieveParts(id)
       return {
-        ...this.cache[id].file,
-        size: parts.length > 0 ? parts.reduce((a: any, b: any) => a + b.Size, 0) : 0,
-        upload_length: metadata.file.upload_length,
-        upload_defer_length: metadata.file.upload_defer_length,
+        id,
+        ...this.cache.get(id)?.file,
+        // @ts-expect-error object is not possibly undefined
+        size: parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0,
+        upload_length: metadata?.file.upload_length,
+        upload_defer_length: metadata?.file.upload_defer_length,
         parts,
       }
-    } catch (error) {
-      if ((error as any).code !== 'NoSuchUpload') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error.code !== 'NoSuchUpload') {
         log(error)
         throw error
       }
@@ -543,15 +532,16 @@ class S3Store extends DataStore {
       // the upload will no longer be present and requesting it will result in a 404.
       // In that case we return the upload_length as size.
       return {
-        ...this.cache[id].file,
-        size: metadata.file.upload_length,
+        id,
+        ...this.cache.get(id)?.file,
+        size: Number.parseInt(metadata.file.upload_length as string, 10),
         upload_length: metadata.file.upload_length,
         upload_defer_length: metadata.file.upload_defer_length,
       }
     }
   }
 
-  async declareUploadLength(file_id: any, upload_length: any) {
+  async declareUploadLength(file_id: string, upload_length: string) {
     const {file, upload_id} = await this._getMetadata(file_id)
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND

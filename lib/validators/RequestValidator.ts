@@ -1,19 +1,23 @@
+/* eslint-disable unicorn/prefer-number-properties */
 import {HEADERS_LOWERCASE, TUS_VERSION, TUS_RESUMABLE} from '../constants'
 
 const RequestValidator = {
   // All PATCH requests MUST include a Upload-Offset header
-  _invalidUploadOffsetHeader(value: any) {
-    return isNaN(value) || Number.parseInt(value, 10) < 0
+  _invalidUploadOffsetHeader(value: string | undefined) {
+    // @ts-expect-error isNan can in fact expect non-number args
+    return isNaN(value) || Number.parseInt(value as string, 10) < 0
   },
 
   // The value MUST be a non-negative integer.
-  _invalidUploadLengthHeader(value: any) {
-    return isNaN(value) || Number.parseInt(value, 10) < 0
+  _invalidUploadLengthHeader(value: string | undefined) {
+    // @ts-expect-error isNan can in fact expect non-number args
+    return isNaN(value) || Number.parseInt(value as string, 10) < 0
   },
 
   // The Upload-Defer-Length value MUST be 1.
-  _invalidUploadDeferLengthHeader(value: any) {
-    return isNaN(value) || Number.parseInt(value, 10) !== 1
+  _invalidUploadDeferLengthHeader(value: string | undefined) {
+    // @ts-expect-error isNan can in fact expect non-number args
+    return isNaN(value) || Number.parseInt(value as string, 10) !== 1
   },
 
   // The Upload-Metadata request and response header MUST consist of one
@@ -21,11 +25,10 @@ const RequestValidator = {
   // separated by a space. The key MUST NOT contain spaces and commas and
   // MUST NOT be empty. The key SHOULD be ASCII encoded and the value MUST
   // be Base64 encoded. All keys MUST be unique.
-  _invalidUploadMetadataHeader(value: any) {
-    const keypairs = value.split(',').map((keypair: any) => keypair.trim().split(' '))
+  _invalidUploadMetadataHeader(value: string) {
+    const keypairs = value.split(',').map((keypair) => keypair.trim().split(' '))
     return keypairs.some(
-      (keypair: any) =>
-        keypair[0] === '' || (keypair.length !== 2 && keypair.length !== 1)
+      (keypair) => keypair[0] === '' || (keypair.length !== 2 && keypair.length !== 1)
     )
   },
 
@@ -33,15 +36,16 @@ const RequestValidator = {
     return false
   },
 
-  _invalidTusVersionHeader(value: any) {
+  _invalidTusVersionHeader(value: string) {
+    // @ts-expect-error we can compare a literal
     return !TUS_VERSION.includes(value)
   },
 
-  _invalidTusResumableHeader(value: any) {
+  _invalidTusResumableHeader(value: string) {
     return value !== TUS_RESUMABLE
   },
 
-  _invalidTusExtensionHeader(value: any) {
+  _invalidTusExtensionHeader() {
     return false
   },
 
@@ -54,7 +58,7 @@ const RequestValidator = {
   },
 
   // All PATCH requests MUST use Content-Type: application/offset+octet-stream.
-  _invalidContentTypeHeader(value: any) {
+  _invalidContentTypeHeader(value: string | undefined) {
     return value !== 'application/offset+octet-stream'
   },
 
@@ -62,7 +66,7 @@ const RequestValidator = {
     return false
   },
 
-  _invalidUploadConcatHeader(value: any) {
+  _invalidUploadConcatHeader(value: string) {
     const valid_partial = value === 'partial'
     const valid_final = value.startsWith('final;')
     return !valid_partial && !valid_final
@@ -70,14 +74,14 @@ const RequestValidator = {
 
   capitalizeHeader(header_name: string) {
     return header_name
-      .replace(/\b[a-z]/g, function () {
-        // eslint-disable-next-line prefer-rest-params
-        return arguments[0].toUpperCase()
+      .replace(/\b[a-z]/g, function (substring) {
+        return substring.toUpperCase()
       })
       .replace(/-/g, '')
   },
 
-  isInvalidHeader(header_name: any, header_value: any): boolean {
+  isInvalidHeader(header_name: string, header_value: string | undefined): boolean {
+    // @ts-expect-error we can compare string literals
     if (!HEADERS_LOWERCASE.includes(header_name)) {
       return false
     }
@@ -87,4 +91,5 @@ const RequestValidator = {
     return this[method](header_value)
   },
 }
+
 export default RequestValidator

@@ -1,45 +1,56 @@
+// TODO: use /promises versions
 import fs from 'node:fs'
 import path from 'node:path'
 import stream from 'node:stream'
+import http from 'node:http'
 
 import debug from 'debug'
-
 import Configstore from 'configstore'
+
 import DataStore from './DataStore'
 import pkg from '../../package.json'
 import {ERRORS} from '../constants'
+
+import type {File} from '../../types'
+
+type Store = {
+  get(key: string): File | undefined
+  set(key: string, value: File): void
+  delete(key: string): void
+}
+
+type Options = {
+  directory: string
+  configstore?: Store
+}
 
 const MASK = '0777'
 const IGNORED_MKDIR_ERROR = 'EEXIST'
 const FILE_DOESNT_EXIST = 'ENOENT'
 const log = debug('tus-node-server:stores:filestore')
 
-class FileStore extends DataStore {
+export default class FileStore extends DataStore {
   directory: string
-  configstore: Configstore
+  configstore: Store
 
-  constructor(options: any) {
-    super(options)
-    this.directory = options.directory
-    this.configstore = options.configstore
-
-    if (!this.configstore) {
-      this.configstore = new Configstore(`${pkg.name}-${pkg.version}`)
-    }
-
+  constructor({directory, configstore}: Options) {
+    super()
+    this.directory = directory
+    this.configstore = configstore ?? new Configstore(`${pkg.name}-${pkg.version}`)
     this.extensions = [
       'creation',
       'creation-with-upload',
       'creation-defer-length',
       'termination',
     ]
-    this._checkOrCreateDirectory()
+    // TODO: this async call can not happen in the constructor
+    this.checkOrCreateDirectory()
   }
 
   /**
    *  Ensure the directory exists.
    */
-  _checkOrCreateDirectory() {
+  private checkOrCreateDirectory() {
     fs.mkdir(this.directory, MASK, (error) => {
       if (error && error.code !== IGNORED_MKDIR_ERROR) {
         throw error
@@ -49,19 +60,16 @@ class FileStore extends DataStore {
 
   /**
    * Create an empty file.
-   *
-   * @param  {File} file
-   * @return {Promise}
    */
-  create(file: any) {
+  create(file: File): Promise<File> {
     return new Promise((resolve, reject) => {
-      return fs.open(path.join(this.directory, file.id), 'w', async (err, fd) => {
+      fs.open(path.join(this.directory, file.id), 'w', (err, fd) => {
         if (err) {
           log('[FileStore] create: Error', err)
           return reject(err)
         }
 
-        await this.configstore.set(file.id, file)
+        this.configstore.set(file.id, file)
 
         return fs.close(fd, (exception) => {
           if (exception) {
@@ -75,25 +83,13 @@ class FileStore extends DataStore {
     })
   }
 
-  /** Get file from filesystem
-   *
-   * @param {string} file_id  Name of the file
-   *
-   * @return {stream.Readable}
-   */
   read(file_id: string) {
     return fs.createReadStream(path.join(this.directory, file_id))
   }
 
-  /**
-   * Deletes a file.
-   *
-   * @param {string} file_id  Name of the file
-   * @return {Promise}
-   */
-  remove(file_id: any): Promise<void> {
+  remove(file_id: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      return fs.unlink(`${this.directory}/${file_id}`, (err) => {
+      fs.unlink(`${this.directory}/${file_id}`, (err) => {
         if (err) {
           log('[FileStore] delete: Error', err)
           reject(ERRORS.FILE_NOT_FOUND)
@@ -109,15 +105,11 @@ class FileStore extends DataStore {
     })
   }
 
-  /**
-   * Write to the file, starting at the provided offset
-   *
-   * @param {object} readable stream.Readable
-   * @param {string} file_id Name of file
-   * @param {integer} offset starting offset
-   * @return {Promise}
-   */
-  write(readable: any, file_id: string, offset: any): Promise<number> {
+  write(
+    readable: http.IncomingMessage | stream.Readable,
+    file_id: string,
+    offset: number
+  ): Promise<number> {
     const writeable = fs.createWriteStream(path.join(this.directory, file_id), {
       flags: 'r+',
       start: offset,
@@ -125,7 +117,7 @@ class FileStore extends DataStore {
 
     let bytes_received = 0
     const transform = new stream.Transform({
-      transform(chunk, encoding, callback) {
+      transform(chunk, _, callback) {
         bytes_received += chunk.length
         callback(null, chunk)
       },
@@ -147,21 +139,20 @@ class FileStore extends DataStore {
     })
   }
 
-  /**
-   * Return file stats, if they exits
-   *
-   * @param  {string} file_id name of the file
-   * @return {object}           fs stats
-   */
-  async getOffset(file_id: string): Promise<{size: number; upload_length: number}> {
-    const config = await this.configstore.get(file_id)
+  async getOffset(file_id: string): Promise<File> {
+    const file = this.configstore.get(file_id)
+
+    if (!file) {
+      throw ERRORS.FILE_NOT_FOUND
+    }
+
     return new Promise((resolve, reject) => {
       const file_path = `${this.directory}/${file_id}`
       fs.stat(file_path, (error, stats) => {
-        if (error && error.code === FILE_DOESNT_EXIST && config) {
+        if (error && error.code === FILE_DOESNT_EXIST && file) {
           log(
             `[FileStore] getOffset: No file found at ${file_path} but db record exists`,
-            config
+            file
           )
           return reject(ERRORS.FILE_NO_LONGER_EXISTS)
         }
@@ -180,14 +171,13 @@ class FileStore extends DataStore {
           return reject(ERRORS.FILE_NOT_FOUND)
         }
 
-        config.size = stats.size
-        return resolve(config)
+        return resolve({...file, size: stats.size})
       })
     })
   }
 
-  async declareUploadLength(file_id: string, upload_length: any) {
-    const file = await this.configstore.get(file_id)
+  async declareUploadLength(file_id: string, upload_length: string) {
+    const file = this.configstore.get(file_id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
@@ -199,5 +189,3 @@ class FileStore extends DataStore {
     this.configstore.set(file_id, file)
   }
 }
-
-export default FileStore

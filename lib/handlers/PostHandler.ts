@@ -1,5 +1,4 @@
 import debug from 'debug'
-import type http from 'node:http'
 
 import BaseHandler from './BaseHandler'
 import File from '../models/File'
@@ -7,10 +6,17 @@ import Uid from '../models/Uid'
 import RequestValidator from '../validators/RequestValidator'
 import {EVENTS, ERRORS} from '../constants'
 
+import type http from 'node:http'
+import type {DataStore, ServerOptions} from '../../types'
+import type {SetRequired} from 'type-fest'
+
 const log = debug('tus-node-server:handlers:post')
 
-class PostHandler extends BaseHandler {
-  constructor(store: any, options: any) {
+export default class PostHandler extends BaseHandler {
+  // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
+  options!: SetRequired<ServerOptions, 'namingFunction'>
+
+  constructor(store: DataStore, options: ServerOptions) {
     if (options.namingFunction && typeof options.namingFunction !== 'function') {
       throw new Error("'namingFunction' must be a function")
     }
@@ -30,9 +36,9 @@ class PostHandler extends BaseHandler {
       throw ERRORS.UNSUPPORTED_CONCATENATION_EXTENSION
     }
 
-    const upload_length = req.headers['upload-length']
-    const upload_defer_length = req.headers['upload-defer-length']
-    const upload_metadata = req.headers['upload-metadata']
+    const upload_length = req.headers['upload-length'] as string | undefined
+    const upload_defer_length = req.headers['upload-defer-length'] as string | undefined
+    const upload_metadata = req.headers['upload-metadata'] as string | undefined
 
     if (
       upload_defer_length !== undefined && // Throw error if extension is not supported
@@ -67,10 +73,9 @@ class PostHandler extends BaseHandler {
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
     if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
       const new_offset = await this.store.write(req, file.id, 0)
-      optional_headers['Upload-Offset'] = new_offset
+      optional_headers['Upload-Offset'] = new_offset.toString()
 
-      // @ts-expect-error todo
-      if (new_offset === Number.parseInt(upload_length, 10)) {
+      if (new_offset === Number.parseInt(upload_length as string, 10)) {
         this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {
           file: new File(
             file_id,
@@ -85,5 +90,3 @@ class PostHandler extends BaseHandler {
     return this.write(res, 201, {Location: url, ...optional_headers})
   }
 }
-
-export default PostHandler

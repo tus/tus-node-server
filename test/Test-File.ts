@@ -22,8 +22,8 @@ describe('File', () => {
 
     it('should set properties given', () => {
       const file_id = Uid.rand()
-      const upload_length = 1234
-      const upload_defer_length = 1
+      const upload_length = '1234'
+      const upload_defer_length = '1'
       const upload_metadata = 'metadata'
       const file = new File(file_id, upload_length, upload_defer_length, upload_metadata)
       assert.equal(file.id, file_id)

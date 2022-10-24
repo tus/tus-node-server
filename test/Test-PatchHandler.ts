@@ -2,53 +2,41 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
+import net from 'node:net'
 
 import sinon from 'sinon'
 import PatchHandler from '../lib/handlers/PatchHandler'
 import DataStore from '../lib/stores/DataStore'
 
-const hasHeader = (res: any, header: any) => {
-  if (typeof header === 'string') {
-    return res._header.includes(`${header}:`)
-  }
-
-  const key = Object.keys(header)[0]
-  return res._header.includes(`${key}: ${header[key]}`)
-}
-
 describe('PatchHandler', () => {
   const path = '/test/output'
-  let res: any = null
-  let store: any = null
-  let handler: any = null
-  const req = {headers: {}}
+  let req: http.IncomingMessage
+  let res: http.ServerResponse
+  let store: sinon.SinonStubbedInstance<DataStore>
+  let handler: InstanceType<typeof PatchHandler>
 
-  beforeEach((done) => {
+  beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
-
     handler = new PatchHandler(store, {path})
-    // @ts-expect-error todo
-    res = new http.ServerResponse({method: 'PATCH'})
-    done()
+    req = new http.IncomingMessage(new net.Socket())
+    req.method = 'PATCH'
+    res = new http.ServerResponse(req)
   })
 
   it('should 403 if no Content-Type header', () => {
     req.headers = {}
-    // @ts-expect-error todo
     req.url = `${path}/1234`
     return assert.rejects(() => handler.send(req, res), {status_code: 403})
   })
 
   it('should 403 if no Upload-Offset header', () => {
     req.headers = {'content-type': 'application/offset+octet-stream'}
-    // @ts-expect-error todo
     req.url = `${path}/1234`
     return assert.rejects(() => handler.send(req, res), {status_code: 403})
   })
 
   describe('send()', () => {
     it('should 404 urls without a path', () => {
-      // @ts-expect-error todo
       req.url = `${path}/`
       return assert.rejects(() => handler.send(req, res), {status_code: 404})
     })
@@ -57,16 +45,12 @@ describe('PatchHandler', () => {
       req.headers = {
         'content-type': 'application/offset+octet-stream',
       }
-      // @ts-expect-error todo
       req.url = `${path}/file`
       return assert.rejects(() => handler.send(req, res), {status_code: 403})
     })
 
     it('should 403 the content-type is omitted', () => {
-      req.headers = {
-        'upload-offset': '0',
-      }
-      // @ts-expect-error todo
+      req.headers = {'upload-offset': '0'}
       req.url = `${path}/file`
       return assert.rejects(() => handler.send(req, res), {status_code: 403})
     })
@@ -77,11 +61,10 @@ describe('PatchHandler', () => {
         'upload-length': '10',
         'content-type': 'application/offset+octet-stream',
       }
-      // @ts-expect-error todo
       req.url = `${path}/file`
 
       store.hasExtension.withArgs('creation-defer-length').returns(true)
-      store.getOffset.resolves({size: 0, upload_defer_length: '1'})
+      store.getOffset.resolves({id: '1234', size: 0, upload_defer_length: '1'})
       store.write.resolves(5)
       store.declareUploadLength.resolves()
 
@@ -96,10 +79,9 @@ describe('PatchHandler', () => {
         'upload-length': '10',
         'content-type': 'application/offset+octet-stream',
       }
-      // @ts-expect-error todo
       req.url = `${path}/file`
 
-      store.getOffset.resolves({size: 0, upload_length: '20'})
+      store.getOffset.resolves({id: '1234', size: 0, upload_length: '20'})
       store.hasExtension.withArgs('creation-defer-length').returns(true)
 
       return assert.rejects(() => handler.send(req, res), {status_code: 400})
@@ -111,8 +93,8 @@ describe('PatchHandler', () => {
         'upload-length': '512',
         'content-type': 'application/offset+octet-stream',
       }
-      // @ts-expect-error todo
       req.url = `${path}/1234`
+      // eslint-disable-next-line new-cap
       handler.send(req, res).should.be.a.Promise()
     })
 
@@ -122,10 +104,9 @@ describe('PatchHandler', () => {
         'upload-length': '512',
         'content-type': 'application/offset+octet-stream',
       }
-      // @ts-expect-error todo
       req.url = `${path}/1234`
 
-      store.getOffset.resolves({size: 0, upload_length: '512'})
+      store.getOffset.resolves({id: '1234', size: 0, upload_length: '512'})
 
       return assert.rejects(() => handler.send(req, res), {status_code: 409})
     })
@@ -135,16 +116,16 @@ describe('PatchHandler', () => {
         'upload-offset': '0',
         'content-type': 'application/offset+octet-stream',
       }
-      // @ts-expect-error todo
       req.url = `${path}/1234`
 
-      store.getOffset.resolves({size: 0, upload_length: '1024'})
+      store.getOffset.resolves({id: '1234', size: 0, upload_length: '1024'})
       store.write.resolves(10)
 
       await handler.send(req, res)
 
-      assert.equal(hasHeader(res, {'Upload-Offset': '10'}), true)
-      assert.equal(hasHeader(res, 'Content-Length'), false)
+      // @ts-expect-error works but not in types
+      assert.equal(res._header.includes('Upload-Offset: 10'), true)
+      assert.equal(res.hasHeader('Content-Length'), false)
       assert.equal(res.statusCode, 204)
     })
   })

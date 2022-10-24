@@ -1,31 +1,25 @@
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
+import net from 'node:net'
+
 import sinon from 'sinon'
+
 import DataStore from '../lib/stores/DataStore'
 import HeadHandler from '../lib/handlers/HeadHandler'
 import {ERRORS} from '../lib/constants'
-const hasHeader = (res: any, header: any) => {
-  const key = Object.keys(header)[0]
-  return res._header.includes(`${key}: ${header[key]}`)
-}
 
 describe('HeadHandler', () => {
   const path = '/test/output'
   const fake_store = sinon.createStubInstance(DataStore)
   const handler = new HeadHandler(fake_store, {relativeLocation: true, path})
-  let req: {url: string; headers: Record<string, string>} = {
-    headers: {},
-    url: '',
-  }
-  // @ts-expect-error
-  let res: http.ServerResponse<http.IncomingMessage> = new http.ServerResponse({
-    method: 'HEAD',
-  })
+  let req: http.IncomingMessage
+  let res: http.ServerResponse
 
   beforeEach(() => {
-    req = {headers: {}, url: handler.generateUrl({}, '1234')}
-    // @ts-expect-error
-    res = new http.ServerResponse({method: 'HEAD'})
+    req = new http.IncomingMessage(new net.Socket())
+    req.url = handler.generateUrl(req, '1234')
+    req.method = 'HEAD'
+    res = new http.ServerResponse(req)
   })
 
   it('should 404 if no file id match', () => {
@@ -39,11 +33,10 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with the offset and cache-control', async () => {
-    // @ts-expect-error
-    fake_store.getOffset.resolves({id: '1234', size: 0, upload_length: 1})
+    fake_store.getOffset.resolves({id: '1234', size: 0, upload_length: '1'})
     await handler.send(req, res)
-    assert.equal(hasHeader(res, {'Upload-Offset': 0}), true)
-    assert.equal(hasHeader(res, {'Cache-Control': 'no-store'}), true)
+    assert.equal(res.getHeader('Upload-Offset'), '0')
+    assert.equal(res.getHeader('Cache-Control'), 'no-store')
     assert.equal(res.statusCode, 200)
   })
 
@@ -54,10 +47,9 @@ describe('HeadHandler', () => {
       upload_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
-    assert.equal(hasHeader(res, {'Upload-Length': file.upload_length}), true)
+    assert.equal(res.getHeader('Upload-Length'), file.upload_length)
     assert.equal(res.hasHeader('Upload-Defer-Length'), false)
   })
 
@@ -68,10 +60,9 @@ describe('HeadHandler', () => {
       upload_defer_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
-    assert.equal(hasHeader(res, {'Upload-Defer-Length': file.upload_defer_length}), true)
+    assert.equal(res.getHeader('Upload-Defer-Length'), file.upload_defer_length)
     assert.equal(res.hasHeader('Upload-Length'), false)
   })
 
@@ -82,15 +73,13 @@ describe('HeadHandler', () => {
       upload_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
-    assert.equal(hasHeader(res, {'Upload-Metadata': file.upload_metadata}), true)
+    assert.equal(res.getHeader('Upload-Metadata'), file.upload_metadata)
   })
 
   it('should resolve without metadata', async () => {
     const file = {id: '1234', size: 0, upload_length: '1'}
-    // @ts-expect-error
     fake_store.getOffset.resolves(file)
     await handler.send(req, res)
     assert.equal(res.hasHeader('Upload-Metadata'), false)

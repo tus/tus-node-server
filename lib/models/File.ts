@@ -1,19 +1,15 @@
-/**
- * @fileOverview
- * Model for File objects.
- *
- * @author Ben Stahl <bhstahl@gmail.com>
- */
-class File {
-  id: any
-  upload_defer_length: any
-  upload_length: any
-  upload_metadata: any
+export default class File {
+  id: string
+  upload_defer_length?: string
+  upload_metadata?: string
+  upload_length?: string
+  size?: number
+
   constructor(
-    file_id: any,
-    upload_length: any,
-    upload_defer_length: any,
-    upload_metadata: any
+    file_id: string,
+    upload_length: string | undefined,
+    upload_defer_length?: string,
+    upload_metadata?: string
   ) {
     if (!file_id) {
       throw new Error('[File] constructor must be given a file_id')
@@ -31,4 +27,3 @@ class File {
     this.upload_metadata = upload_metadata
   }
 }
-export default File

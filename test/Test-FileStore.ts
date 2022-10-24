@@ -12,16 +12,16 @@ import File from '../lib/models/File'
 
 import * as shared from './Test-Stores.shared'
 
-describe('FileStore', function (this: any) {
-  before(function (this: any) {
+describe('FileStore', function () {
+  before(function () {
     this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
     this.storePath = '/test/output'
-    this.testFilePath = path.resolve(__dirname, 'fixtures', this.testFileName)
-    this.filesDirectory = path.resolve(__dirname, `..${this.storePath}`)
+    this.testFilePath = path.resolve('test', 'fixtures', this.testFileName)
+    this.filesDirectory = path.resolve(this.storePath)
   })
 
-  beforeEach(function (this: any) {
+  beforeEach(function () {
     sinon.spy(fs, 'mkdir')
     this.datastore = new FileStore({
       directory: `${this.storePath.slice(1)}`,
@@ -30,32 +30,31 @@ describe('FileStore', function (this: any) {
   })
 
   this.afterEach(() => {
-    // @ts-expect-error
+    // @ts-expect-error ignore
     fs.mkdir.restore()
   })
 
-  it('should create a directory for the files', function (this: any, done: any) {
-    // @ts-expect-error
+  it('should create a directory for the files', function (done) {
+    // @ts-expect-error should
     assert(fs.mkdir.calledOnce)
-    // @ts-expect-error
+    // @ts-expect-error should
     assert.equal(this.datastore.directory, fs.mkdir.getCall(0).args[0])
     done()
   })
 
   describe('create', () => {
-    // @ts-expect-error TS(2554): Expected 4 arguments, but got 2.
     const file = new File('1234', '1000')
 
-    it('should reject when the directory doesnt exist', function (this: any) {
+    it('should reject when the directory doesnt exist', function () {
       this.datastore.directory = 'some_new_path'
       return this.datastore.create(file).should.be.rejected()
     })
 
-    it('should resolve when the directory exists', function (this: any) {
+    it('should resolve when the directory exists', function () {
       return this.datastore.create(file).should.be.fulfilled()
     })
 
-    it('should create an empty file', async function (this: any) {
+    it('should create an empty file', async function () {
       // TODO: this test would pass even if `datastore.create` would not create any file
       // as the file probably already exists from other tests
       await this.datastore.create(file)
@@ -64,15 +63,16 @@ describe('FileStore', function (this: any) {
     })
   })
 
-  describe('write', function (this: any) {
+  describe('write', function () {
     const file = new File(
       '1234',
+      // @ts-expect-error this not typed
       `${this.testFileSize}`,
       undefined,
       'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
     )
 
-    it("created file's size should match 'upload_length'", async function (this: any) {
+    it("created file's size should match 'upload_length'", async function () {
       await this.datastore.create(file)
       await this.datastore.write(fs.createReadStream(this.testFilePath), file.id, 0)
       const stats = fs.statSync(this.testFilePath)
@@ -81,7 +81,7 @@ describe('FileStore', function (this: any) {
   })
 
   describe('getOffset', () => {
-    it('should reject directories', function (this: any) {
+    it('should reject directories', function () {
       return this.datastore.getOffset('').should.be.rejected()
     })
   })

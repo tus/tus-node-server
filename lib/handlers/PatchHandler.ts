@@ -1,13 +1,14 @@
 import debug from 'debug'
-import type http from 'node:http'
 
 import BaseHandler from './BaseHandler'
 import File from '../models/File'
 import {ERRORS, EVENTS} from '../constants'
 
+import type http from 'node:http'
+
 const log = debug('tus-node-server:handlers:patch')
 
-class PatchHandler extends BaseHandler {
+export default class PatchHandler extends BaseHandler {
   /**
    * Write data to the DataStore and return the new offset.
    */
@@ -62,7 +63,7 @@ class PatchHandler extends BaseHandler {
     }
 
     const new_offset = await this.store.write(req, file_id, offset)
-    if (new_offset === Number.parseInt(file.upload_length, 10)) {
+    if (new_offset === Number.parseInt(file.upload_length as string, 10)) {
       this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {
         file: new File(
           file_id,
@@ -82,5 +83,3 @@ class PatchHandler extends BaseHandler {
     return this.write(res, 204, headers)
   }
 }
-
-export default PatchHandler

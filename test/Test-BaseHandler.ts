@@ -1,51 +1,54 @@
+import http from 'node:http'
+import net from 'node:net'
 import {strict as assert} from 'node:assert'
-import * as httpMocks from 'node-mocks-http'
+
+import httpMocks from 'node-mocks-http'
 
 import BaseHandler from '../lib/handlers/BaseHandler'
 import DataStore from '../lib/stores/DataStore'
 
 describe('BaseHandler', () => {
-  it('constructor must require a DataStore', (done: any) => {
+  const store = new DataStore()
+  const handler = new BaseHandler(store, {path: '/test/output'})
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let res: httpMocks.MockResponse<any>
+
+  beforeEach(() => {
+    const req = new http.IncomingMessage(new net.Socket())
+    req.method = 'GET'
+    res = httpMocks.createResponse({req})
+  })
+
+  it('constructor must require a DataStore', (done) => {
     assert.throws(() => {
       // @ts-expect-error TS(2554): Expected 2 arguments, but got 0.
-      const handler = new BaseHandler()
+      new BaseHandler()
     }, Error)
     done()
   })
-  let res: any = null
-  // @ts-expect-error TS(2554): Expected 0 arguments, but got 1.
-  const store = new DataStore({path: '/test/output'})
-  // @ts-expect-error TS(2554): Expected 2 arguments, but got 1.
-  const handler = new BaseHandler(store)
-  beforeEach((done: any) => {
-    const METHOD = 'GET'
-    // @ts-expect-error TS(2345): Argument of type '{ method: string; }' is not assi... Remove this comment to see the full error message
-    res = httpMocks.createResponse({method: METHOD})
-    done()
-  })
-  it('write() should end the response', (done: any) => {
+
+  it('write() should end the response', (done) => {
     handler.write(res, 200, {})
     assert.equal(res.finished, true)
     done()
   })
-  it('write() should set a response code', (done: any) => {
+
+  it('write() should set a response code', (done) => {
     handler.write(res, 201, {})
     assert.equal(res.statusCode, 201)
     done()
   })
-  it('write() should set headers', (done: any) => {
-    const headers = {
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    }
+
+  it('write() should set headers', (done) => {
+    const header = 'Access-Control-Allow-Methods'
+    const headers = {[header]: 'GET, OPTIONS'}
     handler.write(res, 200, headers)
-    for (const header of Object.keys(headers)) {
-      // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-      assert.equal(res.getHeader(header), headers[header])
-    }
+    assert.equal(res.getHeader(header), headers[header])
 
     done()
   })
-  it('write() should write the body', (done: any) => {
+
+  it('write() should write the body', (done) => {
     const body = 'Hello tus!'
     handler.write(res, 200, {}, body)
     const output = res._getData()

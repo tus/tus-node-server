@@ -1,31 +1,23 @@
+import type {File} from '../../types'
+
 /**
- * @fileOverview
  * Memory based configstore.
  * Used mostly for unit tests.
  *
  * @author Mitja Puzigaća <mitjap@gmail.com>
  */
-class MemoryConfigstore {
-  data: any
-  constructor() {
-    this.data = new Map()
+export default class MemoryConfigstore {
+  data: Map<string, File> = new Map()
+
+  get(key: string): File | undefined {
+    return this.data.get(key)
   }
 
-  async get(key: any) {
-    let value = this.data.get(key)
-    if (value !== undefined) {
-      value = JSON.parse(value)
-    }
-
-    return value
+  set(key: string, value: File) {
+    this.data.set(key, value)
   }
 
-  async set(key: any, value: any) {
-    this.data.set(key, JSON.stringify(value))
-  }
-
-  async delete(key: any) {
+  async delete(key: string) {
     return this.data.delete(key)
   }
 }
-export default MemoryConfigstore

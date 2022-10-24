@@ -4,32 +4,29 @@ import debug from 'debug'
 import BaseHandler from './BaseHandler'
 import {ERRORS} from '../constants'
 
+import type http from 'node:http'
+import type {RouteHandler} from '../../types'
+
 const log = debug('tus-node-server:handlers:get')
 
-class GetHandler extends BaseHandler {
-  paths: any
-  constructor(store: any, options: any) {
-    super(store, options)
-    this.paths = new Map()
-  }
+export default class GetHandler extends BaseHandler {
+  paths: Map<string, RouteHandler> = new Map()
 
-  registerPath(path: any, handler: any) {
+  registerPath(path: string, handler: RouteHandler): void {
     this.paths.set(path, handler)
   }
 
   /**
    * Read data from the DataStore and send the stream.
-   *
-   * @param  {object} req http.incomingMessage
-   * @param  {object} res http.ServerResponse
-   * @return {function}
    */
-  async send(req: any, res: any) {
-    // Check if this url has been added to allow GET requests, with an
-    // appropriate callback to handle the request
-    if (this.paths.has(req.url)) {
-      // Invoke the callback
-      return this.paths.get(req.url)(req, res)
+  async send(
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+    // TODO: always return void or a stream?
+  ): Promise<stream.Writable | void> {
+    if (this.paths.has(req.url as string)) {
+      const handler = this.paths.get(req.url as string) as RouteHandler
+      return handler(req, res)
     }
 
     if (!('read' in this.store)) {
@@ -42,7 +39,7 @@ class GetHandler extends BaseHandler {
     }
 
     const stats = await this.store.getOffset(file_id)
-    const upload_length = Number.parseInt(stats.upload_length, 10)
+    const upload_length = Number.parseInt(stats.upload_length as string, 10)
     if (stats.size !== upload_length) {
       log(
         `[GetHandler] send: File is not yet fully uploaded (${stats.size}/${upload_length})`
@@ -51,13 +48,10 @@ class GetHandler extends BaseHandler {
     }
 
     const file_stream = this.store.read(file_id)
-    const headers = {
-      'Content-Length': stats.size,
-    }
+    const headers = {'Content-Length': stats.size}
     res.writeHead(200, headers)
-    return stream.pipeline(file_stream, res, (err: any) => {
+    return stream.pipeline(file_stream, res, () => {
       // We have no need to handle streaming errors
     })
   }
 }
-export default GetHandler
