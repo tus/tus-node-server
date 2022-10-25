@@ -23,7 +23,7 @@ describe('HeadHandler', () => {
   })
 
   it('should 404 if no file id match', () => {
-    fake_store.getOffset.rejects(ERRORS.FILE_NOT_FOUND)
+    fake_store.getUpload.rejects(ERRORS.FILE_NOT_FOUND)
     return assert.rejects(() => handler.send(req, res), {status_code: 404})
   })
 
@@ -33,7 +33,7 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with the offset and cache-control', async () => {
-    fake_store.getOffset.resolves({id: '1234', size: 0, upload_length: '1'})
+    fake_store.getUpload.resolves({id: '1234', size: 0, upload_length: '1'})
     await handler.send(req, res)
     assert.equal(res.getHeader('Upload-Offset'), '0')
     assert.equal(res.getHeader('Cache-Control'), 'no-store')
@@ -47,7 +47,7 @@ describe('HeadHandler', () => {
       upload_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    fake_store.getOffset.resolves(file)
+    fake_store.getUpload.resolves(file)
     await handler.send(req, res)
     assert.equal(res.getHeader('Upload-Length'), file.upload_length)
     assert.equal(res.hasHeader('Upload-Defer-Length'), false)
@@ -60,7 +60,7 @@ describe('HeadHandler', () => {
       upload_defer_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    fake_store.getOffset.resolves(file)
+    fake_store.getUpload.resolves(file)
     await handler.send(req, res)
     assert.equal(res.getHeader('Upload-Defer-Length'), file.upload_defer_length)
     assert.equal(res.hasHeader('Upload-Length'), false)
@@ -73,14 +73,14 @@ describe('HeadHandler', () => {
       upload_length: '1',
       upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     }
-    fake_store.getOffset.resolves(file)
+    fake_store.getUpload.resolves(file)
     await handler.send(req, res)
     assert.equal(res.getHeader('Upload-Metadata'), file.upload_metadata)
   })
 
   it('should resolve without metadata', async () => {
     const file = {id: '1234', size: 0, upload_length: '1'}
-    fake_store.getOffset.resolves(file)
+    fake_store.getUpload.resolves(file)
     await handler.send(req, res)
     assert.equal(res.hasHeader('Upload-Metadata'), false)
   })

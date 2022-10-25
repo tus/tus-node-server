@@ -64,7 +64,7 @@ describe('PatchHandler', () => {
       req.url = `${path}/file`
 
       store.hasExtension.withArgs('creation-defer-length').returns(true)
-      store.getOffset.resolves({id: '1234', size: 0, upload_defer_length: '1'})
+      store.getUpload.resolves({id: '1234', size: 0, upload_defer_length: '1'})
       store.write.resolves(5)
       store.declareUploadLength.resolves()
 
@@ -81,7 +81,7 @@ describe('PatchHandler', () => {
       }
       req.url = `${path}/file`
 
-      store.getOffset.resolves({id: '1234', size: 0, upload_length: '20'})
+      store.getUpload.resolves({id: '1234', size: 0, upload_length: '20'})
       store.hasExtension.withArgs('creation-defer-length').returns(true)
 
       return assert.rejects(() => handler.send(req, res), {status_code: 400})
@@ -106,7 +106,7 @@ describe('PatchHandler', () => {
       }
       req.url = `${path}/1234`
 
-      store.getOffset.resolves({id: '1234', size: 0, upload_length: '512'})
+      store.getUpload.resolves({id: '1234', size: 0, upload_length: '512'})
 
       return assert.rejects(() => handler.send(req, res), {status_code: 409})
     })
@@ -118,7 +118,7 @@ describe('PatchHandler', () => {
       }
       req.url = `${path}/1234`
 
-      store.getOffset.resolves({id: '1234', size: 0, upload_length: '1024'})
+      store.getUpload.resolves({id: '1234', size: 0, upload_length: '1024'})
       store.write.resolves(10)
 
       await handler.send(req, res)

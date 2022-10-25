@@ -31,7 +31,7 @@ export default class PatchHandler extends BaseHandler {
       throw ERRORS.INVALID_CONTENT_TYPE
     }
 
-    const file = await this.store.getOffset(file_id)
+    const file = await this.store.getUpload(file_id)
 
     if (file.size !== offset) {
       // If the offsets do not match, the Server MUST respond with the 409 Conflict status without modifying the upload resource.

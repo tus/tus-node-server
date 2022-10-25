@@ -27,7 +27,7 @@ describe('GetHandler', () => {
   describe('test error responses', () => {
     it('should 404 when file does not exist', async () => {
       const store = sinon.createStubInstance(FileStore)
-      store.getOffset.rejects({status_code: 404})
+      store.getUpload.rejects({status_code: 404})
       const handler = new GetHandler(store, {path})
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
       req.url = `${path}/1234`
@@ -46,20 +46,20 @@ describe('GetHandler', () => {
 
     it('should 404 when file is not complete', async () => {
       const store = sinon.createStubInstance(FileStore)
-      store.getOffset.resolves({id: 'id', size: 512, upload_length: '1024'})
+      store.getUpload.resolves({id: 'id', size: 512, upload_length: '1024'})
       const handler = new GetHandler(store, {path})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
       await assert.rejects(() => handler.send(req, res), {status_code: 404})
-      assert.equal(store.getOffset.calledWith(fileId), true)
+      assert.equal(store.getUpload.calledWith(fileId), true)
     })
 
-    it('should 500 on error store.getOffset error', () => {
+    it('should 500 on error store.getUpload error', () => {
       const store = new DataStore()
       // @ts-expect-error ...
       store.read = () => {}
       const fakeStore = sinon.stub(store)
-      fakeStore.getOffset.rejects()
+      fakeStore.getUpload.rejects()
       const handler = new GetHandler(fakeStore, serverOptions)
       req.url = `${path}/1234`
       return assert.rejects(() => handler.send(req, res))
@@ -68,7 +68,7 @@ describe('GetHandler', () => {
     it('test invalid stream', async () => {
       const store = sinon.createStubInstance(FileStore)
       const size = 512
-      store.getOffset.resolves({id: 'id', size, upload_length: size.toString()})
+      store.getUpload.resolves({id: 'id', size, upload_length: size.toString()})
       // @ts-expect-error what should this be?
       store.read.returns(stream.Readable.from(fs.createReadStream('invalid_path')))
       const handler = new GetHandler(store, {path})
@@ -76,7 +76,7 @@ describe('GetHandler', () => {
       req.url = `${path}/${fileId}`
       await handler.send(req, res)
       assert.equal(res.statusCode, 200)
-      assert.equal(store.getOffset.calledWith(fileId), true)
+      assert.equal(store.getUpload.calledWith(fileId), true)
       assert.equal(store.read.calledWith(fileId), true)
     })
   })
@@ -84,21 +84,21 @@ describe('GetHandler', () => {
   describe('send()', () => {
     it('test if `file_id` is properly passed to store', async () => {
       const store = sinon.createStubInstance(FileStore)
-      store.getOffset.resolves({id: '1234', size: 512, upload_length: '512'})
+      store.getUpload.resolves({id: '1234', size: 512, upload_length: '512'})
       // @ts-expect-error should
       store.read.returns(stream.Readable.from(Buffer.alloc(512)))
       const handler = new GetHandler(store, {path})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
       await handler.send(req, res)
-      assert.equal(store.getOffset.calledWith(fileId), true)
+      assert.equal(store.getUpload.calledWith(fileId), true)
       assert.equal(store.read.calledWith(fileId), true)
     })
 
     it('test successful response', async () => {
       const store = sinon.createStubInstance(FileStore)
       const size = 512
-      store.getOffset.resolves({id: '1234', size, upload_length: size.toString()})
+      store.getUpload.resolves({id: '1234', size, upload_length: size.toString()})
       // @ts-expect-error what should this be?
       store.read.returns(stream.Readable.from(Buffer.alloc(size), {objectMode: false}))
       const handler = new GetHandler(store, {path})
@@ -108,7 +108,7 @@ describe('GetHandler', () => {
       assert.equal(res.statusCode, 200)
       // TODO: this is the get handler but Content-Length is only send in 204 OPTIONS requests?
       // assert.equal(res.getHeader('Content-Length'), size)
-      assert.equal(store.getOffset.calledOnceWith(fileId), true)
+      assert.equal(store.getUpload.calledOnceWith(fileId), true)
       assert.equal(store.read.calledOnceWith(fileId), true)
     })
   })
@@ -142,14 +142,14 @@ describe('GetHandler', () => {
       req.url = `${customPath}`
       await handler.send(req, res)
       assert.equal(spy_getFileIdFromRequest.callCount, 0)
-      assert.equal(fakeStore.getOffset.callCount, 0)
+      assert.equal(fakeStore.getUpload.callCount, 0)
     })
   })
 
   describe('DataStore without `read` method', () => {
     it('should 404 if not implemented', async () => {
       const fakeStore = sinon.stub(new DataStore())
-      fakeStore.getOffset.resolves({id: '1234', size: 512, upload_length: '512'})
+      fakeStore.getUpload.resolves({id: '1234', size: 512, upload_length: '512'})
       const handler = new GetHandler(fakeStore, serverOptions)
       req.url = `/${path}/1234`
       await assert.rejects(() => handler.send(req, res), {status_code: 404})

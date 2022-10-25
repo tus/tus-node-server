@@ -11,7 +11,7 @@ export default class HeadHandler extends BaseHandler {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const file = await this.store.getOffset(file_id)
+    const file = await this.store.getUpload(file_id)
     // The Server MUST prevent the client and/or proxies from
     // caching the response by adding the Cache-Control: no-store
     // header to the response.
