@@ -442,7 +442,7 @@ class S3Store extends DataStore {
   ): Promise<number> {
     return this._getMetadata(file_id)
       .then((metadata) => {
-        return Promise.all([metadata, this._countParts(file_id), this.getOffset(file_id)])
+        return Promise.all([metadata, this._countParts(file_id), this.getUpload(file_id)])
       })
       .then(async (results) => {
         const [metadata, part_number, initial_offset] = results
@@ -455,7 +455,7 @@ class S3Store extends DataStore {
             initial_offset.size
           )
         )
-          .then(() => this.getOffset(file_id))
+          .then(() => this.getUpload(file_id))
           .then((current_offset) => {
             if (
               Number.parseInt(metadata.file.upload_length as string, 10) ===
@@ -491,7 +491,7 @@ class S3Store extends DataStore {
                 )
               }
 
-              return this.getOffset(file_id).then((current_offset) => current_offset.size)
+              return this.getUpload(file_id).then((current_offset) => current_offset.size)
             }
 
             this._clearCache(file_id)
@@ -501,12 +501,12 @@ class S3Store extends DataStore {
       })
   }
 
-  async getOffset(id: string): Promise<File & {parts?: aws.S3.Parts; size: number}> {
+  async getUpload(id: string): Promise<File & {parts?: aws.S3.Parts; size: number}> {
     let metadata: MetadataValue | undefined
     try {
       metadata = await this._getMetadata(id)
     } catch (error) {
-      log('getOffset: No file found.', error)
+      log('getUpload: No file found.', error)
       throw ERRORS.FILE_NOT_FOUND
     }
 

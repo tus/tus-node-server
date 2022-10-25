@@ -60,7 +60,7 @@ export default class DataStore extends EventEmitter {
    * writen to the DataStore, for the client to know where to resume
    * the upload.
    */
-  async getOffset(file_id: string): Promise<File> {
+  async getUpload(file_id: string): Promise<File> {
     return {id: file_id, size: 0, upload_length: '0'}
   }
 
