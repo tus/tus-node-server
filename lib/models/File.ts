@@ -4,6 +4,7 @@ export default class File {
   upload_metadata?: string
   upload_length?: string
   size?: number
+  creation_date?: Date
 
   constructor(
     file_id: string,
@@ -25,5 +26,7 @@ export default class File {
     this.upload_length = upload_length
     this.upload_defer_length = upload_defer_length
     this.upload_metadata = upload_metadata
+
+    this.creation_date = new Date()
   }
 }

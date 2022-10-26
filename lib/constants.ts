@@ -59,6 +59,10 @@ export const ERRORS = {
     status_code: 501,
     body: 'creation-defer-length extension is not (yet) supported.\n',
   },
+  UNSUPPORTED_EXPIRATION_EXTENSION: {
+    status_code: 501,
+    body: 'expiration extension is not (yet) supported.\n',
+  },
 } as const
 export const EVENT_ENDPOINT_CREATED = 'EVENT_ENDPOINT_CREATED' as const
 export const EVENT_FILE_CREATED = 'EVENT_FILE_CREATED' as const

@@ -74,9 +74,24 @@ export default class PatchHandler extends BaseHandler {
       })
     }
 
-    //  It MUST include the Upload-Offset header containing the new offset.
-    const headers = {
+    const headers: {
+      'Upload-Offset': number
+      'Upload-Expires'?: string
+    } = {
       'Upload-Offset': new_offset,
+    }
+
+    if (
+      this.store.hasExtension('expiration') &&
+      this.store.getExpiration() > 0 &&
+      new_offset < Number.parseInt(file.upload_length as string, 10)
+    ) {
+      const creation = new Date(file.creation_date as Date)
+      // Value MUST be in RFC 7231 datetime format
+      const dateString = new Date(
+        creation.getTime() + this.store.getExpiration() * 60_000
+      ).toUTCString()
+      headers['Upload-Expires'] = dateString
     }
 
     // The Server MUST acknowledge successful PATCH requests with the 204

@@ -17,11 +17,13 @@ type Store = {
   get(key: string): File | undefined
   set(key: string, value: File): void
   delete(key: string): void
+  all: Record<string, File>
 }
 
 type Options = {
   directory: string
   configstore?: Store
+  expirationPeriodMinutes?: number
 }
 
 const MASK = '0777'
@@ -32,16 +34,19 @@ const log = debug('tus-node-server:stores:filestore')
 export default class FileStore extends DataStore {
   directory: string
   configstore: Store
+  expirationPeriodInMinutes: number
 
-  constructor({directory, configstore}: Options) {
+  constructor({directory, configstore, expirationPeriodMinutes}: Options) {
     super()
     this.directory = directory
     this.configstore = configstore ?? new Configstore(`${pkg.name}-${pkg.version}`)
+    this.expirationPeriodInMinutes = expirationPeriodMinutes ?? -1
     this.extensions = [
       'creation',
       'creation-with-upload',
       'creation-defer-length',
       'termination',
+      'expiration',
     ]
     // TODO: this async call can not happen in the constructor
     this.checkOrCreateDirectory()
@@ -187,5 +192,43 @@ export default class FileStore extends DataStore {
     file.upload_defer_length = undefined
 
     this.configstore.set(file_id, file)
+  }
+
+  async deleteExpired(): Promise<number> {
+    const now = new Date()
+    const toDelete: Promise<void>[] = []
+    for (const file_id of Object.keys(this.configstore.all)) {
+      this.getOffset(file_id)
+        .then((stats: File) => {
+          const info = this.configstore.get(file_id)
+          const upload_length = stats.upload_length
+            ? Number.parseInt(stats.upload_length, 10)
+            : 0
+          const size_on_disk = stats.size
+          if (size_on_disk === upload_length) {
+            return // Upload is complete, so don't delete
+          }
+
+          if (info && 'creation_date' in info && this.getExpiration() > 0) {
+            const creation = new Date(info.creation_date as Date)
+            const expires = new Date(creation.getTime() + this.getExpiration() * 60_000)
+            if (now > expires) {
+              toDelete.push(this.remove(file_id))
+              this.configstore.delete(file_id)
+            }
+          }
+        })
+        .catch((error) => {
+          if (error !== ERRORS.FILE_NO_LONGER_EXISTS) {
+            throw error
+          }
+        })
+    }
+
+    return Promise.all(toDelete).then(() => toDelete.length)
+  }
+
+  getExpiration(): number {
+    return this.expirationPeriodInMinutes
   }
 }
