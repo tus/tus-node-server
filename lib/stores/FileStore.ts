@@ -198,7 +198,7 @@ export default class FileStore extends DataStore {
     const now = new Date()
     const toDelete: Promise<void>[] = []
     for (const file_id of Object.keys(this.configstore.all)) {
-      this.getOffset(file_id)
+      this.getUpload(file_id)
         .then((stats: File) => {
           const info = this.configstore.get(file_id)
           const upload_length = stats.upload_length
