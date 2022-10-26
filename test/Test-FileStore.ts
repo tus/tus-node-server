@@ -80,9 +80,9 @@ describe('FileStore', function () {
     })
   })
 
-  describe('getOffset', () => {
+  describe('getUpload', () => {
     it('should reject directories', function () {
-      return this.datastore.getOffset('').should.be.rejected()
+      return this.datastore.getUpload('').should.be.rejected()
     })
   })
 

@@ -105,7 +105,7 @@ export default class GCSDataStore extends DataStore {
   ): Promise<number> {
     // GCS Doesn't persist metadata within versions,
     // get that metadata first
-    return this.getOffset(file_id).then((data) => {
+    return this.getUpload(file_id).then((data) => {
       return new Promise((resolve, reject) => {
         const file = this.bucket.file(file_id)
         const destination = data.size === 0 ? file : this.bucket.file(`${file_id}_patch`)
@@ -160,7 +160,7 @@ export default class GCSDataStore extends DataStore {
     })
   }
 
-  getOffset(file_id: string): Promise<File> {
+  getUpload(file_id: string): Promise<File> {
     return new Promise((resolve, reject) => {
       if (!file_id) {
         reject(ERRORS.FILE_NOT_FOUND)
@@ -204,7 +204,7 @@ export default class GCSDataStore extends DataStore {
   }
 
   async declareUploadLength(file_id: string, upload_length: string) {
-    const metadata = await this.getOffset(file_id)
+    const metadata = await this.getUpload(file_id)
     metadata.upload_length = upload_length
     // NOTE: this needs to be `null` and not `undefined`,
     // GCS has logic that if it's the latter, it will keep the previous value ¯\_(ツ)_/¯

@@ -38,7 +38,7 @@ export default class GetHandler extends BaseHandler {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const stats = await this.store.getOffset(file_id)
+    const stats = await this.store.getUpload(file_id)
     const upload_length = Number.parseInt(stats.upload_length as string, 10)
     if (stats.size !== upload_length) {
       log(

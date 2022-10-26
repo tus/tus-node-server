@@ -49,9 +49,9 @@ describe('DataStore', () => {
     done()
   })
 
-  it('must have a getOffset method', (done) => {
-    datastore.should.have.property('getOffset')
-    datastore.getOffset.should.be.type('function')
+  it('must have a getUpload method', (done) => {
+    datastore.should.have.property('getUpload')
+    datastore.getUpload.should.be.type('function')
     done()
   })
 })

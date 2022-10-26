@@ -144,7 +144,7 @@ export default class FileStore extends DataStore {
     })
   }
 
-  async getOffset(file_id: string): Promise<File> {
+  async getUpload(file_id: string): Promise<File> {
     const file = this.configstore.get(file_id)
 
     if (!file) {
@@ -156,14 +156,14 @@ export default class FileStore extends DataStore {
       fs.stat(file_path, (error, stats) => {
         if (error && error.code === FILE_DOESNT_EXIST && file) {
           log(
-            `[FileStore] getOffset: No file found at ${file_path} but db record exists`,
+            `[FileStore] getUpload: No file found at ${file_path} but db record exists`,
             file
           )
           return reject(ERRORS.FILE_NO_LONGER_EXISTS)
         }
 
         if (error && error.code === FILE_DOESNT_EXIST) {
-          log(`[FileStore] getOffset: No file found at ${file_path}`)
+          log(`[FileStore] getUpload: No file found at ${file_path}`)
           return reject(ERRORS.FILE_NOT_FOUND)
         }
 
@@ -172,7 +172,7 @@ export default class FileStore extends DataStore {
         }
 
         if (stats.isDirectory()) {
-          log(`[FileStore] getOffset: ${file_path} is a directory`)
+          log(`[FileStore] getUpload: ${file_path} is a directory`)
           return reject(ERRORS.FILE_NOT_FOUND)
         }
 

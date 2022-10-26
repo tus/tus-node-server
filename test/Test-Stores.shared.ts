@@ -12,8 +12,8 @@ export const shouldHaveStoreMethods = function () {
       done()
     })
 
-    it('must have a getOffset method', function (done) {
-      this.datastore.should.have.property('getOffset')
+    it('must have a getUpload method', function (done) {
+      this.datastore.should.have.property('getUpload')
       done()
     })
   })
@@ -40,25 +40,25 @@ export const shouldCreateUploads = function () {
 
     it('should create new upload resource', async function () {
       await this.datastore.create(file)
-      const data = await this.datastore.getOffset(file.id)
+      const data = await this.datastore.getUpload(file.id)
       assert.equal(data.size, 0)
     })
 
     it('should store `upload_length` when creating new resource', async function () {
       await this.datastore.create(file)
-      const data = await this.datastore.getOffset(file.id)
+      const data = await this.datastore.getUpload(file.id)
       assert.strictEqual(data.upload_length, file.upload_length)
     })
 
     it('should store `upload_defer_length` when creating new resource', async function () {
       await this.datastore.create(file_defered)
-      const data = await this.datastore.getOffset(file.id)
+      const data = await this.datastore.getUpload(file.id)
       assert.strictEqual(data.upload_defer_length, file_defered.upload_defer_length)
     })
 
     it('should store `upload_metadata` when creating new resource', async function () {
       await this.datastore.create(file)
-      const data = await this.datastore.getOffset(file.id)
+      const data = await this.datastore.getUpload(file.id)
       assert.strictEqual(data.upload_metadata, file.upload_metadata)
     })
   })
@@ -129,7 +129,7 @@ export const shouldWriteUploads = function () {
 }
 
 export const shouldHandleOffset = function () {
-  describe('getOffset', function () {
+  describe('getUpload', function () {
     const file = new File(
       '1234',
       // @ts-expect-error todo
@@ -139,7 +139,7 @@ export const shouldHandleOffset = function () {
     )
 
     it('should reject non-existant files', function () {
-      return this.datastore.getOffset('doesnt_exist').should.be.rejected()
+      return this.datastore.getUpload('doesnt_exist').should.be.rejected()
     })
 
     it('should resolve the stats for existing files', async function () {
@@ -149,7 +149,7 @@ export const shouldHandleOffset = function () {
         file.id,
         0
       )
-      const data = await this.datastore.getOffset(file.id)
+      const data = await this.datastore.getUpload(file.id)
       assert.equal(data.size, offset)
     })
   })
@@ -170,11 +170,11 @@ export const shouldDeclareUploadLength = function () {
 
     it('should update upload_length after declaring upload length', async function () {
       await this.datastore.create(file)
-      let data = await this.datastore.getOffset(file.id)
+      let data = await this.datastore.getUpload(file.id)
       assert.equal(data.upload_length, undefined)
       assert.equal(data.upload_defer_length, '1')
       await this.datastore.declareUploadLength(file.id, '10')
-      data = await this.datastore.getOffset(file.id)
+      data = await this.datastore.getUpload(file.id)
       assert.equal(data.upload_length, '10')
       assert.equal(data.upload_defer_length, undefined)
     })
