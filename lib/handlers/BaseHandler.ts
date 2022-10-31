@@ -3,6 +3,9 @@ import EventEmitter from 'node:events'
 import type {DataStore, ServerOptions} from '../../types'
 import type http from 'node:http'
 
+const reForwardedHost = /host="?([^";]+)/
+const reForwardedProto = /proto=(https?)/
+
 export default class BaseHandler extends EventEmitter {
   options: ServerOptions
   store: DataStore
@@ -24,15 +27,34 @@ export default class BaseHandler extends EventEmitter {
     return res.end()
   }
 
-  generateUrl(req: http.IncomingMessage, file_id: string) {
-    if (this.options.relativeLocation) {
-      // TODO
-      // @ts-expect-error baseUrl doesn't exist? Should this be `.url`?
-      return `${req.baseUrl || ''}${this.options.path}/${file_id}`
+  generateUrl(req: http.IncomingMessage, id: string) {
+    const forwarded = req.headers.Forwarded as string
+    const path = this.options.path === '/' ? '' : this.options.path
+
+    if (this.options.respectForwardedHeaders) {
+      if (forwarded) {
+        const host = reForwardedHost.exec(forwarded)?.[1]
+        const proto = reForwardedProto.exec(forwarded)?.[1]
+        if (proto && host) {
+          return `${proto}://${host}${path}/${id}`
+        }
+      }
+
+      const forwardHost = req.headers['X-Forwarded-Host']
+      const forwardProto = (req.headers['X-Forwarded-Proto'] ?? 'https') as string
+
+      if (['http', 'https'].includes(forwardProto) && forwardHost) {
+        return `${forwardProto}://${forwardHost}${path}/${id}`
+      }
     }
 
-    // @ts-expect-error baseUrl doesn't exist? Should this be `.url`?
-    return `//${req.headers.host}${req.baseUrl || ''}${this.options.path}/${file_id}`
+    if (this.options.relativeLocation) {
+      // @ts-expect-error baseUrl type doesn't exist?
+      return `${req.baseUrl || ''}${path}/${id}`
+    }
+
+    // @ts-expect-error baseUrl type doesn't exist?
+    return `//${req.headers.host}${req.baseUrl || ''}${path}/${id}`
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {

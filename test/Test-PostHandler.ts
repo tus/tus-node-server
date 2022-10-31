@@ -113,6 +113,91 @@ describe('PostHandler', () => {
       })
     })
 
+    describe('respect forwarded headers', () => {
+      const handler = new PostHandler(fake_store, {
+        path: '/test/output',
+        respectForwardedHeaders: true,
+        namingFunction: () => '1234',
+      })
+
+      it('should handle X-Forwarded-Host with X-Forwarded-Proto', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          'X-Forwarded-Host': 'foo.com',
+          'X-Forwarded-Proto': 'https',
+        }
+        await handler.send(req, res)
+        assert.equal(
+          // @ts-expect-error works but not in types
+          res._header.includes('Location: https://foo.com/test/output/1234'),
+          true
+        )
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should handle Forwarded', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          Forwarded: 'for=localhost:3000;by=203.0.113.60;proto=https;host=foo.com',
+        }
+        await handler.send(req, res)
+        assert.equal(
+          // @ts-expect-error works but not in types
+          res._header.includes('Location: https://foo.com/test/output/1234'),
+          true
+        )
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should fallback on invalid Forwarded', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          Forwarded: 'invalid',
+        }
+        await handler.send(req, res)
+        assert.equal(
+          // @ts-expect-error works but not in types
+          res._header.includes('Location: //localhost:3000/test/output/1234'),
+          true
+        )
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should fallback on invalid X-Forwarded headers', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          'X-Forwarded-Proto': 'foo',
+        }
+        await handler.send(req, res)
+        assert.equal(
+          // @ts-expect-error works but not in types
+          res._header.includes('Location: //localhost:3000/test/output/1234'),
+          true
+        )
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should handle root as path', async () => {
+        const handler = new PostHandler(fake_store, {
+          path: '/',
+          respectForwardedHeaders: true,
+          namingFunction: () => '1234',
+        })
+        req.headers = {'upload-length': '1000', host: 'localhost:3000'}
+        await handler.send(req, res)
+        assert.equal(
+          // @ts-expect-error works but not in types
+          res._header.includes('Location: //localhost:3000/1234'),
+          true
+        )
+        assert.equal(res.statusCode, 201)
+      })
+    })
+
     describe('events', () => {
       it(`must fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
