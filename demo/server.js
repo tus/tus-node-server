@@ -10,22 +10,13 @@ const GCSDataStore = require('../dist/index').GCSDataStore
 const S3Store = require('../dist/index').S3Store
 const EVENTS = require('../dist/index').EVENTS
 
-const options = {path: '/files'}
-
-const server = new Server(options)
-
-const data_store = process.env.DATA_STORE || 'FileStore'
-
-switch (data_store) {
-  case 'GCSDataStore':
-    server.datastore = new GCSDataStore({
-      projectId: 'vimeo-open-source',
-      keyFilename: path.resolve(__dirname, '../keyfile.json'),
-      bucket: 'tus-node-server',
-    })
-    break
-
-  case 'S3Store':
+const stores = {
+  GCSDataStore: () => new GCSDataStore({
+    projectId: 'vimeo-open-source',
+    keyFilename: path.resolve(__dirname, '../keyfile.json'),
+    bucket: 'tus-node-server',
+  }),
+  S3Store: () => {
     assert.ok(
       process.env.AWS_ACCESS_KEY_ID,
       'environment variable `AWS_ACCESS_KEY_ID` must be set'
@@ -37,18 +28,19 @@ switch (data_store) {
     assert.ok(process.env.AWS_BUCKET, 'environment variable `AWS_BUCKET` must be set')
     assert.ok(process.env.AWS_REGION, 'environment variable `AWS_REGION` must be set')
 
-    server.datastore = new S3Store({
+    return new S3Store({
       bucket: process.env.AWS_BUCKET,
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION,
       partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
     })
-    break
-
-  default:
-    server.datastore = new FileStore({directory: './files'})
+  },
+  FileStore: () => new FileStore({directory: './files'}),
 }
+const storeName = process.env.DATA_STORE || 'FileStore'
+const store = stores[storeName]
+const server = new Server({path: '/files', datastore: store()})
 
 /**
  * Basic GET handler to serve the demo html/js
@@ -118,6 +110,6 @@ const host = '127.0.0.1'
 const port = 1080
 server.listen({host, port}, () => {
   console.log(
-    `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port} using ${data_store}`
+    `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port} using ${storeName}`
   )
 })

@@ -25,11 +25,12 @@ describe('Server', () => {
 
     it('should accept valid options', () => {
       assert.doesNotThrow(() => {
-        new Server({path: '/files'})
+        new Server({path: '/files', datastore: new DataStore()})
       })
       assert.doesNotThrow(() => {
         new Server({
           path: '/files',
+          datastore: new DataStore(),
           namingFunction() {
             return '1234'
           },
@@ -39,16 +40,17 @@ describe('Server', () => {
 
     it('should throw on invalid namingFunction', () => {
       assert.throws(() => {
-        // @ts-expect-error invalid argument
-        const server = new Server({path: '/files', namingFunction: '1234'})
-        server.datastore = new DataStore()
+        new Server({
+          path: '/files',
+          // @ts-expect-error invalid argument
+          namingFunction: '1234',
+          datastore: new DataStore(),
+        })
       }, Error)
     })
 
     it('setting the DataStore should attach handlers', (done) => {
-      const server = new Server({path: '/files'})
-      server.handlers.should.be.empty()
-      server.datastore = new DataStore()
+      const server = new Server({path: '/files', datastore: new DataStore()})
       server.handlers.should.have.property('HEAD')
       server.handlers.should.have.property('OPTIONS')
       server.handlers.should.have.property('POST')
@@ -62,8 +64,7 @@ describe('Server', () => {
     let server: InstanceType<typeof Server>
 
     before(() => {
-      server = new Server({path: '/test/output'})
-      server.datastore = new DataStore()
+      server = new Server({path: '/test/output', datastore: new DataStore()})
     })
 
     it('should create an instance of http.Server', (done) => {
@@ -79,8 +80,7 @@ describe('Server', () => {
     let listener: http.Server
 
     before(() => {
-      server = new Server({path: '/test/output'})
-      server.datastore = new DataStore()
+      server = new Server({path: '/test/output', datastore: new DataStore()})
       server.get('/some_url', (_, res) => {
         res.writeHead(200)
         res.write('Hello world!\n')
@@ -107,9 +107,9 @@ describe('Server', () => {
     let listener: http.Server
 
     before(() => {
-      server = new Server({path: '/test/output'})
-      server.datastore = new FileStore({
-        directory: './test/output',
+      server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
       })
       listener = server.listen()
     })
@@ -239,9 +239,9 @@ describe('Server', () => {
     let listener: http.Server
 
     beforeEach(() => {
-      server = new Server({path: '/test/output'})
-      server.datastore = new FileStore({
-        directory: './test/output',
+      server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
       })
       listener = server.listen()
     })

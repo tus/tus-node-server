@@ -40,11 +40,11 @@ const log = debug('tus-node-server')
 
 // eslint-disable-next-line no-redeclare
 export class Server extends EventEmitter {
-  _datastore!: DataStore // Using ! to say this can never be undefined
-  handlers: Handlers | Record<string, never> = {}
+  datastore: DataStore
+  handlers: Handlers
   options: ServerOptions
 
-  constructor(options: ServerOptions) {
+  constructor(options: ServerOptions & {datastore: DataStore}) {
     super()
 
     if (!options) {
@@ -55,7 +55,23 @@ export class Server extends EventEmitter {
       throw new Error("'path' is not defined; must have a path")
     }
 
-    this.options = {...options}
+    if (!options.datastore) {
+      throw new Error("'datastore' is not defined; must have a datastore")
+    }
+
+    const {datastore, ...rest} = options
+    this.options = rest
+    this.datastore = datastore
+    this.handlers = {
+      // GET handlers should be written in the implementations
+      GET: new GetHandler(this.datastore, this.options),
+      // These methods are handled under the tus protocol
+      HEAD: new HeadHandler(this.datastore, this.options),
+      OPTIONS: new OptionsHandler(this.datastore, this.options),
+      PATCH: new PatchHandler(this.datastore, this.options),
+      POST: new PostHandler(this.datastore, this.options),
+      DELETE: new DeleteHandler(this.datastore, this.options),
+    }
     // Any handlers assigned to this object with the method as the key
     // will be used to repond to those requests. They get set/re-set
     // when a datastore is assigned to the server.
@@ -76,24 +92,6 @@ export class Server extends EventEmitter {
         this.handlers[method].on(event, listener)
       }
     })
-  }
-
-  get datastore() {
-    return this._datastore
-  }
-
-  set datastore(store) {
-    this._datastore = store
-    this.handlers = {
-      // GET handlers should be written in the implementations
-      GET: new GetHandler(store, this.options),
-      // These methods are handled under the tus protocol
-      HEAD: new HeadHandler(store, this.options),
-      OPTIONS: new OptionsHandler(store, this.options),
-      PATCH: new PatchHandler(store, this.options),
-      POST: new PostHandler(store, this.options),
-      DELETE: new DeleteHandler(store, this.options),
-    }
   }
 
   get(path: string, handler: RouteHandler) {
@@ -191,8 +189,8 @@ export class Server extends EventEmitter {
     return res.end()
   }
 
-  listen(): http.Server {
-    const server = http.createServer(this.handle.bind(this))
-    return server.listen.apply(server)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listen(...args: any[]): http.Server {
+    return http.createServer(this.handle.bind(this)).listen(...args)
   }
 }
