@@ -28,7 +28,7 @@ export default class BaseHandler extends EventEmitter {
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
-    const forwarded = req.headers.Forwarded as string
+    const forwarded = req.headers.Forwarded as string | undefined
     const path = this.options.path === '/' ? '' : this.options.path
 
     if (this.options.respectForwardedHeaders) {
