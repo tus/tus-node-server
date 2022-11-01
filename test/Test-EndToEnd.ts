@@ -49,8 +49,10 @@ describe('EndToEnd', () => {
     let deferred_file_id: string
 
     before(() => {
-      server = new Server({path: STORE_PATH})
-      server.datastore = new FileStore({directory: `./${STORE_PATH}`})
+      server = new Server({
+        path: STORE_PATH,
+        datastore: new FileStore({directory: `./${STORE_PATH}`}),
+      })
       listener = server.listen()
       agent = request.agent(listener)
     })
@@ -266,11 +268,9 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
+        datastore: new FileStore({directory: `./${STORE_PATH}`}),
         // Configure the store to return relative path in Location Header
         relativeLocation: true,
-      })
-      server.datastore = new FileStore({
-        directory: `./${STORE_PATH}`,
       })
       listener = server.listen()
       agent = request.agent(listener)
@@ -310,11 +310,11 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
-      })
-      server.datastore = new GCSDataStore({
-        projectId: PROJECT_ID,
-        keyFilename: KEYFILE,
-        bucket: BUCKET,
+        datastore: new GCSDataStore({
+          projectId: PROJECT_ID,
+          keyFilename: KEYFILE,
+          bucket: BUCKET,
+        }),
       })
       listener = server.listen()
       agent = request.agent(listener)
