@@ -11,6 +11,7 @@ import sinon from 'sinon'
 import GetHandler from '../lib/handlers/GetHandler'
 import DataStore from '../lib/stores/DataStore'
 import FileStore from '../lib/stores/FileStore'
+import File from '../lib/models/File'
 
 describe('GetHandler', () => {
   const path = '/test/output'
@@ -46,7 +47,7 @@ describe('GetHandler', () => {
 
     it('should 404 when file is not complete', async () => {
       const store = sinon.createStubInstance(FileStore)
-      store.getUpload.resolves({id: 'id', size: 512, upload_length: '1024'})
+      store.getUpload.resolves(new File({id: '1234', offset: 512, size: 1024}))
       const handler = new GetHandler(store, {path})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
@@ -68,7 +69,7 @@ describe('GetHandler', () => {
     it('test invalid stream', async () => {
       const store = sinon.createStubInstance(FileStore)
       const size = 512
-      store.getUpload.resolves({id: 'id', size, upload_length: size.toString()})
+      store.getUpload.resolves(new File({id: '1234', offset: size, size}))
       // @ts-expect-error what should this be?
       store.read.returns(stream.Readable.from(fs.createReadStream('invalid_path')))
       const handler = new GetHandler(store, {path})
@@ -84,7 +85,7 @@ describe('GetHandler', () => {
   describe('send()', () => {
     it('test if `file_id` is properly passed to store', async () => {
       const store = sinon.createStubInstance(FileStore)
-      store.getUpload.resolves({id: '1234', size: 512, upload_length: '512'})
+      store.getUpload.resolves(new File({id: '1234', offset: 512, size: 512}))
       // @ts-expect-error should
       store.read.returns(stream.Readable.from(Buffer.alloc(512)))
       const handler = new GetHandler(store, {path})
@@ -98,7 +99,7 @@ describe('GetHandler', () => {
     it('test successful response', async () => {
       const store = sinon.createStubInstance(FileStore)
       const size = 512
-      store.getUpload.resolves({id: '1234', size, upload_length: size.toString()})
+      store.getUpload.resolves(new File({id: '1234', offset: size, size}))
       // @ts-expect-error what should this be?
       store.read.returns(stream.Readable.from(Buffer.alloc(size), {objectMode: false}))
       const handler = new GetHandler(store, {path})
@@ -149,7 +150,7 @@ describe('GetHandler', () => {
   describe('DataStore without `read` method', () => {
     it('should 404 if not implemented', async () => {
       const fakeStore = sinon.stub(new DataStore())
-      fakeStore.getUpload.resolves({id: '1234', size: 512, upload_length: '512'})
+      fakeStore.getUpload.resolves(new File({id: '1234', offset: 512, size: 512}))
       const handler = new GetHandler(fakeStore, serverOptions)
       req.url = `/${path}/1234`
       await assert.rejects(() => handler.send(req, res), {status_code: 404})

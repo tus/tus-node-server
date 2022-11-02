@@ -7,6 +7,7 @@ import sinon from 'sinon'
 import DataStore from '../lib/stores/DataStore'
 import HeadHandler from '../lib/handlers/HeadHandler'
 import {ERRORS} from '../lib/constants'
+import File from '../lib/models/File'
 
 describe('HeadHandler', () => {
   const path = '/test/output'
@@ -33,53 +34,54 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with the offset and cache-control', async () => {
-    fake_store.getUpload.resolves({id: '1234', size: 0, upload_length: '1'})
+    fake_store.getUpload.resolves(new File({id: '1234', offset: 0}))
     await handler.send(req, res)
-    assert.equal(res.getHeader('Upload-Offset'), '0')
+    assert.equal(res.getHeader('Upload-Offset'), 0)
     assert.equal(res.getHeader('Cache-Control'), 'no-store')
     assert.equal(res.statusCode, 200)
   })
 
   it('should resolve with upload-length', async () => {
-    const file = {
+    const file = new File({
       id: '1234',
-      size: 0,
-      upload_length: '1',
-      upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
-    }
+      offset: 0,
+      size: 512,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
     fake_store.getUpload.resolves(file)
     await handler.send(req, res)
-    assert.equal(res.getHeader('Upload-Length'), file.upload_length)
+    assert.equal(res.getHeader('Upload-Length'), file.size)
     assert.equal(res.hasHeader('Upload-Defer-Length'), false)
   })
 
   it('should resolve with upload-defer-length', async () => {
-    const file = {
+    const file = new File({
       id: '1234',
-      size: 0,
-      upload_defer_length: '1',
-      upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
-    }
+      offset: 0,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
     fake_store.getUpload.resolves(file)
     await handler.send(req, res)
-    assert.equal(res.getHeader('Upload-Defer-Length'), file.upload_defer_length)
+    assert.equal(res.getHeader('Upload-Defer-Length'), '1')
     assert.equal(res.hasHeader('Upload-Length'), false)
   })
 
   it('should resolve with metadata', async () => {
-    const file = {
+    const file = new File({
       id: '1234',
-      size: 0,
-      upload_length: '1',
-      upload_metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
-    }
+      offset: 0,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
     fake_store.getUpload.resolves(file)
     await handler.send(req, res)
-    assert.equal(res.getHeader('Upload-Metadata'), file.upload_metadata)
+    assert.equal(res.getHeader('Upload-Metadata'), file.metadata)
   })
 
   it('should resolve without metadata', async () => {
-    const file = {id: '1234', size: 0, upload_length: '1'}
+    const file = new File({
+      id: '1234',
+      offset: 0,
+    })
     fake_store.getUpload.resolves(file)
     await handler.send(req, res)
     assert.equal(res.hasHeader('Upload-Metadata'), false)

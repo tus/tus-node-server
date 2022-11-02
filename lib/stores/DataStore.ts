@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import EventEmitter from 'node:events'
 
+import File from '../models/File'
+
 import type stream from 'node:stream'
 import type http from 'node:http'
-import type {File} from '../../types'
 
 export default class DataStore extends EventEmitter {
   private _extensions: string[] = []
@@ -38,7 +39,7 @@ export default class DataStore extends EventEmitter {
    * Called in DELETE requests. This method just deletes the file from the store.
    * http://tus.io/protocols/resumable-upload.html#termination
    */
-  async remove(file_id: string) {}
+  async remove(id: string) {}
 
   /**
    * Called in PATCH requests. This method should write data
@@ -49,7 +50,7 @@ export default class DataStore extends EventEmitter {
    */
   async write(
     stream: http.IncomingMessage | stream.Readable,
-    file_id: string,
+    id: string,
     offset: number
   ) {
     return 0
@@ -60,12 +61,12 @@ export default class DataStore extends EventEmitter {
    * writen to the DataStore, for the client to know where to resume
    * the upload.
    */
-  async getUpload(file_id: string): Promise<File> {
-    return {id: file_id, size: 0, upload_length: '0'}
+  async getUpload(id: string): Promise<File> {
+    return new File({id, size: 0, offset: 0})
   }
 
   /**
    * Called in PATCH requests when upload length is known after being defered.
    */
-  async declareUploadLength(file_id: string, upload_length: string) {}
+  async declareUploadLength(id: string, upload_length: number) {}
 }

@@ -11,7 +11,7 @@ import DataStore from './DataStore'
 import pkg from '../../package.json'
 import {ERRORS} from '../constants'
 
-import type {File} from '../../types'
+import File from '../models/File'
 
 type Store = {
   get(key: string): File | undefined
@@ -139,15 +139,15 @@ export default class FileStore extends DataStore {
     })
   }
 
-  async getUpload(file_id: string): Promise<File> {
-    const file = this.configstore.get(file_id)
+  async getUpload(id: string): Promise<File> {
+    const file = this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
     return new Promise((resolve, reject) => {
-      const file_path = `${this.directory}/${file_id}`
+      const file_path = `${this.directory}/${id}`
       fs.stat(file_path, (error, stats) => {
         if (error && error.code === FILE_DOESNT_EXIST && file) {
           log(
@@ -171,21 +171,22 @@ export default class FileStore extends DataStore {
           return reject(ERRORS.FILE_NOT_FOUND)
         }
 
-        return resolve({...file, size: stats.size})
+        return resolve(
+          new File({id, size: file.size, offset: stats.size, metadata: file.metadata})
+        )
       })
     })
   }
 
-  async declareUploadLength(file_id: string, upload_length: string) {
-    const file = this.configstore.get(file_id)
+  async declareUploadLength(id: string, upload_length: number) {
+    const file = this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    file.upload_length = upload_length
-    file.upload_defer_length = undefined
+    file.size = upload_length
 
-    this.configstore.set(file_id, file)
+    this.configstore.set(id, file)
   }
 }

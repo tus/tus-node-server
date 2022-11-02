@@ -43,7 +43,7 @@ describe('FileStore', function () {
   })
 
   describe('create', () => {
-    const file = new File('1234', '1000')
+    const file = new File({id: '1234', size: 1000, offset: 0})
 
     it('should reject when the directory doesnt exist', function () {
       this.datastore.directory = 'some_new_path'
@@ -64,13 +64,13 @@ describe('FileStore', function () {
   })
 
   describe('write', function () {
-    const file = new File(
-      '1234',
-      // @ts-expect-error this not typed
-      `${this.testFileSize}`,
-      undefined,
-      'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
-    )
+    const file = new File({
+      id: '1234',
+      // @ts-expect-error todo
+      size: this.testFileSize,
+      offset: 0,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
 
     it("created file's size should match 'upload_length'", async function () {
       await this.datastore.create(file)

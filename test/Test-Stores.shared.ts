@@ -21,13 +21,16 @@ export const shouldHaveStoreMethods = function () {
 
 export const shouldCreateUploads = function () {
   describe('create', () => {
-    const file = new File(
-      '1234',
-      '1000',
-      undefined,
-      'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
-    )
-    const file_defered = new File('1234', undefined, '1')
+    const file = new File({
+      id: '1234',
+      size: 1000,
+      offset: 0,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
+    const file_defered = new File({
+      id: '1234',
+      offset: 0,
+    })
 
     it('should resolve to file', async function () {
       const newFile = await this.datastore.create(file)
@@ -40,32 +43,32 @@ export const shouldCreateUploads = function () {
 
     it('should create new upload resource', async function () {
       await this.datastore.create(file)
-      const data = await this.datastore.getUpload(file.id)
-      assert.equal(data.size, 0)
+      const upload = await this.datastore.getUpload(file.id)
+      assert.equal(upload.offset, 0)
     })
 
     it('should store `upload_length` when creating new resource', async function () {
       await this.datastore.create(file)
-      const data = await this.datastore.getUpload(file.id)
-      assert.strictEqual(data.upload_length, file.upload_length)
+      const upload = await this.datastore.getUpload(file.id)
+      assert.strictEqual(upload.size, file.size)
     })
 
     it('should store `upload_defer_length` when creating new resource', async function () {
       await this.datastore.create(file_defered)
-      const data = await this.datastore.getUpload(file.id)
-      assert.strictEqual(data.upload_defer_length, file_defered.upload_defer_length)
+      const upload = await this.datastore.getUpload(file.id)
+      assert.strictEqual(upload.sizeIsDeferred, file_defered.sizeIsDeferred)
     })
 
     it('should store `upload_metadata` when creating new resource', async function () {
       await this.datastore.create(file)
-      const data = await this.datastore.getUpload(file.id)
-      assert.strictEqual(data.upload_metadata, file.upload_metadata)
+      const upload = await this.datastore.getUpload(file.id)
+      assert.strictEqual(upload.metadata, file.metadata)
     })
   })
 }
 
 export const shouldRemoveUploads = function () {
-  const file = new File('1234', '1000')
+  const file = new File({id: '1234', size: 1000, offset: 0})
 
   describe('remove (termination extension)', () => {
     it("should report 'termination' extension", function () {
@@ -96,12 +99,12 @@ export const shouldWriteUploads = function () {
     })
 
     it('should write a stream and resolve the new offset', async function () {
-      const file = new File(
-        '1234',
-        `${this.testFileSize}`,
-        undefined,
-        'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
-      )
+      const file = new File({
+        id: '1234',
+        size: this.testFileSize,
+        offset: 0,
+        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+      })
       await this.datastore.create(file)
       const readable = fs.createReadStream(this.testFilePath)
       const offset = await this.datastore.write(readable, file.id, 0)
@@ -109,12 +112,12 @@ export const shouldWriteUploads = function () {
     })
 
     it('should reject when stream is destroyed', async function () {
-      const file = new File(
-        '1234',
-        `${this.testFileSize}`,
-        undefined,
-        'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
-      )
+      const file = new File({
+        id: '1234',
+        size: this.testFileSize,
+        offset: 0,
+        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+      })
       await this.datastore.create(file)
       const readable = new stream.Readable({
         read() {
@@ -130,13 +133,13 @@ export const shouldWriteUploads = function () {
 
 export const shouldHandleOffset = function () {
   describe('getUpload', function () {
-    const file = new File(
-      '1234',
+    const file = new File({
+      id: '1234',
       // @ts-expect-error todo
-      `${this.testFileSize}`,
-      undefined,
-      'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
-    )
+      size: this.testFileSize,
+      offset: 0,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
 
     it('should reject non-existant files', function () {
       return this.datastore.getUpload('doesnt_exist').should.be.rejected()
@@ -149,20 +152,19 @@ export const shouldHandleOffset = function () {
         file.id,
         0
       )
-      const data = await this.datastore.getUpload(file.id)
-      assert.equal(data.size, offset)
+      const upload = await this.datastore.getUpload(file.id)
+      assert.equal(upload.offset, offset)
     })
   })
 }
 
 export const shouldDeclareUploadLength = function () {
   describe('declareUploadLength', () => {
-    const file = new File(
-      '1234',
-      undefined,
-      '1',
-      'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
-    )
+    const file = new File({
+      id: '1234',
+      offset: 0,
+      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+    })
 
     it('should reject non-existant files', function () {
       return this.datastore.declareUploadLength('doesnt_exist', '10').should.be.rejected()
@@ -170,13 +172,13 @@ export const shouldDeclareUploadLength = function () {
 
     it('should update upload_length after declaring upload length', async function () {
       await this.datastore.create(file)
-      let data = await this.datastore.getUpload(file.id)
-      assert.equal(data.upload_length, undefined)
-      assert.equal(data.upload_defer_length, '1')
-      await this.datastore.declareUploadLength(file.id, '10')
-      data = await this.datastore.getUpload(file.id)
-      assert.equal(data.upload_length, '10')
-      assert.equal(data.upload_defer_length, undefined)
+      let upload = await this.datastore.getUpload(file.id)
+      assert.equal(upload.size, undefined)
+      assert.equal(upload.sizeIsDeferred, true)
+      await this.datastore.declareUploadLength(file.id, 10)
+      upload = await this.datastore.getUpload(file.id)
+      assert.equal(upload.size, 10)
+      assert.equal(upload.sizeIsDeferred, false)
     })
   })
 }
