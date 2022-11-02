@@ -73,22 +73,8 @@ export default class PostHandler extends BaseHandler {
       'Upload-Expires'?: string
     } = {}
 
-    const _addUploadExpiresHeader = (store: DataStore) => {
-      // If expiration is known at creation time, Upload-Expires header MUST be included in the response
-      if (store.hasExtension('expiration') && this.store.getExpiration() > 0) {
-        const creation = new Date(file.creation_date as Date)
-        // Value MUST be in RFC 7231 datetime format
-        optional_headers['Upload-Expires'] = new Date(
-          creation.getTime() + this.store.getExpiration() * 60_000
-        ).toUTCString()
-      }
-    }
-
-    if (RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
-      // Created empty file, so we need to add the Upload-Expires header if the store supports it
-      _addUploadExpiresHeader(this.store)
-    } else {
-      // The request MIGHT include a Content-Type header when using creation-with-upload extension
+    // The request MIGHT include a Content-Type header when using creation-with-upload extension
+    if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
       const new_offset = await this.store.write(req, file.id, 0)
       optional_headers['Upload-Offset'] = new_offset.toString()
 
@@ -101,9 +87,19 @@ export default class PostHandler extends BaseHandler {
             file.upload_metadata
           ),
         })
-      } else {
-        // Upload is not complete, so we need to add the Upload-Expires header if the store supports it
-        _addUploadExpiresHeader(this.store)
+      }
+    }
+
+    // The Upload-Expires response header indicates the time after which the unfinished upload expires.
+    // If expiration is known at creation time, Upload-Expires header MUST be included in the response
+    if (this.store.hasExtension('expiration') && this.store.getExpiration() > 0) {
+      const created = await this.store.getUpload(file.id)
+      if (created.size !== Number.parseInt(upload_length as string, 10)) {
+        const creation = new Date(file.creation_date as Date)
+        // Value MUST be in RFC 7231 datetime format
+        optional_headers['Upload-Expires'] = new Date(
+          creation.getTime() + this.store.getExpiration()
+        ).toUTCString()
       }
     }
 

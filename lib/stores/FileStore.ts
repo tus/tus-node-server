@@ -23,7 +23,7 @@ type Store = {
 type Options = {
   directory: string
   configstore?: Store
-  expirationPeriodMinutes?: number
+  expirationPeriodInMilliseconds?: number
 }
 
 const MASK = '0777'
@@ -34,13 +34,13 @@ const log = debug('tus-node-server:stores:filestore')
 export default class FileStore extends DataStore {
   directory: string
   configstore: Store
-  expirationPeriodInMinutes: number
+  expirationPeriodInMilliseconds: number
 
-  constructor({directory, configstore, expirationPeriodMinutes}: Options) {
+  constructor({directory, configstore, expirationPeriodInMilliseconds}: Options) {
     super()
     this.directory = directory
     this.configstore = configstore ?? new Configstore(`${pkg.name}-${pkg.version}`)
-    this.expirationPeriodInMinutes = expirationPeriodMinutes ?? -1
+    this.expirationPeriodInMilliseconds = expirationPeriodInMilliseconds ?? -1
     this.extensions = [
       'creation',
       'creation-with-upload',
@@ -197,38 +197,37 @@ export default class FileStore extends DataStore {
   async deleteExpired(): Promise<number> {
     const now = new Date()
     const toDelete: Promise<void>[] = []
-    for (const file_id of Object.keys(this.configstore.all)) {
-      this.getUpload(file_id)
-        .then((stats: File) => {
-          const info = this.configstore.get(file_id)
-          const upload_length = stats.upload_length
-            ? Number.parseInt(stats.upload_length, 10)
-            : 0
-          const size_on_disk = stats.size
-          if (size_on_disk === upload_length) {
-            return // Upload is complete, so don't delete
-          }
+    for await (const file_id of Object.keys(this.configstore.all)) {
+      try {
+        const stats = await this.getUpload(file_id)
+        const info = this.configstore.get(file_id)
+        const upload_length = stats.upload_length
+          ? Number.parseInt(stats.upload_length, 10)
+          : 0
+        const size_on_disk = stats.size
+        if (size_on_disk === upload_length) {
+          return 0 // Upload is complete, so don't delete
+        }
 
-          if (info && 'creation_date' in info && this.getExpiration() > 0) {
-            const creation = new Date(info.creation_date as Date)
-            const expires = new Date(creation.getTime() + this.getExpiration() * 60_000)
-            if (now > expires) {
-              toDelete.push(this.remove(file_id))
-              this.configstore.delete(file_id)
-            }
+        if (info && 'creation_date' in info && this.getExpiration() > 0) {
+          const creation = new Date(info.creation_date as Date)
+          const expires = new Date(creation.getTime() + this.getExpiration() * 60_000)
+          if (now > expires) {
+            toDelete.push(this.remove(file_id))
+            this.configstore.delete(file_id)
           }
-        })
-        .catch((error) => {
-          if (error !== ERRORS.FILE_NO_LONGER_EXISTS) {
-            throw error
-          }
-        })
+        }
+      } catch (error) {
+        if (error !== ERRORS.FILE_NO_LONGER_EXISTS) {
+          throw error
+        }
+      }
     }
 
     return Promise.all(toDelete).then(() => toDelete.length)
   }
 
   getExpiration(): number {
-    return this.expirationPeriodInMinutes
+    return this.expirationPeriodInMilliseconds
   }
 }

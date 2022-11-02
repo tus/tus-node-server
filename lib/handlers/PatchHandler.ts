@@ -89,7 +89,7 @@ export default class PatchHandler extends BaseHandler {
       const creation = new Date(file.creation_date as Date)
       // Value MUST be in RFC 7231 datetime format
       const dateString = new Date(
-        creation.getTime() + this.store.getExpiration() * 60_000
+        creation.getTime() + this.store.getExpiration()
       ).toUTCString()
       headers['Upload-Expires'] = dateString
     }
