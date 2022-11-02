@@ -197,21 +197,26 @@ export default class FileStore extends DataStore {
   async deleteExpired(): Promise<number> {
     const now = new Date()
     const toDelete: Promise<void>[] = []
-    for await (const file_id of Object.keys(this.configstore.all)) {
-      try {
-        const stats = await this.getUpload(file_id)
-        const info = this.configstore.get(file_id)
-        const upload_length = stats.upload_length
-          ? Number.parseInt(stats.upload_length, 10)
-          : 0
-        const size_on_disk = stats.size
-        if (size_on_disk === upload_length) {
-          return 0 // Upload is complete, so don't delete
-        }
+    const fileStats = await Promise.all(
+      Object.keys(this.configstore.all).map((file_id) => {
+        return this.getUpload(file_id)
+      })
+    )
 
-        if (info && 'creation_date' in info && this.getExpiration() > 0) {
+    let index = 0
+    for (const file_id of Object.keys(this.configstore.all)) {
+      try {
+        const stats = fileStats[index]
+        const info = this.configstore.get(file_id)
+        if (
+          info &&
+          'creation_date' in info &&
+          this.getExpiration() > 0 &&
+          stats.size !== info.upload_length &&
+          stats.id === info.id
+        ) {
           const creation = new Date(info.creation_date as Date)
-          const expires = new Date(creation.getTime() + this.getExpiration() * 60_000)
+          const expires = new Date(creation.getTime() + this.getExpiration())
           if (now > expires) {
             toDelete.push(this.remove(file_id))
             this.configstore.delete(file_id)
@@ -222,6 +227,8 @@ export default class FileStore extends DataStore {
           throw error
         }
       }
+
+      index++
     }
 
     return Promise.all(toDelete).then(() => toDelete.length)

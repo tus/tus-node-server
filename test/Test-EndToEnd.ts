@@ -309,7 +309,7 @@ describe('EndToEnd', () => {
       server = new Server({path: STORE_PATH})
       server.datastore = new FileStore({
         directory: `./${STORE_PATH}`,
-        expirationPeriodInMilliseconds: 1000,
+        expirationPeriodInMilliseconds: 1,
       })
       listener = server.listen()
       agent = request.agent(listener)
@@ -368,6 +368,32 @@ describe('EndToEnd', () => {
         })
         write_stream.write(msg)
         write_stream.end(() => {})
+      })
+    })
+
+    describe('deleteExpiredFiles', () => {
+      it('can delete expired files', (done) => {
+        server.datastore
+          .deleteExpired()
+          .catch((error) => {
+            done(error)
+          })
+          .then((deleted) => {
+            assert.equal(deleted >= 1, true)
+            done()
+          })
+      })
+
+      it('should be no more delete expired files', (done) => {
+        const promise = server.datastore.deleteExpired()
+        promise
+          .catch((error) => {
+            done(error)
+          })
+          .then((deleted) => {
+            assert.equal(deleted, 0)
+            done()
+          })
       })
     })
   })
