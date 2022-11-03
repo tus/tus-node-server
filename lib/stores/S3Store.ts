@@ -10,7 +10,7 @@ import debug from 'debug'
 
 import DataStore from './DataStore'
 import FileStreamSplitter from '../models/StreamSplitter'
-import File from '../models/File'
+import Upload from '../models/Upload'
 import {ERRORS, TUS_RESUMABLE} from '../constants'
 
 const log = debug('tus-node-server:stores:s3store')
@@ -23,7 +23,7 @@ type Options = {
   partSize?: number
 }
 
-type MetadataValue = {file: File; upload_id: string}
+type MetadataValue = {file: Upload; upload_id: string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -107,7 +107,7 @@ export default class S3Store extends DataStore {
    * Also, a `${file_id}.info` file is created which holds some information
    * about the upload itself like: `upload_id`, `upload_length`, etc.
    */
-  _initMultipartUpload(file: File) {
+  _initMultipartUpload(file: Upload) {
     log(`[${file.id}] initializing multipart upload`)
     const parsedMetadata = this._parseMetadataString(file.metadata)
     type Data = {
@@ -171,7 +171,7 @@ export default class S3Store extends DataStore {
    * on the S3 object's `Metadata` field, so that only a `headObject`
    * is necessary to retrieve the data.
    */
-  _saveMetadata(file: File, upload_id: string) {
+  _saveMetadata(file: Upload, upload_id: string) {
     log(`[${file.id}] saving metadata`)
     const metadata = {
       file: JSON.stringify(file),
@@ -222,7 +222,7 @@ export default class S3Store extends DataStore {
         const file = JSON.parse(Metadata?.file as string)
         this.cache.set(id, {
           ...Metadata,
-          file: new File({
+          file: new Upload({
             id,
             size: file.size ? Number.parseInt(file.size, 10) : undefined,
             offset: Number.parseInt(file.offset, 10),
@@ -426,7 +426,7 @@ export default class S3Store extends DataStore {
     this.cache.delete(file_id)
   }
 
-  create(file: File) {
+  create(file: Upload) {
     return this._bucketExists()
       .then(() => {
         return this._initMultipartUpload(file)
@@ -498,7 +498,7 @@ export default class S3Store extends DataStore {
   }
 
   // TODO: getUpload should only return file
-  async getUpload(id: string): Promise<File & {parts?: aws.S3.Parts}> {
+  async getUpload(id: string): Promise<Upload & {parts?: aws.S3.Parts}> {
     let metadata: MetadataValue
     try {
       metadata = await this._getMetadata(id)

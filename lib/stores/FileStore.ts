@@ -11,11 +11,11 @@ import DataStore from './DataStore'
 import pkg from '../../package.json'
 import {ERRORS} from '../constants'
 
-import File from '../models/File'
+import Upload from '../models/Upload'
 
 type Store = {
-  get(key: string): File | undefined
-  set(key: string, value: File): void
+  get(key: string): Upload | undefined
+  set(key: string, value: Upload): void
   delete(key: string): void
 }
 
@@ -61,7 +61,7 @@ export default class FileStore extends DataStore {
   /**
    * Create an empty file.
    */
-  create(file: File): Promise<File> {
+  create(file: Upload): Promise<Upload> {
     return new Promise((resolve, reject) => {
       fs.open(path.join(this.directory, file.id), 'w', (err, fd) => {
         if (err) {
@@ -139,7 +139,7 @@ export default class FileStore extends DataStore {
     })
   }
 
-  async getUpload(id: string): Promise<File> {
+  async getUpload(id: string): Promise<Upload> {
     const file = this.configstore.get(id)
 
     if (!file) {
@@ -172,7 +172,7 @@ export default class FileStore extends DataStore {
         }
 
         return resolve(
-          new File({id, size: file.size, offset: stats.size, metadata: file.metadata})
+          new Upload({id, size: file.size, offset: stats.size, metadata: file.metadata})
         )
       })
     })

@@ -7,7 +7,7 @@ import net from 'node:net'
 import sinon from 'sinon'
 import PatchHandler from '../lib/handlers/PatchHandler'
 import DataStore from '../lib/stores/DataStore'
-import File from '../lib/models/File'
+import File from '../lib/models/Upload'
 
 describe('PatchHandler', () => {
   const path = '/test/output'

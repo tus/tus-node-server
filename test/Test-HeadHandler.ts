@@ -7,7 +7,7 @@ import sinon from 'sinon'
 import DataStore from '../lib/stores/DataStore'
 import HeadHandler from '../lib/handlers/HeadHandler'
 import {ERRORS} from '../lib/constants'
-import File from '../lib/models/File'
+import Upload from '../lib/models/Upload'
 
 describe('HeadHandler', () => {
   const path = '/test/output'
@@ -34,7 +34,7 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with the offset and cache-control', async () => {
-    fake_store.getUpload.resolves(new File({id: '1234', offset: 0}))
+    fake_store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
     await handler.send(req, res)
     assert.equal(res.getHeader('Upload-Offset'), 0)
     assert.equal(res.getHeader('Cache-Control'), 'no-store')
@@ -42,7 +42,7 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with upload-length', async () => {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       offset: 0,
       size: 512,
@@ -55,7 +55,7 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with upload-defer-length', async () => {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       offset: 0,
       metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
@@ -67,7 +67,7 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve with metadata', async () => {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       offset: 0,
       metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
@@ -78,7 +78,7 @@ describe('HeadHandler', () => {
   })
 
   it('should resolve without metadata', async () => {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       offset: 0,
     })

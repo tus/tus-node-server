@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import BaseHandler from './BaseHandler'
-import File from '../models/File'
+import Upload from '../models/Upload'
 import Uid from '../models/Uid'
 import RequestValidator from '../validators/RequestValidator'
 import {EVENTS, ERRORS} from '../constants'
@@ -60,7 +60,7 @@ export default class PostHandler extends BaseHandler {
       throw ERRORS.FILE_WRITE_ERROR
     }
 
-    const file = new File({
+    const file = new Upload({
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
       offset: 0,

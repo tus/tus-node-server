@@ -5,7 +5,7 @@ import debug from 'debug'
 
 import {ERRORS, TUS_RESUMABLE} from '../constants'
 import DataStore from './DataStore'
-import File from '../models/File'
+import Upload from '../models/Upload'
 
 type Options = {
   bucket: string
@@ -60,7 +60,7 @@ export default class GCSDataStore extends DataStore {
     return bucket
   }
 
-  create(file: File): Promise<File> {
+  create(file: Upload): Promise<Upload> {
     return new Promise((resolve, reject) => {
       if (!file.id) {
         reject(ERRORS.FILE_NOT_FOUND)
@@ -161,7 +161,7 @@ export default class GCSDataStore extends DataStore {
     })
   }
 
-  getUpload(id: string): Promise<File> {
+  getUpload(id: string): Promise<Upload> {
     return new Promise((resolve, reject) => {
       if (!id) {
         reject(ERRORS.FILE_NOT_FOUND)
@@ -181,7 +181,7 @@ export default class GCSDataStore extends DataStore {
 
         const {size, metadata: meta} = metadata.metadata
         return resolve(
-          new File({
+          new Upload({
             id,
             size: size ? Number.parseInt(size, 10) : size,
             offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS

@@ -10,7 +10,7 @@ import sinon from 'sinon'
 import DataStore from '../lib/stores/DataStore'
 import PostHandler from '../lib/handlers/PostHandler'
 import {EVENTS} from '../lib/constants'
-import File from '../lib/models/File'
+import File from '../lib/models/Upload'
 
 const SERVER_OPTIONS = {
   path: '/test',

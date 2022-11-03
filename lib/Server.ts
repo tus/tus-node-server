@@ -14,7 +14,7 @@ import RequestValidator from './validators/RequestValidator'
 import {ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants'
 
 import type stream from 'node:stream'
-import type {DataStore, ServerOptions, RouteHandler, File} from '../types'
+import type {DataStore, ServerOptions, RouteHandler, Upload} from '../types'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -25,9 +25,9 @@ type Handlers = {
   DELETE: InstanceType<typeof DeleteHandler>
 }
 interface TusEvents {
-  EVENT_FILE_CREATED: (event: {file: File}) => void
+  EVENT_FILE_CREATED: (event: {file: Upload}) => void
   EVENT_ENDPOINT_CREATED: (event: {url: string}) => void
-  EVENT_UPLOAD_COMPLETE: (event: {file: File}) => void
+  EVENT_UPLOAD_COMPLETE: (event: {file: Upload}) => void
   EVENT_FILE_DELETED: (event: {file_id: string}) => void
 }
 export declare interface Server {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import EventEmitter from 'node:events'
 
-import File from '../models/File'
+import Upload from '../models/Upload'
 
 import type stream from 'node:stream'
 import type http from 'node:http'
@@ -31,7 +31,7 @@ export default class DataStore extends EventEmitter {
    *
    * http://tus.io/protocols/resumable-upload.html#creation
    */
-  async create(file: File) {
+  async create(file: Upload) {
     return file
   }
 
@@ -61,8 +61,8 @@ export default class DataStore extends EventEmitter {
    * writen to the DataStore, for the client to know where to resume
    * the upload.
    */
-  async getUpload(id: string): Promise<File> {
-    return new File({id, size: 0, offset: 0})
+  async getUpload(id: string): Promise<Upload> {
+    return new Upload({id, size: 0, offset: 0})
   }
 
   /**

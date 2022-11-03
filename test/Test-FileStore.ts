@@ -8,7 +8,7 @@ import sinon from 'sinon'
 
 import FileStore from '../lib/stores/FileStore'
 import MemoryConfigstore from '../lib/configstores/MemoryConfigstore'
-import File from '../lib/models/File'
+import Upload from '../lib/models/Upload'
 
 import * as shared from './Test-Stores.shared'
 
@@ -43,7 +43,7 @@ describe('FileStore', function () {
   })
 
   describe('create', () => {
-    const file = new File({id: '1234', size: 1000, offset: 0})
+    const file = new Upload({id: '1234', size: 1000, offset: 0})
 
     it('should reject when the directory doesnt exist', function () {
       this.datastore.directory = 'some_new_path'
@@ -64,7 +64,7 @@ describe('FileStore', function () {
   })
 
   describe('write', function () {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       // @ts-expect-error todo
       size: this.testFileSize,

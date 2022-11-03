@@ -11,7 +11,7 @@ import sinon from 'sinon'
 import GetHandler from '../lib/handlers/GetHandler'
 import DataStore from '../lib/stores/DataStore'
 import FileStore from '../lib/stores/FileStore'
-import File from '../lib/models/File'
+import File from '../lib/models/Upload'
 
 describe('GetHandler', () => {
   const path = '/test/output'

@@ -1,7 +1,7 @@
 import 'should'
 import {strict as assert} from 'node:assert'
 
-import File from '../lib/models/File'
+import File from '../lib/models/Upload'
 import Uid from '../lib/models/Uid'
 
 describe('File', () => {

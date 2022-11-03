@@ -3,7 +3,7 @@ import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
 
-import File from '../lib/models/File'
+import Upload from '../lib/models/Upload'
 
 export const shouldHaveStoreMethods = function () {
   describe('the class', () => {
@@ -21,20 +21,20 @@ export const shouldHaveStoreMethods = function () {
 
 export const shouldCreateUploads = function () {
   describe('create', () => {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       size: 1000,
       offset: 0,
       metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     })
-    const file_defered = new File({
+    const file_defered = new Upload({
       id: '1234',
       offset: 0,
     })
 
     it('should resolve to file', async function () {
       const newFile = await this.datastore.create(file)
-      assert.equal(newFile instanceof File, true)
+      assert.equal(newFile instanceof Upload, true)
     })
 
     it("should report 'creation' extension", function () {
@@ -68,7 +68,7 @@ export const shouldCreateUploads = function () {
 }
 
 export const shouldRemoveUploads = function () {
-  const file = new File({id: '1234', size: 1000, offset: 0})
+  const file = new Upload({id: '1234', size: 1000, offset: 0})
 
   describe('remove (termination extension)', () => {
     it("should report 'termination' extension", function () {
@@ -99,7 +99,7 @@ export const shouldWriteUploads = function () {
     })
 
     it('should write a stream and resolve the new offset', async function () {
-      const file = new File({
+      const file = new Upload({
         id: '1234',
         size: this.testFileSize,
         offset: 0,
@@ -112,7 +112,7 @@ export const shouldWriteUploads = function () {
     })
 
     it('should reject when stream is destroyed', async function () {
-      const file = new File({
+      const file = new Upload({
         id: '1234',
         size: this.testFileSize,
         offset: 0,
@@ -133,7 +133,7 @@ export const shouldWriteUploads = function () {
 
 export const shouldHandleOffset = function () {
   describe('getUpload', function () {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       // @ts-expect-error todo
       size: this.testFileSize,
@@ -160,7 +160,7 @@ export const shouldHandleOffset = function () {
 
 export const shouldDeclareUploadLength = function () {
   describe('declareUploadLength', () => {
-    const file = new File({
+    const file = new Upload({
       id: '1234',
       offset: 0,
       metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',

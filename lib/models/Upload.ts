@@ -1,17 +1,17 @@
-type Upload = {
+type TUpload = {
   id: string
   size?: number
   offset: number
   metadata?: string
 }
 
-export default class File {
-  id: Upload['id']
-  metadata?: Upload['metadata']
-  size?: Upload['size']
-  offset: Upload['offset']
+export default class Upload {
+  id: TUpload['id']
+  metadata?: TUpload['metadata']
+  size?: TUpload['size']
+  offset: TUpload['offset']
 
-  constructor(upload: Upload) {
+  constructor(upload: TUpload) {
     if (!upload.id) {
       throw new Error('[File] constructor must be given an ID')
     }
