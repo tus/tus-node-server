@@ -309,7 +309,7 @@ describe('EndToEnd', () => {
       server = new Server({path: STORE_PATH})
       server.datastore = new FileStore({
         directory: `./${STORE_PATH}`,
-        expirationPeriodInMilliseconds: 1,
+        expirationPeriodInMilliseconds: 25,
       })
       listener = server.listen()
       agent = request.agent(listener)
@@ -369,9 +369,34 @@ describe('EndToEnd', () => {
         write_stream.write(msg)
         write_stream.end(() => {})
       })
+
+      it('expired upload responds with 410 Gone', (done) => {
+        setTimeout(() => {
+          const msg = 'tus test'
+          const write_stream = agent
+            .patch(`${STORE_PATH}/${file_id}`)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+          write_stream.on('response', (res) => {
+            assert.equal(res.statusCode, 410)
+            done()
+          })
+          write_stream.write(msg)
+          write_stream.end(() => {})
+        }, 25)
+      })
     })
 
     describe('deleteExpiredFiles', () => {
+      it('HEAD request to expired upload returns 410 Gone', (done) => {
+        agent
+          .head(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(410)
+          .end(done)
+      })
+
       it('can delete expired files', (done) => {
         server.datastore
           .deleteExpired()
@@ -380,18 +405,6 @@ describe('EndToEnd', () => {
           })
           .then((deleted) => {
             assert.equal(deleted >= 1, true)
-            done()
-          })
-      })
-
-      it('should be no more delete expired files', (done) => {
-        const promise = server.datastore.deleteExpired()
-        promise
-          .catch((error) => {
-            done(error)
-          })
-          .then((deleted) => {
-            assert.equal(deleted, 0)
             done()
           })
       })

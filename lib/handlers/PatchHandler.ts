@@ -33,6 +33,21 @@ export default class PatchHandler extends BaseHandler {
 
     const file = await this.store.getUpload(file_id)
 
+    // If a Client does attempt to resume an upload which has since
+    // been removed by the Server, the Server SHOULD respond with the
+    // with the 404 Not Found or 410 Gone status. The latter one SHOULD
+    // be used if the Server is keeping track of expired uploads.
+    const creation = new Date(file.creation_date as Date)
+    const expiration = new Date(creation.getTime() + this.store.getExpiration())
+    const now = new Date()
+    if (
+      this.store.hasExtension('expiration') &&
+      this.store.getExpiration() > 0 &&
+      now > expiration
+    ) {
+      throw ERRORS.FILE_NO_LONGER_EXISTS
+    }
+
     if (file.size !== offset) {
       // If the offsets do not match, the Server MUST respond with the 409 Conflict status without modifying the upload resource.
       log(
