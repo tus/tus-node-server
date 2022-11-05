@@ -17,7 +17,7 @@ type Store = {
   get(key: string): File | undefined
   set(key: string, value: File): void
   delete(key: string): void
-  all: Record<string, File>
+  all: string[]
 }
 
 type Options = {
@@ -40,7 +40,7 @@ export default class FileStore extends DataStore {
     super()
     this.directory = directory
     this.configstore = configstore ?? new Configstore(`${pkg.name}-${pkg.version}`)
-    this.expirationPeriodInMilliseconds = expirationPeriodInMilliseconds ?? -1
+    this.expirationPeriodInMilliseconds = expirationPeriodInMilliseconds ?? 0
     this.extensions = [
       'creation',
       'creation-with-upload',
