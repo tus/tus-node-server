@@ -10,7 +10,7 @@ import sinon from 'sinon'
 import DataStore from '../lib/stores/DataStore'
 import PostHandler from '../lib/handlers/PostHandler'
 import {EVENTS} from '../lib/constants'
-import File from '../lib/models/File'
+import File from '../lib/models/Upload'
 
 const SERVER_OPTIONS = {
   path: '/test',
@@ -117,7 +117,7 @@ describe('PostHandler', () => {
       it(`must fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = new File('1234', '10')
+        const file = new File({id: '1234', size: 10, offset: 0})
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
@@ -133,7 +133,7 @@ describe('PostHandler', () => {
       it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with absolute URL`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = new File('1234', '10')
+        const file = new File({id: '1234', size: 10, offset: 0})
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
@@ -152,7 +152,7 @@ describe('PostHandler', () => {
       it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with relative URL`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = new File('1234', '10')
+        const file = new File({id: '1234', size: 10, offset: 0})
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {

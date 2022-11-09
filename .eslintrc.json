@@ -21,7 +21,8 @@
     "@typescript-eslint/no-empty-function": "off",
     "unicorn/prevent-abbreviations": "off",
     "unicorn/no-null": "off",
-    "unicorn/filename-case": "off"
+    "unicorn/filename-case": "off",
+    "unicorn/explicit-length-check": "off"
   },
   "ignorePatterns": ["demo", "dist", "node_modules"]
 }

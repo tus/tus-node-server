@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import BaseHandler from './BaseHandler'
-import File from '../models/File'
+import Upload from '../models/Upload'
 import Uid from '../models/Uid'
 import RequestValidator from '../validators/RequestValidator'
 import {EVENTS, ERRORS} from '../constants'
@@ -51,16 +51,21 @@ export default class PostHandler extends BaseHandler {
       throw ERRORS.INVALID_LENGTH
     }
 
-    let file_id
+    let id
 
     try {
-      file_id = this.options.namingFunction(req)
+      id = this.options.namingFunction(req)
     } catch (error) {
       log('create: check your `namingFunction`. Error', error)
       throw ERRORS.FILE_WRITE_ERROR
     }
 
-    const file = new File(file_id, upload_length, upload_defer_length, upload_metadata)
+    const file = new Upload({
+      id,
+      size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
+      offset: 0,
+      metadata: upload_metadata,
+    })
 
     const obj = await this.store.create(file)
     this.emit(EVENTS.EVENT_FILE_CREATED, {file: obj})
@@ -76,14 +81,7 @@ export default class PostHandler extends BaseHandler {
       optional_headers['Upload-Offset'] = new_offset.toString()
 
       if (new_offset === Number.parseInt(upload_length as string, 10)) {
-        this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {
-          file: new File(
-            file_id,
-            file.upload_length,
-            file.upload_defer_length,
-            file.upload_metadata
-          ),
-        })
+        this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file})
       }
     }
 

@@ -1,4 +1,4 @@
-import type {File} from '../../types'
+import type {Upload} from '../../types'
 
 /**
  * Memory based configstore.
@@ -7,13 +7,13 @@ import type {File} from '../../types'
  * @author Mitja Puzigaća <mitjap@gmail.com>
  */
 export default class MemoryConfigstore {
-  data: Map<string, File> = new Map()
+  data: Map<string, Upload> = new Map()
 
-  get(key: string): File | undefined {
+  get(key: string): Upload | undefined {
     return this.data.get(key)
   }
 
-  set(key: string, value: File) {
+  set(key: string, value: Upload) {
     this.data.set(key, value)
   }
 

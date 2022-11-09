@@ -5,8 +5,7 @@ import debug from 'debug'
 
 import {ERRORS, TUS_RESUMABLE} from '../constants'
 import DataStore from './DataStore'
-
-import type {File} from '../../types'
+import Upload from '../models/Upload'
 
 type Options = {
   bucket: string
@@ -61,7 +60,7 @@ export default class GCSDataStore extends DataStore {
     return bucket
   }
 
-  create(file: File): Promise<File> {
+  create(file: Upload): Promise<Upload> {
     return new Promise((resolve, reject) => {
       if (!file.id) {
         reject(ERRORS.FILE_NOT_FOUND)
@@ -73,9 +72,10 @@ export default class GCSDataStore extends DataStore {
         metadata: {
           metadata: {
             tus_version: TUS_RESUMABLE,
-            upload_length: file.upload_length,
-            upload_metadata: file.upload_metadata,
-            upload_defer_length: file.upload_defer_length,
+            size: file.size,
+            sizeIsDeferred: `${file.sizeIsDeferred}`,
+            offset: file.offset,
+            metadata: file.metadata,
           },
         },
       }
@@ -100,23 +100,24 @@ export default class GCSDataStore extends DataStore {
    */
   write(
     readable: http.IncomingMessage | stream.Readable,
-    file_id: string,
+    id: string,
     offset: number
   ): Promise<number> {
     // GCS Doesn't persist metadata within versions,
     // get that metadata first
-    return this.getUpload(file_id).then((data) => {
+    return this.getUpload(id).then((upload) => {
       return new Promise((resolve, reject) => {
-        const file = this.bucket.file(file_id)
-        const destination = data.size === 0 ? file : this.bucket.file(`${file_id}_patch`)
+        const file = this.bucket.file(id)
+        const destination = upload.offset === 0 ? file : this.bucket.file(`${id}_patch`)
         const options = {
           offset,
           metadata: {
             metadata: {
-              upload_length: data.upload_length,
               tus_version: TUS_RESUMABLE,
-              upload_metadata: data.upload_metadata,
-              upload_defer_length: data.upload_defer_length,
+              size: upload.size,
+              sizeIsDeferred: `${upload.sizeIsDeferred}`,
+              offset,
+              metadata: upload.metadata,
             },
           },
         }
@@ -126,7 +127,7 @@ export default class GCSDataStore extends DataStore {
           return
         }
 
-        let bytes_received = data.size as number
+        let bytes_received = upload.offset
         readable.on('data', (buffer) => {
           bytes_received += buffer.length
         })
@@ -160,15 +161,15 @@ export default class GCSDataStore extends DataStore {
     })
   }
 
-  getUpload(file_id: string): Promise<File> {
+  getUpload(id: string): Promise<Upload> {
     return new Promise((resolve, reject) => {
-      if (!file_id) {
+      if (!id) {
         reject(ERRORS.FILE_NOT_FOUND)
         return
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.bucket.file(file_id).getMetadata((error: any, metadata: any) => {
+      this.bucket.file(id).getMetadata((error: any, metadata: any) => {
         if (error && error.code === 404) {
           return reject(ERRORS.FILE_NOT_FOUND)
         }
@@ -178,38 +179,24 @@ export default class GCSDataStore extends DataStore {
           return reject(error)
         }
 
-        const data: File = {
-          id: file_id,
-          size: Number.parseInt(metadata.size, 10),
-        }
-        if (!('metadata' in metadata)) {
-          return resolve(data)
-        }
-
-        if (metadata.metadata.upload_length) {
-          data.upload_length = metadata.metadata.upload_length
-        }
-
-        if (metadata.metadata.upload_defer_length) {
-          data.upload_defer_length = metadata.metadata.upload_defer_length
-        }
-
-        if (metadata.metadata.upload_metadata) {
-          data.upload_metadata = metadata.metadata.upload_metadata
-        }
-
-        return resolve(data)
+        const {size, metadata: meta} = metadata.metadata
+        return resolve(
+          new Upload({
+            id,
+            size: size ? Number.parseInt(size, 10) : size,
+            offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS
+            metadata: meta,
+          })
+        )
       })
     })
   }
 
-  async declareUploadLength(file_id: string, upload_length: string) {
-    const metadata = await this.getUpload(file_id)
-    metadata.upload_length = upload_length
-    // NOTE: this needs to be `null` and not `undefined`,
-    // GCS has logic that if it's the latter, it will keep the previous value ¯\_(ツ)_/¯
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    metadata.upload_defer_length = null!
-    await this.bucket.file(file_id).setMetadata({metadata})
+  async declareUploadLength(id: string, upload_length: number) {
+    const upload = await this.getUpload(id)
+
+    upload.size = upload_length
+
+    await this.bucket.file(id).setMetadata({metadata: upload})
   }
 }
