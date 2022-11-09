@@ -106,7 +106,7 @@ describe('PostHandler', () => {
         await handler.send(req, res)
         assert.equal(
           // @ts-expect-error works but not in types
-          res._header.includes('Location: //localhost:3000/test/output/1234'),
+          res._header.includes('Location: http://localhost:3000/test/output/1234'),
           true
         )
         assert.equal(res.statusCode, 201)
@@ -160,7 +160,7 @@ describe('PostHandler', () => {
         await handler.send(req, res)
         assert.equal(
           // @ts-expect-error works but not in types
-          res._header.includes('Location: //localhost:3000/test/output/1234'),
+          res._header.includes('Location: http://localhost:3000/test/output/1234'),
           true
         )
         assert.equal(res.statusCode, 201)
@@ -175,7 +175,7 @@ describe('PostHandler', () => {
         await handler.send(req, res)
         assert.equal(
           // @ts-expect-error works but not in types
-          res._header.includes('Location: //localhost:3000/test/output/1234'),
+          res._header.includes('Location: http://localhost:3000/test/output/1234'),
           true
         )
         assert.equal(res.statusCode, 201)
@@ -191,7 +191,7 @@ describe('PostHandler', () => {
         await handler.send(req, res)
         assert.equal(
           // @ts-expect-error works but not in types
-          res._header.includes('Location: //localhost:3000/1234'),
+          res._header.includes('Location: http://localhost:3000/1234'),
           true
         )
         assert.equal(res.statusCode, 201)
@@ -226,7 +226,7 @@ describe('PostHandler', () => {
           namingFunction: () => '1234',
         })
         handler.on(EVENTS.EVENT_ENDPOINT_CREATED, (obj) => {
-          assert.strictEqual(obj.url, '//localhost:3000/test/output/1234')
+          assert.strictEqual(obj.url, 'http://localhost:3000/test/output/1234')
           done()
         })
 

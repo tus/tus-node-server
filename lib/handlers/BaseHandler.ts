@@ -30,31 +30,36 @@ export default class BaseHandler extends EventEmitter {
   generateUrl(req: http.IncomingMessage, id: string) {
     const forwarded = req.headers.Forwarded as string | undefined
     const path = this.options.path === '/' ? '' : this.options.path
-
-    if (this.options.respectForwardedHeaders) {
-      if (forwarded) {
-        const host = reForwardedHost.exec(forwarded)?.[1]
-        const proto = reForwardedProto.exec(forwarded)?.[1]
-        if (proto && host) {
-          return `${proto}://${host}${path}/${id}`
-        }
-      }
-
-      const forwardHost = req.headers['X-Forwarded-Host']
-      const forwardProto = (req.headers['X-Forwarded-Proto'] ?? 'https') as string
-
-      if (['http', 'https'].includes(forwardProto) && forwardHost) {
-        return `${forwardProto}://${forwardHost}${path}/${id}`
-      }
-    }
+    let proto
+    let host
 
     if (this.options.relativeLocation) {
       // @ts-expect-error baseUrl type doesn't exist?
       return `${req.baseUrl || ''}${path}/${id}`
     }
 
+    if (this.options.respectForwardedHeaders) {
+      if (forwarded) {
+        host ??= reForwardedHost.exec(forwarded)?.[1]
+        proto ??= reForwardedProto.exec(forwarded)?.[1]
+      }
+
+      const forwardHost = req.headers['X-Forwarded-Host']
+      const forwardProto = req.headers['X-Forwarded-Proto']
+
+      // @ts-expect-error we can pass undefined
+      if (['http', 'https'].includes(forwardProto)) {
+        proto ??= forwardProto as string
+      }
+
+      host ??= forwardHost
+    }
+
+    host ??= req.headers.host
+    proto ??= 'http'
+
     // @ts-expect-error baseUrl type doesn't exist?
-    return `//${req.headers.host}${req.baseUrl || ''}${path}/${id}`
+    return `${proto}://${host}${req.baseUrl ?? ''}${path}/${id}`
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {
