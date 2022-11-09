@@ -30,12 +30,13 @@ export default class BaseHandler extends EventEmitter {
   generateUrl(req: http.IncomingMessage, id: string) {
     const forwarded = req.headers.Forwarded as string | undefined
     const path = this.options.path === '/' ? '' : this.options.path
+    // @ts-expect-error baseUrl type doesn't exist?
+    const baseUrl = req.baseUrl ?? ''
     let proto
     let host
 
     if (this.options.relativeLocation) {
-      // @ts-expect-error baseUrl type doesn't exist?
-      return `${req.baseUrl || ''}${path}/${id}`
+      return `${baseUrl}${path}/${id}`
     }
 
     if (this.options.respectForwardedHeaders) {
@@ -58,8 +59,7 @@ export default class BaseHandler extends EventEmitter {
     host ??= req.headers.host
     proto ??= 'http'
 
-    // @ts-expect-error baseUrl type doesn't exist?
-    return `${proto}://${host}${req.baseUrl ?? ''}${path}/${id}`
+    return `${proto}://${host}${baseUrl}${path}/${id}`
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {
