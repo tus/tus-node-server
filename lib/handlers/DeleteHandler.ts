@@ -5,13 +5,13 @@ import type http from 'node:http'
 
 export default class DeleteHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
-    const file_id = this.getFileIdFromRequest(req)
-    if (file_id === false) {
+    const id = this.getFileIdFromRequest(req)
+    if (id === false) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    await this.store.remove(file_id)
-    this.emit(EVENTS.EVENT_FILE_DELETED, {file_id})
+    await this.store.remove(id)
+    this.emit(EVENTS.EVENT_FILE_DELETED, {file_id: id})
     return this.write(res, 204, {})
   }
 }

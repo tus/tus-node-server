@@ -33,22 +33,21 @@ export default class GetHandler extends BaseHandler {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const file_id = this.getFileIdFromRequest(req)
-    if (file_id === false) {
+    const id = this.getFileIdFromRequest(req)
+    if (id === false) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const stats = await this.store.getUpload(file_id)
-    const upload_length = Number.parseInt(stats.upload_length as string, 10)
-    if (stats.size !== upload_length) {
+    const stats = await this.store.getUpload(id)
+    if (stats.offset !== stats.size) {
       log(
-        `[GetHandler] send: File is not yet fully uploaded (${stats.size}/${upload_length})`
+        `[GetHandler] send: File is not yet fully uploaded (${stats.offset}/${stats.size})`
       )
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const file_stream = this.store.read(file_id)
-    const headers = {'Content-Length': stats.size}
+    const file_stream = this.store.read(id)
+    const headers = {'Content-Length': stats.offset}
     res.writeHead(200, headers)
     return stream.pipeline(file_stream, res, () => {
       // We have no need to handle streaming errors

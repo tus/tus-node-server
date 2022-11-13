@@ -49,8 +49,10 @@ describe('EndToEnd', () => {
     let deferred_file_id: string
 
     before(() => {
-      server = new Server({path: STORE_PATH})
-      server.datastore = new FileStore({directory: `./${STORE_PATH}`})
+      server = new Server({
+        path: STORE_PATH,
+        datastore: new FileStore({directory: `./${STORE_PATH}`}),
+      })
       listener = server.listen()
       agent = request.agent(listener)
     })
@@ -266,11 +268,9 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
+        datastore: new FileStore({directory: `./${STORE_PATH}`}),
         // Configure the store to return relative path in Location Header
         relativeLocation: true,
-      })
-      server.datastore = new FileStore({
-        directory: `./${STORE_PATH}`,
       })
       listener = server.listen()
       agent = request.agent(listener)
@@ -306,10 +306,12 @@ describe('EndToEnd', () => {
     let file_id: string
 
     before(() => {
-      server = new Server({path: STORE_PATH})
-      server.datastore = new FileStore({
-        directory: `./${STORE_PATH}`,
-        expirationPeriodInMilliseconds: 25,
+      server = new Server({
+        path: STORE_PATH,
+        datastore: new FileStore({
+          directory: `./${STORE_PATH}`,
+          expirationPeriodInMilliseconds: 50,
+        }),
       })
       listener = server.listen()
       agent = request.agent(listener)
@@ -353,6 +355,18 @@ describe('EndToEnd', () => {
 
     describe('PATCH', () => {
       it('unfinished upload response contains header Upload-Expires', (done) => {
+        agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', `${TEST_FILE_SIZE}`)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+          .end((_, res) => {
+            assert.equal('upload-expires' in res.headers, true)
+            file_id = res.headers.location.split('/').pop()
+          })
+
         const msg = 'tus test'
         const write_stream = agent
           .patch(`${STORE_PATH}/${file_id}`)
@@ -371,20 +385,32 @@ describe('EndToEnd', () => {
       })
 
       it('expired upload responds with 410 Gone', (done) => {
-        setTimeout(() => {
-          const msg = 'tus test'
-          const write_stream = agent
-            .patch(`${STORE_PATH}/${file_id}`)
-            .set('Tus-Resumable', TUS_RESUMABLE)
-            .set('Upload-Offset', '0')
-            .set('Content-Type', 'application/offset+octet-stream')
-          write_stream.on('response', (res) => {
-            assert.equal(res.statusCode, 410)
-            done()
+        agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', `${TEST_FILE_SIZE}`)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+          .end((_, res) => {
+            assert.equal('upload-expires' in res.headers, true)
+            file_id = res.headers.location.split('/').pop()
+
+            setTimeout(() => {
+              const msg = 'tus test'
+              const write_stream = agent
+                .patch(`${STORE_PATH}/${file_id}`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Offset', '0')
+                .set('Content-Type', 'application/offset+octet-stream')
+              write_stream.on('response', (res) => {
+                assert.equal(res.statusCode, 410)
+                done()
+              })
+              write_stream.write(msg)
+              write_stream.end(() => {})
+            }, 51)
           })
-          write_stream.write(msg)
-          write_stream.end(() => {})
-        }, 25)
       })
     })
 
@@ -419,11 +445,11 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
-      })
-      server.datastore = new GCSDataStore({
-        projectId: PROJECT_ID,
-        keyFilename: KEYFILE,
-        bucket: BUCKET,
+        datastore: new GCSDataStore({
+          projectId: PROJECT_ID,
+          keyFilename: KEYFILE,
+          bucket: BUCKET,
+        }),
       })
       listener = server.listen()
       agent = request.agent(listener)

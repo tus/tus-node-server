@@ -1,5 +1,5 @@
 import type http from 'node:http'
-import FileModel from '../lib/models/File'
+import UploadModel from '../lib/models/Upload'
 
 import BaseStore from '../lib/stores/DataStore'
 import FileStore from '../lib/stores/FileStore'
@@ -12,7 +12,7 @@ export type ServerOptions = {
   namingFunction?: (req: http.IncomingMessage) => string
 }
 
-export type File = InstanceType<typeof FileModel>
+export type Upload = InstanceType<typeof UploadModel>
 
 export type DataStore =
   | InstanceType<typeof BaseStore>

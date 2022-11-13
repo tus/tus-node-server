@@ -6,24 +6,23 @@ import type http from 'node:http'
 
 export default class HeadHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
-    const file_id = this.getFileIdFromRequest(req)
-    if (file_id === false) {
+    const id = this.getFileIdFromRequest(req)
+    if (id === false) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const file = await this.store.getUpload(file_id)
+    const file = await this.store.getUpload(id)
 
     // If a Client does attempt to resume an upload which has since
     // been removed by the Server, the Server SHOULD respond with the
     // with the 404 Not Found or 410 Gone status. The latter one SHOULD
     // be used if the Server is keeping track of expired uploads.
-    const creation = new Date(file.creation_date as Date)
-    const expiration = new Date(creation.getTime() + this.store.getExpiration())
     const now = new Date()
     if (
       this.store.hasExtension('expiration') &&
       this.store.getExpiration() > 0 &&
-      now > expiration
+      file.creation_date &&
+      now > new Date(new Date(file.creation_date).getTime() + this.store.getExpiration())
     ) {
       throw ERRORS.FILE_NO_LONGER_EXISTS
     }
@@ -34,23 +33,22 @@ export default class HeadHandler extends BaseHandler {
     res.setHeader('Cache-Control', 'no-store')
     // The Server MUST always include the Upload-Offset header in
     // the response for a HEAD request, even if the offset is 0
-    res.setHeader('Upload-Offset', file.size?.toString() as string)
-    if (file.upload_length !== undefined) {
+    res.setHeader('Upload-Offset', file.offset)
+
+    if (file.sizeIsDeferred) {
+      // As long as the length of the upload is not known, the Server
+      // MUST set Upload-Defer-Length: 1 in all responses to HEAD requests.
+      res.setHeader('Upload-Defer-Length', '1')
+    } else {
       // If the size of the upload is known, the Server MUST include
       // the Upload-Length header in the response.
-      res.setHeader('Upload-Length', file.upload_length)
+      res.setHeader('Upload-Length', file.size as number)
     }
 
-    if (file.upload_defer_length !== undefined) {
-      //  As long as the length of the upload is not known, the Server
-      //  MUST set Upload-Defer-Length: 1 in all responses to HEAD requests.
-      res.setHeader('Upload-Defer-Length', file.upload_defer_length)
-    }
-
-    if (file.upload_metadata !== undefined) {
+    if (file.metadata !== undefined) {
       // If the size of the upload is known, the Server MUST include
       // the Upload-Length header in the response.
-      res.setHeader('Upload-Metadata', file.upload_metadata)
+      res.setHeader('Upload-Metadata', file.metadata)
     }
 
     return res.end()

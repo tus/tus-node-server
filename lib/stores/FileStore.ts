@@ -11,11 +11,11 @@ import DataStore from './DataStore'
 import pkg from '../../package.json'
 import {ERRORS} from '../constants'
 
-import type {File} from '../../types'
+import Upload from '../models/Upload'
 
 type Store = {
-  get(key: string): File | undefined
-  set(key: string, value: File): void
+  get(key: string): Upload | undefined
+  set(key: string, value: Upload): void
   delete(key: string): void
   all: string[]
 }
@@ -66,7 +66,7 @@ export default class FileStore extends DataStore {
   /**
    * Create an empty file.
    */
-  create(file: File): Promise<File> {
+  create(file: Upload): Promise<Upload> {
     return new Promise((resolve, reject) => {
       fs.open(path.join(this.directory, file.id), 'w', (err, fd) => {
         if (err) {
@@ -144,15 +144,15 @@ export default class FileStore extends DataStore {
     })
   }
 
-  async getUpload(file_id: string): Promise<File> {
-    const file = this.configstore.get(file_id)
+  async getUpload(id: string): Promise<Upload> {
+    const file = this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
     return new Promise((resolve, reject) => {
-      const file_path = `${this.directory}/${file_id}`
+      const file_path = `${this.directory}/${id}`
       fs.stat(file_path, (error, stats) => {
         if (error && error.code === FILE_DOESNT_EXIST && file) {
           log(
@@ -176,22 +176,29 @@ export default class FileStore extends DataStore {
           return reject(ERRORS.FILE_NOT_FOUND)
         }
 
-        return resolve({...file, size: stats.size})
+        return resolve(
+          new Upload({
+            id,
+            size: file.size,
+            offset: stats.size,
+            metadata: file.metadata,
+            creation_date: file.creation_date,
+          })
+        )
       })
     })
   }
 
-  async declareUploadLength(file_id: string, upload_length: string) {
-    const file = this.configstore.get(file_id)
+  async declareUploadLength(id: string, upload_length: number) {
+    const file = this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    file.upload_length = upload_length
-    file.upload_defer_length = undefined
+    file.size = upload_length
 
-    this.configstore.set(file_id, file)
+    this.configstore.set(id, file)
   }
 
   async deleteExpired(): Promise<number> {
@@ -212,10 +219,11 @@ export default class FileStore extends DataStore {
           info &&
           'creation_date' in info &&
           this.getExpiration() > 0 &&
-          stats.size !== info.upload_length &&
+          stats.size !== info.offset &&
+          info.creation_date &&
           stats.id === info.id
         ) {
-          const creation = new Date(info.creation_date as Date)
+          const creation = new Date(info.creation_date)
           const expires = new Date(creation.getTime() + this.getExpiration())
           if (now > expires) {
             toDelete.push(this.remove(file_id))
