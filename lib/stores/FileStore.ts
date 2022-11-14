@@ -17,7 +17,7 @@ type Store = {
   get(key: string): Upload | undefined
   set(key: string, value: Upload): void
   delete(key: string): void
-  all: string[]
+  all: Record<string, Upload>
 }
 
 type Options = {
@@ -204,30 +204,22 @@ export default class FileStore extends DataStore {
   async deleteExpired(): Promise<number> {
     const now = new Date()
     const toDelete: Promise<void>[] = []
-    const fileStats = await Promise.all(
-      Object.keys(this.configstore.all).map((file_id) => {
-        return this.getUpload(file_id)
-      })
-    )
 
-    let index = 0
-    for (const file_id of Object.keys(this.configstore.all)) {
+    const uploadInfos = this.configstore.all
+    for (const file_id of Object.keys(uploadInfos)) {
       try {
-        const stats = fileStats[index]
-        const info = this.configstore.get(file_id)
+        const info = uploadInfos[file_id]
         if (
           info &&
           'creation_date' in info &&
           this.getExpiration() > 0 &&
-          stats.size !== info.offset &&
-          info.creation_date &&
-          stats.id === info.id
+          info.size !== info.offset &&
+          info.creation_date
         ) {
           const creation = new Date(info.creation_date)
           const expires = new Date(creation.getTime() + this.getExpiration())
           if (now > expires) {
             toDelete.push(this.remove(file_id))
-            this.configstore.delete(file_id)
           }
         }
       } catch (error) {
@@ -235,8 +227,6 @@ export default class FileStore extends DataStore {
           throw error
         }
       }
-
-      index++
     }
 
     return Promise.all(toDelete).then(() => toDelete.length)

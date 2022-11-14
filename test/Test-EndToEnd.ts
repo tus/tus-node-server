@@ -13,6 +13,7 @@ import GCSDataStore from '../lib/stores/GCSDataStore'
 import {TUS_RESUMABLE} from '../lib/constants'
 
 import type http from 'node:http'
+import MemoryConfigstore from '../lib/configstores/MemoryConfigstore'
 
 const STORE_PATH = '/test/output'
 const PROJECT_ID = 'tus-node-server'
@@ -311,6 +312,7 @@ describe('EndToEnd', () => {
         datastore: new FileStore({
           directory: `./${STORE_PATH}`,
           expirationPeriodInMilliseconds: 50,
+          configstore: new MemoryConfigstore(),
         }),
       })
       listener = server.listen()
