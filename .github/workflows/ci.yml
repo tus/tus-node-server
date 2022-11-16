@@ -3,6 +3,10 @@ on:
   push:
     branches: ['master', '1.x']
   pull_request:
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - .github/workflows/ci.yml
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 concurrency: ${{ github.workflow }}--${{ github.ref }}
