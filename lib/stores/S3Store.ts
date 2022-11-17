@@ -60,10 +60,7 @@ export default class S3Store extends DataStore {
   cache: Map<string, MetadataValue> = new Map()
   client: aws.S3
   preferredPartSize: number
-  maxMultipartParts = 10_000
-  minPartSize = 5 * 1024 * 1024
-  maxPartSize = 5 * 1024 * 1024 * 1024
-  maxObjectSize = 5 * 1024 * 1024 * 1024 * 1024
+  maxMultipartParts = 10_000 as const
 
   constructor(options: Options) {
     super()
