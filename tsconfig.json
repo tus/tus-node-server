@@ -13,7 +13,8 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "outDir": "dist",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "useUnknownInCatchVariables": false
   },
   "ts-node": {
     "transpileOnly": true
