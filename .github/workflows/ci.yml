@@ -18,7 +18,7 @@ jobs:
       # We do not want to run CRUD tests in parallel
       max-parallel: 1
       matrix:
-        node-version: [16.x, 18.x, 19.x]
+        node-version: [16.x, 18.x, 19.0.1]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
