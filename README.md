@@ -129,9 +129,7 @@ const fastify = require('fastify')({logger: true})
  * without any parser to leave body untouched
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
-fastify.addContentTypeParser(
-    'application/offset+octet-stream', (request, payload, done) => done(null)
-);
+fastify.addContentTypeParser('application/offset+octet-stream', async () => true)
 
 /**
  * let tus handle preparation and filehandling requests
