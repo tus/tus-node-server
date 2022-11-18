@@ -30,6 +30,8 @@ $ npm install tus-node-server
     ```
 
 - **Amazon S3**
+    
+    using Key/Secret
     ```js
 
     server.datastore = new tus.S3Store({
@@ -41,6 +43,23 @@ $ npm install tus-node-server
     });
     ```
 
+    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property) to fetch credentials inside a AWS container, such as an ECS container, which will inject the required environment variables. The `credentials` config is directly passed into the AWS SDK so you can refer to the AWS docs for the supported values for `credentials`.
+    
+    For example, with `ECSCredentials`:
+    
+    ```js
+    server.datastore = new tus.S3Store({
+        path: '/files',
+        bucket: 'bucket-name',
+        credentials: new AWS.ECSCredentials({
+            httpOptions: { timeout: 5000 },
+            maxRetries: 10,
+        }),
+        region: 'eu-west-1',
+        partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+        tmpDirPrefix: 'tus-s3-store',
+    });
+    ```
 ## Quick Start
 
 #### Use the [tus-node-deploy](https://hub.docker.com/r/bhstahl/tus-node-deploy/) Docker image

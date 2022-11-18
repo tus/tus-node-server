@@ -1,5 +1,7 @@
 import { EventEmitter } from "events";
 import * as http from "http";
+import { RemoteCredentials } from 'aws-sdk'
+
 
 declare interface Configstore {
     get(key: string) : Promise<IFile | undefined> | IFile | undefined;
@@ -10,7 +12,7 @@ declare interface Configstore {
 declare interface ServerOptions {
     path: string;
     relativeLocation?: boolean;
-    namingFunction?: () => string;
+    namingFunction?: (req: http.IncomingMessage) => string;
 }
 
 /**
@@ -30,10 +32,9 @@ declare interface GCStoreOptions extends DataStoreOptions {
 }
 
 declare interface S3StoreOptions extends DataStoreOptions {
-    accessKeyId: string;
-    secretAccessKey: string;
     bucket: string;
     region?: string;
+    tmpDirPrefix?: string;
     partSize: number;
 }
 
@@ -97,7 +98,9 @@ export declare class GCSDataStore extends DataStore {
  * file store in AWS S3
  */
 export declare class S3Store extends DataStore {
-    constructor(options: S3StoreOptions);
+    constructor(options: S3StoreOptions & { accessKeyId: string, secretAccessKey: string });
+    constructor(options: S3StoreOptions & { credentials: RemoteCredentials });
+    getOffset(file_id: string, with_parts?: boolean): Promise<any>;
 }
 
 /**
