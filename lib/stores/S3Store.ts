@@ -19,13 +19,19 @@ function calculateOffsetFromParts(parts?: aws.S3.Parts) {
   return parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0
 }
 
-type Options = {
-  accessKeyId: string
-  secretAccessKey: string
+type Base = {
   bucket: string
   region?: string
   partSize?: number
 }
+
+type Options =
+  | ({accessKeyId: string; secretAccessKey: string; credentials?: never} & Base)
+  | ({
+      credentials: aws.RemoteCredentials
+      accessKeyId?: never
+      secretAccessKey?: never
+    } & Base)
 
 type MetadataValue = {file: Upload; upload_id: string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
@@ -70,9 +76,12 @@ export default class S3Store extends DataStore {
 
   constructor(options: Options) {
     super()
-    assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
-    assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
-    assert.ok(options.bucket, '[S3Store] `bucket` must be set')
+    if (options.accessKeyId || options.secretAccessKey) {
+      assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
+      assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
+    } else {
+      assert.ok(options.credentials, '[S3Store] `credentials` must be set')
+    }
 
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket_name = options.bucket
@@ -441,13 +450,12 @@ export default class S3Store extends DataStore {
 
     try {
       const parts = await this.retrieveParts(id)
-      return {
+      return new Upload({
         id,
         ...this.cache.get(id)?.file,
         offset: calculateOffsetFromParts(parts),
         size: metadata.file.size,
-        sizeIsDeferred: metadata.file.sizeIsDeferred,
-      }
+      })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.code !== 'NoSuchUpload') {
@@ -458,13 +466,12 @@ export default class S3Store extends DataStore {
       // When the last part of an upload is finished and the file is successfully written to S3,
       // the upload will no longer be present and requesting it will result in a 404.
       // In that case we return the upload_length as size.
-      return {
+      return new Upload({
         id,
         ...this.cache.get(id)?.file,
         offset: metadata.file.offset,
         size: metadata.file.size,
-        sizeIsDeferred: metadata.file.sizeIsDeferred,
-      }
+      })
     }
   }
 
