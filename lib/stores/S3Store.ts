@@ -65,11 +65,12 @@ export default class S3Store extends DataStore {
   constructor(options: Options) {
     super()
     const {bucket, partSize, ...rest} = options
-    // TODO: these are deprecated. Remove these, look up new best practise,
-    // and reflect that in the docs
-    assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
-    assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
-    assert.ok(bucket, '[S3Store] `bucket` must be set')
+    if (options.accessKeyId || options.secretAccessKey) {
+      assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
+      assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
+    } else {
+      assert.ok(options.credentials, '[S3Store] `credentials` must be set')
+    }
 
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket = bucket
@@ -481,13 +482,12 @@ export default class S3Store extends DataStore {
 
     try {
       const parts = await this.retrieveParts(id)
-      return {
+      return new Upload({
         id,
         ...this.cache.get(id)?.file,
         offset: calcOffsetFromParts(parts),
         size: metadata.file.size,
-        sizeIsDeferred: metadata.file.sizeIsDeferred,
-      }
+      })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.code !== 'NoSuchUpload') {
@@ -498,13 +498,12 @@ export default class S3Store extends DataStore {
       // When the last part of an upload is finished and the file is successfully written to S3,
       // the upload will no longer be present and requesting it will result in a 404.
       // In that case we return the upload_length as size.
-      return {
+      return new Upload({
         id,
         ...this.cache.get(id)?.file,
         offset: metadata.file.offset,
         size: metadata.file.size,
-        sizeIsDeferred: metadata.file.sizeIsDeferred,
-      }
+      })
     }
   }
 

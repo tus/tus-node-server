@@ -32,6 +32,21 @@ export default class PatchHandler extends BaseHandler {
 
     const file = await this.store.getUpload(id)
 
+    // If a Client does attempt to resume an upload which has since
+    // been removed by the Server, the Server SHOULD respond with the
+    // with the 404 Not Found or 410 Gone status. The latter one SHOULD
+    // be used if the Server is keeping track of expired uploads.
+    const creation = file.creation_date ? new Date(file.creation_date) : new Date()
+    const expiration = new Date(creation.getTime() + this.store.getExpiration())
+    const now = new Date()
+    if (
+      this.store.hasExtension('expiration') &&
+      this.store.getExpiration() > 0 &&
+      now > expiration
+    ) {
+      throw ERRORS.FILE_NO_LONGER_EXISTS
+    }
+
     if (file.offset !== offset) {
       // If the offsets do not match, the Server MUST respond with the 409 Conflict status without modifying the upload resource.
       log(
@@ -67,9 +82,25 @@ export default class PatchHandler extends BaseHandler {
       this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file})
     }
 
-    //  It MUST include the Upload-Offset header containing the new offset.
-    const headers = {
+    const headers: {
+      'Upload-Offset': number
+      'Upload-Expires'?: string
+    } = {
       'Upload-Offset': new_offset,
+    }
+
+    if (
+      this.store.hasExtension('expiration') &&
+      this.store.getExpiration() > 0 &&
+      file.creation_date &&
+      (file.size === undefined || new_offset < file.size)
+    ) {
+      const creation = new Date(file.creation_date)
+      // Value MUST be in RFC 7231 datetime format
+      const dateString = new Date(
+        creation.getTime() + this.store.getExpiration()
+      ).toUTCString()
+      headers['Upload-Expires'] = dateString
     }
 
     // The Server MUST acknowledge successful PATCH requests with the 204

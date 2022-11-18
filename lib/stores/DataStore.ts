@@ -69,4 +69,15 @@ export default class DataStore extends EventEmitter {
    * Called in PATCH requests when upload length is known after being defered.
    */
   async declareUploadLength(id: string, upload_length: number) {}
+
+  /**
+   * Returns number of expired uploads that were deleted.
+   */
+  async deleteExpired(): Promise<number> {
+    return 0
+  }
+
+  getExpiration(): number {
+    return 0
+  }
 }

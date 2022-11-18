@@ -73,7 +73,10 @@ export default class PostHandler extends BaseHandler {
     const url = this.generateUrl(req, file.id)
     this.emit(EVENTS.EVENT_ENDPOINT_CREATED, {url})
 
-    const optional_headers: {'Upload-Offset'?: string} = {}
+    const optional_headers: {
+      'Upload-Offset'?: string
+      'Upload-Expires'?: string
+    } = {}
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
     if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
@@ -82,6 +85,23 @@ export default class PostHandler extends BaseHandler {
 
       if (new_offset === Number.parseInt(upload_length as string, 10)) {
         this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file})
+      }
+    }
+
+    // The Upload-Expires response header indicates the time after which the unfinished upload expires.
+    // If expiration is known at creation time, Upload-Expires header MUST be included in the response
+    if (
+      this.store.hasExtension('expiration') &&
+      this.store.getExpiration() > 0 &&
+      file.creation_date
+    ) {
+      const created = await this.store.getUpload(file.id)
+      if (created.offset !== Number.parseInt(upload_length as string, 10)) {
+        const creation = new Date(file.creation_date)
+        // Value MUST be in RFC 7231 datetime format
+        optional_headers['Upload-Expires'] = new Date(
+          creation.getTime() + this.store.getExpiration()
+        ).toUTCString()
       }
     }
 
