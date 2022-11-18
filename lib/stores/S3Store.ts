@@ -1,4 +1,3 @@
-import {strict as assert} from 'node:assert'
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
 import stream from 'node:stream/promises'
@@ -65,13 +64,6 @@ export default class S3Store extends DataStore {
   constructor(options: Options) {
     super()
     const {bucket, partSize, ...rest} = options
-    if (options.accessKeyId || options.secretAccessKey) {
-      assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
-      assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
-    } else {
-      assert.ok(options.credentials, '[S3Store] `credentials` must be set')
-    }
-
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
