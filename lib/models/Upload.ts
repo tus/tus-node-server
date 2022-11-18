@@ -3,6 +3,7 @@ type TUpload = {
   size?: number
   offset: number
   metadata?: string
+  creation_date?: string
 }
 
 export default class Upload {
@@ -10,6 +11,7 @@ export default class Upload {
   metadata?: TUpload['metadata']
   size?: TUpload['size']
   offset: TUpload['offset']
+  creation_date: TUpload['creation_date']
 
   constructor(upload: TUpload) {
     if (!upload.id) {
@@ -20,6 +22,8 @@ export default class Upload {
     this.size = upload.size
     this.offset = upload.offset
     this.metadata = upload.metadata
+
+    this.creation_date = upload.creation_date ?? new Date().toISOString()
   }
 
   get sizeIsDeferred(): boolean {

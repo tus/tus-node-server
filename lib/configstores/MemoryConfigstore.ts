@@ -20,4 +20,8 @@ export default class MemoryConfigstore {
   async delete(key: string) {
     return this.data.delete(key)
   }
+
+  get all(): Record<string, Upload> {
+    return Object.fromEntries(this.data.entries())
+  }
 }

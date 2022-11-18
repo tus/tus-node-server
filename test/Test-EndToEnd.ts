@@ -13,6 +13,7 @@ import GCSDataStore from '../lib/stores/GCSDataStore'
 import {TUS_RESUMABLE} from '../lib/constants'
 
 import type http from 'node:http'
+import MemoryConfigstore from '../lib/configstores/MemoryConfigstore'
 
 const STORE_PATH = '/test/output'
 const PROJECT_ID = 'tus-node-server'
@@ -296,6 +297,142 @@ describe('EndToEnd', () => {
             assert.equal(!res.headers.location.includes('//'), true)
             // And contains the store path
             assert.equal(res.headers.location.includes(STORE_PATH), true)
+            done()
+          })
+      })
+    })
+  })
+
+  describe('FileStore with defined expirationPeriodInMilliseconds option', () => {
+    let file_id: string
+
+    before(() => {
+      server = new Server({
+        path: STORE_PATH,
+        datastore: new FileStore({
+          directory: `./${STORE_PATH}`,
+          expirationPeriodInMilliseconds: 50,
+          configstore: new MemoryConfigstore(),
+        }),
+      })
+      listener = server.listen()
+      agent = request.agent(listener)
+    })
+
+    after(() => {
+      listener.close()
+    })
+
+    describe('OPTIONS', () => {
+      it('should respond with expiration in Tus-Extension header', (done) => {
+        agent
+          .options(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(204)
+          .expect('Tus-Resumable', TUS_RESUMABLE)
+          .expect('Tus-Extension', 'expiration')
+          .end((_, res) => {
+            res.headers['tus-extension'].includes('expiration')
+            done()
+          })
+      })
+    })
+
+    describe('POST', () => {
+      it('should respond with Upload-Expires', (done) => {
+        agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', `${TEST_FILE_SIZE}`)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+          .end((_, res) => {
+            assert.equal('upload-expires' in res.headers, true)
+            file_id = res.headers.location.split('/').pop()
+            done()
+          })
+      })
+    })
+
+    describe('PATCH', () => {
+      it('unfinished upload response contains header Upload-Expires', (done) => {
+        agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', `${TEST_FILE_SIZE}`)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+          .end((_, res) => {
+            assert.equal('upload-expires' in res.headers, true)
+            file_id = res.headers.location.split('/').pop()
+          })
+
+        const msg = 'tus test'
+        const write_stream = agent
+          .patch(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Offset', '0')
+          .set('Content-Type', 'application/offset+octet-stream')
+        write_stream.on('response', (res) => {
+          assert.equal(res.statusCode, 204)
+          assert.equal(res.header['tus-resumable'], TUS_RESUMABLE)
+          assert.equal(res.header['upload-offset'], `${msg.length}`)
+          assert.equal('upload-expires' in res.headers, true)
+          done()
+        })
+        write_stream.write(msg)
+        write_stream.end(() => {})
+      })
+
+      it('expired upload responds with 410 Gone', (done) => {
+        agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', `${TEST_FILE_SIZE}`)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+          .end((_, res) => {
+            assert.equal('upload-expires' in res.headers, true)
+            file_id = res.headers.location.split('/').pop()
+
+            setTimeout(() => {
+              const msg = 'tus test'
+              const write_stream = agent
+                .patch(`${STORE_PATH}/${file_id}`)
+                .set('Tus-Resumable', TUS_RESUMABLE)
+                .set('Upload-Offset', '0')
+                .set('Content-Type', 'application/offset+octet-stream')
+              write_stream.on('response', (res) => {
+                assert.equal(res.statusCode, 410)
+                done()
+              })
+              write_stream.write(msg)
+              write_stream.end(() => {})
+            }, 51)
+          })
+      })
+    })
+
+    describe('deleteExpiredFiles', () => {
+      it('HEAD request to expired upload returns 410 Gone', (done) => {
+        agent
+          .head(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(410)
+          .end(done)
+      })
+
+      it('can delete expired files', (done) => {
+        server.datastore
+          .deleteExpired()
+          .catch((error) => {
+            done(error)
+          })
+          .then((deleted) => {
+            assert.equal(deleted >= 1, true)
             done()
           })
       })

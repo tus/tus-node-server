@@ -193,4 +193,12 @@ export class Server extends EventEmitter {
   listen(...args: any[]): http.Server {
     return http.createServer(this.handle.bind(this)).listen(...args)
   }
+
+  cleanUpExpiredUploads(): Promise<number> {
+    if (!this.datastore.hasExtension('expiration')) {
+      throw ERRORS.UNSUPPORTED_EXPIRATION_EXTENSION
+    }
+
+    return this.datastore.deleteExpired()
+  }
 }
