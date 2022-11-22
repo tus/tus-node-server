@@ -9,6 +9,7 @@ import S3Store from '../lib/stores/S3Store'
 export type ServerOptions = {
   path: string
   relativeLocation?: boolean
+  respectForwardedHeaders?: boolean
   namingFunction?: (req: http.IncomingMessage) => string
 }
 
