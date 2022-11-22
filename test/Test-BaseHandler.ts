@@ -1,4 +1,5 @@
 import {strict as assert} from 'node:assert'
+import http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
@@ -8,8 +9,7 @@ import DataStore from '../lib/stores/DataStore'
 describe('BaseHandler', () => {
   const store = new DataStore()
   const handler = new BaseHandler(store, {path: '/test/output'})
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let res: httpMocks.MockResponse<any>
+  let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
     res = httpMocks.createResponse()
