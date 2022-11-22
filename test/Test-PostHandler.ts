@@ -102,7 +102,72 @@ describe('PostHandler', () => {
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         await handler.send(req, res)
-        assert.equal(res._getHeaders().location, '//localhost:3000/test/output/1234')
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
+        assert.equal(res.statusCode, 201)
+      })
+    })
+
+    describe('respect forwarded headers', () => {
+      const handler = new PostHandler(fake_store, {
+        path: '/test/output',
+        respectForwardedHeaders: true,
+        namingFunction: () => '1234',
+      })
+
+      it('should handle X-Forwarded-Host with X-Forwarded-Proto', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          'X-Forwarded-Host': 'foo.com',
+          'X-Forwarded-Proto': 'https',
+        }
+        await handler.send(req, res)
+        assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should handle Forwarded', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          Forwarded: 'for=localhost:3000;by=203.0.113.60;proto=https;host=foo.com',
+        }
+        await handler.send(req, res)
+        assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should fallback on invalid Forwarded', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          Forwarded: 'invalid',
+        }
+        await handler.send(req, res)
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should fallback on invalid X-Forwarded headers', async () => {
+        req.headers = {
+          'upload-length': '1000',
+          host: 'localhost:3000',
+          'X-Forwarded-Proto': 'foo',
+        }
+        await handler.send(req, res)
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
+        assert.equal(res.statusCode, 201)
+      })
+
+      it('should handle root as path', async () => {
+        const handler = new PostHandler(fake_store, {
+          path: '/',
+          respectForwardedHeaders: true,
+          namingFunction: () => '1234',
+        })
+        req.headers = {'upload-length': '1000', host: 'localhost:3000'}
+        await handler.send(req, res)
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/1234')
         assert.equal(res.statusCode, 201)
       })
     })
@@ -135,7 +200,7 @@ describe('PostHandler', () => {
           namingFunction: () => '1234',
         })
         handler.on(EVENTS.EVENT_ENDPOINT_CREATED, (obj) => {
-          assert.strictEqual(obj.url, '//localhost:3000/test/output/1234')
+          assert.strictEqual(obj.url, 'http://localhost:3000/test/output/1234')
           done()
         })
 

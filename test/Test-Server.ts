@@ -10,6 +10,9 @@ import FileStore from '../lib/stores/FileStore'
 import DataStore from '../lib/stores/DataStore'
 import {TUS_RESUMABLE, EVENTS} from '../lib/constants'
 
+// Test server crashes on http://{some-ip} so we remove the protocol...
+const removeProtocol = (location: string) => location.slice(6)
+
 describe('Server', () => {
   describe('instantiation', () => {
     it('constructor must require options', () => {
@@ -186,7 +189,7 @@ describe('Server', () => {
         .set('Upload-Length', '12345678')
         .then((res) => {
           request(server.listen())
-            .delete(res.headers.location)
+            .delete(removeProtocol(res.headers.location))
             .set('Tus-Resumable', TUS_RESUMABLE)
             .expect(204, done)
         })
@@ -293,7 +296,7 @@ describe('Server', () => {
         .set('Upload-Length', '12345678')
         .then((res) => {
           request(server.listen())
-            .delete(res.headers.location)
+            .delete(removeProtocol(res.headers.location))
             .set('Tus-Resumable', TUS_RESUMABLE)
             .end((err) => {
               if (err) {
@@ -314,7 +317,7 @@ describe('Server', () => {
         .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
         .then((res) => {
           request(server.listen())
-            .patch(res.headers.location)
+            .patch(removeProtocol(res.headers.location))
             .send('test')
             .set('Tus-Resumable', TUS_RESUMABLE)
             .set('Upload-Offset', '0')
@@ -338,7 +341,7 @@ describe('Server', () => {
         .set('Upload-Defer-Length', '1')
         .then((res) => {
           request(server.listen())
-            .patch(res.headers.location)
+            .patch(removeProtocol(res.headers.location))
             .send('test')
             .set('Tus-Resumable', TUS_RESUMABLE)
             .set('Upload-Offset', '0')
