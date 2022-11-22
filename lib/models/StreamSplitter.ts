@@ -37,13 +37,13 @@ export default class FileStreamSplitter extends stream.Writable {
   }
 
   async _write(chunk: Buffer, _: BufferEncoding, callback: Callback) {
-    // In order to start writing a chunk, we must first create
-    // a file system reference for it
-    if (this.fileHandle === null) {
-      await this._newChunk().catch(callback)
-    }
-
     try {
+      // In order to start writing a chunk, we must first create
+      // a file system reference for it
+      if (this.fileHandle === null) {
+        await this._newChunk()
+      }
+
       const overflow = this.currentChunkSize + chunk.length - this.chunkSize
       // The current chunk will be more than our defined part size if we would
       // write all of it to disk.
