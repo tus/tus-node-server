@@ -1,8 +1,8 @@
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
-import net from 'node:net'
 
 import sinon from 'sinon'
+import httpMocks from 'node-mocks-http'
 
 import DataStore from '../lib/stores/DataStore'
 import HeadHandler from '../lib/handlers/HeadHandler'
@@ -14,13 +14,11 @@ describe('HeadHandler', () => {
   const fake_store = sinon.createStubInstance(DataStore)
   const handler = new HeadHandler(fake_store, {relativeLocation: true, path})
   let req: http.IncomingMessage
-  let res: http.ServerResponse
+  let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
-    req = new http.IncomingMessage(new net.Socket())
-    req.url = handler.generateUrl(req, '1234')
-    req.method = 'HEAD'
-    res = new http.ServerResponse(req)
+    req = {url: `${path}/1234`, method: 'HEAD'} as http.IncomingMessage
+    res = httpMocks.createResponse({req})
   })
 
   it('should 404 if no file id match', () => {

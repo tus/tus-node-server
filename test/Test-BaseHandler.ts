@@ -1,5 +1,3 @@
-import http from 'node:http'
-import net from 'node:net'
 import {strict as assert} from 'node:assert'
 
 import httpMocks from 'node-mocks-http'
@@ -14,9 +12,7 @@ describe('BaseHandler', () => {
   let res: httpMocks.MockResponse<any>
 
   beforeEach(() => {
-    const req = new http.IncomingMessage(new net.Socket())
-    req.method = 'GET'
-    res = httpMocks.createResponse({req})
+    res = httpMocks.createResponse()
   })
 
   it('constructor must require a DataStore', (done) => {
