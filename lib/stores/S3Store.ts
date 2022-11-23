@@ -1,4 +1,3 @@
-import {strict as assert} from 'node:assert'
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
 import stream from 'node:stream/promises'
@@ -8,30 +7,18 @@ import aws from 'aws-sdk'
 import debug from 'debug'
 
 import DataStore from './DataStore'
-import FileStreamSplitter from '../models/StreamSplitter'
+import StreamSplitter from '../models/StreamSplitter'
 import Upload from '../models/Upload'
 import {ERRORS, TUS_RESUMABLE} from '../constants'
 
 const log = debug('tus-node-server:stores:s3store')
 
-function calculateOffsetFromParts(parts?: aws.S3.Parts) {
+function calcOffsetFromParts(parts?: aws.S3.Parts) {
   // @ts-expect-error object is not possibly undefined
   return parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0
 }
 
-type Base = {
-  bucket: string
-  region?: string
-  partSize?: number
-}
-
-type Options =
-  | ({accessKeyId: string; secretAccessKey: string; credentials?: never} & Base)
-  | ({
-      credentials: aws.RemoteCredentials
-      accessKeyId?: never
-      secretAccessKey?: never
-    } & Base)
+type Options = {bucket: string; partSize?: number} & aws.S3.Types.ClientConfiguration
 
 type MetadataValue = {file: Upload; upload_id: string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
@@ -68,39 +55,33 @@ type MetadataValue = {file: Upload; upload_id: string}
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
 export default class S3Store extends DataStore {
-  bucket_name: string
-  // TODO: is a `WeakMap` better here?
+  bucket: string
   cache: Map<string, MetadataValue> = new Map()
   client: aws.S3
-  part_size: number
+  preferredPartSize: number
+  maxMultipartParts = 10_000 as const
 
   constructor(options: Options) {
     super()
-    if (options.accessKeyId || options.secretAccessKey) {
-      assert.ok(options.accessKeyId, '[S3Store] `accessKeyId` must be set')
-      assert.ok(options.secretAccessKey, '[S3Store] `secretAccessKey` must be set')
-    } else {
-      assert.ok(options.credentials, '[S3Store] `credentials` must be set')
-    }
-
+    const {bucket, partSize, ...rest} = options
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
-    this.bucket_name = options.bucket
-    this.part_size = options.partSize || 8 * 1024 * 1024
+    this.bucket = bucket
+    this.preferredPartSize = partSize || 8 * 1024 * 1024
     // TODO: why the old apiVersion?
-    this.client = new aws.S3({apiVersion: '2006-03-01', region: 'eu-west-1', ...options})
+    this.client = new aws.S3({apiVersion: '2006-03-01', region: 'eu-west-1', ...rest})
   }
 
   private async bucketExists() {
     try {
-      const data = await this.client.headBucket({Bucket: this.bucket_name}).promise()
+      const data = await this.client.headBucket({Bucket: this.bucket}).promise()
       if (!data) {
-        throw new Error(`bucket "${this.bucket_name}" does not exist`)
+        throw new Error(`bucket "${this.bucket}" does not exist`)
       }
 
-      log(`bucket "${this.bucket_name}" exists`)
+      log(`bucket "${this.bucket}" exists`)
     } catch (error) {
       if (error.statusCode === 404) {
-        throw new Error(`[S3Store] bucket "${this.bucket_name}" does not exist`)
+        throw new Error(`[S3Store] bucket "${this.bucket}" does not exist`)
       }
 
       throw error
@@ -119,7 +100,7 @@ export default class S3Store extends DataStore {
       Metadata: Record<string, string>
     }
     const request: CreateRequest = {
-      Bucket: this.bucket_name,
+      Bucket: this.bucket,
       Key: file.id,
       Metadata: {tus_version: TUS_RESUMABLE, offset: file.offset.toString()},
     }
@@ -157,7 +138,7 @@ export default class S3Store extends DataStore {
     log(`[${file.id}] saving metadata`)
     await this.client
       .putObject({
-        Bucket: this.bucket_name,
+        Bucket: this.bucket,
         Key: `${file.id}.info`,
         Body: '',
         Metadata: {
@@ -186,7 +167,7 @@ export default class S3Store extends DataStore {
 
     log(`[${id}] metadata from s3`)
     const {Metadata} = await this.client
-      .headObject({Bucket: this.bucket_name, Key: `${id}.info`})
+      .headObject({Bucket: this.bucket, Key: `${id}.info`})
       .promise()
     const file = JSON.parse(Metadata?.file as string)
     this.cache.set(id, {
@@ -234,7 +215,7 @@ export default class S3Store extends DataStore {
   ): Promise<string> {
     const data = await this.client
       .uploadPart({
-        Bucket: this.bucket_name,
+        Bucket: this.bucket,
         Key: metadata.file.id,
         UploadId: metadata.upload_id,
         PartNumber: partNumber,
@@ -254,24 +235,25 @@ export default class S3Store extends DataStore {
     currentPartNumber: number,
     offset: number
   ): Promise<void> {
+    const size = metadata.file.size as number
     const promises: Promise<void | string>[] = []
     let pendingChunkFilepath: string | null = null
-    const splitterStream = new FileStreamSplitter({
-      maxChunkSize: this.part_size,
+    const splitterStream = new StreamSplitter({
+      chunkSize: this.calcOptimalPartSize(size),
       directory: os.tmpdir(),
     })
       .on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
       })
-      .on('chunkFinished', ({path, size}) => {
+      .on('chunkFinished', ({path, size: chunkSize}) => {
         pendingChunkFilepath = null
-        offset += size
+        offset += chunkSize
         const partNumber = currentPartNumber++
         const p = Promise.resolve()
           .then(() => {
             // Skip chunk if it is not last and is smaller than 5MB
-            const is_last_chunk = metadata.file.size === offset
-            if (!is_last_chunk && size < 5 * 1024 * 1024) {
+            const is_last_chunk = size === offset
+            if (!is_last_chunk && chunkSize < 5 * 1024 * 1024) {
               log(`[${metadata.file.id}] ignoring chuck smaller than 5MB`)
               return
             }
@@ -291,7 +273,7 @@ export default class S3Store extends DataStore {
     try {
       await stream.pipeline(readStream, splitterStream)
     } catch (error) {
-      if (error && pendingChunkFilepath !== null) {
+      if (pendingChunkFilepath !== null) {
         try {
           await fsProm.rm(pendingChunkFilepath)
         } catch {
@@ -312,7 +294,7 @@ export default class S3Store extends DataStore {
   private async finishMultipartUpload(metadata: MetadataValue, parts: aws.S3.Parts) {
     const response = await this.client
       .completeMultipartUpload({
-        Bucket: this.bucket_name,
+        Bucket: this.bucket,
         Key: metadata.file.id,
         UploadId: metadata.upload_id,
         MultipartUpload: {
@@ -337,7 +319,7 @@ export default class S3Store extends DataStore {
     partNumberMarker?: number
   ): Promise<aws.S3.Parts | undefined> {
     const params: aws.S3.ListPartsRequest = {
-      Bucket: this.bucket_name,
+      Bucket: this.bucket,
       Key: id,
       UploadId: this.cache.get(id)?.upload_id as string,
     }
@@ -374,6 +356,25 @@ export default class S3Store extends DataStore {
     this.cache.delete(id)
   }
 
+  private calcOptimalPartSize(size: number): number {
+    let optimalPartSize: number
+
+    // When upload is smaller or equal to PreferredPartSize, we upload in just one part.
+    if (size <= this.preferredPartSize) {
+      optimalPartSize = size
+    }
+    // Does the upload fit in MaxMultipartParts parts or less with PreferredPartSize.
+    else if (size <= this.preferredPartSize * this.maxMultipartParts) {
+      optimalPartSize = this.preferredPartSize
+      // The upload is too big for the preferred size.
+      // We devide the size with the max amount of parts and round it up.
+    } else {
+      optimalPartSize = Math.ceil(size / this.maxMultipartParts)
+    }
+
+    return optimalPartSize
+  }
+
   public async create(upload: Upload) {
     try {
       await this.bucketExists()
@@ -396,7 +397,7 @@ export default class S3Store extends DataStore {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
     let parts = await this.retrieveParts(id)
-    let offset = calculateOffsetFromParts(parts)
+    let offset = calcOffsetFromParts(parts)
     const partNumber = parts?.length ?? 0
     const nextPartNumber = partNumber + 1
 
@@ -404,7 +405,7 @@ export default class S3Store extends DataStore {
 
     try {
       parts = await this.retrieveParts(id)
-      offset = calculateOffsetFromParts(parts)
+      offset = calcOffsetFromParts(parts)
     } catch (error) {
       if (error.code === 'RequestTimeout') {
         log(
@@ -439,7 +440,7 @@ export default class S3Store extends DataStore {
     return offset
   }
 
-  async getUpload(id: string): Promise<Upload> {
+  public async getUpload(id: string): Promise<Upload> {
     let metadata: MetadataValue
     try {
       metadata = await this.getMetadata(id)
@@ -453,7 +454,7 @@ export default class S3Store extends DataStore {
       return new Upload({
         id,
         ...this.cache.get(id)?.file,
-        offset: calculateOffsetFromParts(parts),
+        offset: calcOffsetFromParts(parts),
         size: metadata.file.size,
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -475,7 +476,7 @@ export default class S3Store extends DataStore {
     }
   }
 
-  async declareUploadLength(file_id: string, upload_length: number) {
+  public async declareUploadLength(file_id: string, upload_length: number) {
     const {file, upload_id} = await this.getMetadata(file_id)
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
