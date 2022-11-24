@@ -115,7 +115,8 @@ export default class FileStore extends DataStore {
     file_id: string,
     offset: number
   ): Promise<number> {
-    const writeable = fs.createWriteStream(path.join(this.directory, file_id), {
+    const file_path = path.join(this.directory, file_id)
+    const writeable = fs.createWriteStream(file_path, {
       flags: 'r+',
       start: offset,
     })
@@ -135,7 +136,7 @@ export default class FileStore extends DataStore {
           return reject(ERRORS.FILE_WRITE_ERROR)
         }
 
-        log(`[FileStore] write: ${bytes_received} bytes written to ${path}`)
+        log(`[FileStore] write: ${bytes_received} bytes written to ${file_path}`)
         offset += bytes_received
         log(`[FileStore] write: File is now ${offset} bytes`)
 
