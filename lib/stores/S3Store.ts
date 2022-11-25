@@ -1,10 +1,12 @@
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
 import stream from 'node:stream/promises'
+import {Readable} from 'node:stream'
 import http from 'node:http'
 
 import aws from 'aws-sdk'
 import debug from 'debug'
+import pDefer from 'p-defer'
 
 import DataStore from './DataStore'
 import StreamSplitter from '../models/StreamSplitter'
@@ -20,7 +22,7 @@ function calcOffsetFromParts(parts?: aws.S3.Parts) {
 
 type Options = {bucket: string; partSize?: number} & aws.S3.Types.ClientConfiguration
 
-type MetadataValue = {file: Upload; upload_id: string}
+type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -55,11 +57,12 @@ type MetadataValue = {file: Upload; upload_id: string}
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
 export default class S3Store extends DataStore {
-  bucket: string
-  cache: Map<string, MetadataValue> = new Map()
-  client: aws.S3
-  preferredPartSize: number
-  maxMultipartParts = 10_000 as const
+  private bucket: string
+  private cache: Map<string, MetadataValue> = new Map()
+  private client: aws.S3
+  private preferredPartSize: number
+  public maxMultipartParts = 10_000 as const
+  public minPartSize = 5_242_880 as const // 5MB
 
   constructor(options: Options) {
     super()
@@ -93,26 +96,28 @@ export default class S3Store extends DataStore {
    * Also, a `${file_id}.info` file is created which holds some information
    * about the upload itself like: `upload_id`, `upload_length`, etc.
    */
-  private async initMultipartUpload(file: Upload) {
-    log(`[${file.id}] initializing multipart upload`)
-    const parsedMetadata = this.parseMetadataString(file.metadata)
+  private async initMultipartUpload(upload: Upload) {
+    log(`[${upload.id}] initializing multipart upload`)
+    const parsedMetadata = this.parseMetadataString(upload.metadata)
     type CreateRequest = Omit<aws.S3.Types.CreateMultipartUploadRequest, 'Metadata'> & {
       Metadata: Record<string, string>
     }
     const request: CreateRequest = {
       Bucket: this.bucket,
-      Key: file.id,
-      Metadata: {tus_version: TUS_RESUMABLE, offset: file.offset.toString()},
+      Key: upload.id,
+      Metadata: {tus_version: TUS_RESUMABLE},
     }
-    if (file.size) {
-      request.Metadata.size = file.size.toString()
-      request.Metadata.isSizeDeferred = 'false'
+    const file: Record<string, string | number> = {id: upload.id, offset: upload.offset}
+
+    if (upload.size) {
+      file.size = upload.size.toString()
+      file.isSizeDeferred = 'false'
     } else {
-      request.Metadata.isSizeDeferred = 'true'
+      file.isSizeDeferred = 'true'
     }
 
-    if (file.metadata !== undefined) {
-      request.Metadata.metadata = file.metadata
+    if (upload.metadata !== undefined) {
+      file.metadata = upload.metadata
     }
 
     if (parsedMetadata.contentType) {
@@ -123,9 +128,12 @@ export default class S3Store extends DataStore {
       request.Metadata.original_name = parsedMetadata.filename.encoded
     }
 
+    // TODO: rename `file` to `upload` to align with the codebase
+    request.Metadata.file = JSON.stringify(file)
+
     const res = await this.client.createMultipartUpload(request).promise()
-    log(`[${file.id}] multipart upload created (${res.UploadId})`)
-    return this.saveMetadata(file, res.UploadId as string)
+    log(`[${upload.id}] multipart upload created (${res.UploadId})`)
+    return this.saveMetadata(upload, res.UploadId as string)
   }
 
   /**
@@ -172,6 +180,7 @@ export default class S3Store extends DataStore {
     const file = JSON.parse(Metadata?.file as string)
     this.cache.set(id, {
       ...Metadata,
+      tus_version: Metadata?.tus_version as string,
       file: new Upload({
         id,
         size: file.size ? Number.parseInt(file.size, 10) : undefined,
@@ -205,12 +214,21 @@ export default class S3Store extends DataStore {
     return pairs
   }
 
-  /**
-   * Uploads a part/chunk to S3 from a temporary part file.
-   */
+  private partKey(id: string, isIncomplete = false) {
+    if (isIncomplete) {
+      id += '.part'
+    }
+
+    // TODO: introduce ObjectPrefixing for parts and incomplete parts.
+    // ObjectPrefix is prepended to the name of each S3 object that is created
+    // to store uploaded files. It can be used to create a pseudo-directory
+    // structure in the bucket, e.g. "path/to/my/uploads".
+    return id
+  }
+
   private async uploadPart(
     metadata: MetadataValue,
-    readStream: fs.ReadStream,
+    readStream: fs.ReadStream | Readable,
     partNumber: number
   ): Promise<string> {
     const data = await this.client
@@ -226,6 +244,49 @@ export default class S3Store extends DataStore {
     return data.ETag as string
   }
 
+  private async uploadIncompletePart(
+    id: string,
+    readStream: fs.ReadStream | Readable
+  ): Promise<string> {
+    const data = await this.client
+      .putObject({
+        Bucket: this.bucket,
+        Key: id,
+        Body: readStream,
+      })
+      .promise()
+    return data.ETag as string
+  }
+
+  private async getIncompletePart(id: string): Promise<Buffer | undefined> {
+    try {
+      const data = await this.client
+        .getObject({
+          Bucket: this.bucket,
+          Key: id,
+        })
+        .promise()
+      return data.Body as Buffer
+    } catch {
+      return undefined
+    }
+  }
+
+  private async deleteIncompletePart(id: string): Promise<void> {
+    await this.client
+      .deleteObject({
+        Bucket: this.bucket,
+        Key: id,
+      })
+      .promise()
+  }
+
+  private async prependIncompletePart(path: string, buffer: Buffer): Promise<void> {
+    const part = await fsProm.readFile(path, 'utf8')
+    buffer.write(part, buffer.length - 1)
+    await fsProm.writeFile(path, buffer)
+  }
+
   /**
    * Uploads a stream to s3 using multiple parts
    */
@@ -234,10 +295,11 @@ export default class S3Store extends DataStore {
     readStream: http.IncomingMessage | fs.ReadStream,
     currentPartNumber: number,
     offset: number
-  ): Promise<void> {
+  ): Promise<number> {
     const size = metadata.file.size as number
-    const promises: Promise<void | string>[] = []
+    const promises: Promise<void>[] = []
     let pendingChunkFilepath: string | null = null
+    let bytesUploaded = 0
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
       directory: os.tmpdir(),
@@ -245,29 +307,47 @@ export default class S3Store extends DataStore {
       .on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
       })
-      .on('chunkFinished', ({path, size: chunkSize}) => {
+      .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
-        offset += chunkSize
-        const partNumber = currentPartNumber++
-        const p = Promise.resolve()
-          .then(() => {
-            // Skip chunk if it is not last and is smaller than 5MB
-            const is_last_chunk = size === offset
-            if (!is_last_chunk && chunkSize < 5 * 1024 * 1024) {
-              log(`[${metadata.file.id}] ignoring chuck smaller than 5MB`)
-              return
+        const deferred = pDefer<void>()
+
+        // Fork off in the background
+        ;(async () => {
+          try {
+            const partNumber = currentPartNumber++
+            const incompletePartId = this.partKey(metadata.file.id, true)
+            // If we received a chunk under the minimum part size in a previous iteration,
+            // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
+            const incompletePart = await this.getIncompletePart(incompletePartId)
+            const incompletePartSize = incompletePart?.length ?? 0
+            const isFinalChunk = size === offset + partSize + incompletePartSize
+
+            if (incompletePart) {
+              // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
+              // and delete the incomplete part from the bucket. This can be done in parallel.
+              await Promise.all([
+                this.prependIncompletePart(path, incompletePart),
+                this.deleteIncompletePart(incompletePartId),
+              ])
             }
 
-            return this.uploadPart(metadata, fs.createReadStream(path), partNumber)
-          })
-          .finally(() => {
-            fs.rm(path, (err) => {
-              if (err) {
-                log(`[${metadata.file.id}] failed to remove file ${path}`, err)
-              }
-            })
-          })
-        promises.push(p)
+            if (partSize > this.minPartSize || isFinalChunk) {
+              await this.uploadPart(metadata, fs.createReadStream(path), partNumber)
+              offset += partSize
+            } else {
+              await this.uploadIncompletePart(incompletePartId, fs.createReadStream(path))
+            }
+
+            bytesUploaded += partSize
+            deferred.resolve()
+          } catch (error) {
+            deferred.reject(error)
+          } finally {
+            fsProm.rm(path).catch(/* ignore */)
+          }
+        })()
+
+        promises.push(deferred.promise)
       })
 
     try {
@@ -285,6 +365,8 @@ export default class S3Store extends DataStore {
     } finally {
       await Promise.all(promises)
     }
+
+    return bytesUploaded
   }
 
   /**
@@ -401,7 +483,12 @@ export default class S3Store extends DataStore {
     const partNumber = parts?.length ?? 0
     const nextPartNumber = partNumber + 1
 
-    await this.processUpload(metadata, readable, nextPartNumber, offset)
+    const bytesUploaded = await this.processUpload(
+      metadata,
+      readable,
+      nextPartNumber,
+      offset
+    )
 
     try {
       parts = await this.retrieveParts(id)
@@ -426,18 +513,18 @@ export default class S3Store extends DataStore {
       throw error
     }
 
-    if (metadata.file.size === offset) {
+    if (metadata.file.size === offset + bytesUploaded) {
       try {
+        const parts = await this.retrieveParts(id)
         await this.finishMultipartUpload(metadata, parts as aws.S3.Parts)
         this.clearCache(id)
-        return offset
       } catch (error) {
         log(`[${id}] failed to finish upload`, error)
         throw error
       }
     }
 
-    return offset
+    return bytesUploaded
   }
 
   public async getUpload(id: string): Promise<Upload> {
@@ -449,31 +536,39 @@ export default class S3Store extends DataStore {
       throw ERRORS.FILE_NOT_FOUND
     }
 
+    let offset = 0
+
     try {
       const parts = await this.retrieveParts(id)
-      return new Upload({
-        id,
-        ...this.cache.get(id)?.file,
-        offset: calcOffsetFromParts(parts),
-        size: metadata.file.size,
-      })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (error.code !== 'NoSuchUpload') {
-        log(error)
-        throw error
+      offset = calcOffsetFromParts(parts)
+    } catch (error) {
+      // Check if the error is caused by the upload not being found. This happens
+      // when the multipart upload has already been completed or aborted. Since
+      // we already found the info object, we know that the upload has been
+      // completed and therefore can ensure the the offset is the size.
+      // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
+      // Spaces, can also return NoSuchKey.
+      if (error.code === 'NoSuchUpload' || error.code === 'NoSuchKey') {
+        return new Upload({
+          id,
+          ...this.cache.get(id)?.file,
+          offset: metadata.file.size as number,
+          size: metadata.file.size,
+        })
       }
 
-      // When the last part of an upload is finished and the file is successfully written to S3,
-      // the upload will no longer be present and requesting it will result in a 404.
-      // In that case we return the upload_length as size.
-      return new Upload({
-        id,
-        ...this.cache.get(id)?.file,
-        offset: metadata.file.offset,
-        size: metadata.file.size,
-      })
+      log(error)
+      throw error
     }
+
+    const incompletePart = await this.getIncompletePart(this.partKey(id))
+
+    return new Upload({
+      id,
+      ...this.cache.get(id)?.file,
+      offset: offset + (incompletePart?.length ?? 0),
+      size: metadata.file.size,
+    })
   }
 
   public async declareUploadLength(file_id: string, upload_length: number) {
