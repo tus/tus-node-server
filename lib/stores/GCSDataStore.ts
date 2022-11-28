@@ -33,31 +33,7 @@ export default class GCSDataStore extends DataStore {
       projectId: options.projectId,
       keyFilename: options.keyFilename,
     })
-    // TODO: this can't be called async in constructor
-    this.bucket = this._getBucket()
-  }
-
-  _getBucket() {
-    const bucket = this.gcs.bucket(this.bucket_name)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    bucket.exists((error: any, exists: boolean) => {
-      // ignore insufficient access error, assume bucket exists
-      if (error && error.code === 403) {
-        return
-      }
-
-      if (error) {
-        log(error)
-        throw new Error(`[GCSDataStore] _getBucket: ${error.message}`)
-      }
-
-      if (!exists) {
-        throw new Error(
-          `[GCSDataStore] _getBucket: ${this.bucket_name} bucket does not exist`
-        )
-      }
-    })
-    return bucket
+    this.bucket = this.gcs.bucket(this.bucket_name)
   }
 
   create(file: Upload): Promise<Upload> {

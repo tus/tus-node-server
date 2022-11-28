@@ -71,63 +71,6 @@ export default class S3Store extends DataStore {
     this.client = new aws.S3({apiVersion: '2006-03-01', region: 'eu-west-1', ...rest})
   }
 
-  private async bucketExists() {
-    try {
-      const data = await this.client.headBucket({Bucket: this.bucket}).promise()
-      if (!data) {
-        throw new Error(`bucket "${this.bucket}" does not exist`)
-      }
-
-      log(`bucket "${this.bucket}" exists`)
-    } catch (error) {
-      if (error.statusCode === 404) {
-        throw new Error(`[S3Store] bucket "${this.bucket}" does not exist`)
-      }
-
-      throw error
-    }
-  }
-
-  /**
-   * Creates a multipart upload on S3 attaching any metadata to it.
-   * Also, a `${file_id}.info` file is created which holds some information
-   * about the upload itself like: `upload_id`, `upload_length`, etc.
-   */
-  private async initMultipartUpload(file: Upload) {
-    log(`[${file.id}] initializing multipart upload`)
-    const parsedMetadata = this.parseMetadataString(file.metadata)
-    type CreateRequest = Omit<aws.S3.Types.CreateMultipartUploadRequest, 'Metadata'> & {
-      Metadata: Record<string, string>
-    }
-    const request: CreateRequest = {
-      Bucket: this.bucket,
-      Key: file.id,
-      Metadata: {tus_version: TUS_RESUMABLE, offset: file.offset.toString()},
-    }
-    if (file.size) {
-      request.Metadata.size = file.size.toString()
-      request.Metadata.isSizeDeferred = 'false'
-    } else {
-      request.Metadata.isSizeDeferred = 'true'
-    }
-
-    if (file.metadata !== undefined) {
-      request.Metadata.metadata = file.metadata
-    }
-
-    if (parsedMetadata.contentType) {
-      request.ContentType = parsedMetadata.contentType.decoded
-    }
-
-    if (parsedMetadata.filename) {
-      request.Metadata.original_name = parsedMetadata.filename.encoded
-    }
-
-    const res = await this.client.createMultipartUpload(request).promise()
-    log(`[${file.id}] multipart upload created (${res.UploadId})`)
-    return this.saveMetadata(file, res.UploadId as string)
-  }
-
   /**
    * Saves upload metadata to a `${file_id}.info` file on S3.
    * Please note that the file is empty and the metadata is saved
@@ -375,10 +318,45 @@ export default class S3Store extends DataStore {
     return optimalPartSize
   }
 
+  /**
+   * Creates a multipart upload on S3 attaching any metadata to it.
+   * Also, a `${file_id}.info` file is created which holds some information
+   * about the upload itself like: `upload_id`, `upload_length`, etc.
+   */
   public async create(upload: Upload) {
     try {
-      await this.bucketExists()
-      await this.initMultipartUpload(upload)
+      log(`[${upload.id}] initializing multipart upload`)
+      const parsedMetadata = this.parseMetadataString(upload.metadata)
+      type CreateRequest = Omit<aws.S3.Types.CreateMultipartUploadRequest, 'Metadata'> & {
+        Metadata: Record<string, string>
+      }
+      const request: CreateRequest = {
+        Bucket: this.bucket,
+        Key: upload.id,
+        Metadata: {tus_version: TUS_RESUMABLE, offset: upload.offset.toString()},
+      }
+      if (upload.size) {
+        request.Metadata.size = upload.size.toString()
+        request.Metadata.isSizeDeferred = 'false'
+      } else {
+        request.Metadata.isSizeDeferred = 'true'
+      }
+
+      if (upload.metadata !== undefined) {
+        request.Metadata.metadata = upload.metadata
+      }
+
+      if (parsedMetadata.contentType) {
+        request.ContentType = parsedMetadata.contentType.decoded
+      }
+
+      if (parsedMetadata.filename) {
+        request.Metadata.original_name = parsedMetadata.filename.encoded
+      }
+
+      const res = await this.client.createMultipartUpload(request).promise()
+      log(`[${upload.id}] multipart upload created (${res.UploadId})`)
+      await this.saveMetadata(upload, res.UploadId as string)
     } catch (error) {
       this.clearCache(upload.id)
       throw error
