@@ -319,8 +319,7 @@ export default class S3Store extends DataStore {
             // If we received a chunk under the minimum part size in a previous iteration,
             // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
             const incompletePart = await this.getIncompletePart(incompletePartId)
-            const incompletePartSize = incompletePart?.length ?? 0
-            const isFinalChunk = size === offset + partSize + incompletePartSize
+            const isFinalChunk = size === offset + partSize
 
             if (incompletePart) {
               // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
@@ -474,12 +473,12 @@ export default class S3Store extends DataStore {
    */
   public async write(
     readable: http.IncomingMessage | fs.ReadStream,
-    id: string
+    id: string,
+    offset: number
   ): Promise<number> {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
-    let parts = await this.retrieveParts(id)
-    let offset = calcOffsetFromParts(parts)
+    const parts = await this.retrieveParts(id)
     const partNumber = parts?.length ?? 0
     const nextPartNumber = partNumber + 1
 
@@ -490,30 +489,9 @@ export default class S3Store extends DataStore {
       offset
     )
 
-    try {
-      parts = await this.retrieveParts(id)
-      offset = calcOffsetFromParts(parts)
-    } catch (error) {
-      if (error.code === 'RequestTimeout') {
-        log(
-          'Request "close" event was emitted, however S3 was expecting more data. Failing gracefully.'
-        )
-        return metadata.file.offset
-      }
+    const newOffset = offset + bytesUploaded
 
-      if (error.code === 'NoSuchUpload') {
-        log(
-          'Request "close" event was emitted, however S3 was expecting more data. Most likely the upload is already finished/aborted. Failing gracefully.'
-        )
-        return metadata.file.offset
-      }
-
-      this.clearCache(id)
-      log(`[${id}] failed to write file`, error)
-      throw error
-    }
-
-    if (metadata.file.size === offset + bytesUploaded) {
+    if (metadata.file.size === newOffset) {
       try {
         const parts = await this.retrieveParts(id)
         await this.finishMultipartUpload(metadata, parts as aws.S3.Parts)
@@ -524,7 +502,7 @@ export default class S3Store extends DataStore {
       }
     }
 
-    return bytesUploaded
+    return newOffset
   }
 
   public async getUpload(id: string): Promise<Upload> {

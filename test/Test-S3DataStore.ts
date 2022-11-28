@@ -36,8 +36,8 @@ describe('S3DataStore', function () {
 
   it('should store in between chunks under the minimum part size and prepend it to the next call', async function () {
     const store = this.datastore
-    const size = 4 * 1024 * 1024
-    const incompleteSize = 1024 * 1024
+    const size = 1024
+    const incompleteSize = 1024
     const getIncompletePart = sinon.spy(store, 'getIncompletePart')
     const deleteIncompletePart = sinon.spy(store, 'deleteIncompletePart')
     const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
@@ -49,8 +49,14 @@ describe('S3DataStore', function () {
     })
 
     await store.create(upload)
-    await store.write(Readable.from(Buffer.alloc(incompleteSize)), upload.id)
-    await store.write(Readable.from(Buffer.alloc(size)), upload.id)
+    const n1 = await store.write(
+      Readable.from(Buffer.alloc(incompleteSize)),
+      upload.id,
+      upload.offset
+    )
+    assert.equal(n1, incompleteSize)
+    const n2 = await store.write(Readable.from(Buffer.alloc(size)), upload.id, n1)
+    assert.equal(n2, incompleteSize + size)
     const {offset} = await store.getUpload(upload.id)
 
     assert.equal(getIncompletePart.calledTwice, true)

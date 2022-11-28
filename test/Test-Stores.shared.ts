@@ -148,7 +148,8 @@ export const shouldHandleOffset = function () {
       await this.datastore.create(file)
       const offset = await this.datastore.write(
         fs.createReadStream(this.testFilePath),
-        file.id
+        file.id,
+        file.offset
       )
       const upload = await this.datastore.getUpload(file.id)
       assert.equal(upload.offset, offset)
