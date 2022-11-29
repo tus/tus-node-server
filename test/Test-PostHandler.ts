@@ -3,8 +3,8 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
-import net from 'node:net'
 
+import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
 import DataStore from '../lib/stores/DataStore'
@@ -19,16 +19,14 @@ const SERVER_OPTIONS = {
 
 describe('PostHandler', () => {
   let req: http.IncomingMessage
-  let res: http.ServerResponse
+  let res: httpMocks.MockResponse<http.ServerResponse>
 
   const fake_store = sinon.createStubInstance(DataStore)
   fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
   beforeEach(() => {
-    req = new http.IncomingMessage(new net.Socket())
-    req.method = 'POST'
-    req.url = '/files'
-    res = new http.ServerResponse(req)
+    req = {url: '/files', method: 'POST'} as http.IncomingMessage
+    res = httpMocks.createResponse({req})
   })
 
   describe('constructor()', () => {
@@ -104,11 +102,7 @@ describe('PostHandler', () => {
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         await handler.send(req, res)
-        assert.equal(
-          // @ts-expect-error works but not in types
-          res._header.includes('Location: http://localhost:3000/test/output/1234'),
-          true
-        )
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
     })
@@ -128,11 +122,7 @@ describe('PostHandler', () => {
           'X-Forwarded-Proto': 'https',
         }
         await handler.send(req, res)
-        assert.equal(
-          // @ts-expect-error works but not in types
-          res._header.includes('Location: https://foo.com/test/output/1234'),
-          true
-        )
+        assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
 
@@ -143,11 +133,7 @@ describe('PostHandler', () => {
           Forwarded: 'for=localhost:3000;by=203.0.113.60;proto=https;host=foo.com',
         }
         await handler.send(req, res)
-        assert.equal(
-          // @ts-expect-error works but not in types
-          res._header.includes('Location: https://foo.com/test/output/1234'),
-          true
-        )
+        assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
 
@@ -158,11 +144,7 @@ describe('PostHandler', () => {
           Forwarded: 'invalid',
         }
         await handler.send(req, res)
-        assert.equal(
-          // @ts-expect-error works but not in types
-          res._header.includes('Location: http://localhost:3000/test/output/1234'),
-          true
-        )
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
 
@@ -173,11 +155,7 @@ describe('PostHandler', () => {
           'X-Forwarded-Proto': 'foo',
         }
         await handler.send(req, res)
-        assert.equal(
-          // @ts-expect-error works but not in types
-          res._header.includes('Location: http://localhost:3000/test/output/1234'),
-          true
-        )
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
 
@@ -189,11 +167,7 @@ describe('PostHandler', () => {
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
         await handler.send(req, res)
-        assert.equal(
-          // @ts-expect-error works but not in types
-          res._header.includes('Location: http://localhost:3000/1234'),
-          true
-        )
+        assert.equal(res._getHeaders().location, 'http://localhost:3000/1234')
         assert.equal(res.statusCode, 201)
       })
     })
