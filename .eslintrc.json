@@ -12,6 +12,7 @@
   "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
     "no-new":"off",
+    "complexity":"off",
     "camelcase": "off",
     "no-unused-vars": "off",
     "no-warning-comments":"off",

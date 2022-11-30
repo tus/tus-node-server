@@ -30,13 +30,13 @@ export default class PatchHandler extends BaseHandler {
       throw ERRORS.INVALID_CONTENT_TYPE
     }
 
-    const file = await this.store.getUpload(id)
+    const upload = await this.store.getUpload(id)
 
     // If a Client does attempt to resume an upload which has since
     // been removed by the Server, the Server SHOULD respond with the
     // with the 404 Not Found or 410 Gone status. The latter one SHOULD
     // be used if the Server is keeping track of expired uploads.
-    const creation = file.creation_date ? new Date(file.creation_date) : new Date()
+    const creation = upload.creation_date ? new Date(upload.creation_date) : new Date()
     const expiration = new Date(creation.getTime() + this.store.getExpiration())
     const now = new Date()
     if (
@@ -47,10 +47,10 @@ export default class PatchHandler extends BaseHandler {
       throw ERRORS.FILE_NO_LONGER_EXISTS
     }
 
-    if (file.offset !== offset) {
+    if (upload.offset !== offset) {
       // If the offsets do not match, the Server MUST respond with the 409 Conflict status without modifying the upload resource.
       log(
-        `[PatchHandler] send: Incorrect offset - ${offset} sent but file is ${file.offset}`
+        `[PatchHandler] send: Incorrect offset - ${offset} sent but file is ${upload.offset}`
       )
       throw ERRORS.INVALID_OFFSET
     }
@@ -65,37 +65,43 @@ export default class PatchHandler extends BaseHandler {
       }
 
       // Throw error if upload-length is already set.
-      if (file.size !== undefined) {
+      if (upload.size !== undefined) {
         throw ERRORS.INVALID_LENGTH
       }
 
-      if (size < file.offset) {
+      if (size < upload.offset) {
         throw ERRORS.INVALID_LENGTH
       }
 
       await this.store.declareUploadLength(id, size)
-      file.size = size
+      upload.size = size
     }
 
-    const new_offset = await this.store.write(req, id, offset)
-    if (new_offset === file.size) {
-      this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file})
+    const newOffset = await this.store.write(req, id, offset)
+    if (newOffset === upload.size) {
+      try {
+        upload.offset = newOffset
+        await this.options.onUploadFinish?.(req, upload)
+      } catch (error) {
+        log(`onUploadFinish error: ${error}`)
+        throw error
+      }
     }
 
     const headers: {
       'Upload-Offset': number
       'Upload-Expires'?: string
     } = {
-      'Upload-Offset': new_offset,
+      'Upload-Offset': newOffset,
     }
 
     if (
       this.store.hasExtension('expiration') &&
       this.store.getExpiration() > 0 &&
-      file.creation_date &&
-      (file.size === undefined || new_offset < file.size)
+      upload.creation_date &&
+      (upload.size === undefined || newOffset < upload.size)
     ) {
-      const creation = new Date(file.creation_date)
+      const creation = new Date(upload.creation_date)
       // Value MUST be in RFC 7231 datetime format
       const dateString = new Date(
         creation.getTime() + this.store.getExpiration()
@@ -104,6 +110,12 @@ export default class PatchHandler extends BaseHandler {
     }
 
     // The Server MUST acknowledge successful PATCH requests with the 204
-    return this.write(res, 204, headers)
+    const writtenRes = this.write(res, 204, headers)
+
+    if (newOffset === upload.size) {
+      this.emit(EVENTS.POST_FINISH, req, writtenRes, upload)
+    }
+
+    return writtenRes
   }
 }

@@ -8,7 +8,7 @@ import httpMocks from 'node-mocks-http'
 
 import PatchHandler from '../lib/handlers/PatchHandler'
 import DataStore from '../lib/stores/DataStore'
-import File from '../lib/models/Upload'
+import Upload from '../lib/models/Upload'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -20,20 +20,39 @@ describe('PatchHandler', () => {
   beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
     handler = new PatchHandler(store, {path})
-    req = {method: 'PATCH'} as http.IncomingMessage
+    req = {method: 'PATCH', url: `${path}/1234`} as http.IncomingMessage
     res = httpMocks.createResponse({req})
   })
 
   it('should 403 if no Content-Type header', () => {
     req.headers = {}
-    req.url = `${path}/1234`
     return assert.rejects(() => handler.send(req, res), {status_code: 403})
   })
 
   it('should 403 if no Upload-Offset header', () => {
     req.headers = {'content-type': 'application/offset+octet-stream'}
-    req.url = `${path}/1234`
     return assert.rejects(() => handler.send(req, res), {status_code: 403})
+  })
+
+  it('should call onUploadFinished hook', async function () {
+    const spy = sinon.spy()
+    const handler = new PatchHandler(store, {
+      path: '/test/output',
+      onUploadFinish: spy,
+    })
+
+    req.headers = {
+      'upload-offset': '0',
+      'content-type': 'application/offset+octet-stream',
+    }
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
+    store.write.resolves(1024)
+
+    await handler.send(req, res)
+    assert.equal(spy.calledOnce, true)
+    const upload = spy.args[0][1]
+    assert.equal(upload.offset, 1024)
+    assert.equal(upload.size, 1024)
   })
 
   describe('send()', () => {
@@ -65,7 +84,7 @@ describe('PatchHandler', () => {
       req.url = `${path}/file`
 
       store.hasExtension.withArgs('creation-defer-length').returns(true)
-      store.getUpload.resolves(new File({id: '1234', offset: 0}))
+      store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
       store.write.resolves(5)
       store.declareUploadLength.resolves()
 
@@ -82,7 +101,7 @@ describe('PatchHandler', () => {
       }
       req.url = `${path}/file`
 
-      store.getUpload.resolves(new File({id: '1234', offset: 0, size: 20}))
+      store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 20}))
       store.hasExtension.withArgs('creation-defer-length').returns(true)
 
       return assert.rejects(() => handler.send(req, res), {status_code: 400})
@@ -105,9 +124,8 @@ describe('PatchHandler', () => {
         'upload-length': '512',
         'content-type': 'application/offset+octet-stream',
       }
-      req.url = `${path}/1234`
 
-      store.getUpload.resolves(new File({id: '1234', offset: 0, size: 512}))
+      store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 512}))
 
       return assert.rejects(() => handler.send(req, res), {status_code: 409})
     })
@@ -117,9 +135,8 @@ describe('PatchHandler', () => {
         'upload-offset': '0',
         'content-type': 'application/offset+octet-stream',
       }
-      req.url = `${path}/1234`
 
-      store.getUpload.resolves(new File({id: '1234', offset: 0, size: 1024}))
+      store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
       store.write.resolves(10)
 
       await handler.send(req, res)

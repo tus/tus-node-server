@@ -41,10 +41,11 @@ describe('DeleteHandler', () => {
     assert.equal(res.statusCode, 204)
   })
 
-  it(`must fire the ${EVENTS.EVENT_FILE_DELETED} event`, (done) => {
+  it(`must fire the ${EVENTS.POST_TERMINATE} event`, (done) => {
     fake_store.remove.resolves()
-    handler.on(EVENTS.EVENT_FILE_DELETED, (event) => {
-      assert.equal(event.file_id, '1234')
+    handler.on(EVENTS.POST_TERMINATE, (request, id) => {
+      assert.deepStrictEqual(req, request)
+      assert.equal(id, '1234')
       done()
     })
     handler.send(req, res)

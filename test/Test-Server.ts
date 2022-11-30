@@ -254,24 +254,9 @@ describe('Server', () => {
     })
 
     it('should fire when an endpoint is created', (done) => {
-      server.on(EVENTS.EVENT_ENDPOINT_CREATED, (event) => {
-        event.should.have.property('url')
-        done()
-      })
-      request(listener)
-        .post(server.options.path)
-        .set('Tus-Resumable', TUS_RESUMABLE)
-        .set('Upload-Length', '12345678')
-        .end((err) => {
-          if (err) {
-            done(err)
-          }
-        })
-    })
-
-    it('should fire when a file is created', (done) => {
-      server.on(EVENTS.EVENT_FILE_CREATED, (event) => {
-        event.should.have.property('file')
+      server.on(EVENTS.POST_CREATE, (_, upload, url) => {
+        assert.ok(url)
+        assert.equal(upload.size, 12_345_678)
         done()
       })
       request(listener)
@@ -286,8 +271,9 @@ describe('Server', () => {
     })
 
     it('should fire when a file is deleted', (done) => {
-      server.on(EVENTS.EVENT_FILE_DELETED, (event) => {
-        event.should.have.property('file_id')
+      server.on(EVENTS.POST_TERMINATE, (req, id) => {
+        assert.ok(req)
+        assert.ok(id)
         done()
       })
       request(server.listen())
@@ -307,14 +293,17 @@ describe('Server', () => {
     })
 
     it('should fire when an upload is finished', (done) => {
-      server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-        event.should.have.property('file')
+      const length = Buffer.byteLength('test', 'utf8').toString()
+      server.on(EVENTS.POST_FINISH, (req, res, upload) => {
+        assert.ok(req)
+        assert.ok(res)
+        assert.equal(upload.offset, Number(length))
         done()
       })
       request(server.listen())
         .post(server.options.path)
         .set('Tus-Resumable', TUS_RESUMABLE)
-        .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
+        .set('Upload-Length', length)
         .then((res) => {
           request(server.listen())
             .patch(removeProtocol(res.headers.location))
@@ -331,8 +320,11 @@ describe('Server', () => {
     })
 
     it('should fire when an upload is finished with upload-defer-length', (done) => {
-      server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-        event.should.have.property('file')
+      const length = Buffer.byteLength('test', 'utf8').toString()
+      server.on(EVENTS.POST_FINISH, (req, res, upload) => {
+        assert.ok(req)
+        assert.ok(res)
+        assert.equal(upload.offset, Number(length))
         done()
       })
       request(server.listen())
@@ -345,7 +337,7 @@ describe('Server', () => {
             .send('test')
             .set('Tus-Resumable', TUS_RESUMABLE)
             .set('Upload-Offset', '0')
-            .set('Upload-Length', Buffer.byteLength('test', 'utf8').toString())
+            .set('Upload-Length', length)
             .set('Content-Type', 'application/offset+octet-stream')
             .end((err) => {
               if (err) {

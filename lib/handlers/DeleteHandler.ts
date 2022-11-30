@@ -11,7 +11,7 @@ export default class DeleteHandler extends BaseHandler {
     }
 
     await this.store.remove(id)
-    this.emit(EVENTS.EVENT_FILE_DELETED, {file_id: id})
+    this.emit(EVENTS.POST_TERMINATE, req, id)
     return this.write(res, 204, {})
   }
 }
