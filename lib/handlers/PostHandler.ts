@@ -70,7 +70,7 @@ export default class PostHandler extends BaseHandler {
     try {
       await this.options.onUploadCreate?.(req, upload)
     } catch (error) {
-      log(`onUploadCreate error: ${error}`)
+      log(`onUploadCreate error: ${JSON.stringify(error)}`)
       throw error
     }
 

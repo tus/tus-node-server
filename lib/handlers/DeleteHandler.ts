@@ -11,7 +11,8 @@ export default class DeleteHandler extends BaseHandler {
     }
 
     await this.store.remove(id)
-    this.emit(EVENTS.POST_TERMINATE, req, id)
-    return this.write(res, 204, {})
+    const writtenRes = this.write(res, 204, {})
+    this.emit(EVENTS.POST_TERMINATE, req, writtenRes, id)
+    return writtenRes
   }
 }

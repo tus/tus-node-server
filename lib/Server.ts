@@ -38,7 +38,11 @@ interface TusEvents {
     res: http.ServerResponse,
     upload: Upload
   ) => void
-  [EVENTS.POST_TERMINATE]: (req: http.IncomingMessage, id: string) => void
+  [EVENTS.POST_TERMINATE]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    id: string
+  ) => void
 }
 
 type on = EventEmitter['on']

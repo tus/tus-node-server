@@ -1,3 +1,4 @@
+/* eslint-disable no-throw-literal */
 import 'should'
 
 import {strict as assert} from 'node:assert'
@@ -317,6 +318,62 @@ describe('Server', () => {
               }
             })
         })
+    })
+
+    it('should call onUploadCreate and return its error to the client', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
+        onUploadCreate() {
+          throw {body: 'no', status_code: 500}
+        },
+      })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .expect(500, 'no', done)
+    })
+
+    it('should call onUploadFinish and return its error to the client', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
+        onUploadFinish() {
+          throw {body: 'no', status_code: 500}
+        },
+      })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .then((res) => {
+          request(server.listen())
+            .patch(removeProtocol(res.headers.location))
+            .send('test')
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .expect(500, 'no', done)
+        })
+    })
+
+    it('should call onUploadCreate and return its error to the client with creation-with-upload ', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
+        onUploadFinish() {
+          throw {body: 'no', status_code: 500}
+        },
+      })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .set('Upload-Offset', '0')
+        .set('Content-Type', 'application/offset+octet-stream')
+        .send('test')
+        .expect(500, 'no', done)
     })
 
     it('should fire when an upload is finished with upload-defer-length', (done) => {

@@ -1,5 +1,4 @@
 import type http from 'node:http'
-import type {EventEmitter} from 'node:events'
 
 import UploadModel from '../lib/models/Upload'
 
@@ -7,8 +6,6 @@ import BaseStore from '../lib/stores/DataStore'
 import FileStore from '../lib/stores/FileStore'
 import GCSDataStore from '../lib/stores/GCSDataStore'
 import S3Store from '../lib/stores/S3Store'
-
-import {EVENTS} from '../lib/constants'
 
 export type ServerOptions = {
   // The route to accept requests.
@@ -30,30 +27,6 @@ export type ServerOptions = {
   // a response is returned to the client. Error responses from the callback will be passed
   // back to the client. This can be used to implement post-processing validation.
   onUploadFinish?: (req: http.IncomingMessage, upload: Upload) => Promise<void>
-}
-
-export interface TusEvents {
-  [EVENTS.POST_CREATE]: (req: http.IncomingMessage, upload: Upload, id: string) => void
-  [EVENTS.POST_FINISH]: (req: http.IncomingMessage, upload: Upload) => void
-  [EVENTS.POST_TERMINATE]: (req: http.IncomingMessage, id: string) => void
-}
-
-export interface Events {
-  on<Event extends keyof TusEvents>(event: Event, listener: TusEvents[Event]): this
-  // We could get the type of the method `on` but setting that won't work with overloading.
-  on(
-    eventName: Parameters<EventEmitter['on']>[0],
-    listener: Parameters<EventEmitter['on']>[1]
-  ): ReturnType<EventEmitter['on']>
-
-  emit<Event extends keyof TusEvents>(
-    event: Event,
-    listener: TusEvents[Event]
-  ): ReturnType<EventEmitter['emit']>
-  emit(
-    eventName: Parameters<EventEmitter['emit']>[0],
-    listener: Parameters<EventEmitter['emit']>[1]
-  ): ReturnType<EventEmitter['emit']>
 }
 
 export type Upload = InstanceType<typeof UploadModel>
