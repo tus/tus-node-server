@@ -266,8 +266,16 @@ export default class S3Store extends DataStore {
         })
         .promise()
       return data.Body as Buffer
-    } catch {
-      return undefined
+    } catch (error) {
+      if (
+        error.code === 'NoSuchKey' ||
+        error.code === 'NoSuchUpload' ||
+        error.code === 'AccessDenied'
+      ) {
+        return undefined
+      }
+
+      throw error
     }
   }
 
@@ -309,7 +317,7 @@ export default class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
-        // Fork off in the background
+        // eslint-disable-next-line no-async-promise-executor
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             const partNumber = currentPartNumber++
