@@ -36,9 +36,9 @@ export default class PatchHandler extends BaseHandler {
     // been removed by the Server, the Server SHOULD respond with the
     // with the 404 Not Found or 410 Gone status. The latter one SHOULD
     // be used if the Server is keeping track of expired uploads.
-    const creation = upload.creation_date ? new Date(upload.creation_date) : new Date()
-    const expiration = new Date(creation.getTime() + this.store.getExpiration())
-    const now = new Date()
+    const now = Date.now()
+    const creation = upload.creation_date ? new Date(upload.creation_date).getTime() : now
+    const expiration = creation + this.store.getExpiration()
     if (
       this.store.hasExtension('expiration') &&
       this.store.getExpiration() > 0 &&
