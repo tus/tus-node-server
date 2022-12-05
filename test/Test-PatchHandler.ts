@@ -9,6 +9,7 @@ import httpMocks from 'node-mocks-http'
 import PatchHandler from '../lib/handlers/PatchHandler'
 import DataStore from '../lib/stores/DataStore'
 import Upload from '../lib/models/Upload'
+import {EVENTS} from '../lib/constants'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -145,5 +146,24 @@ describe('PatchHandler', () => {
       assert.equal(res.hasHeader('Content-Length'), false)
       assert.equal(res.statusCode, 204)
     })
+  })
+
+  it('should emit POST_RECEIVE event', async () => {
+    const spy = sinon.spy()
+    req.headers = {
+      'upload-offset': '0',
+      'content-type': 'application/offset+octet-stream',
+    }
+
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
+    store.write.resolves(10)
+    handler.on(EVENTS.POST_RECEIVE, spy)
+
+    await handler.send(req, res)
+
+    assert.equal(spy.calledOnce, true)
+    assert.ok(spy.args[0][0])
+    assert.ok(spy.args[0][1])
+    assert.equal(spy.args[0][2].offset, 10)
   })
 })

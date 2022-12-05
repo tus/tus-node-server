@@ -79,6 +79,7 @@ export default class PatchHandler extends BaseHandler {
 
     const newOffset = await this.store.write(req, id, offset)
     upload.offset = newOffset
+    this.emit(EVENTS.POST_RECEIVE, req, res, upload)
     if (newOffset === upload.size && this.options.onUploadFinish) {
       try {
         res = await this.options.onUploadFinish(req, res, upload)

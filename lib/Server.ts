@@ -38,6 +38,11 @@ interface TusEvents {
     upload: Upload,
     url: string
   ) => void
+  [EVENTS.POST_RECEIVE]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload
+  ) => void
   [EVENTS.POST_FINISH]: (
     req: http.IncomingMessage,
     res: http.ServerResponse,
