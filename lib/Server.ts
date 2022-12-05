@@ -32,7 +32,12 @@ type Handlers = {
 }
 
 interface TusEvents {
-  [EVENTS.POST_CREATE]: (req: http.IncomingMessage, upload: Upload, url: string) => void
+  [EVENTS.POST_CREATE]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload,
+    url: string
+  ) => void
   [EVENTS.POST_FINISH]: (
     req: http.IncomingMessage,
     res: http.ServerResponse,

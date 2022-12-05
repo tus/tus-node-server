@@ -67,17 +67,19 @@ export default class PostHandler extends BaseHandler {
       metadata: upload_metadata,
     })
 
-    try {
-      await this.options.onUploadCreate?.(req, upload)
-    } catch (error) {
-      log(`onUploadCreate error: ${JSON.stringify(error)}`)
-      throw error
+    if (this.options.onUploadCreate) {
+      try {
+        res = await this.options.onUploadCreate(req, res, upload)
+      } catch (error) {
+        log(`onUploadCreate error: ${error.body}`)
+        throw error
+      }
     }
 
     await this.store.create(upload)
     const url = this.generateUrl(req, upload.id)
 
-    this.emit(EVENTS.POST_CREATE, req, upload, url)
+    this.emit(EVENTS.POST_CREATE, req, res, upload, url)
 
     let newOffset
     let isFinal = false
@@ -93,11 +95,11 @@ export default class PostHandler extends BaseHandler {
       isFinal = newOffset === Number.parseInt(upload_length as string, 10)
       upload.offset = newOffset
 
-      if (isFinal) {
+      if (isFinal && this.options.onUploadFinish) {
         try {
-          await this.options.onUploadFinish?.(req, upload)
+          res = await this.options.onUploadFinish(req, res, upload)
         } catch (error) {
-          log(`onUploadFinish error: ${error}`)
+          log(`onUploadFinish: ${error.body}`)
           throw error
         }
       }

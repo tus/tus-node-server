@@ -35,7 +35,7 @@ describe('PatchHandler', () => {
   })
 
   it('should call onUploadFinished hook', async function () {
-    const spy = sinon.spy()
+    const spy = sinon.stub().resolvesArg(1)
     const handler = new PatchHandler(store, {
       path: '/test/output',
       onUploadFinish: spy,
@@ -50,7 +50,7 @@ describe('PatchHandler', () => {
 
     await handler.send(req, res)
     assert.equal(spy.calledOnce, true)
-    const upload = spy.args[0][1]
+    const upload = spy.args[0][2]
     assert.equal(upload.offset, 1024)
     assert.equal(upload.size, 1024)
   })

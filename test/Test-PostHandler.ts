@@ -197,7 +197,7 @@ describe('PostHandler', () => {
           path: '/test/output',
           namingFunction: () => '1234',
         })
-        handler.on(EVENTS.POST_CREATE, (_, __, url) => {
+        handler.on(EVENTS.POST_CREATE, (_, __, ___, url) => {
           assert.strictEqual(url, 'http://localhost:3000/test/output/1234')
           done()
         })
@@ -217,7 +217,7 @@ describe('PostHandler', () => {
           relativeLocation: true,
           namingFunction: () => '1234',
         })
-        handler.on(EVENTS.POST_CREATE, (_, __, url) => {
+        handler.on(EVENTS.POST_CREATE, (_, __, ___, url) => {
           assert.strictEqual(url, '/test/output/1234')
           done()
         })
@@ -249,7 +249,7 @@ describe('PostHandler', () => {
 
       it('should call onUploadCreate hook', async function () {
         const store = sinon.createStubInstance(DataStore)
-        const spy = sinon.spy()
+        const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
           path: '/test/output',
           onUploadCreate: spy,
@@ -263,14 +263,14 @@ describe('PostHandler', () => {
 
         await handler.send(req, res)
         assert.equal(spy.calledOnce, true)
-        const upload = spy.args[0][1]
+        const upload = spy.args[0][2]
         assert.equal(upload.offset, 0)
         assert.equal(upload.size, 1024)
       })
 
       it('should call onUploadFinish hook when creation-with-upload is used', async function () {
         const store = sinon.createStubInstance(DataStore)
-        const spy = sinon.spy()
+        const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
           path: '/test/output',
           onUploadFinish: spy,
@@ -286,7 +286,7 @@ describe('PostHandler', () => {
 
         await handler.send(req, res)
         assert.equal(spy.calledOnce, true)
-        const upload = spy.args[0][1]
+        const upload = spy.args[0][2]
         assert.equal(upload.offset, 1024)
         assert.equal(upload.size, 1024)
       })

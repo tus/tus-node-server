@@ -255,7 +255,7 @@ describe('Server', () => {
     })
 
     it('should fire when an endpoint is created', (done) => {
-      server.on(EVENTS.POST_CREATE, (_, upload, url) => {
+      server.on(EVENTS.POST_CREATE, (_, __, upload, url) => {
         assert.ok(url)
         assert.equal(upload.size, 12_345_678)
         done()
@@ -324,7 +324,7 @@ describe('Server', () => {
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory: './test/output'}),
-        onUploadCreate() {
+        async onUploadCreate() {
           throw {body: 'no', status_code: 500}
         },
       })
@@ -358,11 +358,11 @@ describe('Server', () => {
         })
     })
 
-    it('should call onUploadCreate and return its error to the client with creation-with-upload ', (done) => {
+    it('should call onUploadFinish and return its error to the client with creation-with-upload ', (done) => {
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory: './test/output'}),
-        onUploadFinish() {
+        async onUploadFinish() {
           throw {body: 'no', status_code: 500}
         },
       })
@@ -391,11 +391,11 @@ describe('Server', () => {
         .then((res) => {
           request(server.listen())
             .patch(removeProtocol(res.headers.location))
-            .send('test')
             .set('Tus-Resumable', TUS_RESUMABLE)
             .set('Upload-Offset', '0')
             .set('Upload-Length', length)
             .set('Content-Type', 'application/offset+octet-stream')
+            .send('test')
             .end((err) => {
               if (err) {
                 done(err)

@@ -22,11 +22,19 @@ export type ServerOptions = {
   // `onUploadCreate` will be invoked before a new upload is created, if the
   // property is supplied. If the callback returns true, the upload will be created.
   // Otherwise the HTTP request will be aborted. This can be used to implement validation of upload metadata etc.
-  onUploadCreate?: (req: http.IncomingMessage, upload: Upload) => Promise<void>
+  onUploadCreate?: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload
+  ) => Promise<http.ServerResponse>
   // `onUploadFinish` will be invoked after an upload is completed but before
   // a response is returned to the client. Error responses from the callback will be passed
   // back to the client. This can be used to implement post-processing validation.
-  onUploadFinish?: (req: http.IncomingMessage, upload: Upload) => Promise<void>
+  onUploadFinish?: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload
+  ) => Promise<http.ServerResponse>
 }
 
 export type Upload = InstanceType<typeof UploadModel>
