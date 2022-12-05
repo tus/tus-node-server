@@ -4108,13 +4108,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-defer@npm:3.0.0":
-  version: 3.0.0
-  resolution: "p-defer@npm:3.0.0"
-  checksum: ac3b0976a1c76b67cca1a34e00f7299b0cc230891f820749686aa84f8947326bbe0f8e3b7d9ca511578ee06f0c1a6e0ff68c8e9c325eac455f09d99f91697161
-  languageName: node
-  linkType: hard
-
 "p-limit@npm:^2.2.0":
   version: 2.3.0
   resolution: "p-limit@npm:2.3.0"
@@ -5300,7 +5293,6 @@ __metadata:
     mocha: ^9.2.0
     node-mocks-http: ^1.11.0
     nyc: ^15.1.0
-    p-defer: 3.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
     should: ^13.2.3

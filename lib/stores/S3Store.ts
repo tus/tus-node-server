@@ -1,12 +1,11 @@
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
 import stream from 'node:stream/promises'
-import {Readable} from 'node:stream'
+import type {Readable} from 'node:stream'
 import http from 'node:http'
 
 import aws from 'aws-sdk'
 import debug from 'debug'
-import pDefer from 'p-defer'
 
 import DataStore from './DataStore'
 import StreamSplitter from '../models/StreamSplitter'
@@ -309,10 +308,9 @@ export default class S3Store extends DataStore {
       })
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
-        const deferred = pDefer<void>()
 
         // Fork off in the background
-        ;(async () => {
+        const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             const partNumber = currentPartNumber++
             const incompletePartId = this.partKey(metadata.file.id, true)
@@ -338,15 +336,15 @@ export default class S3Store extends DataStore {
             }
 
             bytesUploaded += partSize
-            deferred.resolve()
+            resolve()
           } catch (error) {
-            deferred.reject(error)
+            reject(error)
           } finally {
             fsProm.rm(path).catch(/* ignore */)
           }
-        })()
+        })
 
-        promises.push(deferred.promise)
+        promises.push(deferred)
       })
 
     try {

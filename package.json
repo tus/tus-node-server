@@ -70,7 +70,6 @@
     "mocha": "^9.2.0",
     "node-mocks-http": "^1.11.0",
     "nyc": "^15.1.0",
-    "p-defer": "3.0.0",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "should": "^13.2.3",
