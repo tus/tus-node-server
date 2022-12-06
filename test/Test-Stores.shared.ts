@@ -22,13 +22,13 @@ export const shouldHaveStoreMethods = function () {
 export const shouldCreateUploads = function () {
   describe('create', () => {
     const file = new Upload({
-      id: '1234',
+      id: 'create-test',
       size: 1000,
       offset: 0,
       metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
     })
     const file_defered = new Upload({
-      id: '1234',
+      id: 'create-test-deferred',
       offset: 0,
     })
 
@@ -55,7 +55,7 @@ export const shouldCreateUploads = function () {
 
     it('should store `upload_defer_length` when creating new resource', async function () {
       await this.datastore.create(file_defered)
-      const upload = await this.datastore.getUpload(file.id)
+      const upload = await this.datastore.getUpload(file_defered.id)
       assert.strictEqual(upload.sizeIsDeferred, file_defered.sizeIsDeferred)
     })
 
@@ -68,7 +68,7 @@ export const shouldCreateUploads = function () {
 }
 
 export const shouldRemoveUploads = function () {
-  const file = new Upload({id: '1234', size: 1000, offset: 0})
+  const file = new Upload({id: 'remove-test', size: 1000, offset: 0})
 
   describe('remove (termination extension)', () => {
     it("should report 'termination' extension", function () {
@@ -100,7 +100,7 @@ export const shouldWriteUploads = function () {
 
     it('should write a stream and resolve the new offset', async function () {
       const file = new Upload({
-        id: '1234',
+        id: 'write-test',
         size: this.testFileSize,
         offset: 0,
         metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
@@ -113,7 +113,7 @@ export const shouldWriteUploads = function () {
 
     it('should reject when stream is destroyed', async function () {
       const file = new Upload({
-        id: '1234',
+        id: 'write-test-reject',
         size: this.testFileSize,
         offset: 0,
         metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
@@ -133,24 +133,23 @@ export const shouldWriteUploads = function () {
 
 export const shouldHandleOffset = function () {
   describe('getUpload', function () {
-    const file = new Upload({
-      id: '1234',
-      // @ts-expect-error todo
-      size: this.testFileSize,
-      offset: 0,
-      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
-    })
-
     it('should reject non-existant files', function () {
       return this.datastore.getUpload('doesnt_exist').should.be.rejected()
     })
 
     it('should resolve the stats for existing files', async function () {
+      const file = new Upload({
+        id: 'offset-test',
+        size: this.testFileSize,
+        offset: 0,
+        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+      })
+
       await this.datastore.create(file)
       const offset = await this.datastore.write(
         fs.createReadStream(this.testFilePath),
         file.id,
-        0
+        file.offset
       )
       const upload = await this.datastore.getUpload(file.id)
       assert.equal(upload.offset, offset)
@@ -160,17 +159,17 @@ export const shouldHandleOffset = function () {
 
 export const shouldDeclareUploadLength = function () {
   describe('declareUploadLength', () => {
-    const file = new Upload({
-      id: '1234',
-      offset: 0,
-      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
-    })
-
     it('should reject non-existant files', function () {
       return this.datastore.declareUploadLength('doesnt_exist', '10').should.be.rejected()
     })
 
     it('should update upload_length after declaring upload length', async function () {
+      const file = new Upload({
+        id: 'declare-length-test',
+        offset: 0,
+        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+      })
+
       await this.datastore.create(file)
       let upload = await this.datastore.getUpload(file.id)
       assert.equal(upload.size, undefined)

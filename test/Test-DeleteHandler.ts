@@ -1,10 +1,10 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
-import net from 'node:net'
+import type http from 'node:http'
 
 import sinon from 'sinon'
+import httpMocks from 'node-mocks-http'
 
 import DataStore from '../lib/stores/DataStore'
 import DeleteHandler from '../lib/handlers/DeleteHandler'
@@ -15,15 +15,13 @@ describe('DeleteHandler', () => {
   const fake_store = sinon.createStubInstance(DataStore)
   let handler: InstanceType<typeof DeleteHandler>
   let req: http.IncomingMessage
-  let res: http.ServerResponse
+  let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
     fake_store.remove.resetHistory()
     handler = new DeleteHandler(fake_store, {relativeLocation: true, path})
-    req = new http.IncomingMessage(new net.Socket())
-    req.url = handler.generateUrl(req, '1234')
-    req.method = 'HEAD'
-    res = new http.ServerResponse(req)
+    req = {url: `${path}/1234`, method: 'DELETE'} as http.IncomingMessage
+    res = httpMocks.createResponse()
   })
 
   it('should 404 if no file id match', () => {

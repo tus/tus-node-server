@@ -2,9 +2,10 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
-import net from 'node:net'
 
 import sinon from 'sinon'
+import httpMocks from 'node-mocks-http'
+
 import PatchHandler from '../lib/handlers/PatchHandler'
 import DataStore from '../lib/stores/DataStore'
 import File from '../lib/models/Upload'
@@ -12,16 +13,15 @@ import File from '../lib/models/Upload'
 describe('PatchHandler', () => {
   const path = '/test/output'
   let req: http.IncomingMessage
-  let res: http.ServerResponse
+  let res: httpMocks.MockResponse<http.ServerResponse>
   let store: sinon.SinonStubbedInstance<DataStore>
   let handler: InstanceType<typeof PatchHandler>
 
   beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
     handler = new PatchHandler(store, {path})
-    req = new http.IncomingMessage(new net.Socket())
-    req.method = 'PATCH'
-    res = new http.ServerResponse(req)
+    req = {method: 'PATCH'} as http.IncomingMessage
+    res = httpMocks.createResponse({req})
   })
 
   it('should 403 if no Content-Type header', () => {
@@ -124,8 +124,7 @@ describe('PatchHandler', () => {
 
       await handler.send(req, res)
 
-      // @ts-expect-error works but not in types
-      assert.equal(res._header.includes('Upload-Offset: 10'), true)
+      assert.equal(res._getHeaders()['upload-offset'], 10)
       assert.equal(res.hasHeader('Content-Length'), false)
       assert.equal(res.statusCode, 204)
     })

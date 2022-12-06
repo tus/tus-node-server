@@ -2,7 +2,8 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
-import net from 'node:net'
+
+import httpMocks from 'node-mocks-http'
 
 import OptionsHandler from '../lib/handlers/OptionsHandler'
 import DataStore from '../lib/stores/DataStore'
@@ -14,13 +15,11 @@ describe('OptionsHandler', () => {
   const handler = new OptionsHandler(store, options)
 
   let req: http.IncomingMessage
-  let res: http.ServerResponse
+  let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
-    req = new http.IncomingMessage(new net.Socket())
-    req.url = handler.generateUrl(req, '1234')
-    req.method = 'OPTIONS'
-    res = new http.ServerResponse(req)
+    req = {url: `${options.path}/1234`, method: 'OPTIONS'} as http.IncomingMessage
+    res = httpMocks.createResponse({req})
   })
 
   it('send() should set headers and 204', async () => {

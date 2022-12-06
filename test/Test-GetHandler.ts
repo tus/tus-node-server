@@ -4,9 +4,9 @@ import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
 import http from 'node:http'
-import net from 'node:net'
 
 import sinon from 'sinon'
+import httpMocks from 'node-mocks-http'
 
 import GetHandler from '../lib/handlers/GetHandler'
 import DataStore from '../lib/stores/DataStore'
@@ -20,9 +20,8 @@ describe('GetHandler', () => {
   let res: http.ServerResponse
 
   beforeEach(() => {
-    req = new http.IncomingMessage(new net.Socket())
-    req.method = 'GET'
-    res = new http.ServerResponse(req)
+    req = httpMocks.createRequest({method: 'GET'})
+    res = httpMocks.createResponse({req})
   })
 
   describe('test error responses', () => {
