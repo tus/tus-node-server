@@ -22,7 +22,9 @@
     "unicorn/prevent-abbreviations": "off",
     "unicorn/no-null": "off",
     "unicorn/filename-case": "off",
-    "unicorn/explicit-length-check": "off"
+    "unicorn/explicit-length-check": "off",
+    "unicorn/prefer-ternary": "off",
+    "capitalized-comments":"off"
   },
   "ignorePatterns": ["demo", "dist", "node_modules"]
 }
