@@ -60,31 +60,48 @@ export default class PostHandler extends BaseHandler {
       throw ERRORS.FILE_WRITE_ERROR
     }
 
-    const file = new Upload({
+    const upload = new Upload({
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
       offset: 0,
       metadata: upload_metadata,
     })
 
-    const obj = await this.store.create(file)
-    this.emit(EVENTS.EVENT_FILE_CREATED, {file: obj})
+    if (this.options.onUploadCreate) {
+      try {
+        res = await this.options.onUploadCreate(req, res, upload)
+      } catch (error) {
+        log(`onUploadCreate error: ${error.body}`)
+        throw error
+      }
+    }
 
-    const url = this.generateUrl(req, file.id)
-    this.emit(EVENTS.EVENT_ENDPOINT_CREATED, {url})
+    await this.store.create(upload)
+    const url = this.generateUrl(req, upload.id)
 
-    const optional_headers: {
+    this.emit(EVENTS.POST_CREATE, req, res, upload, url)
+
+    let newOffset
+    let isFinal = false
+    const headers: {
       'Upload-Offset'?: string
       'Upload-Expires'?: string
     } = {}
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
     if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
-      const new_offset = await this.store.write(req, file.id, 0)
-      optional_headers['Upload-Offset'] = new_offset.toString()
+      newOffset = await this.store.write(req, upload.id, 0)
+      headers['Upload-Offset'] = newOffset.toString()
+      isFinal = newOffset === Number.parseInt(upload_length as string, 10)
+      upload.offset = newOffset
 
-      if (new_offset === Number.parseInt(upload_length as string, 10)) {
-        this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file})
+      if (isFinal && this.options.onUploadFinish) {
+        try {
+          res = await this.options.onUploadFinish(req, res, upload)
+        } catch (error) {
+          log(`onUploadFinish: ${error.body}`)
+          throw error
+        }
       }
     }
 
@@ -93,18 +110,24 @@ export default class PostHandler extends BaseHandler {
     if (
       this.store.hasExtension('expiration') &&
       this.store.getExpiration() > 0 &&
-      file.creation_date
+      upload.creation_date
     ) {
-      const created = await this.store.getUpload(file.id)
+      const created = await this.store.getUpload(upload.id)
       if (created.offset !== Number.parseInt(upload_length as string, 10)) {
-        const creation = new Date(file.creation_date)
+        const creation = new Date(upload.creation_date)
         // Value MUST be in RFC 7231 datetime format
-        optional_headers['Upload-Expires'] = new Date(
+        headers['Upload-Expires'] = new Date(
           creation.getTime() + this.store.getExpiration()
         ).toUTCString()
       }
     }
 
-    return this.write(res, 201, {Location: url, ...optional_headers})
+    const writtenRes = this.write(res, 201, {Location: url, ...headers})
+
+    if (isFinal) {
+      this.emit(EVENTS.POST_FINISH, req, writtenRes, upload)
+    }
+
+    return writtenRes
   }
 }

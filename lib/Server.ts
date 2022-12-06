@@ -11,7 +11,13 @@ import PostHandler from './handlers/PostHandler'
 import DeleteHandler from './handlers/DeleteHandler'
 import RequestValidator from './validators/RequestValidator'
 
-import {ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants'
+import {
+  EVENTS,
+  ERRORS,
+  EXPOSED_HEADERS,
+  REQUEST_METHODS,
+  TUS_RESUMABLE,
+} from './constants'
 
 import type stream from 'node:stream'
 import type {DataStore, ServerOptions, RouteHandler, Upload} from '../types'
@@ -24,16 +30,42 @@ type Handlers = {
   POST: InstanceType<typeof PostHandler>
   DELETE: InstanceType<typeof DeleteHandler>
 }
+
 interface TusEvents {
-  EVENT_FILE_CREATED: (event: {file: Upload}) => void
-  EVENT_ENDPOINT_CREATED: (event: {url: string}) => void
-  EVENT_UPLOAD_COMPLETE: (event: {file: Upload}) => void
-  EVENT_FILE_DELETED: (event: {file_id: string}) => void
+  [EVENTS.POST_CREATE]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload,
+    url: string
+  ) => void
+  [EVENTS.POST_RECEIVE]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload
+  ) => void
+  [EVENTS.POST_FINISH]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    upload: Upload
+  ) => void
+  [EVENTS.POST_TERMINATE]: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    id: string
+  ) => void
 }
+
+type on = EventEmitter['on']
+type emit = EventEmitter['emit']
 export declare interface Server {
-  on<U extends keyof TusEvents>(event: U, listener: TusEvents[U]): this
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(eventName: string | symbol, listener: (...args: any[]) => void): this
+  on<Event extends keyof TusEvents>(event: Event, listener: TusEvents[Event]): this
+  on(eventName: Parameters<on>[0], listener: Parameters<on>[1]): this
+
+  emit<Event extends keyof TusEvents>(
+    event: Event,
+    listener: TusEvents[Event]
+  ): ReturnType<emit>
+  emit(eventName: Parameters<emit>[0], listener: Parameters<emit>[1]): ReturnType<emit>
 }
 
 const log = debug('tus-node-server')

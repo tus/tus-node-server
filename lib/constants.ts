@@ -1,4 +1,5 @@
 export const REQUEST_METHODS = ['POST', 'HEAD', 'PATCH', 'OPTIONS', 'DELETE'] as const
+
 export const HEADERS = [
   'Authorization',
   'Content-Type',
@@ -15,9 +16,15 @@ export const HEADERS = [
   'X-HTTP-Method-Override',
   'X-Requested-With',
 ] as const
+
 export const HEADERS_LOWERCASE = HEADERS.map((header) => {
   return header.toLowerCase()
 }) as Array<Lowercase<typeof HEADERS[number]>>
+
+export const ALLOWED_HEADERS = HEADERS.join(', ')
+export const ALLOWED_METHODS = REQUEST_METHODS.join(', ')
+export const EXPOSED_HEADERS = HEADERS.join(', ')
+
 export const ERRORS = {
   MISSING_OFFSET: {
     status_code: 403,
@@ -64,19 +71,13 @@ export const ERRORS = {
     body: 'expiration extension is not (yet) supported.\n',
   },
 } as const
-export const EVENT_ENDPOINT_CREATED = 'EVENT_ENDPOINT_CREATED' as const
-export const EVENT_FILE_CREATED = 'EVENT_FILE_CREATED' as const
-export const EVENT_UPLOAD_COMPLETE = 'EVENT_UPLOAD_COMPLETE' as const
-export const EVENT_FILE_DELETED = 'EVENT_FILE_DELETED' as const
-export const EVENTS = {
-  EVENT_ENDPOINT_CREATED,
-  EVENT_FILE_CREATED,
-  EVENT_UPLOAD_COMPLETE,
-  EVENT_FILE_DELETED,
-} as const
-export const ALLOWED_HEADERS = HEADERS.join(', ')
-export const ALLOWED_METHODS = REQUEST_METHODS.join(', ')
-export const EXPOSED_HEADERS = HEADERS.join(', ')
+
+export const POST_CREATE = 'POST_CREATE' as const
+export const POST_RECEIVE = 'POST_RECEIVE' as const
+export const POST_FINISH = 'POST_FINISH' as const
+export const POST_TERMINATE = 'POST_TERMINATE' as const
+export const EVENTS = {POST_CREATE, POST_RECEIVE, POST_FINISH, POST_TERMINATE} as const
+
 export const MAX_AGE = 86_400 as const
 export const TUS_RESUMABLE = '1.0.0' as const
 export const TUS_VERSION = ['1.0.0'] as const

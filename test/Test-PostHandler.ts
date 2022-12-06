@@ -10,7 +10,7 @@ import sinon from 'sinon'
 import DataStore from '../lib/stores/DataStore'
 import PostHandler from '../lib/handlers/PostHandler'
 import {EVENTS} from '../lib/constants'
-import File from '../lib/models/Upload'
+import Upload from '../lib/models/Upload'
 
 const SERVER_OPTIONS = {
   path: '/test',
@@ -173,34 +173,32 @@ describe('PostHandler', () => {
     })
 
     describe('events', () => {
-      it(`must fire the ${EVENTS.EVENT_FILE_CREATED} event`, (done) => {
-        const fake_store = sinon.createStubInstance(DataStore)
+      it(`must fire the ${EVENTS.POST_CREATE} event`, async () => {
+        const store = sinon.createStubInstance(DataStore)
+        const file = new Upload({id: '1234', size: 1024, offset: 0})
+        const handler = new PostHandler(store, SERVER_OPTIONS)
+        const spy = sinon.spy()
 
-        const file = new File({id: '1234', size: 10, offset: 0})
-        fake_store.create.resolves(file)
+        req.headers = {'upload-length': '1024'}
+        store.create.resolves(file)
+        handler.on(EVENTS.POST_CREATE, spy)
 
-        const handler = new PostHandler(fake_store, SERVER_OPTIONS)
-        handler.on(EVENTS.EVENT_FILE_CREATED, (obj) => {
-          assert.strictEqual(obj.file, file)
-          done()
-        })
-
-        req.headers = {'upload-length': '1000'}
-        handler.send(req, res)
+        await handler.send(req, res)
+        assert.equal(spy.calledOnce, true)
       })
 
-      it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with absolute URL`, (done) => {
+      it(`must fire the ${EVENTS.POST_CREATE} event with absolute URL`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = new File({id: '1234', size: 10, offset: 0})
+        const file = new Upload({id: '1234', size: 10, offset: 0})
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
           path: '/test/output',
           namingFunction: () => '1234',
         })
-        handler.on(EVENTS.EVENT_ENDPOINT_CREATED, (obj) => {
-          assert.strictEqual(obj.url, 'http://localhost:3000/test/output/1234')
+        handler.on(EVENTS.POST_CREATE, (_, __, ___, url) => {
+          assert.strictEqual(url, 'http://localhost:3000/test/output/1234')
           done()
         })
 
@@ -208,10 +206,10 @@ describe('PostHandler', () => {
         handler.send(req, res)
       })
 
-      it(`must fire the ${EVENTS.EVENT_ENDPOINT_CREATED} event with relative URL`, (done) => {
+      it(`must fire the ${EVENTS.POST_CREATE} event with relative URL`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
-        const file = new File({id: '1234', size: 10, offset: 0})
+        const file = new Upload({id: '1234', size: 10, offset: 0})
         fake_store.create.resolves(file)
 
         const handler = new PostHandler(fake_store, {
@@ -219,8 +217,8 @@ describe('PostHandler', () => {
           relativeLocation: true,
           namingFunction: () => '1234',
         })
-        handler.on(EVENTS.EVENT_ENDPOINT_CREATED, (obj) => {
-          assert.strictEqual(obj.url, '/test/output/1234')
+        handler.on(EVENTS.POST_CREATE, (_, __, ___, url) => {
+          assert.strictEqual(url, '/test/output/1234')
           done()
         })
 
@@ -228,7 +226,7 @@ describe('PostHandler', () => {
         handler.send(req, res)
       })
 
-      it(`must fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event when upload is complete with single request`, (done) => {
+      it(`must fire the ${EVENTS.POST_CREATE} event when upload is complete with single request`, (done) => {
         const fake_store = sinon.createStubInstance(DataStore)
 
         const upload_length = 1000
@@ -237,7 +235,7 @@ describe('PostHandler', () => {
         fake_store.write.resolves(upload_length)
 
         const handler = new PostHandler(fake_store, {path: '/test/output'})
-        handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, () => {
+        handler.on(EVENTS.POST_CREATE, () => {
           done()
         })
 
@@ -249,29 +247,48 @@ describe('PostHandler', () => {
         handler.send(req, res)
       })
 
-      it(`must not fire the ${EVENTS.EVENT_UPLOAD_COMPLETE} event when upload-length is defered`, (done) => {
-        const fake_store = sinon.createStubInstance(DataStore)
-
-        const upload_length = 1000
-
-        fake_store.create.resolvesArg(0)
-        fake_store.write.resolves(upload_length)
-        fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
-
-        const handler = new PostHandler(fake_store, {path: '/test/output'})
-        handler.on(EVENTS.EVENT_UPLOAD_COMPLETE, () => {
-          done(new Error('test'))
+      it('should call onUploadCreate hook', async function () {
+        const store = sinon.createStubInstance(DataStore)
+        const spy = sinon.stub().resolvesArg(1)
+        const handler = new PostHandler(store, {
+          path: '/test/output',
+          onUploadCreate: spy,
         })
 
         req.headers = {
-          'upload-defer-length': '1',
+          'upload-length': '1024',
+          host: 'localhost:3000',
+        }
+        store.create.resolvesArg(0)
+
+        await handler.send(req, res)
+        assert.equal(spy.calledOnce, true)
+        const upload = spy.args[0][2]
+        assert.equal(upload.offset, 0)
+        assert.equal(upload.size, 1024)
+      })
+
+      it('should call onUploadFinish hook when creation-with-upload is used', async function () {
+        const store = sinon.createStubInstance(DataStore)
+        const spy = sinon.stub().resolvesArg(1)
+        const handler = new PostHandler(store, {
+          path: '/test/output',
+          onUploadFinish: spy,
+        })
+
+        req.headers = {
+          'upload-length': '1024',
           host: 'localhost:3000',
           'content-type': 'application/offset+octet-stream',
         }
-        handler
-          .send(req, res)
-          .then(() => done())
-          .catch(done)
+        store.create.resolvesArg(0)
+        store.write.resolves(1024)
+
+        await handler.send(req, res)
+        assert.equal(spy.calledOnce, true)
+        const upload = spy.args[0][2]
+        assert.equal(upload.offset, 1024)
+        assert.equal(upload.size, 1024)
       })
     })
   })
