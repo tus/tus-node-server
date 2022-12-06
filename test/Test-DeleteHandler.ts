@@ -43,7 +43,7 @@ describe('DeleteHandler', () => {
 
   it(`must fire the ${EVENTS.POST_TERMINATE} event`, (done) => {
     fake_store.remove.resolves()
-    handler.on(EVENTS.POST_TERMINATE, (request, id) => {
+    handler.on(EVENTS.POST_TERMINATE, (request, _, id) => {
       assert.deepStrictEqual(req, request)
       assert.equal(id, '1234')
       done()
