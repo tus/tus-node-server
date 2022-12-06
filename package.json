@@ -4,6 +4,11 @@
   "version": "0.9.0",
   "description": "Node.js tus server",
   "packageManager": "yarn@3.2.3",
+  "workspaces": [
+    "packages/*",
+    "internal/*",
+    "demo/*"
+  ],
   "keywords": [
     "tus",
     "framework",
@@ -43,20 +48,7 @@
     "demo:gcs": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
     "demo:s3": "cross-env DATA_STORE=S3Store node demo/server.js"
   },
-  "dependencies": {
-    "@google-cloud/storage": "^6.2.2",
-    "aws-sdk": "^2.1064.0",
-    "configstore": "^5.0.1",
-    "debug": "^4.3.3"
-  },
   "devDependencies": {
-    "@types/configstore": "^6.0.0",
-    "@types/debug": "^4.1.7",
-    "@types/mocha": "^10.0.0",
-    "@types/node": "^18.7.23",
-    "@types/rimraf": "^3.0.2",
-    "@types/sinon": "^10.0.13",
-    "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
     "cross-env": "^7.0.3",
@@ -66,20 +58,12 @@
     "eslint-config-xo": "^0.42.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-unicorn": "^44.0.0",
-    "istanbul": "^0.4.5",
-    "mocha": "^9.2.0",
-    "node-mocks-http": "^1.11.0",
-    "nyc": "^15.1.0",
     "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
     "should": "^13.2.3",
     "sinon": "^13.0.1",
     "supertest": "^6.2.2",
     "ts-node": "^10.9.1",
-    "tsc": "^2.0.4",
-    "tus-js-client": "^2.3.0",
-    "type-fest": "^3.1.0",
-    "typescript": "^4.8.4"
+    "tsc": "^2.0.4"
   },
   "engines": {
     "node": ">=16"

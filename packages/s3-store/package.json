@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@tus/s3-store",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@tus/constants": "workspace:*",
+    "@tus/models": "workspace:*",
+    "@tus/types": "workspace:*",
+    "aws-sdk": "^2.1064.0",
+    "debug": "^4.3.3",
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/node": "latest"
+  }
+}

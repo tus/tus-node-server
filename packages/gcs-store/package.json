@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@tus/gcs-store",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@google-cloud/storage": "^6.2.2",
+    "@tus/constants": "workspace:*",
+    "@tus/models": "workspace:*",
+    "@tus/types": "workspace:*",
+    "debug": "^4.3.3",
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/node": "latest"
+  }
+}

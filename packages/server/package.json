@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@tus/server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@tus/constants": "workspace:*",
+    "@tus/models": "workspace:*",
+    "@tus/types": "workspace:*",
+    "debug": "^4.3.3",
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "type-fest": "^3.1.0"
+  }
+}
