@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/prefer-number-properties */
-import {HEADERS_LOWERCASE, TUS_VERSION, TUS_RESUMABLE} from '@tus/constants'
+import {HEADERS_LOWERCASE, TUS_VERSION, TUS_RESUMABLE} from '../constants'
 
-const RequestValidator = {
+export const RequestValidator = {
   // All PATCH requests MUST include a Upload-Offset header
   _invalidUploadOffsetHeader(value: string | undefined) {
     // @ts-expect-error isNan can in fact expect non-number args
@@ -91,5 +91,3 @@ const RequestValidator = {
     return this[method](header_value)
   },
 }
-
-export default RequestValidator

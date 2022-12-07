@@ -7,11 +7,8 @@ import http from 'node:http'
 import debug from 'debug'
 import Configstore from 'configstore'
 
-import DataStore from './DataStore'
-import pkg from '../../package.json'
-import {ERRORS} from '../constants'
-
-import Upload from '../models/Upload'
+import {DataStore, Upload, ERRORS} from '@tus/server'
+import pkg from './package.json'
 
 type Store = {
   get(key: string): Upload | undefined
@@ -31,7 +28,7 @@ const IGNORED_MKDIR_ERROR = 'EEXIST'
 const FILE_DOESNT_EXIST = 'ENOENT'
 const log = debug('tus-node-server:stores:filestore')
 
-export default class FileStore extends DataStore {
+export class FileStore extends DataStore {
   directory: string
   configstore: Store
   expirationPeriodInMilliseconds: number

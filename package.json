@@ -1,71 +1,25 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "tus-node-server",
-  "version": "0.9.0",
-  "description": "Node.js tus server",
-  "packageManager": "yarn@3.2.3",
+  "private": true,
   "workspaces": [
     "packages/*",
-    "internal/*",
-    "demo/*"
+    "demo",
+    "test"
   ],
-  "keywords": [
-    "tus",
-    "framework",
-    "resumable",
-    "upload",
-    "protocol",
-    "app",
-    "api",
-    "server"
-  ],
-  "homepage": "https://github.com/tus/tus-node-server#readme",
-  "bugs": {
-    "url": "https://github.com/tus/tus-node-server/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tus/tus-node-server.git"
-  },
-  "license": "MIT",
-  "author": "Ben Stahl <bhstahl@gmail.com>",
-  "main": "index.js",
-  "files": [
-    "LICENSE",
-    "README.md",
-    "dist/"
-  ],
-  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "lint": "eslint --cache .",
-    "format": "eslint --cache --fix . && prettier --write .",
-    "test": "cross-env NODE_ENV=test mocha --timeout 40000 --exit --extension ts --require ts-node/register --project tsconfig.json",
-    "test:local": "env-cmd npm run test",
-    "test:build": "tsc --project tsconfig.dev.json",
-    "test:with-coverage": "nyc npm test",
-    "demo": "node demo/server.js",
-    "demo:gcs": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
-    "demo:s3": "cross-env DATA_STORE=S3Store node demo/server.js"
+    "build": "turbo run build",
+    "demo": "yarn workspace demo start",
+    "demo:gcs": "yarn workspace demo start:gcs",
+    "demo:s3": "yarn workspace demo start:s3",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "test": "turbo run test --concurrency 1"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.38.1",
-    "@typescript-eslint/parser": "^5.38.1",
-    "cross-env": "^7.0.3",
-    "env-cmd": "^10.1.0",
-    "eslint": "^8.24.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-config-xo": "^0.42.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-unicorn": "^44.0.0",
+    "eslint": "^8.29.0",
+    "eslint-config-custom": "*",
     "prettier": "^2.7.1",
-    "should": "^13.2.3",
-    "sinon": "^13.0.1",
-    "supertest": "^6.2.2",
-    "ts-node": "^10.9.1",
-    "tsc": "^2.0.4"
+    "turbo": "^1.6.3"
   },
-  "engines": {
-    "node": ">=16"
-  }
+  "packageManager": "yarn@3.2.3"
 }

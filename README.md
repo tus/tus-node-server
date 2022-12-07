@@ -23,6 +23,7 @@ nearly any other cloud provider could easily be added to tusd.
 * [When should I use this?](#when-should-i-use-this)
 * [Quick start](#quick-start)
 * [Packages](#packages)
+* [Extensions](#extensions)
 * [Demos](#demos)
 * [Types](#types)
 * [Compatibility](#compatibility)
@@ -41,7 +42,15 @@ There are also other mature servers, like [tusd](https://github.com/tus/tusd), [
 
 ## Quick start
 
+```js
+const {Server} = require('@tus/server')
+const {Filestore} = require('@tus/file-store')
+
+```
+
 ## Packages
+
+## Extensions
 
 ## Demos
 

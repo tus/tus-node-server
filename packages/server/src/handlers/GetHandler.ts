@@ -1,15 +1,15 @@
 import stream from 'node:stream'
 import debug from 'debug'
 
-import BaseHandler from './BaseHandler'
-import {ERRORS} from '@tus/constants'
+import {BaseHandler} from './BaseHandler'
+import {ERRORS} from '../constants'
 
 import type http from 'node:http'
-import type {RouteHandler} from '@tus/types'
+import type {RouteHandler} from '../types'
 
 const log = debug('tus-node-server:handlers:get')
 
-export default class GetHandler extends BaseHandler {
+export class GetHandler extends BaseHandler {
   paths: Map<string, RouteHandler> = new Map()
 
   registerPath(path: string, handler: RouteHandler): void {
@@ -46,6 +46,7 @@ export default class GetHandler extends BaseHandler {
       throw ERRORS.FILE_NOT_FOUND
     }
 
+    // @ts-expect-error exists if supported
     const file_stream = this.store.read(id)
     const headers = {'Content-Length': stats.offset}
     res.writeHead(200, headers)

@@ -1,13 +1,13 @@
 import debug from 'debug'
 
-import BaseHandler from './BaseHandler'
-import {ERRORS, EVENTS} from '@tus/constants'
+import {BaseHandler} from './BaseHandler'
+import {ERRORS, EVENTS} from '../constants'
 
 import type http from 'node:http'
 
 const log = debug('tus-node-server:handlers:patch')
 
-export default class PatchHandler extends BaseHandler {
+export class PatchHandler extends BaseHandler {
   /**
    * Write data to the DataStore and return the new offset.
    */

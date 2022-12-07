@@ -3,8 +3,8 @@ import stream from 'node:stream'
 import http from 'node:http'
 import debug from 'debug'
 
-import {ERRORS, TUS_RESUMABLE} from '@tus/constants'
-import {Upload, DatsStore} from '@tus/models'
+import {ERRORS, TUS_RESUMABLE} from '@tus/server'
+import {Upload, DataStore} from '@tus/server'
 
 type Options = {
   bucket: string
@@ -14,7 +14,7 @@ type Options = {
 
 const log = debug('tus-node-server:stores:gcsstore')
 
-export default class GCSDataStore extends DataStore {
+export class GCSStore extends DataStore {
   bucket: Bucket
   bucket_name: string
   gcs: Storage

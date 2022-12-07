@@ -1,17 +1,18 @@
 import debug from 'debug'
 
-import BaseHandler from './BaseHandler'
-import { Upload, Uid } from '@tus/models'
-import RequestValidator from '../validators/RequestValidator'
-import {EVENTS, ERRORS} from '@tus/constants'
+import {BaseHandler} from './BaseHandler'
+import {Upload, Uid} from '../models'
+import {RequestValidator} from '../validators/RequestValidator'
+import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
-import type {DataStore, ServerOptions} from '@tus/types'
+import type {ServerOptions} from '../types'
+import type {DataStore} from '../models'
 import type {SetRequired} from 'type-fest'
 
 const log = debug('tus-node-server:handlers:post')
 
-export default class PostHandler extends BaseHandler {
+export class PostHandler extends BaseHandler {
   // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
   options!: SetRequired<ServerOptions, 'namingFunction'>
 

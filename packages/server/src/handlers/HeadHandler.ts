@@ -1,10 +1,10 @@
-import BaseHandler from './BaseHandler'
+import {BaseHandler} from './BaseHandler'
 
-import {ERRORS} from '@tus/constants'
+import {ERRORS} from '../constants'
 
 import type http from 'node:http'
 
-export default class HeadHandler extends BaseHandler {
+export class HeadHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const id = this.getFileIdFromRequest(req)
     if (id === false) {

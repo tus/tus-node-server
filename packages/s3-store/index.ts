@@ -7,8 +7,8 @@ import http from 'node:http'
 import aws from 'aws-sdk'
 import debug from 'debug'
 
-import {DataStore, StreamSplitter, Upload} from '@tus/models'
-import {ERRORS, TUS_RESUMABLE} from '@tus/constants'
+import {DataStore, StreamSplitter, Upload} from '@tus/server'
+import {ERRORS, TUS_RESUMABLE} from '@tus/server'
 
 const log = debug('tus-node-server:stores:s3store')
 
@@ -60,7 +60,7 @@ type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
 // are internally used.
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
-export default class S3Store extends DataStore {
+export class S3Store extends DataStore {
   private bucket: string
   private cache: Map<string, MetadataValue> = new Map()
   private client: aws.S3

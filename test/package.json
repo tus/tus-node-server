@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "test",
+  "private": true,
+  "scripts": {
+    "test": "mocha e2e.test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+  },
+  "dependencies": {
+    "@tus/file-store": "workspace:^",
+    "@tus/gcs-store": "workspace:^",
+    "@tus/s3-store": "workspace:^",
+    "@tus/server": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.1",
+    "@types/node": "latest",
+    "@types/rimraf": "^3",
+    "@types/sinon": "^10.0.13",
+    "@types/supertest": "^2.0.12",
+    "mocha": "^10.1.0",
+    "rimraf": "^3.0.2",
+    "should": "^13.2.3",
+    "sinon": "^15.0.0",
+    "supertest": "^6.3.2",
+    "ts-node": "^10.9.1",
+    "tsconfig": "*",
+    "typescript": "latest"
+  }
+}

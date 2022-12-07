@@ -1,12 +1,13 @@
 import EventEmitter from 'node:events'
 
-import type {DataStore, ServerOptions} from '@tus/types'
+import type {ServerOptions} from '../types'
+import type {DataStore} from '../models'
 import type http from 'node:http'
 
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
 
-export default class BaseHandler extends EventEmitter {
+export class BaseHandler extends EventEmitter {
   options: ServerOptions
   store: DataStore
 
