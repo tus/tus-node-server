@@ -314,6 +314,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tus/file-store@workspace:packages/file-store"
   dependencies:
+    "@tus/server": "workspace:^"
     "@types/configstore": ^6.0.0
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
@@ -335,6 +336,7 @@ __metadata:
   resolution: "@tus/gcs-store@workspace:packages/gcs-store"
   dependencies:
     "@google-cloud/storage": ^6.2.2
+    "@tus/server": "workspace:^"
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
     "@types/node": latest
@@ -351,6 +353,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tus/s3-store@workspace:packages/s3-store"
   dependencies:
+    "@tus/server": "workspace:^"
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
     "@types/node": latest
