@@ -11,7 +11,7 @@ describe('GCSStore', () => {
   before(function () {
     this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
-    this.storePath = storePath,
+    this.storePath = storePath
     this.testFilePath = path.resolve(fixturesPath, this.testFileName)
   })
 

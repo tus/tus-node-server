@@ -320,6 +320,8 @@ __metadata:
     "@types/node": latest
     configstore: ^5.0.1
     debug: ^4.3.3
+    eslint: ^8.29.0
+    eslint-config-custom: "workspace:*"
     mocha: ^10.1.0
     should: ^13.2.3
     typescript: latest
@@ -337,6 +339,8 @@ __metadata:
     "@types/mocha": ^10.0.1
     "@types/node": latest
     debug: ^4.3.3
+    eslint: ^8.29.0
+    eslint-config-custom: "workspace:*"
     mocha: ^10.1.0
     should: ^13.2.3
     typescript: latest
@@ -352,6 +356,8 @@ __metadata:
     "@types/node": latest
     aws-sdk: ^2.1064.0
     debug: ^4.3.3
+    eslint: ^8.29.0
+    eslint-config-custom: "workspace:*"
     mocha: ^10.1.0
     should: ^13.2.3
     typescript: latest
@@ -371,7 +377,7 @@ __metadata:
     "@types/supertest": ^2.0.12
     debug: ^4.3.3
     eslint: ^8.29.0
-    eslint-config-custom: "*"
+    eslint-config-custom: "workspace:*"
     mocha: ^10.1.0
     node-mocks-http: ^1.12.1
     should: ^13.2.3
@@ -1495,7 +1501,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-custom@*, eslint-config-custom@workspace:packages/eslint-config-custom":
+"eslint-config-custom@workspace:*, eslint-config-custom@workspace:packages/eslint-config-custom":
   version: 0.0.0-use.local
   resolution: "eslint-config-custom@workspace:packages/eslint-config-custom"
   dependencies:
@@ -3681,7 +3687,8 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     eslint: ^8.29.0
-    eslint-config-custom: "*"
+    eslint-config-custom: "workspace:*"
+    eslint-plugin-prettier: ^4.2.1
     prettier: ^2.7.1
     turbo: ^1.6.3
   languageName: unknown
