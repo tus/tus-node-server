@@ -25,6 +25,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
+    "@tus/server": "workspace:^",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
     "@types/node": "latest",
