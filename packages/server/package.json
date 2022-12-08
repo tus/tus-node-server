@@ -12,7 +12,8 @@
   "files": [
     "README.md",
     "LICENSE",
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "build": "tsc",
