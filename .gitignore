@@ -45,7 +45,7 @@ node_modules
 
 # Example local FileStore
 example/files
-test/output
+**/test/output
 
 #OSX
 .DS_Store

@@ -7,7 +7,8 @@ import http from 'node:http'
 import debug from 'debug'
 import Configstore from 'configstore'
 
-import {DataStore, Upload, ERRORS} from '@tus/server'
+import {DataStore, Upload} from '@tus/server/dist/models'
+import {ERRORS} from '@tus/server/dist/constants'
 import pkg from './package.json'
 
 type Store = {

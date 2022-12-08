@@ -3,7 +3,7 @@ import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
 
-import {Upload} from '@tus/server'
+import {Upload} from '@tus/server/dist/models'
 
 export const shouldHaveStoreMethods = function () {
   describe('the class', () => {

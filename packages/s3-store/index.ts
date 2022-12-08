@@ -7,8 +7,8 @@ import http from 'node:http'
 import aws from 'aws-sdk'
 import debug from 'debug'
 
-import {DataStore, StreamSplitter, Upload} from '@tus/server'
-import {ERRORS, TUS_RESUMABLE} from '@tus/server'
+import {DataStore, StreamSplitter, Upload} from '@tus/server/dist/models'
+import {ERRORS, TUS_RESUMABLE} from '@tus/server/dist/constants'
 
 const log = debug('tus-node-server:stores:s3store')
 
