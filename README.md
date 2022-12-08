@@ -16,7 +16,7 @@ moment allowing to continue seamlessly after e.g. network interruptions.
 It is capable of accepting uploads with arbitrary sizes and storing them locally
 on disk, on Google Cloud Storage or on AWS S3 (or any other S3-compatible
 storage system). Due to its modularization and extensibility, support for
-nearly any other cloud provider could easily be added to tusd.
+nearly any other cloud provider could easily be added to tus-node-server
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
@@ -65,7 +65,7 @@ new Server({
 ```
 
 A tus server integrated into your existing Node.js server.
-`tus-node-server` has no dependencies so it can be integrated in any server-side framework.
+`@tus/server` has no dependencies so it can be integrated in any server-side framework.
 More examples can be found in [`@tus/server`][].
 
 ```js
