@@ -1,166 +1,92 @@
 # tus-node-server
-[![npm version](https://badge.fury.io/js/tus-node-server.svg)](https://badge.fury.io/js/tus-node-server)
-[![Build Status](https://github.com/tus/tus-node-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tus/tus-node-server/actions/workflows/ci.yml)
 
-tus is a new open protocol for resumable uploads built on HTTP. This is the [tus protocol 1.0.0](http://tus.io/protocols/resumable-upload.html) node.js server implementation.
+<img alt="Tus logo" src="https://github.com/tus/tus.io/blob/master/assets/img/tus1.png?raw=true" width="30%" align="right" />
 
-## Installation
+> **tus** is a protocol based on HTTP for _resumable file uploads_. Resumable
+> means that an upload can be interrupted at any moment and can be resumed without
+> re-uploading the previous data again. An interruption may happen willingly, if
+> the user wants to pause, or by accident in case of an network issue or server
+> outage.
 
-```bash
-$ npm install tus-node-server
-```
+tus-node-server is an official implementation of the [tus resumable upload protocol](http://www.tus.io/protocols/resumable-upload.html).
+The protocol specifies a flexible method to upload files to remote servers using HTTP.
+The special feature is the ability to pause and resume uploads at any
+moment allowing to continue seamlessly after e.g. network interruptions.
 
-## Flexible Data Stores
+It is capable of accepting uploads with arbitrary sizes and storing them locally
+on disk, on Google Cloud Storage or on AWS S3 (or any other S3-compatible
+storage system). Due to its modularization and extensibility, support for
+nearly any other cloud provider could easily be added to tus-node-server
 
-- **Local File Storage**
-    ```js
-    server.datastore = new tus.FileStore({
-        directory: './files'
-    });
-    ```
+> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
+> The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
+> Make sure to use the new packages, currently in beta at `1.0.0-beta.1`.
 
-- **Google Cloud Storage**
-    ```js
+## Contents
 
-    server.datastore = new tus.GCSDataStore({
-        projectId: 'project-id',
-        keyFilename: 'path/to/your/keyfile.json',
-        bucket: 'bucket-name',
-    });
-    ```
+- [When should I use this?](#when-should-i-use-this)
+- [Quick start](#quick-start)
+- [Packages](#packages)
+- [Extensions](#extensions)
+- [Demos](#demos)
+- [Types](#types)
+- [Compatibility](#compatibility)
+- [Contribute](#contribute)
+- [License](#license)
 
-- **Amazon S3**
-    
-    using Key/Secret
-    ```js
+## When should I use this?
 
-    server.datastore = new tus.S3Store({
-        bucket: 'bucket-name',
-        accessKeyId: 'access-key-id',
-        secretAccessKey: 'secret-access-key',
-        region: 'eu-west-1',
-        partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
-    });
-    ```
+When you want reliable, resumable uploads.
+Together with a client like [tus-js-client](https://github.com/tus/tus-js-client) or [Uppy](https://uppy.io),
+you'll have a plug-and-play experience.
 
-    using [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property) to fetch credentials inside a AWS container, such as an ECS container, which will inject the required environment variables. The `credentials` config is directly passed into the AWS SDK so you can refer to the AWS docs for the supported values for `credentials`.
-    
-    For example, with `ECSCredentials`:
-    
-    ```js
-    server.datastore = new tus.S3Store({
-        path: '/files',
-        bucket: 'bucket-name',
-        credentials: new AWS.ECSCredentials({
-            httpOptions: { timeout: 5000 },
-            maxRetries: 10,
-        }),
-        region: 'eu-west-1',
-        partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
-        tmpDirPrefix: 'tus-s3-store',
-    });
-    ```
-## Quick Start
+tus-node-server in particular makes sense if you want to host a Node.js server or integrate it into your existing one.
+There are also other mature servers, like [tusd](https://github.com/tus/tusd), [tusdotnet](https://github.com/tusdotnet/tusdotnet),
+[rustus](https://github.com/s3rius/rustus), and [many others](https://tus.io/implementations.html).
 
-#### Use the [tus-node-deploy](https://hub.docker.com/r/bhstahl/tus-node-deploy/) Docker image
+## Quick start
 
-```sh
-$ docker run -p 1080:8080 -d bhstahl/tus-node-deploy
-```
-
-#### Build a standalone server yourself
-```js
-const tus = require('tus-node-server');
-
-const server = new tus.Server({ path: '/files' });
-server.datastore = new tus.FileStore({ directory: './files' });
-
-const host = '127.0.0.1';
-const port = 1080;
-server.listen({ host, port }, () => {
-    console.log(`[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port}`);
-});
-```
-
-#### Use tus-node-server as [Express Middleware](http://expressjs.com/en/guide/using-middleware.html)
+A standalone server which stores files on disk.
 
 ```js
-const tus = require('tus-node-server');
-const server = new tus.Server({ path: '/files' });
-server.datastore = new tus.FileStore({ directory: './files' });
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
+const host = '127.0.0.1'
+const port = 1080
 
-const express = require('express');
-const app = express();
-const uploadApp = express();
-uploadApp.all('*', server.handle.bind(server));
-app.use('/uploads', uploadApp);
-
-const host = '127.0.0.1';
-const port = 1080;
-app.listen(port, host);
+new Server({
+  path: '/files',
+  datastore: new FileStore({directory: './files'}),
+}).listen({host, port}, () => {
+  console.log(
+    `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port}`
+  )
+})
 ```
 
-#### Use tus-node-server with [Koa](https://github.com/koajs/koa) or plain Node server
+A tus server integrated into your existing Node.js server.
+`@tus/server` has no dependencies so it can be integrated in any server-side framework.
+More examples can be found in [`@tus/server`][].
 
 ```js
-const http = require('http');
-const url = require('url');
-const Koa = require('koa')
-const tus = require('tus-node-server');
-
-const tusServer = new tus.Server({ path: '/files' });
-tusServer.datastore = new tus.FileStore({ directory: './files' });
-
-const app = new Koa();
-const appCallback = app.callback();
-const port = 1080;
-
-
-const server = http.createServer((req, res) => {
-    const urlPath = url.parse(req.url).pathname;
-
-    // handle any requests with the `/files/*` pattern
-    if (/^\/files\/.+/.test(urlPath.toLowerCase())) {
-        return tusServer.handle(req, res);
-    }
-
-    appCallback(req, res);
-});
-
-server.listen(port)
-```
-
-#### Use tus-node-server with [Fastify](https://www.fastify.io)
-
-```js
-const tus = require('tus-node-server');
-const tusServer = new tus.Server({ path: '/files' });
-tusServer.datastore = new tus.FileStore({ directory: './files' });
-
 const fastify = require('fastify')({ logger: true });
+const {Server} = require('@tus/server');
+const {FileStore} = require('@tus/file-store');
 
-/**
- * add new content-type to fastify forewards request
- * without any parser to leave body untouched
- * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
- */
+const tusServer = new Server({
+  path: '/files',
+  datastore: new FileStore({ directory: './files' })
+})
+
 fastify.addContentTypeParser(
-    'application/offset+octet-stream', (request, payload, done) => done(null)
+    'application/offset+octet-stream', (request, payload, done) => done(null);
 );
-
-/**
- * let tus handle preparation and filehandling requests
- * fastify exposes raw nodejs http req/res via .raw property
- * @see https://www.fastify.io/docs/latest/Reference/Request/
- * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
- */
 fastify.all('/files', (req, res) => {
     tusServer.handle(req.raw, res.raw);
 });
 fastify.all('/files/*', (req, res) => {
     tusServer.handle(req.raw, res.raw);
 });
-
 fastify.listen(3000, (err) => {
     if (err) {
         fastify.log.error(err);
@@ -169,110 +95,82 @@ fastify.listen(3000, (err) => {
 });
 ```
 
-## Features
-#### Events:
+## Packages
 
-Execute code when lifecycle events happen by adding event handlers to your server.
+- [`@tus/server`][]. The tus server. Standalone or integrate it into your Node.js server. Supports events and hooks for monitering and validation.
+- [`@tus/file-store`][]. Store files on disk.
+- [`@tus/s3-store`][]. Store files on AWS S3.
+- [`@tus/gcs-store`][]. Store files on Google Cloud Storage.
 
-```js
-const tus = require('tus-node-server');
-const EVENTS = require('tus-node-server').EVENTS;
+## Extensions
 
-const server = new tus.Server({ path: '/files' });
-server.datastore = new tus.FileStore({ directory: './files' });
+The tus protocol supports optional [extensions][]:
 
-server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
-    console.log(`Upload complete for file ${event.file.id}`);
-});
-```
+- [Creation][]. Create an upload.
+- [Creation With Upload][]. Include part of the upload in the initial request, rather than in subsequent `PATCH` request(s).
+- [Expiration][]. The Server MAY remove unfinished uploads once they expire.
+- [Checksum][]. Verify data integrity of each `PATCH` request.
+- [Termination][]. Allow clients to terminate (`DELETE`) completed and unfinished uploads allowing the Server to free up used resources.
+- [Concatenation][]. Concatenate multiple uploads into a single one enabling Clients to perform parallel uploads and to upload non-contiguous chunks
 
-- `EVENT_FILE_CREATED`: Fired when a `POST` request successfully creates a new file
+| Extension            | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] |
+| -------------------- | --------------------------------- | ----------------------------- | ------------------------------- |
+| Creation             | ✅                                | ✅                            | ✅                              |
+| Creation With Upload | ✅                                | ✅                            | ✅                              |
+| Expiration           | ✅                                | ❌                            | ❌                              |
+| Checksum             | ❌                                | ❌                            | ❌                              |
+| Termination          | ✅                                | ❌                            | ❌                              |
+| Concatenation        | ❌                                | ❌                            | ❌                              |
 
-    _Example payload:_
-    ```
-    {
-        file: {
-            id: '7b26bf4d22cf7198d3b3706bf0379794',
-            upload_length: '41767441',
-            upload_metadata: 'filename NDFfbWIubXA0'
-         }
-    }
-    ```
-
-- `EVENT_ENDPOINT_CREATED`: Fired when a `POST` request successfully creates a new upload endpoint
-
-    _Example payload:_
-    ```
-    {
-        url: 'http://localhost:1080/files/7b26bf4d22cf7198d3b3706bf0379794'
-    }
-    ```
-
-- `EVENT_UPLOAD_COMPLETE`: Fired when a `PATCH` request finishes writing the file
-
-    _Example payload:_
-    ```
-    {
-        file: {
-            id: '7b26bf4d22cf7198d3b3706bf0379794',
-            upload_length: '41767441',
-            upload_metadata: 'filename NDFfbWIubXA0'
-        }
-    }
-    ```
-
-- `EVENT_FILE_DELETED`: Fired when a `DELETE` request finishes deleting the file
-
-    _Example payload:_
-    ```
-    {
-        file_id: '7b26bf4d22cf7198d3b3706bf0379794'
-
-    }
-    ```
-
-#### Custom `GET` handlers:
-Add custom `GET` handlers to suit your needs, similar to [Express routing](https://expressjs.com/en/guide/routing.html).
-```js
-const server = new tus.Server({ path: '/files' });
-server.datastore = new tus.FileStore({ directory: './files' });
-
-server.get('/uploads', (req, res) => {
-    // Read from your DataStore
-    fs.readdir(server.datastore.directory, (err, files) => {
-        // Format the JSON response and send it
-    }
-});
-```
-
-#### Custom file names:
-
-The default naming of files is a random crypto hex string. When using your own `namingFunction`, make sure to create URL friendly names such as removing spaces.
-```js
-const crypto = require('crypto');
-
-// req is http.IncomingMessage
-const randomString = (req) => {
-    // same as the default implementation
-    return crypto.randomBytes(16).toString('hex');
-}
-
-const server = new tus.Server({
-    path: '/files',
-    namingFunction: randomString,
-});
-```
-
-## Development
+## Demos
 
 Start the demo server using Local File Storage
+
 ```bash
-$ npm run demo
+yarn workspace demo start
 ```
 
-Or start up the demo server using Google Cloud Storage
+Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` need to be present.
+
 ```bash
-$ npm run gcs_demo
+yarn workspace demo start:s3
 ```
 
-Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client)
+Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present in the root of the repository.
+
+```bash
+yarn workspace demo start:gcs
+```
+
+Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client).
+
+## Types
+
+All packages are fully typed with TypeScript.
+
+## Compatibility
+
+All packages require Node.js 16.0+.
+
+## Contribute
+
+See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
+
+## License
+
+[MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+
+[corepack]: https://nodejs.org/api/corepack.html
+[yarn]: https://yarnpkg.com/
+[`@tus/server`]: https://github.com/tus/tus-node-server/tree/main/packages/server
+[`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
+[`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
+[`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
+[extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
+[Creation]: https://tus.io/protocols/resumable-upload.html#creation
+[Creation With Upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[Expiration]: https://tus.io/protocols/resumable-upload.html#expiration
+[Checksum]: https://tus.io/protocols/resumable-upload.html#checksum
+[Termination]: https://tus.io/protocols/resumable-upload.html#termination
+[Concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation

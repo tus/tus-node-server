@@ -1,68 +1,25 @@
 {
-  "name": "tus-node-server",
-  "description": "Node.js tus server",
-  "version": "0.9.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tus/tus-node-server.git"
-  },
-  "keywords": [
-    "tus",
-    "framework",
-    "resumable",
-    "upload",
-    "protocol",
-    "app",
-    "api",
-    "server"
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "demo",
+    "test"
   ],
-  "author": "Ben Stahl <bhstahl@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/tus/tus-node-server/issues"
-  },
-  "homepage": "https://github.com/tus/tus-node-server#readme",
-  "engines": {
-    "node": ">=10.0"
-  },
-  "files": [
-    "LICENSE",
-    "README.md",
-    "index.js",
-    "index.d.ts",
-    "lib/"
-  ],
-  "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --timeout 15000 --exit",
-    "test:local": "env-cmd npm run test",
-    "coverage": "nyc npm test",
-    "demo": "node demo/server.js",
-    "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
-    "s3_demo": "cross-env DATA_STORE=S3Store node demo/server.js",
-    "lint": "eslint ."
+    "build": "turbo run build",
+    "demo": "yarn workspace demo start",
+    "demo:gcs": "yarn workspace demo start:gcs",
+    "demo:s3": "yarn workspace demo start:s3",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "test": "turbo run test --concurrency 1"
   },
   "devDependencies": {
-    "@vimeo/eslint-config-player": "^5.0.1",
-    "babel-eslint": "^10.1.0",
-    "cross-env": "^7.0.3",
-    "env-cmd": "^10.1.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "istanbul": "^0.4.5",
-    "mocha": "^9.2.0",
-    "node-mocks-http": "^1.11.0",
-    "nyc": "^15.1.0",
-    "rimraf": "^3.0.2",
-    "should": "^13.2.3",
-    "sinon": "^13.0.1",
-    "supertest": "^6.2.2",
-    "tus-js-client": "^2.3.0"
+    "eslint": "^8.29.0",
+    "eslint-config-custom": "*",
+    "prettier": "^2.7.1",
+    "turbo": "^1.6.3"
   },
-  "dependencies": {
-    "@google-cloud/storage": "^6.2.2",
-    "aws-sdk": "^2.1064.0",
-    "configstore": "^5.0.1",
-    "debug": "^4.3.3"
-  }
+  "packageManager": "yarn@3.2.3"
 }
