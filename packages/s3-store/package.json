@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@tus/s3-store",
+  "version": "1.0.0",
+  "description": "AWS S3 store for @tus/server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://github.com/tus/tus-node-server#readme",
+  "bugs": "https://github.com/tus/tus-node-server/issues",
+  "repository": "tus/tus-node-server",
+  "license": "MIT",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "format": "eslint --fix .",
+    "test": "mocha test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1064.0",
+    "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "latest",
+    "mocha": "^10.1.0",
+    "should": "^13.2.3",
+    "typescript": "latest"
+  },
+  "peerDependencies": {
+    "@tus/server": "workspace:^"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "demo",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "start:gcs": "cross-env DATA_STORE=GCSDataStore node server.js",
+    "start:s3": "cross-env DATA_STORE=S3Store node server.js"
+  },
+  "dependencies": {
+    "@tus/file-store": "workspace:^",
+    "@tus/gcs-store": "workspace:^",
+    "@tus/s3-store": "workspace:^",
+    "@tus/server": "workspace:^",
+    "tus-js-client": "^2.3.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

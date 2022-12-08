@@ -12,6 +12,7 @@ dist
 !.yarn/versions
 
 .env
+.env.sh
 
 # Logs
 logs
