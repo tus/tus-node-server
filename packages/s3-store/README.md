@@ -29,7 +29,7 @@ npm install @tus/s3-store
 
 ```js
 const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/s3-store')
+const {S3Store} = require('@tus/s3-store')
 
 const server = new Server({
   path: '/files',
@@ -70,7 +70,7 @@ but may increase it to not exceed the S3 10K parts limit.
 
 ### Example: using `credentials` to fetch credentials inside a AWS container
 
-The `credentials` config is directly passed into the AWS SDK so you can refer to the AWS docs for the supported values for `credentials`.
+The `credentials` config is directly passed into the AWS SDK so you can refer to the AWS docs for the supported values of [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property)
 
 ```js
 const aws = require('aws-sdk')
@@ -108,10 +108,3 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 ## License
 
 [MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
-
-[`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
-[`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
-[`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
-[`constants`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/constants.ts
-[`types`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/types.ts
-[`models`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/models/index.ts
