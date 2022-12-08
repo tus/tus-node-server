@@ -11,8 +11,7 @@
   "files": [
     "README.md",
     "LICENSE",
-    "dist",
-    "index.ts"
+    "dist"
   ],
   "license": "MIT",
   "scripts": {
