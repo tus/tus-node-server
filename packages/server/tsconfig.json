@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "extends": "tsconfig/tsconfig.json",
-  "include": ["src/index.ts"],
+  "include": ["src/*"],
   "compilerOptions": {
     "outDir": "./dist"
   }
