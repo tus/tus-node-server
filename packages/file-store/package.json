@@ -11,8 +11,7 @@
   "files": [
     "README.md",
     "LICENSE",
-    "dist",
-    "index.ts"
+    "dist"
   ],
   "license": "MIT",
   "scripts": {
@@ -26,7 +25,6 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@tus/server": "workspace:^",
     "@types/configstore": "^6.0.0",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
