@@ -10,6 +10,7 @@
 - [Use](#use)
 - [API](#api)
   - [`new S3Store(options)`](#new-s3storeoptions)
+- [Extensions](#extensions)
 - [Examples](#examples)
   - [Example: using `credentials` to fetch credentials inside a AWS container](#example-using-credentials-to-fetch-credentials-inside-a-aws-container)
 - [Types](#types)
@@ -56,15 +57,28 @@ Creates a new AWS S3 store with options.
 > All options except for `bucket` and `partSize` are directly passed to the S3 client.
 > This means you can also provide alternative authentication properties, such as [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property).
 
-#### `bucket`
+#### `options.bucket`
 
 The bucket name.
 
-#### `partSize`
+#### `options.partSize`
 
 The preferred part size for parts send to S3. Can not be lower than 5MB or more than 500MB.
 The server calculates the optimal part size, which takes this size into account,
 but may increase it to not exceed the S3 10K parts limit.
+
+## Extensions
+
+The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.
+
+| Extension                | `@tus/s3-store` |
+| ------------------------ | --------------- |
+| [Creation][]             | ✅              |
+| [Creation With Upload][] | ✅              |
+| [Expiration][]           | ❌              |
+| [Checksum][]             | ❌              |
+| [Termination][]          | ❌              |
+| [Concatenation][]        | ❌              |
 
 ## Examples
 
@@ -108,3 +122,11 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 ## License
 
 [MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+
+[extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
+[creation]: https://tus.io/protocols/resumable-upload.html#creation
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[expiration]: https://tus.io/protocols/resumable-upload.html#expiration
+[checksum]: https://tus.io/protocols/resumable-upload.html#checksum
+[termination]: https://tus.io/protocols/resumable-upload.html#termination
+[concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation

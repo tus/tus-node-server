@@ -48,17 +48,30 @@ This package exports `GCSStore`. There is no default export.
 
 Creates a new Google Cloud Storage store with options.
 
-#### `projectId`
+#### `options.projectId`
 
 The GCS project ID (`string`).
 
-#### `keyFilename`
+#### `options.keyFilename`
 
 Path to the keyfile with credentials (`string`).
 
-#### `bucket`
+#### `options.bucket`
 
 The bucket name.
+
+## Extensions
+
+The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/gcs-store`.
+
+| Extension                | `@tus/gcs-store` |
+| ------------------------ | ---------------- |
+| [Creation][]             | ✅               |
+| [Creation With Upload][] | ✅               |
+| [Expiration][]           | ❌               |
+| [Checksum][]             | ❌               |
+| [Termination][]          | ❌               |
+| [Concatenation][]        | ❌               |
 
 ## Types
 
@@ -75,3 +88,11 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 ## License
 
 [MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+
+[extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
+[creation]: https://tus.io/protocols/resumable-upload.html#creation
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[expiration]: https://tus.io/protocols/resumable-upload.html#expiration
+[checksum]: https://tus.io/protocols/resumable-upload.html#checksum
+[termination]: https://tus.io/protocols/resumable-upload.html#termination
+[concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation

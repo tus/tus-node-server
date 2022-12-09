@@ -97,30 +97,23 @@ fastify.listen(3000, (err) => {
 
 ## Packages
 
-- [`@tus/server`][]. The tus server. Standalone or integrate it into your Node.js server. Supports events and hooks for monitering and validation.
+- [`@tus/server`][]. The tus server. Standalone or integrate it into your Node.js server.
 - [`@tus/file-store`][]. Store files on disk.
 - [`@tus/s3-store`][]. Store files on AWS S3.
 - [`@tus/gcs-store`][]. Store files on Google Cloud Storage.
 
 ## Extensions
 
-The tus protocol supports optional [extensions][]:
+The tus protocol supports optional [extensions][]. Below is a table of the supported extensions.
 
-- [Creation][]. Create an upload.
-- [Creation With Upload][]. Include part of the upload in the initial request, rather than in subsequent `PATCH` request(s).
-- [Expiration][]. The Server MAY remove unfinished uploads once they expire.
-- [Checksum][]. Verify data integrity of each `PATCH` request.
-- [Termination][]. Allow clients to terminate (`DELETE`) completed and unfinished uploads allowing the Server to free up used resources.
-- [Concatenation][]. Concatenate multiple uploads into a single one enabling Clients to perform parallel uploads and to upload non-contiguous chunks
-
-| Extension            | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] |
-| -------------------- | --------------------------------- | ----------------------------- | ------------------------------- |
-| Creation             | ✅                                | ✅                            | ✅                              |
-| Creation With Upload | ✅                                | ✅                            | ✅                              |
-| Expiration           | ✅                                | ❌                            | ❌                              |
-| Checksum             | ❌                                | ❌                            | ❌                              |
-| Termination          | ✅                                | ❌                            | ❌                              |
-| Concatenation        | ❌                                | ❌                            | ❌                              |
+| Extension                | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] |
+| ------------------------ | --------------------------------- | ----------------------------- | ------------------------------- |
+| [Creation][]             | ✅                                | ✅                            | ✅                              |
+| [Creation With Upload][] | ✅                                | ✅                            | ✅                              |
+| [Expiration][]           | ✅                                | ❌                            | ❌                              |
+| [Checksum][]             | ❌                                | ❌                            | ❌                              |
+| [Termination][]          | ✅                                | ❌                            | ❌                              |
+| [Concatenation][]        | ❌                                | ❌                            | ❌                              |
 
 ## Demos
 
@@ -168,9 +161,9 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
 [`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
-[Creation]: https://tus.io/protocols/resumable-upload.html#creation
-[Creation With Upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
-[Expiration]: https://tus.io/protocols/resumable-upload.html#expiration
-[Checksum]: https://tus.io/protocols/resumable-upload.html#checksum
-[Termination]: https://tus.io/protocols/resumable-upload.html#termination
-[Concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
+[creation]: https://tus.io/protocols/resumable-upload.html#creation
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[expiration]: https://tus.io/protocols/resumable-upload.html#expiration
+[checksum]: https://tus.io/protocols/resumable-upload.html#checksum
+[termination]: https://tus.io/protocols/resumable-upload.html#termination
+[concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
