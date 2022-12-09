@@ -12,6 +12,9 @@
   - [`new Server(options)`](#new-serveroptions)
   - [`EVENTS`](#events)
 - [Examples](#examples)
+  - [Example: integrate tus into Express](#example-integrate-tus-into-express)
+  - [Example: integrate tus into Koa](#example-integrate-tus-into-koa)
+  - [Example: integrate tus into Fastify](#example-integrate-tus-into-fastify)
   - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
 - [Types](#types)
 - [Compatibility](#compatibility)
@@ -36,14 +39,11 @@ const {FileStore} = require('@tus/file-store')
 const host = '127.0.0.1'
 const port = 1080
 
-new Server({
+const server = new Server({
   path: '/files',
   datastore: new FileStore({directory: './files'}),
-}).listen({host, port}, () => {
-  console.log(
-    `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port}`
-  )
 })
+server.listen({host, port})
 ```
 
 ## API
@@ -55,26 +55,26 @@ You should only need the `Server` and `EVENTS` exports.
 
 Creates a new tus server with options.
 
-#### `path`
+#### `options.path`
 
 The route to accept requests (`string`).
 
-#### `relativeLocation`
+#### `options.relativeLocation`
 
 Return a relative URL as the `Location` header to the client (`boolean`).
 
-#### `respectForwardedHeaders`
+#### `options.respectForwardedHeaders`
 
 Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers to override the `Location` header returned by the server (`boolean`).
 
-#### `namingFunction`
+#### `options.namingFunction`
 
 Control how you want to name files (`(req) => string`)
 
 It is important to make these unique to prevent data loss. Only use it if you need to.
 Default uses `crypto.randomBytes(16).toString('hex')`.
 
-#### `onUploadCreate`
+#### `options.onUploadCreate`
 
 `onUploadCreate` will be invoked before a new upload is created. (`(req, res, upload) => Promise<res>`).
 
@@ -83,7 +83,7 @@ If an error is thrown, the HTTP request will be aborted and the provided `body` 
 
 This can be used to implement validation of upload metadata or add headers.
 
-#### `onUploadFinish`
+#### `options.onUploadFinish`
 
 `onUploadFinish` will be invoked after an upload is completed but before a response is returned to the client (`(req, res, upload) => Promise<res>`).
 
@@ -91,6 +91,19 @@ If the function returns the (modified) response, the upload will finish.
 If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks) will be sent to the client.
 
 This can be used to implement post-processing validation.
+
+#### `server.handle(req, res)
+
+The main server request handler invoked on every request.
+You only need to use this when you integrate tus into an existing Node.js server.
+
+#### `server.listen()
+
+Start the tus server. Supported arguments are the same as [`server.listen()`](https://nodejs.org/api/net.html#serverlisten) from `node:net`.
+
+#### `server.cleanUpExpiredUploads()
+
+Clean up expired uploads. Your chosen datastore must support the [expiration][] extension for this to work.
 
 ### `EVENTS`
 
@@ -140,6 +153,98 @@ server.on(EVENTS.POST_TERMINATE, (req ,res, id => {})
 
 ## Examples
 
+### Example: integrate tus into Express
+
+```js
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
+const express = require('express')
+
+const host = '127.0.0.1'
+const port = 1080
+const app = express()
+const uploadApp = express()
+const server = new Server({
+  datastore: new FileStore({directory: '/files'}),
+})
+
+uploadApp.all('*', server.handle.bind(server))
+app.use('/uploads', uploadApp)
+app.listen(port, host)
+```
+
+### Example: integrate tus into Koa
+
+```js
+const http = require('node:http')
+const url = require('node:url')
+const Koa = require('koa')
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
+
+const app = new Koa()
+const appCallback = app.callback()
+const port = 1080
+const tusServer = new Server({
+  path: '/files',
+  datastore: new FileStore({directory: '/files'}),
+})
+
+const server = http.createServer((req, res) => {
+  const urlPath = url.parse(req.url).pathname
+
+  // handle any requests with the `/files/*` pattern
+  if (/^\/files\/.+/.test(urlPath.toLowerCase())) {
+    return tusServer.handle(req, res)
+  }
+
+  appCallback(req, res)
+})
+
+server.listen(port)
+```
+
+### Example: integrate tus into Fastify
+
+```js
+const fastify = require('fastify')({ logger: true });
+const {Server} = require('@tus/server');
+const {FileStore} = require('@tus/file-store');
+
+const tusServer = new Server({
+  path: '/files',
+  datastore: new FileStore({ directory: './files' })
+})
+
+/**
+ * add new content-type to fastify forewards request
+ * without any parser to leave body untouched
+ * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
+ */
+fastify.addContentTypeParser(
+    'application/offset+octet-stream', (request, payload, done) => done(null);
+);
+
+/**
+ * let tus handle preparation and filehandling requests
+ * fastify exposes raw nodejs http req/res via .raw property
+ * @see https://www.fastify.io/docs/latest/Reference/Request/
+ * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
+ */
+fastify.all('/files', (req, res) => {
+    tusServer.handle(req.raw, res.raw);
+});
+fastify.all('/files/*', (req, res) => {
+    tusServer.handle(req.raw, res.raw);
+});
+fastify.listen(3000, (err) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+});
+```
+
 ### Example: validate metadata when an upload is created
 
 ```js
@@ -184,3 +289,4 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [`constants`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/constants.ts
 [`types`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/types.ts
 [`models`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/models/index.ts
+[expiration]: https://tus.io/protocols/resumable-upload.html#expiration

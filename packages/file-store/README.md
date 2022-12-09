@@ -10,6 +10,7 @@
 - [Use](#use)
 - [API](#api)
   - [`new FileStore(options)`](#new-filestoreoptions)
+- [Extensions](#extensions)
 - [Examples](#examples)
   - [Example: creating your own config store](#example-creating-your-own-config-store)
 - [Types](#types)
@@ -46,13 +47,35 @@ This package exports `FileStore`. There is no default export.
 
 Creates a new file store with options.
 
-#### `directory`
+#### `options.directory`
 
-The directory to store the files on disk.
+The directory to store the files on disk (`string`).
 
-#### `configstore`
+#### `options.configstore`
 
-Provide your own storage solution for the metadata of uploads. Default uses [`configstore`](https://www.npmjs.com/package/configstore).
+Provide your own storage solution for the metadata of uploads (`Class`).
+
+Default uses [`configstore`](https://www.npmjs.com/package/configstore).
+
+#### `options.expirationPeriodInMilliseconds`
+
+The time before an _ongoing_ upload is considered expired (`number`).
+
+This is since the time of creation, not modification. Once an upload is considered expired,
+uploads can be removed with [`cleanUpExpiredUploads`](https://github.com/tus/tus-node-server/tree/main/packages/server#)#servercleanupexpireduploads
+
+## Extensions
+
+The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/file-store`.
+
+| Extension                | `@tus/file-store` |
+| ------------------------ | ----------------- |
+| [Creation][]             | ✅                |
+| [Creation With Upload][] | ✅                |
+| [Expiration][]           | ✅                |
+| [Checksum][]             | ❌                |
+| [Termination][]          | ✅                |
+| [Concatenation][]        | ❌                |
 
 ## Examples
 
@@ -108,3 +131,11 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 ## License
 
 [MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+
+[extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
+[creation]: https://tus.io/protocols/resumable-upload.html#creation
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[expiration]: https://tus.io/protocols/resumable-upload.html#expiration
+[checksum]: https://tus.io/protocols/resumable-upload.html#checksum
+[termination]: https://tus.io/protocols/resumable-upload.html#termination
+[concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
