@@ -36,9 +36,6 @@
   - [Compatibility](#compatibility)
   - [Contribute](#contribute)
   - [License](#license)
-
-[Example: Integration tus into Next.js](#example-integrate-tus-into-next.js)
-
 ## Install
 
 In Node.js (16.0+), install with npm:
