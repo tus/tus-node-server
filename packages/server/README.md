@@ -17,10 +17,10 @@
   - [Example: integrate tus into Fastify](#example-integrate-tus-into-fastify)
   - [Example: integrate tus into Next.js](#example-integrate-tus-into-nextjs)
   - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
-  - [Types](#types)
-  - [Compatibility](#compatibility)
-  - [Contribute](#contribute)
-  - [License](#license)
+- [Types](#types)
+- [Compatibility](#compatibility)
+- [Contribute](#contribute)
+- [License](#license)
 
 ## Install
 
