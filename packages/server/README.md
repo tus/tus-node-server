@@ -6,20 +6,38 @@
 
 ## Contents
 
-- [Install](#install)
-- [Use](#use)
-- [API](#api)
-  - [`new Server(options)`](#new-serveroptions)
-  - [`EVENTS`](#events)
-- [Examples](#examples)
-  - [Example: integrate tus into Express](#example-integrate-tus-into-express)
-  - [Example: integrate tus into Koa](#example-integrate-tus-into-koa)
-  - [Example: integrate tus into Fastify](#example-integrate-tus-into-fastify)
-  - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
-- [Types](#types)
-- [Compatibility](#compatibility)
-- [Contribute](#contribute)
-- [License](#license)
+- [`@tus/server`](#tusserver)
+  - [Contents](#contents)
+  - [Install](#install)
+  - [Use](#use)
+  - [API](#api)
+    - [`new Server(options)`](#new-serveroptions)
+      - [`options.path`](#optionspath)
+      - [`options.relativeLocation`](#optionsrelativelocation)
+      - [`options.respectForwardedHeaders`](#optionsrespectforwardedheaders)
+      - [`options.namingFunction`](#optionsnamingfunction)
+      - [`options.onUploadCreate`](#optionsonuploadcreate)
+      - [`options.onUploadFinish`](#optionsonuploadfinish)
+      - [\`server.handle(req, res)](#serverhandlereq-res)
+      - [\`server.listen()](#serverlisten)
+      - [\`server.cleanUpExpiredUploads()](#servercleanupexpireduploads)
+    - [`EVENTS`](#events)
+      - [`POST_CREATE`](#post_create)
+      - [`POST_RECEIVE`](#post_receive)
+      - [`POST_FINISH`](#post_finish)
+      - [`POST_TERMINATE`](#post_terminate)
+  - [Examples](#examples)
+    - [Example: integrate tus into Express](#example-integrate-tus-into-express)
+    - [Example: integrate tus into Koa](#example-integrate-tus-into-koa)
+    - [Example: integrate tus into Fastify](#example-integrate-tus-into-fastify)
+    - [Example: integrate tus into Next.js](#example-integrate-tus-into-nextjs)
+    - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
+  - [Types](#types)
+  - [Compatibility](#compatibility)
+  - [Contribute](#contribute)
+  - [License](#license)
+
+[Example: Integration tus into Next.js](#example-integrate-tus-into-next.js)
 
 ## Install
 
@@ -243,6 +261,39 @@ fastify.listen(3000, (err) => {
         process.exit(1);
     }
 });
+```
+
+### Example: integrate tus into Next.js
+
+Attach the tus server handler to a Next.js route handler in an [optional catch-all route file](https://nextjs.org/docs/routing/dynamic-routes#optional-catch-all-routes)
+
+`/pages/api/upload/[[...file]].ts`
+
+```ts
+import type {NextApiRequest, NextApiResponse} from 'next'
+import {Server, Upload} from '@tus/server'
+import {FileStore} from '@tus/file-store'
+
+/**
+ * !Important. This will tell Next.js NOT Parse the body as tus requires
+ * @see https://nextjs.org/docs/api-routes/request-helpers
+ */
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+const tusServer = new Server({
+  // `path` needs to match the route declared by the next file router
+  // ie /api/upload
+  path: '/api/upload',
+  datastore: new FileStore({directory: './files'}),
+})
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  return tusServer.handle(req, res)
+}
 ```
 
 ### Example: validate metadata when an upload is created
