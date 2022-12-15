@@ -51,4 +51,11 @@ describe('BaseHandler', () => {
     assert.equal(output.match(/Hello tus!$/).index, output.length - body.length)
     done()
   })
+
+  it('should get ID correctly from nested URL', () => {
+    const req = {url: '/some/path/yeah/1234'} as http.IncomingMessage
+    const id = handler.getFileIdFromRequest(req)
+
+    assert.equal(id, '1234')
+  })
 })
