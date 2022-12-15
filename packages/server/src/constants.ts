@@ -15,6 +15,9 @@ export const HEADERS = [
   'Upload-Offset',
   'X-HTTP-Method-Override',
   'X-Requested-With',
+  'X-Forwarded-Host',
+  'X-Forwarded-Proto',
+  'Forwarded',
 ] as const
 
 export const HEADERS_LOWERCASE = HEADERS.map((header) => {

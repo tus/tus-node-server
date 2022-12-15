@@ -117,8 +117,8 @@ describe('PostHandler', () => {
         req.headers = {
           'upload-length': '1000',
           host: 'localhost:3000',
-          'X-Forwarded-Host': 'foo.com',
-          'X-Forwarded-Proto': 'https',
+          'x-forwarded-host': 'foo.com',
+          'x-forwarded-proto': 'https',
         }
         await handler.send(req, res)
         assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
@@ -129,7 +129,7 @@ describe('PostHandler', () => {
         req.headers = {
           'upload-length': '1000',
           host: 'localhost:3000',
-          Forwarded: 'for=localhost:3000;by=203.0.113.60;proto=https;host=foo.com',
+          forwarded: 'for=localhost:3000;by=203.0.113.60;proto=https;host=foo.com',
         }
         await handler.send(req, res)
         assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
@@ -140,7 +140,7 @@ describe('PostHandler', () => {
         req.headers = {
           'upload-length': '1000',
           host: 'localhost:3000',
-          Forwarded: 'invalid',
+          forwarded: 'invalid',
         }
         await handler.send(req, res)
         assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
@@ -151,7 +151,7 @@ describe('PostHandler', () => {
         req.headers = {
           'upload-length': '1000',
           host: 'localhost:3000',
-          'X-Forwarded-Proto': 'foo',
+          'x-forwarded-proto': 'foo',
         }
         await handler.send(req, res)
         assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
