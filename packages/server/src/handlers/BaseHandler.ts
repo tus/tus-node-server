@@ -30,7 +30,7 @@ export class BaseHandler extends EventEmitter {
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
-    const forwarded = req.headers.Forwarded as string | undefined
+    const forwarded = req.headers.forwarded as string | undefined
     const path = this.options.path === '/' ? '' : this.options.path
     // @ts-expect-error baseUrl type doesn't exist?
     const baseUrl = req.baseUrl ?? ''
@@ -47,8 +47,8 @@ export class BaseHandler extends EventEmitter {
         proto ??= reForwardedProto.exec(forwarded)?.[1]
       }
 
-      const forwardHost = req.headers['X-Forwarded-Host']
-      const forwardProto = req.headers['X-Forwarded-Proto']
+      const forwardHost = req.headers['x-forwarded-host']
+      const forwardProto = req.headers['x-forwarded-proto']
 
       // @ts-expect-error we can pass undefined
       if (['http', 'https'].includes(forwardProto)) {
