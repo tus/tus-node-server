@@ -20,7 +20,7 @@ nearly any other cloud provider could easily be added to tus-node-server
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages, currently in beta at `1.0.0-beta.1`.
+> Make sure to use the new packages (currently in beta).
 
 ## Contents
 
