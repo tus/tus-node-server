@@ -1,13 +1,10 @@
 import stream from 'node:stream'
-import debug from 'debug'
 
 import {BaseHandler} from './BaseHandler'
 import {ERRORS} from '../constants'
 
 import type http from 'node:http'
 import type {RouteHandler} from '../types'
-
-const log = debug('tus-node-server:handlers:get')
 
 export class GetHandler extends BaseHandler {
   paths: Map<string, RouteHandler> = new Map()
@@ -39,10 +36,7 @@ export class GetHandler extends BaseHandler {
     }
 
     const stats = await this.store.getUpload(id)
-    if (stats.offset !== stats.size) {
-      log(
-        `[GetHandler] send: File is not yet fully uploaded (${stats.offset}/${stats.size})`
-      )
+    if (!stats || stats.offset !== stats.size) {
       throw ERRORS.FILE_NOT_FOUND
     }
 

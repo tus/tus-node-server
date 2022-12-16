@@ -4,6 +4,7 @@ import type {ServerOptions} from '../types'
 import type {DataStore} from '../models'
 import type http from 'node:http'
 
+const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
 
@@ -64,15 +65,12 @@ export class BaseHandler extends EventEmitter {
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {
-    // @ts-expect-error baseUrl doesn't exist? Should this be `.url`?
-    const re = new RegExp(`${req.baseUrl || ''}${this.options.path}\\/(\\S+)\\/?`)
-    // @ts-expect-error originalUrl doesn't exist?
-    const match = (req.originalUrl || req.url).match(re)
-    if (!match) {
+    const match = reExtractFileID.exec(req.url as string)
+
+    if (!match || this.options.path.includes(match[1])) {
       return false
     }
 
-    const file_id = match[1]
-    return file_id
+    return match[1]
   }
 }
