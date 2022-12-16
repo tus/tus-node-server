@@ -93,16 +93,36 @@ If an error is thrown, the HTTP request will be aborted and the provided `body` 
 
 This can be used to implement post-processing validation.
 
-#### `server.handle(req, res)
+#### `server.handle(req, res)`
 
 The main server request handler invoked on every request.
 You only need to use this when you integrate tus into an existing Node.js server.
 
-#### `server.listen()
+#### `server.get(req, res)`
+
+You can implement your own `GET` handlers. For instance, to return all files.
+
+```js
+const fs = require('node:fs/promises')
+const {Server} require('@tus/server')
+const {FileStore} require('@tus/file-store')
+
+const server = new Server({
+  path: '/files',
+  datastore: new FileStore({ directory: './files' })
+})
+
+server.get('/uploads', async (req, res) => {
+    const files = await fs.readdir(server.datastore.directory)
+    // Format and return
+});
+```
+
+#### `server.listen()`
 
 Start the tus server. Supported arguments are the same as [`server.listen()`](https://nodejs.org/api/net.html#serverlisten) from `node:net`.
 
-#### `server.cleanUpExpiredUploads()
+#### `server.cleanUpExpiredUploads()`
 
 Clean up expired uploads. Your chosen datastore must support the [expiration][] extension for this to work.
 
