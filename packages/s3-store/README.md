@@ -67,6 +67,12 @@ The preferred part size for parts send to S3. Can not be lower than 5MB or more 
 The server calculates the optimal part size, which takes this size into account,
 but may increase it to not exceed the S3 10K parts limit.
 
+#### `options.s3ClientConfig`
+
+Options to pass to the AWS S3 SDK.
+Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
+docs for the supported options. Configuring your preferred method of authentication and region is required.
+
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.
@@ -96,12 +102,13 @@ const server = new Server({
   datastore: new S3Store({
     bucket: 'bucket-name',
     partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
-    credentials: new aws.ECSCredentials({
-      httpOptions: {timeout: 5000},
-      maxRetries: 10,
-    }),
-    region: 'eu-west-1',
-    tmpDirPrefix: 'tus-s3-store',
+    s3ClientConfig: {
+      region: 'eu-west-1',
+      credentials: new aws.ECSCredentials({
+        httpOptions: {timeout: 5000},
+        maxRetries: 10,
+      }),
+    },
   }),
 })
 // ...

@@ -25,7 +25,7 @@ type Options = {
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   // Options to pass to the AWS S3 SDK.
-  s3Options: aws.S3.Types.ClientConfiguration
+  s3ClientConfig: aws.S3.Types.ClientConfiguration
 }
 
 type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
@@ -72,11 +72,11 @@ export class S3Store extends DataStore {
 
   constructor(options: Options) {
     super()
-    const {bucket, partSize, s3Options} = options
+    const {bucket, partSize, s3ClientConfig} = options
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
-    this.client = new aws.S3(s3Options)
+    this.client = new aws.S3(s3ClientConfig)
   }
 
   /**
