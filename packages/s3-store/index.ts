@@ -24,7 +24,9 @@ type Options = {
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
-} & aws.S3.Types.ClientConfiguration
+  // Options to pass to the AWS S3 SDK.
+  s3Options: aws.S3.Types.ClientConfiguration
+}
 
 type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
@@ -70,12 +72,11 @@ export class S3Store extends DataStore {
 
   constructor(options: Options) {
     super()
-    const {bucket, partSize, ...rest} = options
+    const {bucket, partSize, s3Options} = options
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
-    // TODO: why the old apiVersion?
-    this.client = new aws.S3({apiVersion: '2006-03-01', region: 'eu-west-1', ...rest})
+    this.client = new aws.S3(s3Options)
   }
 
   /**
