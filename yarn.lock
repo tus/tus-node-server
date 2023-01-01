@@ -388,7 +388,7 @@ __metadata:
     supertest: ^6.3.2
     ts-node: ^10.9.1
     tsconfig: "*"
-    type-fest: ^3.1.0
+    type-fest: ^3.5.0
     typescript: latest
   languageName: unknown
   linkType: soft
@@ -4359,10 +4359,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^3.1.0":
-  version: 3.3.0
-  resolution: "type-fest@npm:3.3.0"
-  checksum: 6f260466dd1847048bca4481412f39c32fbb69abbe6daf1ead67e682529adfe8ab8f150a9937eddd065fa544eaf92c15e35ebad0f45f46feadcfbd3a87ae5a2d
+"type-fest@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "type-fest@npm:3.5.0"
+  checksum: 9b82958ded0aedeb38fe6b172645a319522d11904b58e422dbab9ba40f85d48e749ff8fb7047cd72f4a2923c63927b741e2efc97ce7b0662b7e042923510132f
   languageName: node
   linkType: hard
 
