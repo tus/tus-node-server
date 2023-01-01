@@ -29,7 +29,7 @@
     "@types/node": "latest",
     "@types/sinon": "^10.0.13",
     "@types/supertest": "^2.0.12",
-    "eslint": "^8.29.0",
+    "eslint": "^8.31.0",
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.1.0",
     "node-mocks-http": "^1.12.1",
