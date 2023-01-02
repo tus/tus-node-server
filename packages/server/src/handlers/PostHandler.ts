@@ -64,7 +64,7 @@ export class PostHandler extends BaseHandler {
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
       offset: 0,
-      metadata: upload_metadata,
+      metadata: this.parseMetadataString(upload_metadata),
     })
 
     if (this.options.onUploadCreate) {

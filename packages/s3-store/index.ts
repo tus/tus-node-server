@@ -135,27 +135,6 @@ export class S3Store extends DataStore {
     return this.cache.get(id) as MetadataValue
   }
 
-  /**
-   * Parses the Base64 encoded metadata received from the client.
-   */
-  private parseMetadataString(str?: string) {
-    const pairs: Record<string, {encoded: string; decoded?: string}> = {}
-
-    if (!str) {
-      return pairs
-    }
-
-    for (const pair of str.split(',')) {
-      const [key, encoded] = pair.split(' ')
-      pairs[key] = {
-        encoded,
-        decoded: encoded ? Buffer.from(encoded, 'base64').toString('ascii') : undefined,
-      }
-    }
-
-    return pairs
-  }
-
   private partKey(id: string, isIncomplete = false) {
     if (isIncomplete) {
       id += '.part'
@@ -412,7 +391,6 @@ export class S3Store extends DataStore {
    */
   public async create(upload: Upload) {
     log(`[${upload.id}] initializing multipart upload`)
-    const parsedMetadata = this.parseMetadataString(upload.metadata)
     type CreateRequest = Omit<aws.S3.Types.CreateMultipartUploadRequest, 'Metadata'> & {
       Metadata: Record<string, string>
     }
@@ -430,16 +408,8 @@ export class S3Store extends DataStore {
       file.isSizeDeferred = 'true'
     }
 
-    if (upload.metadata !== undefined) {
-      file.metadata = upload.metadata
-    }
-
-    if (parsedMetadata.contentType) {
-      request.ContentType = parsedMetadata.contentType.decoded
-    }
-
-    if (parsedMetadata.filename) {
-      request.Metadata.original_name = parsedMetadata.filename.encoded
+    if (upload.metadata?.contentType) {
+      request.ContentType = upload.metadata.contentType
     }
 
     // TODO: rename `file` to `upload` to align with the codebase

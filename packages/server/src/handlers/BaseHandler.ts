@@ -1,12 +1,13 @@
 import EventEmitter from 'node:events'
 
 import type {ServerOptions} from '../types'
-import type {DataStore} from '../models'
+import type {DataStore, Upload} from '../models'
 import type http from 'node:http'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
+const own = Object.prototype.hasOwnProperty
 
 export class BaseHandler extends EventEmitter {
   options: ServerOptions
@@ -72,5 +73,45 @@ export class BaseHandler extends EventEmitter {
     }
 
     return match[1]
+  }
+
+  parseMetadataString(str?: string) {
+    const pairs: Record<string, string> = {}
+
+    if (!str) {
+      return pairs
+    }
+
+    for (const pair of str.split(',')) {
+      const parts = pair.trim().split(' ')
+
+      if (parts.length > 2) {
+        continue
+      }
+
+      const [key, value] = parts
+      if (key?.length > 0 && value?.length > 0) {
+        pairs[key] = Buffer.from(value, 'base64').toString('ascii')
+      }
+    }
+
+    return pairs
+  }
+
+  serializeMetadataString(metadata: Upload['metadata']) {
+    let header = ''
+
+    if (!metadata) {
+      return header
+    }
+
+    for (const key in metadata) {
+      if (own.call(metadata, key)) {
+        header += `${key} ${Buffer.from(metadata[key]).toString('base64')},`
+      }
+    }
+
+    // Remove trailing comma
+    return header.slice(0, -1)
   }
 }
