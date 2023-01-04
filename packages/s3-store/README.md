@@ -53,10 +53,6 @@ This package exports `S3Store`. There is no default export.
 
 Creates a new AWS S3 store with options.
 
-> **Note**
-> All options except for `bucket` and `partSize` are directly passed to the S3 client.
-> This means you can also provide alternative authentication properties, such as [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property).
-
 #### `options.bucket`
 
 The bucket name.
