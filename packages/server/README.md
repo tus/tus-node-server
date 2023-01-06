@@ -109,13 +109,13 @@ const {FileStore} require('@tus/file-store')
 
 const server = new Server({
   path: '/files',
-  datastore: new FileStore({ directory: './files' })
+  datastore: new FileStore({ directory: './files' }),
 })
 
 server.get('/uploads', async (req, res) => {
-    const files = await fs.readdir(server.datastore.directory)
-    // Format and return
-});
+  const files = await fs.readdir(server.datastore.directory)
+  // Format and return
+})
 ```
 
 #### `server.listen()`
@@ -139,7 +139,7 @@ Called after an upload has been created but before it's written to a store.
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
-server.on(EVENTS.POST_CREATE, (req ,res, upload => {})
+server.on(EVENTS.POST_CREATE, (req, res, upload => {})
 ```
 
 #### `POST_RECEIVE`
@@ -149,7 +149,7 @@ Called every time a `PATCH` request is handled.
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
-server.on(EVENTS.POST_RECEIVE, (req ,res, upload => {})
+server.on(EVENTS.POST_RECEIVE, (req, res, upload => {})
 ```
 
 #### `POST_FINISH`
@@ -159,7 +159,7 @@ Called an upload has completed and after a response has been sent to the client.
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
-server.on(EVENTS.POST_FINISH, (req ,res, upload => {})
+server.on(EVENTS.POST_FINISH, (req, res, upload => {})
 ```
 
 #### `POST_TERMINATE`
@@ -169,7 +169,7 @@ Called after an upload has been terminated and a response has been sent to the c
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
-server.on(EVENTS.POST_TERMINATE, (req ,res, id => {})
+server.on(EVENTS.POST_TERMINATE, (req, res, id => {})
 ```
 
 ## Examples
@@ -228,13 +228,13 @@ server.listen(port)
 ### Example: integrate tus into Fastify
 
 ```js
-const fastify = require('fastify')({ logger: true });
-const {Server} = require('@tus/server');
-const {FileStore} = require('@tus/file-store');
+const fastify = require('fastify')({ logger: true })
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
 
 const tusServer = new Server({
   path: '/files',
-  datastore: new FileStore({ directory: './files' })
+  datastore: new FileStore({ directory: './files' }),
 })
 
 /**
@@ -243,8 +243,8 @@ const tusServer = new Server({
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
 fastify.addContentTypeParser(
-    'application/offset+octet-stream', (request, payload, done) => done(null);
-);
+  'application/offset+octet-stream', (request, payload, done) => done(null)
+)
 
 /**
  * let tus handle preparation and filehandling requests
@@ -253,17 +253,17 @@ fastify.addContentTypeParser(
  * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
  */
 fastify.all('/files', (req, res) => {
-    tusServer.handle(req.raw, res.raw);
-});
+  tusServer.handle(req.raw, res.raw)
+})
 fastify.all('/files/*', (req, res) => {
-    tusServer.handle(req.raw, res.raw);
-});
+  tusServer.handle(req.raw, res.raw)
+})
 fastify.listen(3000, (err) => {
-    if (err) {
-        fastify.log.error(err);
-        process.exit(1);
-    }
-});
+  if (err) {
+    fastify.log.error(err)
+    process.exit(1)
+  }
+})
 ```
 
 ### Example: integrate tus into Next.js
