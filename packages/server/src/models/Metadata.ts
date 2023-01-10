@@ -1,3 +1,5 @@
+import {Upload} from './Upload'
+
 const ASCII_SPACE = ' '.codePointAt(0)
 const ASCII_COMMA = ','.codePointAt(0)
 const BASE64_REGEX = /^[\d+/A-Za-z]*={0,2}$/
@@ -29,8 +31,12 @@ export function validateValue(value: string) {
   return BASE64_REGEX.test(value)
 }
 
-export function parse(str: string) {
+export function parse(str?: string) {
   const meta: Record<string, string | undefined> = {}
+
+  if (!str) {
+    return {}
+  }
 
   for (const pair of str.split(',')) {
     const tokens = pair.split(' ')
@@ -52,8 +58,8 @@ export function parse(str: string) {
   return meta
 }
 
-export function stringify(obj: Record<string, string | undefined>) {
-  return Object.entries(obj)
+export function stringify(metadata: NonNullable<Upload['metadata']>) {
+  return Object.entries(metadata)
     .map(([key, value]) => {
       if (value === undefined) {
         return key

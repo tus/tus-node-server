@@ -2,7 +2,7 @@ type TUpload = {
   id: string
   size?: number
   offset: number
-  metadata?: Record<string, string>
+  metadata?: Record<string, string | undefined | never>
   creation_date?: string
 }
 
@@ -21,7 +21,7 @@ export class Upload {
     this.id = upload.id
     this.size = upload.size
     this.offset = upload.offset
-    this.metadata = upload.metadata ?? {}
+    this.metadata = upload.metadata
 
     this.creation_date = upload.creation_date ?? new Date().toISOString()
   }
