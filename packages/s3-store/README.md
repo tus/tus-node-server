@@ -32,16 +32,16 @@ npm install @tus/s3-store
 const {Server} = require('@tus/server')
 const {S3Store} = require('@tus/s3-store')
 
-const server = new Server({
-  path: '/files',
-  datastore: new S3Store({
+const s3Store = new S3Store({
+  partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
+  s3ClientConfig: {
     bucket: process.env.AWS_BUCKET,
+    region: process.env.AWS_REGION,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-    partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
-  }),
+  },
 })
+const server = new Server({path: '/files', datastore: s3Store})
 // ...
 ```
 
@@ -53,10 +53,6 @@ This package exports `S3Store`. There is no default export.
 
 Creates a new AWS S3 store with options.
 
-> **Note**
-> All options except for `bucket` and `partSize` are directly passed to the S3 client.
-> This means you can also provide alternative authentication properties, such as [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property).
-
 #### `options.bucket`
 
 The bucket name.
@@ -66,6 +62,12 @@ The bucket name.
 The preferred part size for parts send to S3. Can not be lower than 5MB or more than 500MB.
 The server calculates the optimal part size, which takes this size into account,
 but may increase it to not exceed the S3 10K parts limit.
+
+#### `options.s3ClientConfig`
+
+Options to pass to the AWS S3 SDK.
+Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
+docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication. 
 
 ## Extensions
 
@@ -91,19 +93,18 @@ const aws = require('aws-sdk')
 const {Server} = require('@tus/server')
 const {FileStore} = require('@tus/s3-store')
 
-const server = new Server({
-  path: '/files',
-  datastore: new S3Store({
-    bucket: 'bucket-name',
-    partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
+const s3Store = new S3Store({
+  partSize: 8 * 1024 * 1024,
+  s3ClientConfig: {
+    bucket: process.env.AWS_BUCKET,
+    region: process.env.AWS_REGION,
     credentials: new aws.ECSCredentials({
       httpOptions: {timeout: 5000},
       maxRetries: 10,
     }),
-    region: 'eu-west-1',
-    tmpDirPrefix: 'tus-s3-store',
-  }),
+  },
 })
+const server = new Server({path: '/files', datastore: s3Store})
 // ...
 ```
 

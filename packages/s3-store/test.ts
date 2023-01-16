@@ -21,11 +21,13 @@ describe('S3DataStore', function () {
   })
   beforeEach(function () {
     this.datastore = new S3Store({
-      bucket: process.env.AWS_BUCKET as string,
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-      region: process.env.AWS_REGION,
       partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
+      s3ClientConfig: {
+        bucket: process.env.AWS_BUCKET as string,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+        region: process.env.AWS_REGION,
+      },
     })
   })
 

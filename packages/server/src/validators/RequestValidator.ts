@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/prefer-number-properties */
 import {HEADERS_LOWERCASE, TUS_VERSION, TUS_RESUMABLE} from '../constants'
 
 export const RequestValidator = {

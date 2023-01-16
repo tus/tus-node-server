@@ -10,11 +10,12 @@ const {S3Store} = require('@tus/s3-store')
 const {FileStore} = require('@tus/file-store')
 
 const stores = {
-  GCSDataStore: () => new GCSDataStore({
-    projectId: 'vimeo-open-source',
-    keyFilename: path.resolve(__dirname, '../keyfile.json'),
-    bucket: 'tus-node-server',
-  }),
+  GCSDataStore: () =>
+    new GCSDataStore({
+      projectId: 'vimeo-open-source',
+      keyFilename: path.resolve(__dirname, '../keyfile.json'),
+      bucket: 'tus-node-server',
+    }),
   S3Store: () => {
     assert.ok(
       process.env.AWS_ACCESS_KEY_ID,
@@ -28,11 +29,13 @@ const stores = {
     assert.ok(process.env.AWS_REGION, 'environment variable `AWS_REGION` must be set')
 
     return new S3Store({
-      bucket: process.env.AWS_BUCKET,
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION,
       partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+      s3ClientConfig: {
+        bucket: process.env.AWS_BUCKET,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION,
+      },
     })
   },
   FileStore: () => new FileStore({directory: './files'}),
