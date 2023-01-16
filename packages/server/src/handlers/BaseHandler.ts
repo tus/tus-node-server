@@ -1,13 +1,12 @@
 import EventEmitter from 'node:events'
 
 import type {ServerOptions} from '../types'
-import type {DataStore, Upload} from '../models'
+import type {DataStore} from '../models'
 import type http from 'node:http'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
-const own = Object.prototype.hasOwnProperty
 
 export class BaseHandler extends EventEmitter {
   options: ServerOptions

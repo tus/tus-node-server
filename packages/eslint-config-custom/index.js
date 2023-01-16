@@ -16,6 +16,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/ban-ts-comment': 'warn',
     '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/no-unused-vars': 'error',
     'capitalized-comments': 'off',
   },
   ignorePatterns: ['eslint-config-custom', 'demo', 'dist', 'node_modules'],
