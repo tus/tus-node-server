@@ -65,11 +65,11 @@ describe('HeadHandler', () => {
     const file = new Upload({
       id: '1234',
       offset: 0,
-      metadata: {is_confidential: undefined},
+      metadata: {is_confidential: undefined, foo: 'bar'},
     })
     fake_store.getUpload.resolves(file)
     await handler.send(req, res)
-    assert.equal(res.getHeader('Upload-Metadata'), 'is_confidential')
+    assert.equal(res.getHeader('Upload-Metadata'), 'is_confidential,foo YmFy')
   })
 
   it('should resolve without metadata', async () => {
