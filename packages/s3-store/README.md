@@ -67,7 +67,7 @@ but may increase it to not exceed the S3 10K parts limit.
 
 Options to pass to the AWS S3 SDK.
 Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
-docs for the supported options. Configuring your preferred method of authentication and region is required.
+docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication. 
 
 ## Extensions
 
