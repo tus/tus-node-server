@@ -18,14 +18,12 @@ function calcOffsetFromParts(parts?: aws.S3.Parts) {
 }
 
 type Options = {
-  // Name of the bucket.
-  bucket: string
   // The preferred part size for parts send to S3. Can not be lower than 5MB or more than 500MB.
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   // Options to pass to the AWS S3 SDK.
-  s3ClientConfig: aws.S3.Types.ClientConfiguration
+  s3ClientConfig: aws.S3.Types.ClientConfiguration & {bucket: string}
 }
 
 type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
@@ -72,11 +70,12 @@ export class S3Store extends DataStore {
 
   constructor(options: Options) {
     super()
-    const {bucket, partSize, s3ClientConfig} = options
+    const {partSize, s3ClientConfig} = options
+    const {bucket, ...restS3ClientConfig} = s3ClientConfig
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
-    this.client = new aws.S3(s3ClientConfig)
+    this.client = new aws.S3(restS3ClientConfig)
   }
 
   /**

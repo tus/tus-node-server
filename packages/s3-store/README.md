@@ -32,16 +32,16 @@ npm install @tus/s3-store
 const {Server} = require('@tus/server')
 const {S3Store} = require('@tus/s3-store')
 
-const server = new Server({
-  path: '/files',
-  datastore: new S3Store({
+const s3Store = new S3Store({
+  partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
+  s3ClientConfig: {
     bucket: process.env.AWS_BUCKET,
+    region: process.env.AWS_REGION,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-    partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
-  }),
+  },
 })
+const server = new Server({path: '/files', datastore: s3Store})
 // ...
 ```
 
@@ -93,20 +93,18 @@ const aws = require('aws-sdk')
 const {Server} = require('@tus/server')
 const {FileStore} = require('@tus/s3-store')
 
-const server = new Server({
-  path: '/files',
-  datastore: new S3Store({
-    bucket: 'bucket-name',
-    partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
-    s3ClientConfig: {
-      region: 'eu-west-1',
-      credentials: new aws.ECSCredentials({
-        httpOptions: {timeout: 5000},
-        maxRetries: 10,
-      }),
-    },
-  }),
+const s3Store = new S3Store({
+  partSize: 8 * 1024 * 1024,
+  s3ClientConfig: {
+    bucket: process.env.AWS_BUCKET,
+    region: process.env.AWS_REGION,
+    credentials: new aws.ECSCredentials({
+      httpOptions: {timeout: 5000},
+      maxRetries: 10,
+    }),
+  },
 })
+const server = new Server({path: '/files', datastore: s3Store})
 // ...
 ```
 
