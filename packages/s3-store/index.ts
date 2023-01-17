@@ -84,22 +84,21 @@ export class S3Store extends DataStore {
    * on the S3 object's `Metadata` field, so that only a `headObject`
    * is necessary to retrieve the data.
    */
-  private async saveMetadata(file: Upload, upload_id: string) {
-    log(`[${file.id}] saving metadata`)
+  private async saveMetadata(upload: Upload, upload_id: string) {
+    log(`[${upload.id}] saving metadata`)
     await this.client
       .putObject({
         Bucket: this.bucket,
-        Key: `${file.id}.info`,
+        Key: `${upload.id}.info`,
         Body: '',
         Metadata: {
-          file: JSON.stringify(file),
+          file: JSON.stringify(upload),
           upload_id,
           tus_version: TUS_RESUMABLE,
         },
       })
       .promise()
-    log(`[${file.id}] metadata file saved`)
-    return {file, upload_id}
+    log(`[${upload.id}] metadata file saved`)
   }
 
   /**
@@ -399,7 +398,11 @@ export class S3Store extends DataStore {
       Key: upload.id,
       Metadata: {tus_version: TUS_RESUMABLE},
     }
-    const file: Record<string, string | number> = {id: upload.id, offset: upload.offset}
+    const file: Record<string, string | number | Upload['metadata']> = {
+      id: upload.id,
+      offset: upload.offset,
+      metadata: upload.metadata,
+    }
 
     if (upload.size) {
       file.size = upload.size.toString()
@@ -486,6 +489,7 @@ export class S3Store extends DataStore {
           ...this.cache.get(id)?.file,
           offset: metadata.file.size as number,
           size: metadata.file.size,
+          metadata: metadata.file.metadata,
         })
       }
 

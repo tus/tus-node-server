@@ -9,8 +9,8 @@ describe('Metadata', () => {
       'file/name': 'test.mp4',
       size: '960244',
       'type!': 'video/mp4',
-      video: undefined,
-      withWhitespace: undefined,
+      video: null,
+      withWhitespace: null,
     }
     const decoded = parse(str)
     assert.deepStrictEqual(decoded, obj)
@@ -21,8 +21,8 @@ describe('Metadata', () => {
       filename: 'test.mp4',
       size: '960244',
       type: 'video/mp4',
-      video: undefined,
-      withWhitespace: undefined,
+      video: null,
+      withWhitespace: null,
     }
     const encoded = stringify(obj)
 
@@ -34,11 +34,9 @@ describe('Metadata', () => {
     assert.strictEqual(stringify({size: '960244'}), 'size OTYwMjQ0')
     assert.strictEqual(stringify({type: 'video/mp4'}), 'type dmlkZW8vbXA0')
     // Multiple valid options
-    assert.notStrictEqual(['video', 'video '].indexOf(stringify({video: undefined})), -1)
+    assert.notStrictEqual(['video', 'video '].indexOf(stringify({video: null})), -1)
     assert.notStrictEqual(
-      ['withWhitespace', 'withWhitespace '].indexOf(
-        stringify({withWhitespace: undefined})
-      ),
+      ['withWhitespace', 'withWhitespace '].indexOf(stringify({withWhitespace: null})),
       -1
     )
   })
@@ -51,20 +49,20 @@ describe('Metadata', () => {
     assert.deepStrictEqual(parse('type dmlkZW8vbXA0'), {
       type: 'video/mp4',
     })
-    assert.deepStrictEqual(parse('video'), {video: undefined})
-    assert.deepStrictEqual(parse('video '), {video: undefined})
+    assert.deepStrictEqual(parse('video'), {video: null})
+    assert.deepStrictEqual(parse('video '), {video: null})
     assert.deepStrictEqual(parse('withWhitespace'), {
-      withWhitespace: undefined,
+      withWhitespace: null,
     })
     assert.deepStrictEqual(parse('withWhitespace '), {
-      withWhitespace: undefined,
+      withWhitespace: null,
     })
   })
 
   it('cyclic test', () => {
     const obj = {
       filename: 'world_domination_plan.pdf',
-      is_confidential: undefined,
+      is_confidential: null,
     }
     // Object -> string -> object
     assert.deepStrictEqual(parse(stringify(obj)), obj)

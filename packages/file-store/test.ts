@@ -71,7 +71,7 @@ describe('FileStore', function () {
       // @ts-expect-error todo
       size: this.testFileSize,
       offset: 0,
-      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+      metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
     })
 
     it("created file's size should match 'upload_length'", async function () {

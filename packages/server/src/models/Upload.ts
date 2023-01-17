@@ -2,7 +2,7 @@ type TUpload = {
   id: string
   size?: number
   offset: number
-  metadata?: Record<string, string | undefined | never>
+  metadata?: Record<string, string | null>
   creation_date?: string
 }
 

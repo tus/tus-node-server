@@ -65,7 +65,7 @@ describe('HeadHandler', () => {
     const file = new Upload({
       id: '1234',
       offset: 0,
-      metadata: {is_confidential: undefined, foo: 'bar'},
+      metadata: {is_confidential: null, foo: 'bar'},
     })
     fake_store.getUpload.resolves(file)
     await handler.send(req, res)

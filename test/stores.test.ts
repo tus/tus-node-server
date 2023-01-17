@@ -25,7 +25,7 @@ export const shouldCreateUploads = function () {
       id: 'create-test',
       size: 1000,
       offset: 0,
-      metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+      metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
     })
     const file_defered = new Upload({
       id: 'create-test-deferred',
@@ -62,7 +62,7 @@ export const shouldCreateUploads = function () {
     it('should store `upload_metadata` when creating new resource', async function () {
       await this.datastore.create(file)
       const upload = await this.datastore.getUpload(file.id)
-      assert.strictEqual(upload.metadata, file.metadata)
+      assert.deepStrictEqual(upload.metadata, file.metadata)
     })
   })
 }
@@ -103,7 +103,7 @@ export const shouldWriteUploads = function () {
         id: 'write-test',
         size: this.testFileSize,
         offset: 0,
-        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
       })
       await this.datastore.create(file)
       const readable = fs.createReadStream(this.testFilePath)
@@ -116,7 +116,7 @@ export const shouldWriteUploads = function () {
         id: 'write-test-reject',
         size: this.testFileSize,
         offset: 0,
-        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
       })
       await this.datastore.create(file)
       const readable = new stream.Readable({
@@ -142,7 +142,7 @@ export const shouldHandleOffset = function () {
         id: 'offset-test',
         size: this.testFileSize,
         offset: 0,
-        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
       })
 
       await this.datastore.create(file)
@@ -167,7 +167,7 @@ export const shouldDeclareUploadLength = function () {
       const file = new Upload({
         id: 'declare-length-test',
         offset: 0,
-        metadata: 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential',
+        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
       })
 
       await this.datastore.create(file)

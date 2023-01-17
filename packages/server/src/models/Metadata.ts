@@ -32,7 +32,7 @@ export function validateValue(value: string) {
 }
 
 export function parse(str?: string) {
-  const meta: Record<string, string | undefined> = {}
+  const meta: Record<string, string | null> = {}
 
   if (!str) {
     return {}
@@ -46,9 +46,7 @@ export function parse(str?: string) {
         (tokens.length === 2 && validateKey(key) && validateValue(value))) &&
       !(key in meta)
     ) {
-      const decodedValue = value
-        ? Buffer.from(value, 'base64').toString('utf8')
-        : undefined
+      const decodedValue = value ? Buffer.from(value, 'base64').toString('utf8') : null
       meta[key] = decodedValue
     } else {
       throw new Error('Metadata string is not valid')
@@ -58,10 +56,10 @@ export function parse(str?: string) {
   return meta
 }
 
-export function stringify(metadata: NonNullable<Upload['metadata']>) {
+export function stringify(metadata: NonNullable<Upload['metadata']>): string {
   return Object.entries(metadata)
     .map(([key, value]) => {
-      if (value === undefined) {
+      if (value === null) {
         return key
       }
 
