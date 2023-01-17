@@ -2,13 +2,13 @@ type TUpload = {
   id: string
   size?: number
   offset: number
-  metadata?: string
+  metadata?: Record<string, string | undefined | never>
   creation_date?: string
 }
 
 export class Upload {
   id: TUpload['id']
-  metadata?: TUpload['metadata']
+  metadata: TUpload['metadata']
   size?: TUpload['size']
   offset: TUpload['offset']
   creation_date: TUpload['creation_date']

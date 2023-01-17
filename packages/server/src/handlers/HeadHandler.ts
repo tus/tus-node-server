@@ -1,6 +1,7 @@
 import {BaseHandler} from './BaseHandler'
 
 import {ERRORS} from '../constants'
+import {Metadata} from '../models'
 
 import type http from 'node:http'
 
@@ -48,7 +49,7 @@ export class HeadHandler extends BaseHandler {
     if (file.metadata !== undefined) {
       // If the size of the upload is known, the Server MUST include
       // the Upload-Length header in the response.
-      res.setHeader('Upload-Metadata', file.metadata)
+      res.setHeader('Upload-Metadata', Metadata.stringify(file.metadata))
     }
 
     return res.end()

@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import {BaseHandler} from './BaseHandler'
-import {Upload, Uid} from '../models'
+import {Upload, Uid, Metadata} from '../models'
 import {RequestValidator} from '../validators/RequestValidator'
 import {EVENTS, ERRORS} from '../constants'
 
@@ -64,7 +64,7 @@ export class PostHandler extends BaseHandler {
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
       offset: 0,
-      metadata: upload_metadata,
+      metadata: Metadata.parse(upload_metadata),
     })
 
     if (this.options.onUploadCreate) {

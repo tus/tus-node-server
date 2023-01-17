@@ -17,7 +17,7 @@ describe('Upload', () => {
       const id = Uid.rand()
       const size = 1234
       const offset = 0
-      const metadata = 'metadata'
+      const metadata = {foo: 'bar'}
       const upload = new Upload({id, size, offset, metadata})
       assert.equal(upload.id, id)
       assert.equal(upload.size, size)

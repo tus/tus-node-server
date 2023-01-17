@@ -201,7 +201,7 @@ describe('Server', () => {
         .post(server.options.path)
         .set('Tus-Resumable', TUS_RESUMABLE)
         .set('Upload-Length', '300')
-        .set('Upload-Metadata', 'foo aGVsbG8=, bar d29ynGQ=')
+        .set('Upload-Metadata', 'is_confidential')
         .set('Content-Type', 'application/false')
         .expect(201, {}, (err, res) => {
           res.headers.should.have.property('location')
