@@ -7,7 +7,7 @@ import rimraf from 'rimraf'
 import request from 'supertest'
 import {Storage} from '@google-cloud/storage'
 
-import {Server, TUS_RESUMABLE, MemoryConfigstore} from '@tus/server'
+import {Server, TUS_RESUMABLE, MemoryConfigstore, ERRORS} from '@tus/server'
 import {FileStore} from '@tus/file-store'
 import {GCSStore} from '@tus/gcs-store'
 
@@ -20,7 +20,7 @@ const BUCKET = 'tus-node-server-ci'
 const FILES_DIRECTORY = path.resolve(STORE_PATH)
 const TEST_FILE_SIZE = '960244'
 const TEST_FILE_PATH = path.resolve('fixtures', 'test.mp4')
-const TEST_METADATA = 'some data, for you'
+const TEST_METADATA = 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
 const gcs = new Storage({
   projectId: PROJECT_ID,
   keyFilename: KEYFILE,
@@ -111,6 +111,19 @@ describe('EndToEnd', () => {
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
             file_id = res.headers.location.split('/').pop()
+            done()
+          })
+      })
+
+      it('should throw informative error on invalid metadata', (done) => {
+        agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', TEST_FILE_SIZE)
+          .set('Upload-Metadata', 'no sir')
+          .expect(ERRORS.INVALID_METADATA.status_code)
+          .end((_, res) => {
+            assert.equal(res.text, ERRORS.INVALID_METADATA.body)
             done()
           })
       })
@@ -649,15 +662,34 @@ describe('EndToEnd', () => {
 
     describe('HEAD', () => {
       it('should return the ending offset of the uploaded file', (done) => {
-        agent
-          .head(`${STORE_PATH}/${file_id}`)
+        const read_stream = fs.createReadStream(TEST_FILE_PATH)
+        const write_stream = agent
+          .post(STORE_PATH)
           .set('Tus-Resumable', TUS_RESUMABLE)
-          .expect(200)
-          .expect('Upload-Metadata', TEST_METADATA)
-          .expect('Upload-Offset', `${TEST_FILE_SIZE}`)
-          .expect('Upload-Length', `${TEST_FILE_SIZE}`)
-          .expect('Tus-Resumable', TUS_RESUMABLE)
-          .end(done)
+          .set('Upload-Length', TEST_FILE_SIZE)
+          .set('Content-Type', 'application/offset+octet-stream')
+        write_stream.on('response', (res) => {
+          assert.equal(res.statusCode, 201)
+          assert.equal(res.header['tus-resumable'], TUS_RESUMABLE)
+          assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`)
+          const id = res.headers.location.split('/').pop()
+          agent
+            .head(`${STORE_PATH}/${id}`)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .expect(200)
+            .expect('Upload-Offset', `${TEST_FILE_SIZE}`)
+            .expect('Upload-Length', `${TEST_FILE_SIZE}`)
+            .expect('Tus-Resumable', TUS_RESUMABLE)
+            .end(done)
+        })
+        // Using .pipe() broke when upgrading to Superagent 3.0+,
+        // so now we use data events to read the file to the agent.
+        read_stream.on('data', (chunk) => {
+          write_stream.write(chunk)
+        })
+        read_stream.on('end', () => {
+          write_stream.end(() => {})
+        })
       })
     })
   })

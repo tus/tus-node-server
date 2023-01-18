@@ -43,6 +43,7 @@ export class GCSStore extends DataStore {
       }
 
       const gcs_file = this.bucket.file(file.id)
+
       const options = {
         metadata: {
           metadata: {
@@ -50,7 +51,7 @@ export class GCSStore extends DataStore {
             size: file.size,
             sizeIsDeferred: `${file.sizeIsDeferred}`,
             offset: file.offset,
-            metadata: file.metadata,
+            metadata: JSON.stringify(file.metadata),
           },
         },
       }
@@ -160,7 +161,7 @@ export class GCSStore extends DataStore {
             id,
             size: size ? Number.parseInt(size, 10) : size,
             offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS
-            metadata: meta,
+            metadata: meta ? JSON.parse(meta) : undefined,
           })
         )
       })

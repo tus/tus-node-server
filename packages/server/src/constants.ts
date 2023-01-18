@@ -53,6 +53,10 @@ export const ERRORS = {
     status_code: 400,
     body: 'Upload-Length or Upload-Defer-Length header required\n',
   },
+  INVALID_METADATA: {
+    status_code: 400,
+    body: 'Upload-Metadata is invalid. It MUST consist of one or more comma-separated key-value pairs. The key and value MUST be separated by a space. The key MUST NOT contain spaces and commas and MUST NOT be empty. The key SHOULD be ASCII encoded and the value MUST be Base64 encoded. All keys MUST be unique',
+  },
   UNKNOWN_ERROR: {
     status_code: 500,
     body: 'Something went wrong with that request\n',

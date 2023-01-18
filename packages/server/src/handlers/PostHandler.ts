@@ -52,7 +52,6 @@ export class PostHandler extends BaseHandler {
     }
 
     let id
-
     try {
       id = this.options.namingFunction(req)
     } catch (error) {
@@ -60,11 +59,18 @@ export class PostHandler extends BaseHandler {
       throw ERRORS.FILE_WRITE_ERROR
     }
 
+    let metadata
+    try {
+      metadata = Metadata.parse(upload_metadata)
+    } catch (error) {
+      throw ERRORS.INVALID_METADATA
+    }
+
     const upload = new Upload({
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
       offset: 0,
-      metadata: Metadata.parse(upload_metadata),
+      metadata,
     })
 
     if (this.options.onUploadCreate) {
