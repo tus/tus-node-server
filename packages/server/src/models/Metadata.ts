@@ -35,7 +35,7 @@ export function parse(str?: string) {
   const meta: Record<string, string | null> = {}
 
   if (!str) {
-    return {}
+    return undefined
   }
 
   for (const pair of str.split(',')) {

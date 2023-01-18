@@ -161,7 +161,7 @@ export class GCSStore extends DataStore {
             id,
             size: size ? Number.parseInt(size, 10) : size,
             offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS
-            metadata: JSON.parse(meta),
+            metadata: meta ? JSON.parse(meta) : undefined,
           })
         )
       })
