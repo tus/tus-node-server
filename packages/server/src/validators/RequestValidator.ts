@@ -40,7 +40,7 @@ export const RequestValidator = {
   },
 
   _invalidXForwardedProtoHeader(value: string) {
-    return !['http', 'https'].includes(value);
+    return !['http', 'https'].includes(value)
   },
 
   _invalidTusVersionHeader(value: string) {
