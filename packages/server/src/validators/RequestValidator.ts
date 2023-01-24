@@ -35,6 +35,14 @@ export const RequestValidator = {
     return false
   },
 
+  _invalidXForwardedHostHeader() {
+    return false
+  },
+
+  _invalidXForwardedProtoHeader(value: string) {
+    return !['http', 'https'].includes(value);
+  },
+
   _invalidTusVersionHeader(value: string) {
     // @ts-expect-error we can compare a literal
     return !TUS_VERSION.includes(value)
