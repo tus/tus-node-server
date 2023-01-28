@@ -58,4 +58,11 @@ describe('BaseHandler', () => {
 
     assert.equal(id, '1234')
   })
+
+  it('should handle URL-encoded ID', () => {
+    const req = {url: '/some/path/yeah/1234%205%23'} as http.IncomingMessage
+    const id = handler.getFileIdFromRequest(req)
+
+    assert.equal(id, '1234 5#')
+  })
 })

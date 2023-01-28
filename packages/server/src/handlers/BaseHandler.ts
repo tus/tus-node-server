@@ -30,6 +30,8 @@ export class BaseHandler extends EventEmitter {
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
+    id = encodeURIComponent(id)
+
     const forwarded = req.headers.forwarded as string | undefined
     const path = this.options.path === '/' ? '' : this.options.path
     // @ts-expect-error baseUrl type doesn't exist?
@@ -71,6 +73,6 @@ export class BaseHandler extends EventEmitter {
       return false
     }
 
-    return match[1]
+    return decodeURIComponent(match[1])
   }
 }
