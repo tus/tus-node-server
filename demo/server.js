@@ -59,7 +59,7 @@ const writeFile = (req, res) => {
   if (!filename.startsWith('/dist/')) {
     filename = '/demos/browser' + filename
   }
-  filename = path.join(process.cwd(), '/node_modules/tus-js-client', filename)
+  filename = path.join(process.cwd(), '../node_modules/tus-js-client', filename)
   fs.readFile(filename, 'binary', (err, file) => {
     if (err) {
       res.writeHead(500, {'Content-Type': 'text/plain'})
