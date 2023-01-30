@@ -17,8 +17,10 @@ describe('GCSStore', () => {
 
   beforeEach(function () {
     this.datastore = new GCSStore({
-      projectId: 'tus-node-server',
-      keyFilename: path.resolve('../', '../', 'keyfile.json'),
+      storageOptions: {
+        projectId: 'tus-node-server',
+        keyFilename: path.resolve('../', '../', 'keyfile.json'),
+      },
       bucket: 'tus-node-server-ci',
     })
   })

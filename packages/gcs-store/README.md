@@ -32,8 +32,10 @@ const {GCSStore} = require('@tus/gcs-store')
 const server = new Server({
   path: '/files',
   datastore: new GCSStore({
-    projectId: 'id',
-    keyFilename: path.resolve('./some-path', 'keyfile.json'),
+    storageOptions: {
+      projectId: 'id',
+      keyFilename: path.resolve('./some-path', 'keyfile.json'),
+    },
     bucket: 'tus-node-server-ci',
   }),
 })
@@ -46,19 +48,19 @@ This package exports `GCSStore`. There is no default export.
 
 ### `new GCSStore(options)`
 
-Creates a new Google Cloud Storage store with options.
+Creates a new Google Cloud Storage store with options or by passing a GCS bucket instance.
 
-#### `options.projectId`
+#### `options.storageOptions.projectId`
 
 The GCS project ID (`string`).
 
-#### `options.keyFilename`
+#### `options.storageOptions.keyFilename`
 
 Path to the keyfile with credentials (`string`).
 
 #### `options.bucket`
 
-The bucket name.
+The bucket name or bucket instance
 
 ## Extensions
 

@@ -1,4 +1,4 @@
-import {Storage, Bucket} from '@google-cloud/storage'
+import {Storage, Bucket, StorageOptions, BucketOptions} from '@google-cloud/storage'
 import stream from 'node:stream'
 import http from 'node:http'
 import debug from 'debug'
@@ -6,18 +6,18 @@ import debug from 'debug'
 import {ERRORS, TUS_RESUMABLE} from '@tus/server'
 import {Upload, DataStore} from '@tus/server'
 
-type Options = {
-  bucket: string
-  projectId: string
-  keyFilename: string
-}
-
 const log = debug('tus-node-server:stores:gcsstore')
+
+type Options =
+  | {bucket: string; storageOptions: StorageOptions; bucketOptions?: BucketOptions}
+  | {bucket: Bucket}
+
+function isBucketObject(options: Options): options is {bucket: Bucket} {
+  return options.bucket instanceof Bucket
+}
 
 export class GCSStore extends DataStore {
   bucket: Bucket
-  bucket_name: string
-  gcs: Storage
 
   constructor(options: Options) {
     super()
@@ -26,13 +26,14 @@ export class GCSStore extends DataStore {
       throw new Error('GCSDataStore must have a bucket')
     }
 
+    if (isBucketObject(options)) {
+      this.bucket = options.bucket
+    } else {
+      const storage = new Storage(options.storageOptions)
+      this.bucket = storage.bucket(options.bucket, options.bucketOptions)
+    }
+
     this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
-    this.bucket_name = options.bucket
-    this.gcs = new Storage({
-      projectId: options.projectId,
-      keyFilename: options.keyFilename,
-    })
-    this.bucket = this.gcs.bucket(this.bucket_name)
   }
 
   create(file: Upload): Promise<Upload> {

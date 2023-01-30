@@ -459,8 +459,10 @@ describe('EndToEnd', () => {
       server = new Server({
         path: STORE_PATH,
         datastore: new GCSStore({
-          projectId: PROJECT_ID,
-          keyFilename: KEYFILE,
+          storageOptions: {
+            projectId: PROJECT_ID,
+            keyFilename: KEYFILE,
+          },
           bucket: BUCKET,
         }),
       })
