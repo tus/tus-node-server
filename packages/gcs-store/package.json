@@ -21,7 +21,7 @@
     "test": "mocha test.ts --timeout 30000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "@google-cloud/storage": "^6.2.2",
+    "@google-cloud/storage": "^6.9.1",
     "debug": "^4.3.3"
   },
   "devDependencies": {
