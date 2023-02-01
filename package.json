@@ -19,7 +19,7 @@
     "eslint": "^8.29.0",
     "eslint-config-custom": "workspace:*",
     "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.7.1",
+    "prettier": "^2.8.3",
     "turbo": "^1.6.3"
   },
   "packageManager": "yarn@3.2.3"
