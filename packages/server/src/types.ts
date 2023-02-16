@@ -7,6 +7,8 @@ export type ServerOptions = {
   path: string
   // Return a relative URL as the `Location` header.
   relativeLocation?: boolean
+  // Add Request url to `Location` header
+  addUrlDataToLocation?: boolean
   // Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers
   // to override the `Location` header returned by the server.
   respectForwardedHeaders?: boolean

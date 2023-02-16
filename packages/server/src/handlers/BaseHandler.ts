@@ -39,8 +39,10 @@ export class BaseHandler extends EventEmitter {
     let proto
     let host
 
+    const urlData = this.options.addUrlDataToLocation ? req.url : ''
+
     if (this.options.relativeLocation) {
-      return `${baseUrl}${path}/${id}`
+      return `${baseUrl}${urlData}${path}/${id}`
     }
 
     if (this.options.respectForwardedHeaders) {
@@ -63,7 +65,7 @@ export class BaseHandler extends EventEmitter {
     host ??= req.headers.host
     proto ??= 'http'
 
-    return `${proto}://${host}${baseUrl}${path}/${id}`
+    return `${proto}://${host}${baseUrl}${urlData}${path}/${id}`
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {
