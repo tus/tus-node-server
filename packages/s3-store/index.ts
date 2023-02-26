@@ -524,6 +524,19 @@ export class S3Store extends DataStore {
   }
 
   public async remove(id: string): Promise<void> {
+    try {
+      const metadata = await this.getMetadata(id)
+      if (metadata?.upload_id) {
+        await this.client
+          .abortMultipartUpload({
+            Bucket: this.bucket,
+            Key: id,
+            UploadId: metadata.upload_id,
+          })
+          .promise()
+      }
+    } catch {}
+
     await this.client
       .deleteObjects({
         Bucket: this.bucket,
