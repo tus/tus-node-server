@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import {BaseHandler} from './BaseHandler'
 import {Upload, Uid, Metadata} from '../models'
-import {RequestValidator} from '../validators/RequestValidator'
+import {invalidHeader} from '../validators/HeaderValidator'
 import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
@@ -95,7 +95,7 @@ export class PostHandler extends BaseHandler {
     } = {}
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
-    if (!RequestValidator.isInvalidHeader('content-type', req.headers['content-type'])) {
+    if (!invalidHeader('content-type', req.headers['content-type'])) {
       newOffset = await this.store.write(req, upload.id, 0)
       headers['Upload-Offset'] = newOffset.toString()
       isFinal = newOffset === Number.parseInt(upload_length as string, 10)
