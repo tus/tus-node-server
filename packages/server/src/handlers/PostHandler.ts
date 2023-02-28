@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import {BaseHandler} from './BaseHandler'
 import {Upload, Uid, Metadata} from '../models'
-import {invalidHeader} from '../validators/HeaderValidator'
+import {validateHeader} from '../validators/HeaderValidator'
 import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
@@ -60,10 +60,12 @@ export class PostHandler extends BaseHandler {
     }
 
     let metadata
-    try {
-      metadata = Metadata.parse(upload_metadata)
-    } catch (error) {
-      throw ERRORS.INVALID_METADATA
+    if ('upload-metadata' in req.headers) {
+      try {
+        metadata = Metadata.parse(upload_metadata)
+      } catch (error) {
+        throw ERRORS.INVALID_METADATA
+      }
     }
 
     const upload = new Upload({
@@ -95,7 +97,7 @@ export class PostHandler extends BaseHandler {
     } = {}
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
-    if (!invalidHeader('content-type', req.headers['content-type'])) {
+    if (validateHeader('content-type', req.headers['content-type'])) {
       newOffset = await this.store.write(req, upload.id, 0)
       headers['Upload-Offset'] = newOffset.toString()
       isFinal = newOffset === Number.parseInt(upload_length as string, 10)

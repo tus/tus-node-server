@@ -1,29 +1,32 @@
 import {TUS_VERSION, TUS_RESUMABLE} from '../constants'
+import {Metadata} from '../models'
 
 type validator = (value?: string) => boolean
 
 export const validators = new Map<string, validator>([
   [
-    'upload-offset',
-    function (value: string | undefined) {
-      // @ts-expect-error isNan can in fact expect non-number args
-      return isNaN(value) || Number.parseInt(value as string, 10) < 0
-    },
-  ],
-  [
-    'upload-length',
+    // The Upload-Offset request and response header indicates a byte offset within a resource.
     // The value MUST be a non-negative integer.
-    function (value: string | undefined) {
-      // @ts-expect-error isNan can in fact expect non-number args
-      return isNaN(value) || Number.parseInt(value as string, 10) < 0
+    'upload-offset',
+    function (value) {
+      return Number.parseInt(value as string, 10) >= 0
     },
   ],
   [
+    // The Upload-Length request and response header indicates the size of the entire upload in bytes.
+    // The value MUST be a non-negative integer.
+    'upload-length',
+    function (value) {
+      return Number.parseInt(value as string, 10) > 0
+    },
+  ],
+  [
+    // The Upload-Defer-Length request and response header indicates that the size of the upload
+    // is not known currently and will be transferred later.
+    // Its value MUST be 1. If the length of an upload is not deferred, this header MUST be omitted.
     'upload-defer-length',
-    // The Upload-Defer-Length value MUST be 1.
-    function (value: string | undefined) {
-      // @ts-expect-error isNan can in fact expect non-number args
-      return isNaN(value) || Number.parseInt(value as string, 10) !== 1
+    function (value) {
+      return Number.parseInt(value as string, 10) === 1
     },
   ],
   [
@@ -33,54 +36,71 @@ export const validators = new Map<string, validator>([
     // separated by a space. The key MUST NOT contain spaces and commas and
     // MUST NOT be empty. The key SHOULD be ASCII encoded and the value MUST
     // be Base64 encoded. All keys MUST be unique.
-    function (value: string | undefined) {
-      if (!value) return true
-      const keypairs = value.split(',').map((keypair) => keypair.trim().split(' '))
-      return keypairs.some(
-        (keypair) => keypair[0] === '' || (keypair.length !== 2 && keypair.length !== 1)
-      )
+    function (value) {
+      try {
+        Metadata.parse(value)
+        return true
+      } catch {
+        return false
+      }
     },
   ],
   [
     'x-forwarded-proto',
-    function (value: string | undefined) {
-      // @ts-expect-error possible
-      return !['http', 'https'].includes(value)
+    function (value) {
+      if (value === 'http' || value === 'https') {
+        return true
+      }
+      return false
     },
   ],
   [
+    // The Tus-Version response header MUST be a comma-separated list of protocol versions supported by the Server.
+    // The list MUST be sorted by Server's preference where the first one is the most preferred one.
     'tus-version',
-    function (value: string | undefined) {
+    function (value) {
       // @ts-expect-error we can compare a literal
-      return !TUS_VERSION.includes(value)
+      return TUS_VERSION.includes(value)
     },
   ],
   [
+    // The Tus-Resumable header MUST be included in every request and response except for OPTIONS requests.
+    // The value MUST be the version of the protocol used by the Client or the Server.
+    // If the version specified by the Client is not supported by the Server,
+    // it MUST respond with the 412 Precondition Failed status and MUST include the Tus-Version header into the response.
+    // In addition, the Server MUST NOT process the request.
     'tus-resumable',
-    function (value: string | undefined) {
-      return value !== TUS_RESUMABLE
+    function (value) {
+      return value === TUS_RESUMABLE
     },
   ],
   [
     'content-type',
-    function (value: string | undefined) {
-      return value !== 'application/offset+octet-stream'
+    function (value) {
+      return value === 'application/offset+octet-stream'
     },
   ],
   [
+    // The Upload-Concat request and response header MUST be set in both partial and final upload creation requests.
+    // It indicates whether the upload is either a partial or final upload.
+    // If the upload is a partial one, the header value MUST be partial.
+    // In the case of a final upload, its value MUST be final followed by a semicolon and a space-separated list
+    // of partial upload URLs that will be concatenated.
+    // The partial uploads URLs MAY be absolute or relative and MUST NOT contain spaces as defined in RFC 3986.
     'upload-concat',
-    function (value = '') {
+    function (value) {
+      if (!value) return false
       const valid_partial = value === 'partial'
       const valid_final = value.startsWith('final;')
-      return !valid_partial && !valid_final
+      return valid_partial || valid_final
     },
   ],
 ])
 
-export function invalidHeader(name: string, value?: string): boolean {
+export function validateHeader(name: string, value?: string): boolean {
   const lowercaseName = name.toLowerCase()
   if (!validators.has(lowercaseName)) {
-    return false
+    return true
   }
   // @ts-expect-error if already guards
   return validators.get(lowercaseName)(value)

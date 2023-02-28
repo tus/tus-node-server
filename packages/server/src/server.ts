@@ -9,7 +9,7 @@ import {OptionsHandler} from './handlers/OptionsHandler'
 import {PatchHandler} from './handlers/PatchHandler'
 import {PostHandler} from './handlers/PostHandler'
 import {DeleteHandler} from './handlers/DeleteHandler'
-import {invalidHeader} from './validators/HeaderValidator'
+import {validateHeader} from './validators/HeaderValidator'
 
 import {
   EVENTS,
@@ -182,7 +182,7 @@ export class Server extends EventEmitter {
         continue
       }
 
-      if (invalidHeader(header_name, req.headers[header_name] as string | undefined)) {
+      if (!validateHeader(header_name, req.headers[header_name] as string | undefined)) {
         log(`Invalid ${header_name} header: ${req.headers[header_name]}`)
         invalid_headers.push(header_name)
       }
