@@ -63,7 +63,7 @@ export class PostHandler extends BaseHandler {
     if ('upload-metadata' in req.headers) {
       try {
         metadata = Metadata.parse(upload_metadata)
-      } catch (error) {
+      } catch {
         throw ERRORS.INVALID_METADATA
       }
     }
