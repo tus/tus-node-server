@@ -18,8 +18,10 @@ describe('HeaderValidator', () => {
     })
 
     it('should invalidate a non number', (done) => {
-      const value = 'hello'
-      assert.equal(validateHeader('upload-offset', value), false)
+      assert.equal(validateHeader('upload-length', 'hello'), false)
+      assert.equal(validateHeader('upload-length', '0100'), false)
+      assert.equal(validateHeader('upload-length', '0asd100'), false)
+      assert.equal(validateHeader('upload-length', '1asd100'), false)
       done()
     })
   })
@@ -37,8 +39,10 @@ describe('HeaderValidator', () => {
     })
 
     it('should invalidate a non number', (done) => {
-      const value = 'hello'
-      assert.equal(validateHeader('upload-length', value), false)
+      assert.equal(validateHeader('upload-length', 'hello'), false)
+      assert.equal(validateHeader('upload-length', '0100'), false)
+      assert.equal(validateHeader('upload-length', '0asd100'), false)
+      assert.equal(validateHeader('upload-length', '1asd100'), false)
       done()
     })
   })

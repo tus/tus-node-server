@@ -9,7 +9,8 @@ export const validators = new Map<string, validator>([
     // The value MUST be a non-negative integer.
     'upload-offset',
     function (value) {
-      return Number.parseInt(value as string, 10) >= 0
+      const n = Number(value)
+      return n !== Infinity && String(n) === value && n >= 0
     },
   ],
   [
@@ -17,7 +18,8 @@ export const validators = new Map<string, validator>([
     // The value MUST be a non-negative integer.
     'upload-length',
     function (value) {
-      return Number.parseInt(value as string, 10) > 0
+      const n = Number(value)
+      return n !== Infinity && String(n) === value && n >= 0
     },
   ],
   [
@@ -26,7 +28,7 @@ export const validators = new Map<string, validator>([
     // Its value MUST be 1. If the length of an upload is not deferred, this header MUST be omitted.
     'upload-defer-length',
     function (value) {
-      return Number.parseInt(value as string, 10) === 1
+      return value === '1'
     },
   ],
   [
