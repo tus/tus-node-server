@@ -43,6 +43,11 @@ describe('HeaderValidator', () => {
       assert.equal(validateHeader('upload-length', '0100'), false)
       assert.equal(validateHeader('upload-length', '0asd100'), false)
       assert.equal(validateHeader('upload-length', '1asd100'), false)
+      assert.equal(validateHeader('upload-length', '1.3'), false)
+      assert.equal(validateHeader('upload-length', '-0'), false)
+      assert.equal(validateHeader('upload-length', '+0'), false)
+      assert.equal(validateHeader('upload-length', 'NaN'), false)
+      assert.equal(validateHeader('upload-length', '+Infinity'), false)
       done()
     })
   })
@@ -58,6 +63,8 @@ describe('HeaderValidator', () => {
       assert.equal(validateHeader('upload-defer-length', '0'), false)
       assert.equal(validateHeader('upload-defer-length', '1234'), false)
       assert.equal(validateHeader('upload-defer-length', '-1'), false)
+      assert.equal(validateHeader('upload-defer-length', '+1'), false)
+      assert.equal(validateHeader('upload-defer-length', ' 1 '), false) // test leading and trailing whitespaces
       done()
     })
 
