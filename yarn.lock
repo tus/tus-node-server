@@ -62,9 +62,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google-cloud/storage@npm:^6.2.2":
-  version: 6.8.0
-  resolution: "@google-cloud/storage@npm:6.8.0"
+"@google-cloud/storage@npm:^6.9.3":
+  version: 6.9.3
+  resolution: "@google-cloud/storage@npm:6.9.3"
   dependencies:
     "@google-cloud/paginator": ^3.0.7
     "@google-cloud/projectify": ^3.0.0
@@ -83,7 +83,7 @@ __metadata:
     retry-request: ^5.0.0
     teeny-request: ^8.0.0
     uuid: ^8.0.0
-  checksum: c0b9eae1eae4aadd22b4ea7699345790adcc063874c5f08477425840001f6822091bdb8db7b67f2a9bb77acbbc4257ed40c14ba5cb2ab91addf2902d56714ddf
+  checksum: 32bd3b49509b823504f0007d1d5cb1ec854bbc84e6be1ef397879b99c0f198c6251b85ddec81226428e046a06c0346356d82d26485e9d1f9e7ef943e091db06f
   languageName: node
   linkType: hard
 
@@ -297,7 +297,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tus/gcs-store@workspace:packages/gcs-store"
   dependencies:
-    "@google-cloud/storage": ^6.2.2
+    "@google-cloud/storage": ^6.9.3
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
