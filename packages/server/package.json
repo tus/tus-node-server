@@ -24,6 +24,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
+    "@types/configstore": "^6.0.0",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
     "@types/node": "latest",
@@ -43,5 +44,9 @@
   },
   "engines": {
     "node": ">=16"
+  },
+  "optionalDependencies": {
+    "@redis/client": "^1.5.5",
+    "configstore": "^5.0.1"
   }
 }

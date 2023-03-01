@@ -5,21 +5,12 @@ import stream from 'node:stream'
 import http from 'node:http'
 
 import debug from 'debug'
-import Configstore from 'configstore'
 
-import {DataStore, Upload, ERRORS} from '@tus/server'
-import pkg from './package.json'
-
-type Store = {
-  get(key: string): Upload | undefined
-  set(key: string, value: Upload): void
-  delete(key: string): void
-  all: Record<string, Upload>
-}
+import {DataStore, Upload, ERRORS, Configstore, FileConfigstore} from '@tus/server'
 
 type Options = {
   directory: string
-  configstore?: Store
+  configstore?: Configstore
   expirationPeriodInMilliseconds?: number
 }
 
@@ -30,13 +21,13 @@ const log = debug('tus-node-server:stores:filestore')
 
 export class FileStore extends DataStore {
   directory: string
-  configstore: Store
+  configstore: Configstore
   expirationPeriodInMilliseconds: number
 
   constructor({directory, configstore, expirationPeriodInMilliseconds}: Options) {
     super()
     this.directory = directory
-    this.configstore = configstore ?? new Configstore(`${pkg.name}-${pkg.version}`)
+    this.configstore = configstore ?? new FileConfigstore()
     this.expirationPeriodInMilliseconds = expirationPeriodInMilliseconds ?? 0
     this.extensions = [
       'creation',
@@ -65,13 +56,13 @@ export class FileStore extends DataStore {
    */
   create(file: Upload): Promise<Upload> {
     return new Promise((resolve, reject) => {
-      fs.open(path.join(this.directory, file.id), 'w', (err, fd) => {
+      fs.open(path.join(this.directory, file.id), 'w', async (err, fd) => {
         if (err) {
           log('[FileStore] create: Error', err)
           return reject(err)
         }
 
-        this.configstore.set(file.id, file)
+        await this.configstore.set(file.id, file)
 
         return fs.close(fd, (exception) => {
           if (exception) {
@@ -143,7 +134,7 @@ export class FileStore extends DataStore {
   }
 
   async getUpload(id: string): Promise<Upload> {
-    const file = this.configstore.get(id)
+    const file = await this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
@@ -188,7 +179,7 @@ export class FileStore extends DataStore {
   }
 
   async declareUploadLength(id: string, upload_length: number) {
-    const file = this.configstore.get(id)
+    const file = await this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
@@ -196,17 +187,21 @@ export class FileStore extends DataStore {
 
     file.size = upload_length
 
-    this.configstore.set(id, file)
+    await this.configstore.set(id, file)
   }
 
   async deleteExpired(): Promise<number> {
     const now = new Date()
     const toDelete: Promise<void>[] = []
 
-    const uploadInfos = this.configstore.all
-    for (const file_id of Object.keys(uploadInfos)) {
+    if (!this.configstore.list) {
+      return 0
+    }
+
+    const uploadKeys = await this.configstore.list()
+    for (const file_id of uploadKeys) {
       try {
-        const info = uploadInfos[file_id]
+        const info = await this.configstore.get(file_id)
         if (
           info &&
           'creation_date' in info &&
@@ -227,7 +222,8 @@ export class FileStore extends DataStore {
       }
     }
 
-    return Promise.all(toDelete).then(() => toDelete.length)
+    await Promise.all(toDelete)
+    return toDelete.length
   }
 
   getExpiration(): number {

@@ -183,6 +183,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/client@npm:^1.5.5":
+  version: 1.5.5
+  resolution: "@redis/client@npm:1.5.5"
+  dependencies:
+    cluster-key-slot: 1.1.2
+    generic-pool: 3.9.0
+    yallist: 4.0.0
+  checksum: 16ae814ea1eb28cb7f30d4fda1aa3b0ab81de515e5c23e54092ecfaded3a30f261d5b2171eb63f153f059b69e885c5d86d802368b52c741eca443885d14c4b79
+  languageName: node
+  linkType: hard
+
 "@sinonjs/commons@npm:^1.7.0":
   version: 1.8.6
   resolution: "@sinonjs/commons@npm:1.8.6"
@@ -277,11 +288,9 @@ __metadata:
   resolution: "@tus/file-store@workspace:packages/file-store"
   dependencies:
     "@tus/server": "workspace:^"
-    "@types/configstore": ^6.0.0
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
     "@types/node": latest
-    configstore: ^5.0.1
     debug: ^4.3.3
     eslint: ^8.29.0
     eslint-config-custom: "workspace:*"
@@ -335,11 +344,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tus/server@workspace:packages/server"
   dependencies:
+    "@redis/client": ^1.5.5
+    "@types/configstore": ^6.0.0
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
     "@types/node": latest
     "@types/sinon": ^10.0.13
     "@types/supertest": ^2.0.12
+    configstore: ^5.0.1
     debug: ^4.3.3
     eslint: ^8.29.0
     eslint-config-custom: "workspace:*"
@@ -352,6 +364,11 @@ __metadata:
     tsconfig: "*"
     type-fest: ^3.1.0
     typescript: latest
+  dependenciesMeta:
+    "@redis/client":
+      optional: true
+    configstore:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -1072,6 +1089,13 @@ __metadata:
     strip-ansi: ^6.0.0
     wrap-ansi: ^7.0.0
   checksum: ce2e8f578a4813806788ac399b9e866297740eecd4ad1823c27fd344d78b22c5f8597d548adbcc46f0573e43e21e751f39446c5a5e804a12aace402b7a315d7f
+  languageName: node
+  linkType: hard
+
+"cluster-key-slot@npm:1.1.2":
+  version: 1.1.2
+  resolution: "cluster-key-slot@npm:1.1.2"
+  checksum: be0ad2d262502adc998597e83f9ded1b80f827f0452127c5a37b22dfca36bab8edf393f7b25bb626006fb9fb2436106939ede6d2d6ecf4229b96a47f27edd681
   languageName: node
   linkType: hard
 
@@ -1883,6 +1907,13 @@ __metadata:
     gaxios: ^5.0.0
     json-bigint: ^1.0.0
   checksum: abc0a3b8375c4101fa80b492d108bebbefa5531b8b5ecf9adefef0def2631d242263e17dd8d2917068fab7954992347004b1c18240f89832083bb964974dfecf
+  languageName: node
+  linkType: hard
+
+"generic-pool@npm:3.9.0":
+  version: 3.9.0
+  resolution: "generic-pool@npm:3.9.0"
+  checksum: 3d89e9b2018d2e3bbf44fec78c76b2b7d56d6a484237aa9daf6ff6eedb14b0899dadd703b5d810219baab2eb28e5128fb18b29e91e602deb2eccac14492d8ca8
   languageName: node
   linkType: hard
 
@@ -4186,7 +4217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yallist@npm:^4.0.0":
+"yallist@npm:4.0.0, yallist@npm:^4.0.0":
   version: 4.0.0
   resolution: "yallist@npm:4.0.0"
   checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
