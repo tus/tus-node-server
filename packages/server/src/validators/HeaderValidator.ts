@@ -10,7 +10,7 @@ export const validators = new Map<string, validator>([
     'upload-offset',
     function (value) {
       const n = Number(value)
-      return n !== Infinity && String(n) === value && n >= 0
+      return Number.isInteger(n) && String(n) === value && n >= 0
     },
   ],
   [
@@ -19,7 +19,7 @@ export const validators = new Map<string, validator>([
     'upload-length',
     function (value) {
       const n = Number(value)
-      return n !== Infinity && String(n) === value && n >= 0
+      return Number.isInteger(n) && String(n) === value && n >= 0
     },
   ],
   [
