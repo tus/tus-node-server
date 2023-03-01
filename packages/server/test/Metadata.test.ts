@@ -79,6 +79,12 @@ describe('Metadata', () => {
       assert.throws(() => {
         parse('size,size ')
       })
+      assert.throws(() => {
+        parse('')
+      })
+      assert.throws(() => {
+        parse('\t\n')
+      })
     })
 
     it('invalid key', () => {
