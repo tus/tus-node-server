@@ -33,7 +33,7 @@ describe('HeaderValidator', () => {
       done()
     })
 
-    it('should invalidate a number < 1', (done) => {
+    it('should invalidate a number < 0', (done) => {
       assert.equal(validateHeader('upload-length', '-1'), false)
       done()
     })
