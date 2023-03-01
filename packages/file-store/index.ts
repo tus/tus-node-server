@@ -11,10 +11,10 @@ import {DataStore, Upload, ERRORS} from '@tus/server'
 import pkg from './package.json'
 
 type Store = {
-  get(key: string): Upload | undefined
-  set(key: string, value: Upload): void
-  delete(key: string): void
-  all: Record<string, Upload>
+  get(key: string): Promise<Upload | undefined> | Upload | undefined
+  set(key: string, value: Upload): Promise<void> | void
+  delete(key: string): Promise<void> | void
+  all(): Promise<Record<string, Upload>> | Record<string, Upload>
 }
 
 type Options = {
@@ -143,7 +143,7 @@ export class FileStore extends DataStore {
   }
 
   async getUpload(id: string): Promise<Upload> {
-    const file = this.configstore.get(id)
+    const file = await this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
@@ -188,7 +188,7 @@ export class FileStore extends DataStore {
   }
 
   async declareUploadLength(id: string, upload_length: number) {
-    const file = this.configstore.get(id)
+    const file = await this.configstore.get(id)
 
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
@@ -203,7 +203,7 @@ export class FileStore extends DataStore {
     const now = new Date()
     const toDelete: Promise<void>[] = []
 
-    const uploadInfos = this.configstore.all
+    const uploadInfos = await this.configstore.all()
     for (const file_id of Object.keys(uploadInfos)) {
       try {
         const info = uploadInfos[file_id]

@@ -17,11 +17,11 @@ export class MemoryConfigstore {
     this.data.set(key, value)
   }
 
-  async delete(key: string) {
-    return this.data.delete(key)
+  delete(key: string) {
+    this.data.delete(key)
   }
 
-  get all(): Record<string, Upload> {
+  all(): Record<string, Upload> {
     return Object.fromEntries(this.data.entries())
   }
 }
