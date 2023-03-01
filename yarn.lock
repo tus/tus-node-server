@@ -319,7 +319,7 @@ __metadata:
     "@types/debug": ^4.1.7
     "@types/mocha": ^10.0.1
     "@types/node": latest
-    aws-sdk: ^2.1064.0
+    aws-sdk: ^2.1325.0
     debug: ^4.3.3
     eslint: ^8.29.0
     eslint-config-custom: "workspace:*"
@@ -865,9 +865,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aws-sdk@npm:^2.1064.0":
-  version: 2.1269.0
-  resolution: "aws-sdk@npm:2.1269.0"
+"aws-sdk@npm:^2.1325.0":
+  version: 2.1325.0
+  resolution: "aws-sdk@npm:2.1325.0"
   dependencies:
     buffer: 4.9.2
     events: 1.1.1
@@ -879,7 +879,7 @@ __metadata:
     util: ^0.12.4
     uuid: 8.0.0
     xml2js: 0.4.19
-  checksum: 359c79ea7436dda2127db74a6e5579f7adaee700cd469b0555913ee6c14d7ade97c80cfe8d428b8268caa8a1a46c4a1cd2c7b3228abe626c0b5edff3de2bc425
+  checksum: 1ee4cb3c146f6547975b0da3bc9ebf44347f28c2d5ef9a208400207042e7d4895e07629fbf77b71be9ddca946f2eac90b2031b6315297a11a4fb8d04a78656a5
   languageName: node
   linkType: hard
 
