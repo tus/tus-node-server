@@ -525,17 +525,20 @@ export class S3Store extends DataStore {
 
   public async remove(id: string): Promise<void> {
     try {
-      const metadata = await this.getMetadata(id)
-      if (metadata?.upload_id) {
+      const {upload_id} = await this.getMetadata(id)
+      if (upload_id) {
         await this.client
           .abortMultipartUpload({
             Bucket: this.bucket,
             Key: id,
-            UploadId: metadata.upload_id,
+            UploadId: upload_id,
           })
           .promise()
       }
-    } catch {}
+    } catch (error) {
+      log('remove: No file found.', error)
+      throw ERRORS.FILE_NOT_FOUND
+    }
 
     await this.client
       .deleteObjects({
