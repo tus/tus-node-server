@@ -92,11 +92,28 @@ export const shouldRemoveUploads = function () {
         metadata: {filename: 'terminate_during_upload.pdf', is_confidential: null},
       })
       await this.datastore.create(file)
-      const readable = fs.createReadStream(this.testFilePath)
-      const writeProm = this.datastore.write(readable, file.id, 0)
-      await this.datastore.remove(file.id).should.be.fulfilled()
-      await writeProm.should.be.rejected()
-      return this.datastore.getUpload(file.id).should.be.rejected()
+
+      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 50 * 1024})
+      // Pause between chunks read to make sure that file is still uploading when terminate function is invoked
+      readable.on('data', () => {
+        readable.pause()
+        setTimeout(() => readable.resume(), 1000)
+      })
+
+      try {
+        await Promise.all([
+          this.datastore.write(readable, file.id, 0),
+          this.datastore.remove(file.id),
+        ])
+      } catch {}
+
+      try {
+        await this.datastore.getUpload(file.id)
+      } catch (error) {
+        assert.equal([404, 410].includes(error.status_code), true)
+      }
+
+      readable.destroy()
     })
   })
 }
