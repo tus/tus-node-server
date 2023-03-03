@@ -93,24 +93,23 @@ export const shouldRemoveUploads = function () {
       })
       await this.datastore.create(file)
 
-      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 50 * 1024})
+      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 100 * 1024})
       // Pause between chunks read to make sure that file is still uploading when terminate function is invoked
       readable.on('data', () => {
         readable.pause()
         setTimeout(() => readable.resume(), 1000)
       })
 
-      try {
-        await Promise.all([
-          this.datastore.write(readable, file.id, 0),
-          this.datastore.remove(file.id),
-        ])
-      } catch {}
+      await Promise.allSettled([
+        this.datastore.write(readable, file.id, 0),
+        this.datastore.remove(file.id),
+      ])
 
       try {
         await this.datastore.getUpload(file.id)
+        assert.fail('getUpload should have thrown an error')
       } catch (error) {
-        assert.equal([404, 410].includes(error.status_code), true)
+        assert.equal([404, 410].includes(error?.status_code), true)
       }
 
       readable.destroy()
