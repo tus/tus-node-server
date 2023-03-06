@@ -536,14 +536,19 @@ export class S3Store extends DataStore {
           .promise()
       }
     } catch (error) {
-      log('remove: No file found.', error)
-      throw ERRORS.FILE_NOT_FOUND
+      if (error?.code && ['NoSuchKey', 'NoSuchUpload'].includes(error.code)) {
+        log('remove: No file found.', error)
+        throw ERRORS.FILE_NOT_FOUND
+      }
+      throw error
     }
 
     await this.client
       .deleteObjects({
         Bucket: this.bucket,
-        Delete: {Objects: [{Key: id}, {Key: `${id}.info`}]},
+        Delete: {
+          Objects: [{Key: id}, {Key: `${id}.info`}],
+        },
       })
       .promise()
 
