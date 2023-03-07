@@ -72,7 +72,12 @@ export class S3Store extends DataStore {
     super()
     const {partSize, s3ClientConfig} = options
     const {bucket, ...restS3ClientConfig} = s3ClientConfig
-    this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length']
+    this.extensions = [
+      'creation',
+      'creation-with-upload',
+      'creation-defer-length',
+      'termination',
+    ]
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
     this.client = new aws.S3(restS3ClientConfig)
@@ -516,5 +521,37 @@ export class S3Store extends DataStore {
     file.size = upload_length
 
     this.saveMetadata(file, upload_id)
+  }
+
+  public async remove(id: string): Promise<void> {
+    try {
+      const {upload_id} = await this.getMetadata(id)
+      if (upload_id) {
+        await this.client
+          .abortMultipartUpload({
+            Bucket: this.bucket,
+            Key: id,
+            UploadId: upload_id,
+          })
+          .promise()
+      }
+    } catch (error) {
+      if (error?.code && ['NoSuchKey', 'NoSuchUpload'].includes(error.code)) {
+        log('remove: No file found.', error)
+        throw ERRORS.FILE_NOT_FOUND
+      }
+      throw error
+    }
+
+    await this.client
+      .deleteObjects({
+        Bucket: this.bucket,
+        Delete: {
+          Objects: [{Key: id}, {Key: `${id}.info`}],
+        },
+      })
+      .promise()
+
+    this.clearCache(id)
   }
 }

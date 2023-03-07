@@ -110,7 +110,7 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 | [Creation With Upload][] | ✅                                | ✅                            | ✅                              |
 | [Expiration][]           | ✅                                | ❌                            | ❌                              |
 | [Checksum][]             | ❌                                | ❌                            | ❌                              |
-| [Termination][]          | ✅                                | ❌                            | ❌                              |
+| [Termination][]          | ✅                                | ✅                            | ❌                              |
 | [Concatenation][]        | ❌                                | ❌                            | ❌                              |
 
 ## Demos
