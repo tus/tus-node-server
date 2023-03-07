@@ -1,4 +1,4 @@
-import {Upload} from '../models'
+import {Upload} from '@tus/server'
 
 export interface Configstore {
   get(key: string): Promise<Upload | undefined>

@@ -1,6 +1,6 @@
 import {RedisClientType} from '@redis/client'
 
-import {Upload} from '../models'
+import {Upload} from '@tus/server'
 import {Configstore} from './Types'
 
 /**

@@ -6,7 +6,8 @@ import http from 'node:http'
 
 import debug from 'debug'
 
-import {DataStore, Upload, ERRORS, Configstore, FileConfigstore} from '@tus/server'
+import {Configstore, FileConfigstore} from './configstores'
+import {DataStore, Upload, ERRORS} from '@tus/server'
 
 type Options = {
   directory: string

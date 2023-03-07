@@ -1,4 +1,4 @@
-import {Upload} from '../models'
+import {Upload} from '@tus/server'
 import {Configstore} from './Types'
 
 /**

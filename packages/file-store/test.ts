@@ -10,7 +10,7 @@ import {FileStore} from './'
 import {Upload} from '@tus/server'
 
 import * as shared from '../../test/stores.test'
-import {MemoryConfigstore} from '@tus/server/src/configstores/MemoryConfigstore'
+import {MemoryConfigstore} from './configstores/MemoryConfigstore'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
