@@ -8,7 +8,7 @@ import request from 'supertest'
 import {Storage} from '@google-cloud/storage'
 
 import {Server, TUS_RESUMABLE, ERRORS} from '@tus/server'
-import {MemoryConfigstore} from '@tus/server'
+import {Configstore, MemoryConfigstore} from '@tus/file-store'
 import {FileStore} from '@tus/file-store'
 import {GCSStore} from '@tus/gcs-store'
 
@@ -67,7 +67,12 @@ describe('EndToEnd', () => {
         // Clear the config
         // @ts-expect-error we can consider a generic to pass to
         // datastore to narrow down the store type
-        server.datastore.configstore.clear()
+        const uploads = (server.datastore.configstore as Configstore).list?.() ?? []
+        for (const upload in uploads) {
+          // @ts-expect-error we can consider a generic to pass to
+          // datastore to narrow down the store type
+          await(server.datastore.configstore as Configstore).delete(upload)
+        }
         listener.close()
         return done()
       })
@@ -437,16 +442,9 @@ describe('EndToEnd', () => {
           .end(done)
       })
 
-      it('can delete expired files', (done) => {
-        server.datastore
-          .deleteExpired()
-          .catch((error) => {
-            done(error)
-          })
-          .then((deleted) => {
-            assert.equal(deleted >= 1, true)
-            done()
-          })
+      it('can delete expired files', async () => {
+        const deleted = await server.datastore.deleteExpired()
+        assert.equal(deleted >= 1, true)
       })
     })
   })

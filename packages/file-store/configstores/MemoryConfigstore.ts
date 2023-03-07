@@ -23,7 +23,7 @@ export class MemoryConfigstore implements Configstore {
   }
 
   async list(): Promise<Array<string>> {
-    return Object.keys(this.data)
+    return [...this.data.keys()]
   }
 
   private serializeValue(value: Upload): string {
@@ -31,6 +31,6 @@ export class MemoryConfigstore implements Configstore {
   }
 
   private deserializeValue(buffer: string | undefined): Upload | undefined {
-    return buffer ? JSON.parse(buffer) : undefined
+    return buffer ? new Upload(JSON.parse(buffer)) : undefined
   }
 }

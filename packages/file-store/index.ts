@@ -9,6 +9,8 @@ import debug from 'debug'
 import {Configstore, FileConfigstore} from './configstores'
 import {DataStore, Upload, ERRORS} from '@tus/server'
 
+export * from './configstores'
+
 type Options = {
   directory: string
   configstore?: Configstore
