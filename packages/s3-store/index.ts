@@ -274,7 +274,9 @@ export class S3Store extends DataStore {
           } catch (error) {
             reject(error)
           } finally {
-            fsProm.rm(path).catch(/* ignore */)
+            fsProm.rm(path).catch(() => {
+              /* ignore */
+            })
           }
         })
 
