@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new package, currently in beta at `1.0.0-beta.4`.
+> Make sure to use the new package, currently in beta at `1.0.0-beta.5`.
 
 ## Contents
 

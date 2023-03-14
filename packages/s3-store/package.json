@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/s3-store",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "AWS S3 store for @tus/server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
