@@ -262,11 +262,13 @@ export class S3Store extends DataStore {
               ])
             }
 
+            const readable = fs.createReadStream(path)
+            readable.on('error', reject)
             if (partSize > this.minPartSize || isFinalChunk) {
-              await this.uploadPart(metadata, fs.createReadStream(path), partNumber)
+              await this.uploadPart(metadata, readable, partNumber)
               offset += partSize
             } else {
-              await this.uploadIncompletePart(incompletePartId, fs.createReadStream(path))
+              await this.uploadIncompletePart(incompletePartId, readable)
             }
 
             bytesUploaded += partSize
