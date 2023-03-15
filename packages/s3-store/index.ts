@@ -540,7 +540,7 @@ export class S3Store extends DataStore {
           .promise()
       }
     } catch (error) {
-      if (error?.code && ['NoSuchKey', 'NoSuchUpload'].includes(error.code)) {
+      if (error?.code && ['NotFound', 'NoSuchKey', 'NoSuchUpload'].includes(error.code)) {
         log('remove: No file found.', error)
         throw ERRORS.FILE_NOT_FOUND
       }
