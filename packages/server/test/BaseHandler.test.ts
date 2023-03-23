@@ -1,14 +1,14 @@
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 import http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
-import {BaseHandler} from '../src/handlers//BaseHandler'
-import {DataStore} from '../src/models'
+import { BaseHandler } from '../src/handlers//BaseHandler'
+import { DataStore } from '../src/models'
 
 describe('BaseHandler', () => {
   const store = new DataStore()
-  const handler = new BaseHandler(store, {path: '/test/output'})
+  const handler = new BaseHandler(store, { path: '/test/output' })
   let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
@@ -37,7 +37,7 @@ describe('BaseHandler', () => {
 
   it('write() should set headers', (done) => {
     const header = 'Access-Control-Allow-Methods'
-    const headers = {[header]: 'GET, OPTIONS'}
+    const headers = { [header]: 'GET, OPTIONS' }
     handler.write(res, 200, headers)
     assert.equal(res.getHeader(header), headers[header])
 
@@ -53,14 +53,14 @@ describe('BaseHandler', () => {
   })
 
   it('should get ID correctly from nested URL', () => {
-    const req = {url: '/some/path/yeah/1234'} as http.IncomingMessage
+    const req = { url: '/some/path/yeah/1234' } as http.IncomingMessage
     const id = handler.getFileIdFromRequest(req)
 
     assert.equal(id, '1234')
   })
 
   it('should handle URL-encoded ID', () => {
-    const req = {url: '/some/path/yeah/1234%205%23'} as http.IncomingMessage
+    const req = { url: '/some/path/yeah/1234%205%23' } as http.IncomingMessage
     const id = handler.getFileIdFromRequest(req)
 
     assert.equal(id, '1234 5#')

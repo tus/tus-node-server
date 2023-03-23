@@ -1,9 +1,9 @@
 import os from 'node:os'
 import fs from 'node:fs'
 import stream from 'node:stream/promises'
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 
-import {StreamSplitter} from '../src/models'
+import { StreamSplitter } from '../src/models'
 
 const fileSize = 20_971_520
 
@@ -17,7 +17,7 @@ describe('StreamSplitter', () => {
     const splitterStream = new StreamSplitter({
       chunkSize: optimalChunkSize,
       directory: os.tmpdir(),
-    }).on('chunkFinished', ({size}) => {
+    }).on('chunkFinished', ({ size }) => {
       offset += size
       assert.equal(parts[index], size)
       index++

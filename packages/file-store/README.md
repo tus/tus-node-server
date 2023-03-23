@@ -29,12 +29,12 @@ npm install @tus/file-store
 ## Use
 
 ```js
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
+const { Server } = require('@tus/server')
+const { FileStore } = require('@tus/file-store')
 
 const server = new Server({
   path: '/files',
-  datastore: new FileStore({directory: './some/path'}),
+  datastore: new FileStore({ directory: './some/path' }),
 })
 // ...
 ```
@@ -85,7 +85,7 @@ For demonstration purposes we will create a memory config store, but that's not 
 It's written in TypeScript.
 
 ```ts
-import type {Upload} from '@tus/server'
+import type { Upload } from '@tus/server'
 
 export class MemoryConfigstore {
   data: Map<string, Upload> = new Map()

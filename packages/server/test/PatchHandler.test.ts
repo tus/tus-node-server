@@ -1,14 +1,14 @@
 import 'should'
 
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 import http from 'node:http'
 
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {PatchHandler} from '../src/handlers/PatchHandler'
-import {Upload, DataStore} from '../src/models'
-import {EVENTS} from '../src/constants'
+import { PatchHandler } from '../src/handlers/PatchHandler'
+import { Upload, DataStore } from '../src/models'
+import { EVENTS } from '../src/constants'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -19,19 +19,19 @@ describe('PatchHandler', () => {
 
   beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
-    handler = new PatchHandler(store, {path})
-    req = {method: 'PATCH', url: `${path}/1234`} as http.IncomingMessage
-    res = httpMocks.createResponse({req})
+    handler = new PatchHandler(store, { path })
+    req = { method: 'PATCH', url: `${path}/1234` } as http.IncomingMessage
+    res = httpMocks.createResponse({ req })
   })
 
   it('should 403 if no Content-Type header', () => {
     req.headers = {}
-    return assert.rejects(() => handler.send(req, res), {status_code: 403})
+    return assert.rejects(() => handler.send(req, res), { status_code: 403 })
   })
 
   it('should 403 if no Upload-Offset header', () => {
-    req.headers = {'content-type': 'application/offset+octet-stream'}
-    return assert.rejects(() => handler.send(req, res), {status_code: 403})
+    req.headers = { 'content-type': 'application/offset+octet-stream' }
+    return assert.rejects(() => handler.send(req, res), { status_code: 403 })
   })
 
   it('should call onUploadFinished hook', async function () {
@@ -45,7 +45,7 @@ describe('PatchHandler', () => {
       'upload-offset': '0',
       'content-type': 'application/offset+octet-stream',
     }
-    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
+    store.getUpload.resolves(new Upload({ id: '1234', offset: 0, size: 1024 }))
     store.write.resolves(1024)
 
     await handler.send(req, res)
@@ -58,7 +58,7 @@ describe('PatchHandler', () => {
   describe('send()', () => {
     it('should 404 urls without a path', () => {
       req.url = `${path}/`
-      return assert.rejects(() => handler.send(req, res), {status_code: 404})
+      return assert.rejects(() => handler.send(req, res), { status_code: 404 })
     })
 
     it('should 403 if the offset is omitted', () => {
@@ -66,13 +66,13 @@ describe('PatchHandler', () => {
         'content-type': 'application/offset+octet-stream',
       }
       req.url = `${path}/file`
-      return assert.rejects(() => handler.send(req, res), {status_code: 403})
+      return assert.rejects(() => handler.send(req, res), { status_code: 403 })
     })
 
     it('should 403 the content-type is omitted', () => {
-      req.headers = {'upload-offset': '0'}
+      req.headers = { 'upload-offset': '0' }
       req.url = `${path}/file`
-      return assert.rejects(() => handler.send(req, res), {status_code: 403})
+      return assert.rejects(() => handler.send(req, res), { status_code: 403 })
     })
 
     it('should declare upload-length once it is send', async () => {
@@ -84,7 +84,7 @@ describe('PatchHandler', () => {
       req.url = `${path}/file`
 
       store.hasExtension.withArgs('creation-defer-length').returns(true)
-      store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
+      store.getUpload.resolves(new Upload({ id: '1234', offset: 0 }))
       store.write.resolves(5)
       store.declareUploadLength.resolves()
 
@@ -101,10 +101,10 @@ describe('PatchHandler', () => {
       }
       req.url = `${path}/file`
 
-      store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 20}))
+      store.getUpload.resolves(new Upload({ id: '1234', offset: 0, size: 20 }))
       store.hasExtension.withArgs('creation-defer-length').returns(true)
 
-      return assert.rejects(() => handler.send(req, res), {status_code: 400})
+      return assert.rejects(() => handler.send(req, res), { status_code: 400 })
     })
 
     it('must return a promise if the headers validate', () => {
@@ -125,9 +125,9 @@ describe('PatchHandler', () => {
         'content-type': 'application/offset+octet-stream',
       }
 
-      store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 512}))
+      store.getUpload.resolves(new Upload({ id: '1234', offset: 0, size: 512 }))
 
-      return assert.rejects(() => handler.send(req, res), {status_code: 409})
+      return assert.rejects(() => handler.send(req, res), { status_code: 409 })
     })
 
     it('must acknowledge successful PATCH requests with the 204', async () => {
@@ -136,7 +136,7 @@ describe('PatchHandler', () => {
         'content-type': 'application/offset+octet-stream',
       }
 
-      store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
+      store.getUpload.resolves(new Upload({ id: '1234', offset: 0, size: 1024 }))
       store.write.resolves(10)
 
       await handler.send(req, res)
@@ -154,7 +154,7 @@ describe('PatchHandler', () => {
       'content-type': 'application/offset+octet-stream',
     }
 
-    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
+    store.getUpload.resolves(new Upload({ id: '1234', offset: 0, size: 1024 }))
     store.write.resolves(10)
     handler.on(EVENTS.POST_RECEIVE, spy)
 

@@ -1,4 +1,4 @@
-import type {Upload} from '../models'
+import type { Upload } from '../models'
 
 /**
  * Memory based configstore.

@@ -1,14 +1,14 @@
 import os from 'node:os'
-import fs, {promises as fsProm} from 'node:fs'
+import fs, { promises as fsProm } from 'node:fs'
 import stream from 'node:stream/promises'
-import type {Readable} from 'node:stream'
+import type { Readable } from 'node:stream'
 import http from 'node:http'
 
 import aws from 'aws-sdk'
 import debug from 'debug'
 
-import {DataStore, StreamSplitter, Upload} from '@tus/server'
-import {ERRORS, TUS_RESUMABLE} from '@tus/server'
+import { DataStore, StreamSplitter, Upload } from '@tus/server'
+import { ERRORS, TUS_RESUMABLE } from '@tus/server'
 
 const log = debug('tus-node-server:stores:s3store')
 
@@ -23,10 +23,10 @@ type Options = {
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   // Options to pass to the AWS S3 SDK.
-  s3ClientConfig: aws.S3.Types.ClientConfiguration & {bucket: string}
+  s3ClientConfig: aws.S3.Types.ClientConfiguration & { bucket: string }
 }
 
-type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
+type MetadataValue = { file: Upload; upload_id: string; tus_version: string }
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -70,14 +70,9 @@ export class S3Store extends DataStore {
 
   constructor(options: Options) {
     super()
-    const {partSize, s3ClientConfig} = options
-    const {bucket, ...restS3ClientConfig} = s3ClientConfig
-    this.extensions = [
-      'creation',
-      'creation-with-upload',
-      'creation-defer-length',
-      'termination',
-    ]
+    const { partSize, s3ClientConfig } = options
+    const { bucket, ...restS3ClientConfig } = s3ClientConfig
+    this.extensions = ['creation', 'creation-with-upload', 'creation-defer-length', 'termination']
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
     this.client = new aws.S3(restS3ClientConfig)
@@ -120,8 +115,8 @@ export class S3Store extends DataStore {
     }
 
     log(`[${id}] metadata from s3`)
-    const {Metadata} = await this.client
-      .headObject({Bucket: this.bucket, Key: `${id}.info`})
+    const { Metadata } = await this.client
+      .headObject({ Bucket: this.bucket, Key: `${id}.info` })
       .promise()
     const file = JSON.parse(Metadata?.file as string)
     this.cache.set(id, {
@@ -240,7 +235,7 @@ export class S3Store extends DataStore {
       .on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
       })
-      .on('chunkFinished', ({path, size: partSize}) => {
+      .on('chunkFinished', ({ path, size: partSize }) => {
         pendingChunkFilepath = null
 
         // eslint-disable-next-line no-async-promise-executor
@@ -405,7 +400,7 @@ export class S3Store extends DataStore {
     const request: CreateRequest = {
       Bucket: this.bucket,
       Key: upload.id,
-      Metadata: {tus_version: TUS_RESUMABLE},
+      Metadata: { tus_version: TUS_RESUMABLE },
     }
     const file: Record<string, string | number | Upload['metadata']> = {
       id: upload.id,
@@ -448,12 +443,7 @@ export class S3Store extends DataStore {
     const partNumber = parts?.length ?? 0
     const nextPartNumber = partNumber + 1
 
-    const bytesUploaded = await this.processUpload(
-      metadata,
-      readable,
-      nextPartNumber,
-      offset
-    )
+    const bytesUploaded = await this.processUpload(metadata, readable, nextPartNumber, offset)
 
     const newOffset = offset + bytesUploaded
 
@@ -517,7 +507,7 @@ export class S3Store extends DataStore {
   }
 
   public async declareUploadLength(file_id: string, upload_length: number) {
-    const {file, upload_id} = await this.getMetadata(file_id)
+    const { file, upload_id } = await this.getMetadata(file_id)
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
@@ -529,7 +519,7 @@ export class S3Store extends DataStore {
 
   public async remove(id: string): Promise<void> {
     try {
-      const {upload_id} = await this.getMetadata(id)
+      const { upload_id } = await this.getMetadata(id)
       if (upload_id) {
         await this.client
           .abortMultipartUpload({
@@ -551,7 +541,7 @@ export class S3Store extends DataStore {
       .deleteObjects({
         Bucket: this.bucket,
         Delete: {
-          Objects: [{Key: id}, {Key: `${id}.info`}],
+          Objects: [{ Key: id }, { Key: `${id}.info` }],
         },
       })
       .promise()

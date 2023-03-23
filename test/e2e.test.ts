@@ -1,15 +1,15 @@
 /* eslint-disable max-nested-callbacks */
 import path from 'node:path'
 import fs from 'node:fs'
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 
 import rimraf from 'rimraf'
 import request from 'supertest'
-import {Storage} from '@google-cloud/storage'
+import { Storage } from '@google-cloud/storage'
 
-import {Server, TUS_RESUMABLE, MemoryConfigstore} from '@tus/server'
-import {FileStore} from '@tus/file-store'
-import {GCSStore} from '@tus/gcs-store'
+import { Server, TUS_RESUMABLE, MemoryConfigstore } from '@tus/server'
+import { FileStore } from '@tus/file-store'
+import { GCSStore } from '@tus/gcs-store'
 
 import type http from 'node:http'
 
@@ -50,7 +50,7 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
-        datastore: new FileStore({directory: `./${STORE_PATH}`}),
+        datastore: new FileStore({ directory: `./${STORE_PATH}` }),
       })
       listener = server.listen()
       agent = request.agent(listener)
@@ -267,7 +267,7 @@ describe('EndToEnd', () => {
     before(() => {
       server = new Server({
         path: STORE_PATH,
-        datastore: new FileStore({directory: `./${STORE_PATH}`}),
+        datastore: new FileStore({ directory: `./${STORE_PATH}` }),
         // Configure the store to return relative path in Location Header
         relativeLocation: true,
       })

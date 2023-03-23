@@ -29,8 +29,8 @@ npm install @tus/s3-store
 ## Use
 
 ```js
-const {Server} = require('@tus/server')
-const {S3Store} = require('@tus/s3-store')
+const { Server } = require('@tus/server')
+const { S3Store } = require('@tus/s3-store')
 
 const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
@@ -41,7 +41,7 @@ const s3Store = new S3Store({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 })
-const server = new Server({path: '/files', datastore: s3Store})
+const server = new Server({ path: '/files', datastore: s3Store })
 // ...
 ```
 
@@ -94,8 +94,8 @@ The `credentials` config is directly passed into the AWS SDK so you can refer to
 
 ```js
 const aws = require('aws-sdk')
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/s3-store')
+const { Server } = require('@tus/server')
+const { FileStore } = require('@tus/s3-store')
 
 const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024,
@@ -103,12 +103,12 @@ const s3Store = new S3Store({
     bucket: process.env.AWS_BUCKET,
     region: process.env.AWS_REGION,
     credentials: new aws.ECSCredentials({
-      httpOptions: {timeout: 5000},
+      httpOptions: { timeout: 5000 },
       maxRetries: 10,
     }),
   },
 })
-const server = new Server({path: '/files', datastore: s3Store})
+const server = new Server({ path: '/files', datastore: s3Store })
 // ...
 ```
 

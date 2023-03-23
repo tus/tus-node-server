@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import EventEmitter from 'node:events'
 
-import {Upload} from './Upload'
+import { Upload } from './Upload'
 
 import type stream from 'node:stream'
 import type http from 'node:http'
@@ -36,11 +36,7 @@ export class DataStore extends EventEmitter {
    *
    * http://tus.io/protocols/resumable-upload.html#concatenation
    */
-  async write(
-    stream: http.IncomingMessage | stream.Readable,
-    id: string,
-    offset: number
-  ) {
+  async write(stream: http.IncomingMessage | stream.Readable, id: string, offset: number) {
     return 0
   }
 
@@ -50,7 +46,7 @@ export class DataStore extends EventEmitter {
    * the upload.
    */
   async getUpload(id: string): Promise<Upload> {
-    return new Upload({id, size: 0, offset: 0})
+    return new Upload({ id, size: 0, offset: 0 })
   }
 
   /**

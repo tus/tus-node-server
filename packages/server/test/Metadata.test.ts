@@ -1,10 +1,9 @@
-import {strict as assert} from 'node:assert'
-import {parse, stringify} from '../src/models/Metadata'
+import { strict as assert } from 'node:assert'
+import { parse, stringify } from '../src/models/Metadata'
 
 describe('Metadata', () => {
   it('parse valid metadata string', () => {
-    const str =
-      'file/name dGVzdC5tcDQ=,size OTYwMjQ0,type! dmlkZW8vbXA0,video,withWhitespace '
+    const str = 'file/name dGVzdC5tcDQ=,size OTYwMjQ0,type! dmlkZW8vbXA0,video,withWhitespace '
     const obj = {
       'file/name': 'test.mp4',
       size: '960244',
@@ -30,13 +29,13 @@ describe('Metadata', () => {
   })
 
   it('verify metadata stringification', () => {
-    assert.strictEqual(stringify({filename: 'test.mp4'}), 'filename dGVzdC5tcDQ=')
-    assert.strictEqual(stringify({size: '960244'}), 'size OTYwMjQ0')
-    assert.strictEqual(stringify({type: 'video/mp4'}), 'type dmlkZW8vbXA0')
+    assert.strictEqual(stringify({ filename: 'test.mp4' }), 'filename dGVzdC5tcDQ=')
+    assert.strictEqual(stringify({ size: '960244' }), 'size OTYwMjQ0')
+    assert.strictEqual(stringify({ type: 'video/mp4' }), 'type dmlkZW8vbXA0')
     // Multiple valid options
-    assert.notStrictEqual(['video', 'video '].indexOf(stringify({video: null})), -1)
+    assert.notStrictEqual(['video', 'video '].indexOf(stringify({ video: null })), -1)
     assert.notStrictEqual(
-      ['withWhitespace', 'withWhitespace '].indexOf(stringify({withWhitespace: null})),
+      ['withWhitespace', 'withWhitespace '].indexOf(stringify({ withWhitespace: null })),
       -1
     )
   })
@@ -45,12 +44,12 @@ describe('Metadata', () => {
     assert.deepStrictEqual(parse('filename dGVzdC5tcDQ='), {
       filename: 'test.mp4',
     })
-    assert.deepStrictEqual(parse('size OTYwMjQ0'), {size: '960244'})
+    assert.deepStrictEqual(parse('size OTYwMjQ0'), { size: '960244' })
     assert.deepStrictEqual(parse('type dmlkZW8vbXA0'), {
       type: 'video/mp4',
     })
-    assert.deepStrictEqual(parse('video'), {video: null})
-    assert.deepStrictEqual(parse('video '), {video: null})
+    assert.deepStrictEqual(parse('video'), { video: null })
+    assert.deepStrictEqual(parse('video '), { video: null })
     assert.deepStrictEqual(parse('withWhitespace'), {
       withWhitespace: null,
     })

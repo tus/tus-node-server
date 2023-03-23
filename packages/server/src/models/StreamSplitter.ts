@@ -24,7 +24,7 @@ export class StreamSplitter extends stream.Writable {
   chunkSize: Options['chunkSize']
   part: number
 
-  constructor({chunkSize, directory}: Options, options?: stream.WritableOptions) {
+  constructor({ chunkSize, directory }: Options, options?: stream.WritableOptions) {
     super(options)
     this.chunkSize = chunkSize
     this.currentChunkPath = null
@@ -103,10 +103,7 @@ export class StreamSplitter extends stream.Writable {
   }
 
   async _newChunk(): Promise<void> {
-    this.currentChunkPath = path.join(
-      this.directory,
-      `${this.filenameTemplate}-${this.part}`
-    )
+    this.currentChunkPath = path.join(this.directory, `${this.filenameTemplate}-${this.part}`)
     const fileHandle = await fs.open(this.currentChunkPath, 'w')
     this.emit('chunkStarted', this.currentChunkPath)
     this.currentChunkSize = 0

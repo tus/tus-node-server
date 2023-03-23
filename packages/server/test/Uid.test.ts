@@ -1,6 +1,6 @@
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 
-import {Uid} from '../src/models'
+import { Uid } from '../src/models'
 
 describe('Uid', () => {
   it('returns a 32 char string', (done) => {

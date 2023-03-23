@@ -1,10 +1,10 @@
-import {Storage, Bucket} from '@google-cloud/storage'
+import { Storage, Bucket } from '@google-cloud/storage'
 import stream from 'node:stream'
 import http from 'node:http'
 import debug from 'debug'
 
-import {ERRORS, TUS_RESUMABLE} from '@tus/server'
-import {Upload, DataStore} from '@tus/server'
+import { ERRORS, TUS_RESUMABLE } from '@tus/server'
+import { Upload, DataStore } from '@tus/server'
 
 type Options = {
   bucket: string
@@ -111,7 +111,7 @@ export class GCSStore extends DataStore {
           if (e) {
             log(e)
             try {
-              await destination.delete({ignoreNotFound: true})
+              await destination.delete({ ignoreNotFound: true })
             } finally {
               reject(ERRORS.FILE_WRITE_ERROR)
             }
@@ -122,7 +122,7 @@ export class GCSStore extends DataStore {
                 await this.bucket.combine([file, destination], file)
                 await Promise.all([
                   file.setMetadata(options.metadata),
-                  destination.delete({ignoreNotFound: true}),
+                  destination.delete({ ignoreNotFound: true }),
                 ])
               }
 
@@ -155,7 +155,7 @@ export class GCSStore extends DataStore {
           return reject(error)
         }
 
-        const {size, metadata: meta} = metadata.metadata
+        const { size, metadata: meta } = metadata.metadata
         return resolve(
           new Upload({
             id,
@@ -173,6 +173,6 @@ export class GCSStore extends DataStore {
 
     upload.size = upload_length
 
-    await this.bucket.file(id).setMetadata({metadata: upload})
+    await this.bucket.file(id).setMetadata({ metadata: upload })
   }
 }

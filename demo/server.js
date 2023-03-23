@@ -4,10 +4,10 @@ const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
 
-const {Server, EVENTS} = require('@tus/server')
-const {GCSDataStore} = require('@tus/gcs-store')
-const {S3Store} = require('@tus/s3-store')
-const {FileStore} = require('@tus/file-store')
+const { Server, EVENTS } = require('@tus/server')
+const { GCSDataStore } = require('@tus/gcs-store')
+const { S3Store } = require('@tus/s3-store')
+const { FileStore } = require('@tus/file-store')
 
 const stores = {
   GCSDataStore: () =>
@@ -17,10 +17,7 @@ const stores = {
       bucket: 'tus-node-server',
     }),
   S3Store: () => {
-    assert.ok(
-      process.env.AWS_ACCESS_KEY_ID,
-      'environment variable `AWS_ACCESS_KEY_ID` must be set'
-    )
+    assert.ok(process.env.AWS_ACCESS_KEY_ID, 'environment variable `AWS_ACCESS_KEY_ID` must be set')
     assert.ok(
       process.env.AWS_SECRET_ACCESS_KEY,
       'environment variable `AWS_SECRET_ACCESS_KEY` must be set'
@@ -38,11 +35,11 @@ const stores = {
       },
     })
   },
-  FileStore: () => new FileStore({directory: './files'}),
+  FileStore: () => new FileStore({ directory: './files' }),
 }
 const storeName = process.env.DATA_STORE || 'FileStore'
 const store = stores[storeName]
-const server = new Server({path: '/files', datastore: store()})
+const server = new Server({ path: '/files', datastore: store() })
 
 /**
  * Basic GET handler to serve the demo html/js
@@ -62,17 +59,14 @@ const writeFile = (req, res) => {
   filename = path.join(process.cwd(), '../node_modules/tus-js-client', filename)
   fs.readFile(filename, 'binary', (err, file) => {
     if (err) {
-      res.writeHead(500, {'Content-Type': 'text/plain'})
+      res.writeHead(500, { 'Content-Type': 'text/plain' })
       res.write(err)
       res.end()
       return
     }
 
     // Update demo URL to point to our local server
-    file = file.replace(
-      'https://tusd.tusdemo.net/files/',
-      `http://${host}:${port}/files/`
-    )
+    file = file.replace('https://tusd.tusdemo.net/files/', `http://${host}:${port}/files/`)
 
     res.writeHead(200)
     res.write(file)
@@ -94,9 +88,7 @@ server.get('/dist/tus.min.js.map', writeFile)
 
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
   console.log(
-    `[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${
-      event.file.id
-    }`
+    `[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id}`
   )
 })
 
@@ -110,7 +102,7 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
 
 const host = '127.0.0.1'
 const port = 1080
-server.listen({host, port}, () => {
+server.listen({ host, port }, () => {
   console.log(
     `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port} using ${storeName}`
   )

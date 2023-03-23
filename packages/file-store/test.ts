@@ -1,13 +1,13 @@
 import 'should'
 
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 import fs from 'node:fs'
 import path from 'node:path'
 
 import sinon from 'sinon'
 
-import {FileStore} from './'
-import {Upload, MemoryConfigstore} from '@tus/server'
+import { FileStore } from './'
+import { Upload, MemoryConfigstore } from '@tus/server'
 
 import * as shared from '../../test/stores.test'
 
@@ -45,7 +45,7 @@ describe('FileStore', function () {
   })
 
   describe('create', () => {
-    const file = new Upload({id: '1234', size: 1000, offset: 0})
+    const file = new Upload({ id: '1234', size: 1000, offset: 0 })
 
     it('should reject when the directory doesnt exist', function () {
       this.datastore.directory = 'some_new_path'
@@ -71,7 +71,7 @@ describe('FileStore', function () {
       // @ts-expect-error todo
       size: this.testFileSize,
       offset: 0,
-      metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+      metadata: { filename: 'world_domination_plan.pdf', is_confidential: null },
     })
 
     it("created file's size should match 'upload_length'", async function () {

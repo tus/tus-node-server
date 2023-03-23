@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import {GCSStore} from './'
+import { GCSStore } from './'
 
 import * as shared from '../../test/stores.test'
 

@@ -1,13 +1,13 @@
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import assert from 'node:assert/strict'
-import {Readable} from 'node:stream'
+import { Readable } from 'node:stream'
 
 import sinon from 'sinon'
 
-import {S3Store} from './'
+import { S3Store } from './'
 import * as shared from '../../test/stores.test'
-import {Upload} from '@tus/server'
+import { Upload } from '@tus/server'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
@@ -62,7 +62,7 @@ describe('S3DataStore', function () {
     assert.equal(n1, incompleteSize)
     const n2 = await store.write(Readable.from(Buffer.alloc(size)), upload.id, n1)
     assert.equal(n2, incompleteSize + size)
-    const {offset} = await store.getUpload(upload.id)
+    const { offset } = await store.getUpload(upload.id)
 
     assert.equal(getIncompletePart.calledTwice, true)
     assert.equal(deleteIncompletePart.calledOnce, true)

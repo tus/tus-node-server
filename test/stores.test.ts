@@ -1,9 +1,9 @@
 import 'should'
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
 
-import {Upload} from '@tus/server'
+import { Upload } from '@tus/server'
 
 export const shouldHaveStoreMethods = function () {
   describe('the class', () => {
@@ -25,7 +25,7 @@ export const shouldCreateUploads = function () {
       id: 'create-test',
       size: 1000,
       offset: 0,
-      metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+      metadata: { filename: 'world_domination_plan.pdf', is_confidential: null },
     })
     const file_defered = new Upload({
       id: 'create-test-deferred',
@@ -68,7 +68,7 @@ export const shouldCreateUploads = function () {
 }
 
 export const shouldRemoveUploads = function () {
-  const file = new Upload({id: 'remove-test', size: 1000, offset: 0})
+  const file = new Upload({ id: 'remove-test', size: 1000, offset: 0 })
 
   describe('remove (termination extension)', () => {
     it("should report 'termination' extension", function () {
@@ -89,11 +89,11 @@ export const shouldRemoveUploads = function () {
         id: 'termination-test',
         size: this.testFileSize,
         offset: 0,
-        metadata: {filename: 'terminate_during_upload.pdf', is_confidential: null},
+        metadata: { filename: 'terminate_during_upload.pdf', is_confidential: null },
       })
       await this.datastore.create(file)
 
-      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 100 * 1024})
+      const readable = fs.createReadStream(this.testFilePath, { highWaterMark: 100 * 1024 })
       // Pause between chunks read to make sure that file is still uploading when terminate function is invoked
       readable.on('data', () => {
         readable.pause()
@@ -134,7 +134,7 @@ export const shouldWriteUploads = function () {
         id: 'write-test',
         size: this.testFileSize,
         offset: 0,
-        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+        metadata: { filename: 'world_domination_plan.pdf', is_confidential: null },
       })
       await this.datastore.create(file)
       const readable = fs.createReadStream(this.testFilePath)
@@ -147,7 +147,7 @@ export const shouldWriteUploads = function () {
         id: 'write-test-reject',
         size: this.testFileSize,
         offset: 0,
-        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+        metadata: { filename: 'world_domination_plan.pdf', is_confidential: null },
       })
       await this.datastore.create(file)
       const readable = new stream.Readable({
@@ -173,7 +173,7 @@ export const shouldHandleOffset = function () {
         id: 'offset-test',
         size: this.testFileSize,
         offset: 0,
-        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+        metadata: { filename: 'world_domination_plan.pdf', is_confidential: null },
       })
 
       await this.datastore.create(file)
@@ -198,7 +198,7 @@ export const shouldDeclareUploadLength = function () {
       const file = new Upload({
         id: 'declare-length-test',
         offset: 0,
-        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+        metadata: { filename: 'world_domination_plan.pdf', is_confidential: null },
       })
 
       await this.datastore.create(file)

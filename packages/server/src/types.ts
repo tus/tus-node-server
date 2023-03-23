@@ -1,6 +1,6 @@
 import type http from 'node:http'
 
-import type {Upload} from './models'
+import type { Upload } from './models'
 
 export type ServerOptions = {
   // The route to accept requests.

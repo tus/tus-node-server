@@ -1,7 +1,7 @@
 import 'should'
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 
-import {DataStore} from '../src/models/DataStore'
+import { DataStore } from '../src/models/DataStore'
 
 describe('DataStore', () => {
   const datastore = new DataStore()

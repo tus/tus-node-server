@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events'
 
-import type {ServerOptions} from '../types'
-import type {DataStore} from '../models'
+import type { ServerOptions } from '../types'
+import type { DataStore } from '../models'
 import type http from 'node:http'
 
 const reExtractFileID = /([^/]+)\/?$/
@@ -23,7 +23,7 @@ export class BaseHandler extends EventEmitter {
   }
 
   write(res: http.ServerResponse, status: number, headers = {}, body = '') {
-    headers = status === 204 ? headers : {...headers, 'Content-Length': body.length}
+    headers = status === 204 ? headers : { ...headers, 'Content-Length': body.length }
     res.writeHead(status, headers)
     res.write(body)
     return res.end()

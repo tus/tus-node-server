@@ -1,5 +1,5 @@
-import {BaseHandler} from './BaseHandler'
-import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../constants'
+import { BaseHandler } from './BaseHandler'
+import { ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE } from '../constants'
 
 import type http from 'node:http'
 

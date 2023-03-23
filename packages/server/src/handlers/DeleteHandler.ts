@@ -1,5 +1,5 @@
-import {BaseHandler} from './BaseHandler'
-import {ERRORS, EVENTS} from '../constants'
+import { BaseHandler } from './BaseHandler'
+import { ERRORS, EVENTS } from '../constants'
 
 import type http from 'node:http'
 

@@ -7,7 +7,7 @@ import http from 'node:http'
 import debug from 'debug'
 import Configstore from 'configstore'
 
-import {DataStore, Upload, ERRORS} from '@tus/server'
+import { DataStore, Upload, ERRORS } from '@tus/server'
 import pkg from './package.json'
 
 type Store = {
@@ -33,7 +33,7 @@ export class FileStore extends DataStore {
   configstore: Store
   expirationPeriodInMilliseconds: number
 
-  constructor({directory, configstore, expirationPeriodInMilliseconds}: Options) {
+  constructor({ directory, configstore, expirationPeriodInMilliseconds }: Options) {
     super()
     this.directory = directory
     this.configstore = configstore ?? new Configstore(`${pkg.name}-${pkg.version}`)
@@ -153,10 +153,7 @@ export class FileStore extends DataStore {
       const file_path = `${this.directory}/${id}`
       fs.stat(file_path, (error, stats) => {
         if (error && error.code === FILE_DOESNT_EXIST && file) {
-          log(
-            `[FileStore] getUpload: No file found at ${file_path} but db record exists`,
-            file
-          )
+          log(`[FileStore] getUpload: No file found at ${file_path} but db record exists`, file)
           return reject(ERRORS.FILE_NO_LONGER_EXISTS)
         }
 

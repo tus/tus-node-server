@@ -1,7 +1,7 @@
-import {BaseHandler} from './BaseHandler'
+import { BaseHandler } from './BaseHandler'
 
-import {ERRORS} from '../constants'
-import {Metadata} from '../models'
+import { ERRORS } from '../constants'
+import { Metadata } from '../models'
 
 import type http from 'node:http'
 

@@ -1,27 +1,21 @@
 import http from 'node:http'
-import {EventEmitter} from 'node:events'
+import { EventEmitter } from 'node:events'
 
 import debug from 'debug'
 
-import {GetHandler} from './handlers/GetHandler'
-import {HeadHandler} from './handlers/HeadHandler'
-import {OptionsHandler} from './handlers/OptionsHandler'
-import {PatchHandler} from './handlers/PatchHandler'
-import {PostHandler} from './handlers/PostHandler'
-import {DeleteHandler} from './handlers/DeleteHandler'
-import {validateHeader} from './validators/HeaderValidator'
+import { GetHandler } from './handlers/GetHandler'
+import { HeadHandler } from './handlers/HeadHandler'
+import { OptionsHandler } from './handlers/OptionsHandler'
+import { PatchHandler } from './handlers/PatchHandler'
+import { PostHandler } from './handlers/PostHandler'
+import { DeleteHandler } from './handlers/DeleteHandler'
+import { validateHeader } from './validators/HeaderValidator'
 
-import {
-  EVENTS,
-  ERRORS,
-  EXPOSED_HEADERS,
-  REQUEST_METHODS,
-  TUS_RESUMABLE,
-} from './constants'
+import { EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE } from './constants'
 
 import type stream from 'node:stream'
-import type {ServerOptions, RouteHandler} from './types'
-import type {DataStore, Upload} from './models'
+import type { ServerOptions, RouteHandler } from './types'
+import type { DataStore, Upload } from './models'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -49,11 +43,7 @@ interface TusEvents {
     res: http.ServerResponse,
     upload: Upload
   ) => void
-  [EVENTS.POST_TERMINATE]: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    id: string
-  ) => void
+  [EVENTS.POST_TERMINATE]: (req: http.IncomingMessage, res: http.ServerResponse, id: string) => void
 }
 
 type on = EventEmitter['on']
@@ -62,10 +52,7 @@ export declare interface Server {
   on<Event extends keyof TusEvents>(event: Event, listener: TusEvents[Event]): this
   on(eventName: Parameters<on>[0], listener: Parameters<on>[1]): this
 
-  emit<Event extends keyof TusEvents>(
-    event: Event,
-    listener: TusEvents[Event]
-  ): ReturnType<emit>
+  emit<Event extends keyof TusEvents>(event: Event, listener: TusEvents[Event]): ReturnType<emit>
   emit(eventName: Parameters<emit>[0], listener: Parameters<emit>[1]): ReturnType<emit>
 }
 
@@ -77,7 +64,7 @@ export class Server extends EventEmitter {
   handlers: Handlers
   options: ServerOptions
 
-  constructor(options: ServerOptions & {datastore: DataStore}) {
+  constructor(options: ServerOptions & { datastore: DataStore }) {
     super()
 
     if (!options) {
@@ -92,7 +79,7 @@ export class Server extends EventEmitter {
       throw new Error("'datastore' is not defined; must have a datastore")
     }
 
-    const {datastore, ...rest} = options
+    const { datastore, ...rest } = options
     this.options = rest
     this.datastore = datastore
     this.handlers = {

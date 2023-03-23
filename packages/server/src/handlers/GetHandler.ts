@@ -1,10 +1,10 @@
 import stream from 'node:stream'
 
-import {BaseHandler} from './BaseHandler'
-import {ERRORS} from '../constants'
+import { BaseHandler } from './BaseHandler'
+import { ERRORS } from '../constants'
 
 import type http from 'node:http'
-import type {RouteHandler} from '../types'
+import type { RouteHandler } from '../types'
 
 export class GetHandler extends BaseHandler {
   paths: Map<string, RouteHandler> = new Map()
@@ -42,7 +42,7 @@ export class GetHandler extends BaseHandler {
 
     // @ts-expect-error exists if supported
     const file_stream = this.store.read(id)
-    const headers = {'Content-Length': stats.offset}
+    const headers = { 'Content-Length': stats.offset }
     res.writeHead(200, headers)
     return stream.pipeline(file_stream, res, () => {
       // We have no need to handle streaming errors

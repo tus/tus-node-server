@@ -1,14 +1,14 @@
 import debug from 'debug'
 
-import {BaseHandler} from './BaseHandler'
-import {Upload, Uid, Metadata} from '../models'
-import {validateHeader} from '../validators/HeaderValidator'
-import {EVENTS, ERRORS} from '../constants'
+import { BaseHandler } from './BaseHandler'
+import { Upload, Uid, Metadata } from '../models'
+import { validateHeader } from '../validators/HeaderValidator'
+import { EVENTS, ERRORS } from '../constants'
 
 import type http from 'node:http'
-import type {ServerOptions} from '../types'
-import type {DataStore} from '../models'
-import type {SetRequired} from 'type-fest'
+import type { ServerOptions } from '../types'
+import type { DataStore } from '../models'
+import type { SetRequired } from 'type-fest'
 
 const log = debug('tus-node-server:handlers:post')
 
@@ -130,7 +130,7 @@ export class PostHandler extends BaseHandler {
       }
     }
 
-    const writtenRes = this.write(res, 201, {Location: url, ...headers})
+    const writtenRes = this.write(res, 201, { Location: url, ...headers })
 
     if (isFinal) {
       this.emit(EVENTS.POST_FINISH, req, writtenRes, upload)

@@ -1,4 +1,4 @@
-import {Upload} from './Upload'
+import { Upload } from './Upload'
 
 const ASCII_SPACE = ' '.codePointAt(0)
 const ASCII_COMMA = ','.codePointAt(0)
@@ -11,11 +11,7 @@ export function validateKey(key: string) {
 
   for (let i = 0; i < key.length; ++i) {
     const charCodePoint = key.codePointAt(i) as number
-    if (
-      charCodePoint > 127 ||
-      charCodePoint === ASCII_SPACE ||
-      charCodePoint === ASCII_COMMA
-    ) {
+    if (charCodePoint > 127 || charCodePoint === ASCII_SPACE || charCodePoint === ASCII_COMMA) {
       return false
     }
   }

@@ -1,16 +1,16 @@
 import 'should'
 
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 import http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
-import {OptionsHandler} from '../src/handlers/OptionsHandler'
-import {DataStore} from '../src/models/DataStore'
-import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../src/constants'
+import { OptionsHandler } from '../src/handlers/OptionsHandler'
+import { DataStore } from '../src/models/DataStore'
+import { ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE } from '../src/constants'
 
 describe('OptionsHandler', () => {
-  const options = {path: '/test/output'}
+  const options = { path: '/test/output' }
   const store = new DataStore()
   const handler = new OptionsHandler(store, options)
 
@@ -18,8 +18,8 @@ describe('OptionsHandler', () => {
   let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
-    req = {url: `${options.path}/1234`, method: 'OPTIONS'} as http.IncomingMessage
-    res = httpMocks.createResponse({req})
+    req = { url: `${options.path}/1234`, method: 'OPTIONS' } as http.IncomingMessage
+    res = httpMocks.createResponse({ req })
   })
 
   it('send() should set headers and 204', async () => {
@@ -38,7 +38,7 @@ describe('OptionsHandler', () => {
   })
 
   it('send() should set extensions header if they exist', async () => {
-    const headers = {'Tus-Extension': 'creation,expiration'}
+    const headers = { 'Tus-Extension': 'creation,expiration' }
     store.extensions = ['creation', 'expiration']
     const handler = new OptionsHandler(store, options)
     await handler.send(req, res)

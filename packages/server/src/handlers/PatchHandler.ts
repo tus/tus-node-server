@@ -1,7 +1,7 @@
 import debug from 'debug'
 
-import {BaseHandler} from './BaseHandler'
-import {ERRORS, EVENTS} from '../constants'
+import { BaseHandler } from './BaseHandler'
+import { ERRORS, EVENTS } from '../constants'
 
 import type http from 'node:http'
 
@@ -49,9 +49,7 @@ export class PatchHandler extends BaseHandler {
 
     if (upload.offset !== offset) {
       // If the offsets do not match, the Server MUST respond with the 409 Conflict status without modifying the upload resource.
-      log(
-        `[PatchHandler] send: Incorrect offset - ${offset} sent but file is ${upload.offset}`
-      )
+      log(`[PatchHandler] send: Incorrect offset - ${offset} sent but file is ${upload.offset}`)
       throw ERRORS.INVALID_OFFSET
     }
 
@@ -104,9 +102,7 @@ export class PatchHandler extends BaseHandler {
     ) {
       const creation = new Date(upload.creation_date)
       // Value MUST be in RFC 7231 datetime format
-      const dateString = new Date(
-        creation.getTime() + this.store.getExpiration()
-      ).toUTCString()
+      const dateString = new Date(creation.getTime() + this.store.getExpiration()).toUTCString()
       headers['Upload-Expires'] = dateString
     }
 

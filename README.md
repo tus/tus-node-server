@@ -49,17 +49,17 @@ There are also other mature servers, like [tusd](https://github.com/tus/tusd), [
 A standalone server which stores files on disk.
 
 ```js
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
+const { Server } = require('@tus/server')
+const { FileStore } = require('@tus/file-store')
 
 const host = '127.0.0.1'
 const port = 1080
 const server = new Server({
   path: '/files',
-  datastore: new FileStore({directory: './files'}),
+  datastore: new FileStore({ directory: './files' }),
 })
 
-server.listen({host, port})
+server.listen({ host, port })
 ```
 
 A tus server integrated into your existing Node.js server.

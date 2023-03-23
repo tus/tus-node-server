@@ -1,15 +1,15 @@
 /* eslint-disable no-throw-literal */
 import 'should'
 
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 import http from 'node:http'
 
 import request from 'supertest'
 
-import {Server} from '../src'
-import {FileStore} from '@tus/file-store'
-import {DataStore} from '../src/models'
-import {TUS_RESUMABLE, EVENTS} from '../src/constants'
+import { Server } from '../src'
+import { FileStore } from '@tus/file-store'
+import { DataStore } from '../src/models'
+import { TUS_RESUMABLE, EVENTS } from '../src/constants'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
@@ -29,7 +29,7 @@ describe('Server', () => {
 
     it('should accept valid options', () => {
       assert.doesNotThrow(() => {
-        new Server({path: '/files', datastore: new DataStore()})
+        new Server({ path: '/files', datastore: new DataStore() })
       })
       assert.doesNotThrow(() => {
         new Server({
@@ -54,7 +54,7 @@ describe('Server', () => {
     })
 
     it('setting the DataStore should attach handlers', (done) => {
-      const server = new Server({path: '/files', datastore: new DataStore()})
+      const server = new Server({ path: '/files', datastore: new DataStore() })
       server.handlers.should.have.property('HEAD')
       server.handlers.should.have.property('OPTIONS')
       server.handlers.should.have.property('POST')
@@ -68,7 +68,7 @@ describe('Server', () => {
     let server: InstanceType<typeof Server>
 
     before(() => {
-      server = new Server({path: '/test/output', datastore: new DataStore()})
+      server = new Server({ path: '/test/output', datastore: new DataStore() })
     })
 
     it('should create an instance of http.Server', (done) => {
@@ -84,7 +84,7 @@ describe('Server', () => {
     let listener: http.Server
 
     before(() => {
-      server = new Server({path: '/test/output', datastore: new DataStore()})
+      server = new Server({ path: '/test/output', datastore: new DataStore() })
       server.get('/some_url', (_, res) => {
         res.writeHead(200)
         res.write('Hello world!\n')
@@ -113,7 +113,7 @@ describe('Server', () => {
     before(() => {
       server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({ directory: './test/output' }),
       })
       listener = server.listen()
     })
@@ -140,10 +140,7 @@ describe('Server', () => {
     })
 
     it('HEAD should 404 non files', (done) => {
-      request(listener)
-        .head('/')
-        .set('Tus-Resumable', TUS_RESUMABLE)
-        .expect(404, {}, done)
+      request(listener).head('/').set('Tus-Resumable', TUS_RESUMABLE).expect(404, {}, done)
     })
 
     it('POST should require Upload-Length header', (done) => {
@@ -215,11 +212,11 @@ describe('Server', () => {
 
     it('should allow overriding the HTTP method', (done) => {
       const req = {
-        headers: {'x-http-method-override': 'OPTIONS'},
+        headers: { 'x-http-method-override': 'OPTIONS' },
         method: 'GET',
       }
       // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
+      const res = new http.ServerResponse({ method: 'OPTIONS' })
       // @ts-expect-error todo
       server.handle(req, res)
       assert.equal(req.method, 'OPTIONS')
@@ -228,9 +225,9 @@ describe('Server', () => {
 
     it('should allow overriding the HTTP method', (done) => {
       const origin = 'vimeo.com'
-      const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
+      const req = { headers: { origin }, method: 'OPTIONS', url: '/' }
       // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
+      const res = new http.ServerResponse({ method: 'OPTIONS' })
       // @ts-expect-error todo
       server.handle(req, res)
       assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
@@ -245,7 +242,7 @@ describe('Server', () => {
     beforeEach(() => {
       server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({ directory: './test/output' }),
       })
       listener = server.listen()
     })
@@ -323,9 +320,9 @@ describe('Server', () => {
     it('should call onUploadCreate and return its error to the client', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({ directory: './test/output' }),
         async onUploadCreate() {
-          throw {body: 'no', status_code: 500}
+          throw { body: 'no', status_code: 500 }
         },
       })
       request(server.listen())
@@ -338,9 +335,9 @@ describe('Server', () => {
     it('should call onUploadFinish and return its error to the client', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({ directory: './test/output' }),
         onUploadFinish() {
-          throw {body: 'no', status_code: 500}
+          throw { body: 'no', status_code: 500 }
         },
       })
       request(server.listen())
@@ -361,9 +358,9 @@ describe('Server', () => {
     it('should call onUploadFinish and return its error to the client with creation-with-upload ', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({ directory: './test/output' }),
         async onUploadFinish() {
-          throw {body: 'no', status_code: 500}
+          throw { body: 'no', status_code: 500 }
         },
       })
       request(server.listen())

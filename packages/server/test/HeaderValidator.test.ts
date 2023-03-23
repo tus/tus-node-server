@@ -1,7 +1,7 @@
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 
-import {validateHeader} from '../src/validators/HeaderValidator'
-import {TUS_RESUMABLE} from '../src/constants'
+import { validateHeader } from '../src/validators/HeaderValidator'
+import { TUS_RESUMABLE } from '../src/constants'
 
 describe('HeaderValidator', () => {
   describe('upload-offset', () => {
@@ -77,8 +77,7 @@ describe('HeaderValidator', () => {
 
   describe('upload-metadata', () => {
     it('should validate a comma separated list', (done) => {
-      const value =
-        'file/name dGVzdC5tcDQ=,size OTYwMjQ0,type! dmlkZW8vbXA0,video,withWhitespace'
+      const value = 'file/name dGVzdC5tcDQ=,size OTYwMjQ0,type! dmlkZW8vbXA0,video,withWhitespace'
       assert.equal(validateHeader('upload-metadata', value), true)
       done()
     })
@@ -160,10 +159,7 @@ describe('HeaderValidator', () => {
 
   describe('content-type', () => {
     it('should validate octet-stream', (done) => {
-      assert.equal(
-        validateHeader('content-type', 'application/offset+octet-stream'),
-        true
-      )
+      assert.equal(validateHeader('content-type', 'application/offset+octet-stream'), true)
       done()
     })
 

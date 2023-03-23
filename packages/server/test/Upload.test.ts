@@ -1,8 +1,8 @@
 import 'should'
-import {strict as assert} from 'node:assert'
+import { strict as assert } from 'node:assert'
 
-import {Upload} from '../src/models/Upload'
-import {Uid} from '../src/models/Uid'
+import { Upload } from '../src/models/Upload'
+import { Uid } from '../src/models/Uid'
 
 describe('Upload', () => {
   describe('constructor', () => {
@@ -17,8 +17,8 @@ describe('Upload', () => {
       const id = Uid.rand()
       const size = 1234
       const offset = 0
-      const metadata = {foo: 'bar'}
-      const upload = new Upload({id, size, offset, metadata})
+      const metadata = { foo: 'bar' }
+      const upload = new Upload({ id, size, offset, metadata })
       assert.equal(upload.id, id)
       assert.equal(upload.size, size)
       assert.equal(upload.offset, offset)
