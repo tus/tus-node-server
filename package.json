@@ -11,15 +11,20 @@
     "demo": "yarn workspace demo start",
     "demo:gcs": "yarn workspace demo start:gcs",
     "demo:s3": "yarn workspace demo start:s3",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint && yarn lint:formatting",
     "format": "turbo run format",
-    "test": "turbo run test --concurrency 1"
+    "test": "turbo run test --concurrency 1",
+    "fix:formatting": "prettier --write .",
+    "lint:formatting": "prettier --check .",
+    "fix": "yarn fix:formatting"
   },
   "devDependencies": {
     "eslint": "^8.29.0",
     "eslint-config-custom": "workspace:*",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.7.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.6",
     "turbo": "^1.6.3"
   },
   "packageManager": "yarn@3.2.3"

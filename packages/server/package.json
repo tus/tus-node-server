@@ -16,9 +16,12 @@
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "eslint .",
+    "lint": "eslint . && yarn lint:formatting",
     "format": "eslint --fix .",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register",
+    "fix:formatting": "../../node_modules/.bin/prettier --write .",
+    "lint:formatting": "../../node_modules/.bin/prettier --check .",
+    "fix": "yarn fix:formatting"
   },
   "dependencies": {
     "debug": "^4.3.3"

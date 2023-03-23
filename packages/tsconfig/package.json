@@ -6,5 +6,11 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "fix:formatting": "../../node_modules/.bin/prettier --write .",
+    "lint:formatting": "../../node_modules/.bin/prettier --check .",
+    "fix": "yarn fix:formatting",
+    "lint": "yarn lint:formatting"
   }
 }

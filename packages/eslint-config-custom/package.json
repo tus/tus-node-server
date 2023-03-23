@@ -20,5 +20,11 @@
   "devDependencies": {
     "@types/eslint": "^8",
     "@types/prettier": "^2"
+  },
+  "scripts": {
+    "fix:formatting": "../../node_modules/.bin/prettier --write .",
+    "lint:formatting": "../../node_modules/.bin/prettier --check .",
+    "fix": "yarn fix:formatting",
+    "lint": "yarn lint:formatting"
   }
 }
