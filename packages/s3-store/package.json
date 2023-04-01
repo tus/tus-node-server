@@ -21,7 +21,7 @@
     "test": "mocha test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "aws-sdk": "^2.1325.0",
+    "aws-sdk": "^2.1348.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
