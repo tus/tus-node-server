@@ -29,14 +29,14 @@ npm install @tus/gcs-store
 const {Server} = require('@tus/server')
 const {GCSStore} = require('@tus/gcs-store')
 
+const {Storage} = require('@google-cloud/storage');
+
+const storage = new Storage({keyFilename: 'key.json'})
+
 const server = new Server({
   path: '/files',
   datastore: new GCSStore({
-    storageOptions: {
-      projectId: 'id',
-      keyFilename: path.resolve('./some-path', 'keyfile.json'),
-    },
-    bucket: 'tus-node-server-ci',
+    bucket: storage.bucket('tus-node-server-ci'),
   }),
 })
 // ...

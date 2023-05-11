@@ -21,10 +21,10 @@
     "test": "mocha test.ts --timeout 30000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "@google-cloud/storage": "^6.2.2",
     "debug": "^4.3.3"
   },
   "devDependencies": {
+    "@google-cloud/storage": "^6.2.2",
     "@tus/server": "workspace:^",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
@@ -35,7 +35,8 @@
     "should": "^13.2.3",
     "typescript": "latest"
   },
-  "peerdependencies": {
+  "peerDependencies": {
+    "@google-cloud/storage": "*",
     "@tus/server": "workspace:^"
   },
   "engines": {
