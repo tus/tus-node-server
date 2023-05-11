@@ -48,19 +48,11 @@ This package exports `GCSStore`. There is no default export.
 
 ### `new GCSStore(options)`
 
-Creates a new Google Cloud Storage store with options or by passing a GCS bucket instance.
-
-#### `options.storageOptions.projectId`
-
-The GCS project ID (`string`).
-
-#### `options.storageOptions.keyFilename`
-
-Path to the keyfile with credentials (`string`).
+Creates a new Google Cloud Storage store by passing a GCS bucket instance.
 
 #### `options.bucket`
 
-The bucket name or bucket instance
+The bucket instance
 
 ## Extensions
 
