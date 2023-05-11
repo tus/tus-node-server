@@ -47,8 +47,6 @@ export class HeadHandler extends BaseHandler {
     }
 
     if (file.metadata !== undefined) {
-      // If the size of the upload is known, the Server MUST include
-      // the Upload-Length header in the response.
       res.setHeader('Upload-Metadata', Metadata.stringify(file.metadata) as string)
     }
 
