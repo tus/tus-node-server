@@ -110,7 +110,7 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 | [Creation With Upload][] | ✅                                | ✅                            | ✅                              |
 | [Expiration][]           | ✅                                | ❌                            | ❌                              |
 | [Checksum][]             | ❌                                | ❌                            | ❌                              |
-| [Termination][]          | ✅                                | ❌                            | ❌                              |
+| [Termination][]          | ✅                                | ✅                            | ❌                              |
 | [Concatenation][]        | ❌                                | ❌                            | ❌                              |
 
 ## Demos
@@ -118,20 +118,20 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 Start the demo server using Local File Storage
 
 ```bash
-yarn workspace demo start
+yarn build && yarn demo
 ```
 
 Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` need to be present.
 
 ```bash
-yarn workspace demo start:s3
+yarn build && yarn demo:s3
 ```
 
 Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present in the root of the repository.
 
 ```bash
-yarn workspace demo start:gcs
+yarn build && yarn demo:gcs
 ```
 
 Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client).

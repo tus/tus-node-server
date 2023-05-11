@@ -24,7 +24,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@google-cloud/storage": "^6.2.2",
+    "@google-cloud/storage": "^6.9.3",
     "@tus/server": "workspace:^",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",

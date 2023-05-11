@@ -34,8 +34,8 @@ export function validateValue(value: string) {
 export function parse(str?: string) {
   const meta: Record<string, string | null> = {}
 
-  if (!str) {
-    return undefined
+  if (!str || str.trim().length === 0) {
+    throw new Error('Metadata string is not valid')
   }
 
   for (const pair of str.split(',')) {

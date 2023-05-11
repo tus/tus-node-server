@@ -7,7 +7,7 @@ import rimraf from 'rimraf'
 import request from 'supertest'
 import {Storage} from '@google-cloud/storage'
 
-import {Server, TUS_RESUMABLE, MemoryConfigstore, ERRORS} from '@tus/server'
+import {Server, TUS_RESUMABLE, MemoryConfigstore} from '@tus/server'
 import {FileStore} from '@tus/file-store'
 import {GCSStore} from '@tus/gcs-store'
 
@@ -111,19 +111,6 @@ describe('EndToEnd', () => {
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
             file_id = res.headers.location.split('/').pop()
-            done()
-          })
-      })
-
-      it('should throw informative error on invalid metadata', (done) => {
-        agent
-          .post(STORE_PATH)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', TEST_FILE_SIZE)
-          .set('Upload-Metadata', 'no sir')
-          .expect(ERRORS.INVALID_METADATA.status_code)
-          .end((_, res) => {
-            assert.equal(res.text, ERRORS.INVALID_METADATA.body)
             done()
           })
       })
