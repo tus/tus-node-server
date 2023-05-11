@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "extends": "tsconfig/tsconfig.json",
   "include": ["e2e.test.ts"],
-  "ts-node": {
-    "transpileOnly": true
+  "compilerOptions": {
+    "noEmit": true,
   }
 }
