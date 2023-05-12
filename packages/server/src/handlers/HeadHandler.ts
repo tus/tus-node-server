@@ -47,12 +47,9 @@ export class HeadHandler extends BaseHandler {
     }
 
     if (file.metadata !== undefined) {
-      // If the Upload-Metadata header is included, the header MUST
-      // consist of one or more comma-separated key-value pairs and
-      // the key and value MUST be separated by a space. For example:
-      // `key1 dGVzdA==, key2 aGVsbG8=`
-      // the key MUST be ASCII encoded and the value MUST be Base64
-      // encoded. All keys MUST be unique. The value MAY be empty.
+      // If an upload contains additional metadata, responses to HEAD
+      // requests MUST include the Upload-Metadata header and its value
+      // as specified by the Client during the creation.
       res.setHeader('Upload-Metadata', Metadata.stringify(file.metadata) as string)
     }
 
