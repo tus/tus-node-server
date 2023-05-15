@@ -426,12 +426,12 @@ describe('EndToEnd', () => {
       it('can delete expired files', (done) => {
         server.datastore
           .deleteExpired()
-          .catch((error) => {
-            done(error)
-          })
           .then((deleted) => {
             assert.equal(deleted >= 1, true)
             done()
+          })
+          .catch((error) => {
+            done(error)
           })
       })
     })

@@ -3,6 +3,7 @@
   "name": "test",
   "private": true,
   "scripts": {
+    "build": "tsc",
     "test": "mocha e2e.test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
