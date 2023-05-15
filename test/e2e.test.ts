@@ -443,12 +443,15 @@ describe('EndToEnd', () => {
     const files_created: string[] = []
 
     before(() => {
+      const storage = new Storage({
+        projectId: PROJECT_ID,
+        keyFilename: KEYFILE,
+      })
+
       server = new Server({
         path: STORE_PATH,
         datastore: new GCSStore({
-          projectId: PROJECT_ID,
-          keyFilename: KEYFILE,
-          bucket: BUCKET,
+          bucket: storage.bucket(BUCKET),
         }),
       })
       listener = server.listen()

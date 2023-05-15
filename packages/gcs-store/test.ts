@@ -4,6 +4,8 @@ import {GCSStore} from './'
 
 import * as shared from '../../test/stores.test'
 
+import {Storage} from '@google-cloud/storage'
+
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
 
@@ -16,10 +18,13 @@ describe('GCSStore', () => {
   })
 
   beforeEach(function () {
-    this.datastore = new GCSStore({
+    const storage = new Storage({
       projectId: 'tus-node-server',
       keyFilename: path.resolve('../', '../', 'keyfile.json'),
-      bucket: 'tus-node-server-ci',
+    })
+
+    this.datastore = new GCSStore({
+      bucket: storage.bucket('tus-node-server-ci'),
     })
   })
 
