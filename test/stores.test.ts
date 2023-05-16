@@ -83,6 +83,37 @@ export const shouldRemoveUploads = function () {
       await this.datastore.create(file)
       return this.datastore.remove(file.id)
     })
+
+    it('should delete the file during upload', async function () {
+      const file = new Upload({
+        id: 'termination-test',
+        size: this.testFileSize,
+        offset: 0,
+        metadata: {filename: 'terminate_during_upload.pdf', is_confidential: null},
+      })
+      await this.datastore.create(file)
+
+      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 100 * 1024})
+      // Pause between chunks read to make sure that file is still uploading when terminate function is invoked
+      readable.on('data', () => {
+        readable.pause()
+        setTimeout(() => readable.resume(), 1000)
+      })
+
+      await Promise.allSettled([
+        this.datastore.write(readable, file.id, 0),
+        this.datastore.remove(file.id),
+      ])
+
+      try {
+        await this.datastore.getUpload(file.id)
+        assert.fail('getUpload should have thrown an error')
+      } catch (error) {
+        assert.equal([404, 410].includes(error?.status_code), true)
+      }
+
+      readable.destroy()
+    })
   })
 }
 
@@ -93,7 +124,7 @@ export const shouldWriteUploads = function () {
       return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })
 
-    it('should reject whean readable stream has an error', async function () {
+    it('should reject when readable stream has an error', async function () {
       const stream = fs.createReadStream(this.testFilePath)
       return this.datastore.write(stream, 'doesnt_exist', 0).should.be.rejected()
     })

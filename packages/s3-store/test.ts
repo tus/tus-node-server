@@ -73,8 +73,7 @@ describe('S3DataStore', function () {
 
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
-  // Termination extension not implemented yet
-  // shared.shouldRemoveUploads()
+  shared.shouldRemoveUploads() // Termination extension
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
   shared.shouldDeclareUploadLength() // Creation-defer-length extension

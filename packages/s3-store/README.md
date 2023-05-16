@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages, currently in beta at `1.0.0-beta.1`.
+> Make sure to use the new package, currently in beta at `1.0.0-beta.5`.
 
 ## Contents
 
@@ -67,7 +67,7 @@ but may increase it to not exceed the S3 10K parts limit.
 
 Options to pass to the AWS S3 SDK.
 Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
-docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication. 
+docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication.
 
 ## Extensions
 
@@ -79,8 +79,12 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 | [Creation With Upload][] | ✅              |
 | [Expiration][]           | ❌              |
 | [Checksum][]             | ❌              |
-| [Termination][]          | ❌              |
+| [Termination][]          | ✅              |
 | [Concatenation][]        | ❌              |
+
+### Termination
+
+After a multipart upload is aborted, no additional parts can be uploaded using that upload ID. The storage consumed by any previously uploaded parts will be freed. However, if any part uploads are currently in progress, those part uploads might or might not succeed. As a result, it might be necessary to set an [S3 Lifecycle configuration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html) to abort incomplete multipart uploads.
 
 ## Examples
 
