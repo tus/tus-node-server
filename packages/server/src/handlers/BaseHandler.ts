@@ -23,7 +23,10 @@ export class BaseHandler extends EventEmitter {
   }
 
   write(res: http.ServerResponse, status: number, headers = {}, body = '') {
-    headers = status === 204 ? headers : {...headers, 'Content-Length': body.length}
+    if (status !== 204) {
+      // @ts-expect-error not explicitly typed but possible
+      headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
+    }
     res.writeHead(status, headers)
     res.write(body)
     return res.end()
