@@ -32,7 +32,7 @@
     "eslint": "^8.29.0",
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.1.0",
-    "node-mocks-http": "^1.12.1",
+    "node-mocks-http": "^1.12.2",
     "should": "^13.2.3",
     "sinon": "^15.0.4",
     "supertest": "^6.3.2",
