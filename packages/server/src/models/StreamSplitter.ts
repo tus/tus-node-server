@@ -85,17 +85,20 @@ export class StreamSplitter extends stream.Writable {
     this.currentChunkSize += chunk.length
   }
 
-  async _finishChunk(): Promise<void> {
+  async _finishChunk(err?: Error): Promise<void> {
     if (this.fileHandle === null) {
       return
     }
 
     await this.fileHandle.close()
 
-    this.emit('chunkFinished', {
-      path: this.currentChunkPath,
-      size: this.currentChunkSize,
-    })
+    if (!err) {
+      this.emit('chunkFinished', {
+        path: this.currentChunkPath,
+        size: this.currentChunkSize,
+      })
+    }
+
     this.currentChunkPath = null
     this.fileHandle = null
     this.currentChunkSize = 0
