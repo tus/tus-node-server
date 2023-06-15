@@ -22,7 +22,7 @@ export const HEADERS = [
 
 export const HEADERS_LOWERCASE = HEADERS.map((header) => {
   return header.toLowerCase()
-}) as Array<Lowercase<typeof HEADERS[number]>>
+}) as Array<Lowercase<(typeof HEADERS)[number]>>
 
 export const ALLOWED_HEADERS = HEADERS.join(', ')
 export const ALLOWED_METHODS = REQUEST_METHODS.join(', ')
