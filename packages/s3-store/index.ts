@@ -26,7 +26,7 @@ type Options = {
   s3ClientConfig: aws.S3.Types.ClientConfiguration & {bucket: string}
 }
 
-type MetadataValue = {file: Upload; upload_id: string; tus_version: string}
+type MetadataValue = {file: Upload; 'upload-id': string; 'tus-version': string}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -89,7 +89,7 @@ export class S3Store extends DataStore {
    * on the S3 object's `Metadata` field, so that only a `headObject`
    * is necessary to retrieve the data.
    */
-  private async saveMetadata(upload: Upload, upload_id: string) {
+  private async saveMetadata(upload: Upload, uploadId: string) {
     log(`[${upload.id}] saving metadata`)
     await this.client
       .putObject({
@@ -98,8 +98,8 @@ export class S3Store extends DataStore {
         Body: '',
         Metadata: {
           file: JSON.stringify(upload),
-          upload_id,
-          tus_version: TUS_RESUMABLE,
+          'upload-id': uploadId,
+          'tus-version': TUS_RESUMABLE,
         },
       })
       .promise()
@@ -126,15 +126,14 @@ export class S3Store extends DataStore {
     const file = JSON.parse(Metadata?.file as string)
     this.cache.set(id, {
       ...Metadata,
-      tus_version: Metadata?.tus_version as string,
+      'tus-version': Metadata?.['tus-version'] as string,
       file: new Upload({
         id,
         size: file.size ? Number.parseInt(file.size, 10) : undefined,
         offset: Number.parseInt(file.offset, 10),
         metadata: file.metadata,
       }),
-      // Patch for Digital Ocean: if key upload_id (AWS, standard) doesn't exist in Metadata object, fallback to upload-id (DO)
-      upload_id: (Metadata?.upload_id as string) || (Metadata?.['upload-id'] as string),
+      'upload-id': Metadata?.['upload-id'] as string,
     })
     return this.cache.get(id) as MetadataValue
   }
@@ -160,7 +159,7 @@ export class S3Store extends DataStore {
       .uploadPart({
         Bucket: this.bucket,
         Key: metadata.file.id,
-        UploadId: metadata.upload_id,
+        UploadId: metadata['upload-id'],
         PartNumber: partNumber,
         Body: readStream,
       })
@@ -313,7 +312,7 @@ export class S3Store extends DataStore {
       .completeMultipartUpload({
         Bucket: this.bucket,
         Key: metadata.file.id,
-        UploadId: metadata.upload_id,
+        UploadId: metadata['upload-id'],
         MultipartUpload: {
           Parts: parts.map((part) => {
             return {
@@ -338,7 +337,7 @@ export class S3Store extends DataStore {
     const params: aws.S3.ListPartsRequest = {
       Bucket: this.bucket,
       Key: id,
-      UploadId: this.cache.get(id)?.upload_id as string,
+      UploadId: this.cache.get(id)?.['upload-id'] as string,
     }
     if (partNumberMarker) {
       params.PartNumberMarker = partNumberMarker
@@ -395,7 +394,7 @@ export class S3Store extends DataStore {
   /**
    * Creates a multipart upload on S3 attaching any metadata to it.
    * Also, a `${file_id}.info` file is created which holds some information
-   * about the upload itself like: `upload_id`, `upload_length`, etc.
+   * about the upload itself like: `upload-id`, `upload-length`, etc.
    */
   public async create(upload: Upload) {
     log(`[${upload.id}] initializing multipart upload`)
@@ -405,7 +404,7 @@ export class S3Store extends DataStore {
     const request: CreateRequest = {
       Bucket: this.bucket,
       Key: upload.id,
-      Metadata: {tus_version: TUS_RESUMABLE},
+      Metadata: {'tus-version': TUS_RESUMABLE},
     }
     const file: Record<string, string | number | Upload['metadata']> = {
       id: upload.id,
@@ -517,25 +516,25 @@ export class S3Store extends DataStore {
   }
 
   public async declareUploadLength(file_id: string, upload_length: number) {
-    const {file, upload_id} = await this.getMetadata(file_id)
+    const {file, 'upload-id': uploadId} = await this.getMetadata(file_id)
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
     file.size = upload_length
 
-    this.saveMetadata(file, upload_id)
+    this.saveMetadata(file, uploadId)
   }
 
   public async remove(id: string): Promise<void> {
     try {
-      const {upload_id} = await this.getMetadata(id)
-      if (upload_id) {
+      const {'upload-id': uploadId} = await this.getMetadata(id)
+      if (uploadId) {
         await this.client
           .abortMultipartUpload({
             Bucket: this.bucket,
             Key: id,
-            UploadId: upload_id,
+            UploadId: uploadId,
           })
           .promise()
       }

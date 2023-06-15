@@ -33,7 +33,7 @@ export class StreamSplitter extends stream.Writable {
     this.directory = directory
     this.filenameTemplate = randomString(10)
     this.part = 0
-    this.on('error', this._finishChunk.bind(this))
+    this.on('error', this._handleError.bind(this))
   }
 
   async _write(chunk: Buffer, _: BufferEncoding, callback: Callback) {
@@ -85,19 +85,30 @@ export class StreamSplitter extends stream.Writable {
     this.currentChunkSize += chunk.length
   }
 
-  async _finishChunk(err?: Error): Promise<void> {
+  async _handleError() {
+    // If there was an error, we want to stop allowing to write on disk as we cannot advance further.
+    // At this point the chunk might be incomplete advancing further might cause data loss.
+    // some scenarios where this might happen is if the disk is full or if we abort the stream midway.
+    if (this.fileHandle === null) {
+      return
+    }
+
+    await this.fileHandle.close()
+    this.currentChunkPath = null
+    this.fileHandle = null
+  }
+
+  async _finishChunk(): Promise<void> {
     if (this.fileHandle === null) {
       return
     }
 
     await this.fileHandle.close()
 
-    if (!err) {
-      this.emit('chunkFinished', {
-        path: this.currentChunkPath,
-        size: this.currentChunkSize,
-      })
-    }
+    this.emit('chunkFinished', {
+      path: this.currentChunkPath,
+      size: this.currentChunkSize,
+    })
 
     this.currentChunkPath = null
     this.fileHandle = null
