@@ -29,7 +29,7 @@
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
     "@types/node": "latest",
-    "eslint": "^8.29.0",
+    "eslint": "^8.44.0",
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.1.0",
     "should": "^13.2.3",
