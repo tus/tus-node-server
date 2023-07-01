@@ -1334,6 +1334,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv@npm:16.0.3":
+  version: 16.0.3
+  resolution: "dotenv@npm:16.0.3"
+  checksum: afcf03f373d7a6d62c7e9afea6328e62851d627a4e73f2e12d0a8deae1cd375892004f3021883f8aec85932cd2834b091f568ced92b4774625b321db83b827f8
+  languageName: node
+  linkType: hard
+
 "duplexify@npm:^4.0.0":
   version: 4.1.2
   resolution: "duplexify@npm:4.1.2"
@@ -1443,13 +1450,13 @@ __metadata:
   linkType: hard
 
 "eslint-config-turbo@npm:latest":
-  version: 0.0.7
-  resolution: "eslint-config-turbo@npm:0.0.7"
+  version: 1.10.7
+  resolution: "eslint-config-turbo@npm:1.10.7"
   dependencies:
-    eslint-plugin-turbo: 0.0.7
+    eslint-plugin-turbo: 1.10.7
   peerDependencies:
     eslint: ">6.6.0"
-  checksum: 097c1a5fa669971cf0bd1198a00b64a6beb6917237c0d9599781c0a802536eb8f489a94d17841680bd2d02af00bd17608b909df596cb03034eb842a3dd6e2ef2
+  checksum: 73aa7ef1e975825b0704d81baf965c0eb25c5a5d22bc8e8dc34459d0fc312d426b854edab6e129bfe0eb4a09dd2917f343ae7fbfce4e49663ba99aff5bbca83c
   languageName: node
   linkType: hard
 
@@ -1468,12 +1475,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-turbo@npm:0.0.7":
-  version: 0.0.7
-  resolution: "eslint-plugin-turbo@npm:0.0.7"
+"eslint-plugin-turbo@npm:1.10.7":
+  version: 1.10.7
+  resolution: "eslint-plugin-turbo@npm:1.10.7"
+  dependencies:
+    dotenv: 16.0.3
   peerDependencies:
     eslint: ">6.6.0"
-  checksum: d6d99111c5b84148e906919bfec11bff2f683e73ebd59830bc23e08acad668c4a72e65b0159dfa476d0da31d88f28578231e8c5a837b8e0a3cf2e353ed6a2f55
+  checksum: 8656d2ad211c791efaed7315b965e39c0a2ab73e9d14ce010534a30dbf9e74dc74c0f87f15148e881e9a0d252753e4fffd708e8df9684bfc33923101c62b87e0
   languageName: node
   linkType: hard
 
