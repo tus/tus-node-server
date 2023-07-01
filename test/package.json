@@ -22,7 +22,7 @@
     "rimraf": "^3.0.2",
     "should": "^13.2.3",
     "sinon": "^15.0.4",
-    "supertest": "^6.3.2",
+    "supertest": "^6.3.3",
     "ts-node": "^10.9.1",
     "tsconfig": "*",
     "typescript": "latest"
