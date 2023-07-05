@@ -90,7 +90,7 @@ export class PostHandler extends BaseHandler {
     this.emit(EVENTS.POST_CREATE, req, res, upload, url)
 
     let newOffset
-    let isFinal = false
+    let isFinal = upload.size === 0 && !upload.sizeIsDeferred
     const headers: {
       'Upload-Offset'?: string
       'Upload-Expires'?: string
@@ -102,14 +102,13 @@ export class PostHandler extends BaseHandler {
       headers['Upload-Offset'] = newOffset.toString()
       isFinal = newOffset === Number.parseInt(upload_length as string, 10)
       upload.offset = newOffset
-
-      if (isFinal && this.options.onUploadFinish) {
-        try {
-          res = await this.options.onUploadFinish(req, res, upload)
-        } catch (error) {
-          log(`onUploadFinish: ${error.body}`)
-          throw error
-        }
+    }
+    if (isFinal && this.options.onUploadFinish) {
+      try {
+        res = await this.options.onUploadFinish(req, res, upload)
+      } catch (error) {
+        log(`onUploadFinish: ${error.body}`)
+        throw error
       }
     }
 
