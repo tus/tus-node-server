@@ -30,7 +30,7 @@ export class FileStore extends DataStore {
   constructor({directory, configstore, expirationPeriodInMilliseconds}: Options) {
     super()
     this.directory = directory
-    this.configstore = configstore ?? new FileConfigstore()
+    this.configstore = configstore ?? new FileConfigstore(directory)
     this.expirationPeriodInMilliseconds = expirationPeriodInMilliseconds ?? 0
     this.extensions = [
       'creation',
