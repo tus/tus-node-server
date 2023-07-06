@@ -42,8 +42,5 @@
   },
   "engines": {
     "node": ">=16"
-  },
-  "optionalDependencies": {
-    "@redis/client": "^1.5.5"
   }
 }
