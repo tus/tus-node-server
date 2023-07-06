@@ -8,13 +8,13 @@ import {EVENTS, ERRORS} from '../constants'
 import type http from 'node:http'
 import type {ServerOptions} from '../types'
 import type {DataStore} from '../models'
-import type {SetRequired} from 'type-fest'
 
 const log = debug('tus-node-server:handlers:post')
 
 export class PostHandler extends BaseHandler {
   // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
-  options!: SetRequired<ServerOptions, 'namingFunction'>
+  options!: Required<Pick<ServerOptions, 'namingFunction'>> &
+    Omit<ServerOptions, 'namingFunction'>
 
   constructor(store: DataStore, options: ServerOptions) {
     if (options.namingFunction && typeof options.namingFunction !== 'function') {
@@ -90,7 +90,7 @@ export class PostHandler extends BaseHandler {
     this.emit(EVENTS.POST_CREATE, req, res, upload, url)
 
     let newOffset
-    let isFinal = false
+    let isFinal = upload.size === 0 && !upload.sizeIsDeferred
     const headers: {
       'Upload-Offset'?: string
       'Upload-Expires'?: string
@@ -102,14 +102,13 @@ export class PostHandler extends BaseHandler {
       headers['Upload-Offset'] = newOffset.toString()
       isFinal = newOffset === Number.parseInt(upload_length as string, 10)
       upload.offset = newOffset
-
-      if (isFinal && this.options.onUploadFinish) {
-        try {
-          res = await this.options.onUploadFinish(req, res, upload)
-        } catch (error) {
-          log(`onUploadFinish: ${error.body}`)
-          throw error
-        }
+    }
+    if (isFinal && this.options.onUploadFinish) {
+      try {
+        res = await this.options.onUploadFinish(req, res, upload)
+      } catch (error) {
+        log(`onUploadFinish: ${error.body}`)
+        throw error
       }
     }
 

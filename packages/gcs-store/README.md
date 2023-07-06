@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages, currently in beta at `1.0.0-beta.1`.
+> Make sure to use the new packages, currently in beta at `1.0.0-beta.3`.
 
 ## Contents
 
@@ -29,7 +29,7 @@ npm install @tus/gcs-store
 const {Server} = require('@tus/server')
 const {GCSStore} = require('@tus/gcs-store')
 
-const {Storage} = require('@google-cloud/storage');
+const {Storage} = require('@google-cloud/storage')
 
 const storage = new Storage({keyFilename: 'key.json'})
 

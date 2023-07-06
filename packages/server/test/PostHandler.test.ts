@@ -289,6 +289,23 @@ describe('PostHandler', () => {
         assert.equal(upload.offset, 1024)
         assert.equal(upload.size, 1024)
       })
+
+      it('should call onUploadFinish hook for empty file without content-type', async function () {
+        const store = sinon.createStubInstance(DataStore)
+        const spy = sinon.stub().resolvesArg(1)
+        const handler = new PostHandler(store, {
+          path: '/test/output',
+          onUploadFinish: spy,
+        })
+
+        req.headers = {'upload-length': '0', host: 'localhost:3000'}
+
+        await handler.send(req, res)
+        assert.equal(spy.calledOnce, true)
+        const upload = spy.args[0][2]
+        assert.equal(upload.offset, 0)
+        assert.equal(upload.size, 0)
+      })
     })
   })
 })

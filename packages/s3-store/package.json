@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/s3-store",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "description": "AWS S3 store for @tus/server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
     "test": "mocha test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "aws-sdk": "^2.1325.0",
+    "aws-sdk": "^2.1368.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
