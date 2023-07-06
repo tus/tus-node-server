@@ -1,7 +1,7 @@
 import Store, {ConfigstoreOptions} from 'configstore'
 
 import {Upload} from '@tus/server/src'
-import {Configstore} from './Types'
+import {Configstore} from './types'
 import pkg from '../package.json'
 
 export class FileConfigstore implements Configstore {

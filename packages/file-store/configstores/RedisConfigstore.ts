@@ -1,7 +1,7 @@
 import {RedisClientType} from '@redis/client'
 
 import {Upload} from '@tus/server'
-import {Configstore} from './Types'
+import {Configstore} from './types'
 
 /**
  * Redis based configstore.
@@ -9,7 +9,10 @@ import {Configstore} from './Types'
  * @author Mitja Puzigaća <mitjap@gmail.com>
  */
 export class RedisConfigstore implements Configstore {
-  constructor(private redis: RedisClientType, private prefix: string = '') {}
+  constructor(private redis: RedisClientType, private prefix: string = '') {
+    this.redis = redis
+    this.prefix = prefix
+  }
 
   async get(key: string): Promise<Upload | undefined> {
     return this.deserializeValue(await this.redis.get(this.prefix + key))

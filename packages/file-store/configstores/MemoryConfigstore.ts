@@ -1,5 +1,5 @@
 import {Upload} from '@tus/server'
-import {Configstore} from './Types'
+import {Configstore} from './types'
 
 /**
  * Memory based configstore.
