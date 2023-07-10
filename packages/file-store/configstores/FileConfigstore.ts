@@ -10,9 +10,13 @@ export class FileConfigstore implements Configstore {
     this.directory = path
   }
 
-  async get(key: string): Promise<Upload> {
-    const buffer = await fs.readFile(this.resolve(key), 'utf8')
-    return JSON.parse(buffer)
+  async get(key: string): Promise<Upload | undefined> {
+    try {
+      const buffer = await fs.readFile(this.resolve(key), 'utf8')
+      return JSON.parse(buffer)
+    } catch {
+      return undefined
+    }
   }
 
   async set(key: string, value: Upload): Promise<void> {
