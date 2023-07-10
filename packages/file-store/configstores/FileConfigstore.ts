@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import {Upload} from '@tus/server'
 
-import {Configstore} from './types'
+import {Configstore} from './Types'
 
 export class FileConfigstore implements Configstore {
   directory: string
