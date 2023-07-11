@@ -198,7 +198,7 @@ export class FileStore extends DataStore {
     const toDelete: Promise<void>[] = []
 
     if (!this.configstore.list) {
-      return 0
+      throw ERRORS.UNSUPPORTED_EXPIRATION_EXTENSION
     }
 
     const uploadKeys = await this.configstore.list()
