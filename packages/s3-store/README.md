@@ -37,8 +37,10 @@ const s3Store = new S3Store({
   s3ClientConfig: {
     bucket: process.env.AWS_BUCKET,
     region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
   },
 })
 const server = new Server({path: '/files', datastore: s3Store})
