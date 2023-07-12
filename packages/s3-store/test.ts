@@ -24,8 +24,10 @@ describe('S3DataStore', function () {
       partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
       s3ClientConfig: {
         bucket: process.env.AWS_BUCKET as string,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+        },
         region: process.env.AWS_REGION,
       },
     })
@@ -63,7 +65,6 @@ describe('S3DataStore', function () {
     const n2 = await store.write(Readable.from(Buffer.alloc(size)), upload.id, n1)
     assert.equal(n2, incompleteSize + size)
     const {offset} = await store.getUpload(upload.id)
-
     assert.equal(getIncompletePart.calledTwice, true)
     assert.equal(deleteIncompletePart.calledOnce, true)
     assert.equal(uploadIncompletePart.calledOnce, true)
