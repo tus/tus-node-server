@@ -36,8 +36,8 @@ describe('S3DataStore', function () {
   it('should correctly prepend a buffer to a file', async function () {
     const p = path.resolve(fixturesPath, 'foo.txt')
     await fs.writeFile(p, 'world!')
-    await this.datastore.prependIncompletePart(p, Buffer.from('Hello, '))
-    assert(await fs.readFile(p, 'utf8'), 'Hello, world!')
+    await this.datastore.prependIncompletePart(p, new TextEncoder().encode('Hello, '))
+    assert.strictEqual(await fs.readFile(p, 'utf8'), 'Hello, world!')
     await fs.unlink(p)
   })
 

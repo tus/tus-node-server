@@ -26,7 +26,11 @@ type Options = {
   s3ClientConfig: S3ClientConfig & {bucket: string}
 }
 
-type MetadataValue = {file: Upload; 'upload-id': string; 'tus-version': string}
+type MetadataValue = {
+  file: Upload
+  'upload-id': string
+  'tus-version': string
+}
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -204,9 +208,13 @@ export class S3Store extends DataStore {
     })
   }
 
-  private async prependIncompletePart(path: string, part: Uint8Array): Promise<void> {
-    const file = await fsProm.readFile(path)
-    await fsProm.writeFile(path, Buffer.concat([file, Buffer.from(part)]))
+  private async prependIncompletePart(
+    newChunkPath: string,
+    previousIncompletePart: Uint8Array
+  ): Promise<void> {
+    const newChunk = await fsProm.readFile(newChunkPath)
+    const combined = Buffer.concat([previousIncompletePart, newChunk])
+    await fsProm.writeFile(newChunkPath, combined)
   }
 
   /**
