@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import path from 'node:path'
 import {Upload} from '@tus/server'
 
 import {Configstore} from './Types'
@@ -39,6 +40,6 @@ export class FileConfigstore implements Configstore {
   }
 
   private resolve(key: string): string {
-    return `${this.directory}/${key}.info`
+    return path.resolve(this.directory, `${key}.json`)
   }
 }
