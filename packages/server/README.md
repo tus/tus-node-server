@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new package, currently in beta at `1.0.0-beta.5`.
+> Make sure to use the new package, currently in beta at `1.0.0-beta.7`.
 
 ## Contents
 
@@ -35,16 +35,16 @@ npm install @tus/server
 A standalone server which stores files on disk.
 
 ```js
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
-const host = '127.0.0.1'
-const port = 1080
+const { Server } = require("@tus/server");
+const { FileStore } = require("@tus/file-store");
+const host = "127.0.0.1";
+const port = 1080;
 
 const server = new Server({
-  path: '/files',
-  datastore: new FileStore({directory: './files'}),
-})
-server.listen({host, port})
+  path: "/files",
+  datastore: new FileStore({ directory: "./files" }),
+});
+server.listen({ host, port });
 ```
 
 ## API
@@ -177,65 +177,65 @@ server.on(EVENTS.POST_TERMINATE, (req, res, id => {})
 ### Example: integrate tus into Express
 
 ```js
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
-const express = require('express')
+const { Server } = require("@tus/server");
+const { FileStore } = require("@tus/file-store");
+const express = require("express");
 
-const host = '127.0.0.1'
-const port = 1080
-const app = express()
-const uploadApp = express()
+const host = "127.0.0.1";
+const port = 1080;
+const app = express();
+const uploadApp = express();
 const server = new Server({
-  datastore: new FileStore({directory: '/files'}),
-})
+  datastore: new FileStore({ directory: "/files" }),
+});
 
-uploadApp.all('*', server.handle.bind(server))
-app.use('/uploads', uploadApp)
-app.listen(port, host)
+uploadApp.all("*", server.handle.bind(server));
+app.use("/uploads", uploadApp);
+app.listen(port, host);
 ```
 
 ### Example: integrate tus into Koa
 
 ```js
-const http = require('node:http')
-const url = require('node:url')
-const Koa = require('koa')
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
+const http = require("node:http");
+const url = require("node:url");
+const Koa = require("koa");
+const { Server } = require("@tus/server");
+const { FileStore } = require("@tus/file-store");
 
-const app = new Koa()
-const appCallback = app.callback()
-const port = 1080
+const app = new Koa();
+const appCallback = app.callback();
+const port = 1080;
 const tusServer = new Server({
-  path: '/files',
-  datastore: new FileStore({directory: '/files'}),
-})
+  path: "/files",
+  datastore: new FileStore({ directory: "/files" }),
+});
 
 const server = http.createServer((req, res) => {
-  const urlPath = url.parse(req.url).pathname
+  const urlPath = url.parse(req.url).pathname;
 
   // handle any requests with the `/files/*` pattern
   if (/^\/files\/.+/.test(urlPath.toLowerCase())) {
-    return tusServer.handle(req, res)
+    return tusServer.handle(req, res);
   }
 
-  appCallback(req, res)
-})
+  appCallback(req, res);
+});
 
-server.listen(port)
+server.listen(port);
 ```
 
 ### Example: integrate tus into Fastify
 
 ```js
-const fastify = require('fastify')({ logger: true })
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
+const fastify = require("fastify")({ logger: true });
+const { Server } = require("@tus/server");
+const { FileStore } = require("@tus/file-store");
 
 const tusServer = new Server({
-  path: '/files',
-  datastore: new FileStore({ directory: './files' }),
-})
+  path: "/files",
+  datastore: new FileStore({ directory: "./files" }),
+});
 
 /**
  * add new content-type to fastify forewards request
@@ -243,8 +243,9 @@ const tusServer = new Server({
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
 fastify.addContentTypeParser(
-  'application/offset+octet-stream', (request, payload, done) => done(null)
-)
+  "application/offset+octet-stream",
+  (request, payload, done) => done(null)
+);
 
 /**
  * let tus handle preparation and filehandling requests
@@ -252,18 +253,18 @@ fastify.addContentTypeParser(
  * @see https://www.fastify.io/docs/latest/Reference/Request/
  * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
  */
-fastify.all('/files', (req, res) => {
-  tusServer.handle(req.raw, res.raw)
-})
-fastify.all('/files/*', (req, res) => {
-  tusServer.handle(req.raw, res.raw)
-})
+fastify.all("/files", (req, res) => {
+  tusServer.handle(req.raw, res.raw);
+});
+fastify.all("/files/*", (req, res) => {
+  tusServer.handle(req.raw, res.raw);
+});
 fastify.listen(3000, (err) => {
   if (err) {
-    fastify.log.error(err)
-    process.exit(1)
+    fastify.log.error(err);
+    process.exit(1);
   }
-})
+});
 ```
 
 ### Example: integrate tus into Next.js
@@ -273,9 +274,9 @@ Attach the tus server handler to a Next.js route handler in an [optional catch-a
 `/pages/api/upload/[[...file]].ts`
 
 ```ts
-import type {NextApiRequest, NextApiResponse} from 'next'
-import {Server, Upload} from '@tus/server'
-import {FileStore} from '@tus/file-store'
+import type { NextApiRequest, NextApiResponse } from "next";
+import { Server, Upload } from "@tus/server";
+import { FileStore } from "@tus/file-store";
 
 /**
  * !Important. This will tell Next.js NOT Parse the body as tus requires
@@ -285,40 +286,40 @@ export const config = {
   api: {
     bodyParser: false,
   },
-}
+};
 
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   // ie /api/upload
-  path: '/api/upload',
-  datastore: new FileStore({directory: './files'}),
-})
+  path: "/api/upload",
+  datastore: new FileStore({ directory: "./files" }),
+});
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  return tusServer.handle(req, res)
+  return tusServer.handle(req, res);
 }
 ```
 
 ### Example: validate metadata when an upload is created
 
 ```js
-const {Server} = require('@tus/server')
+const { Server } = require("@tus/server");
 // ...
 
 const server = new Server({
   // ..
   async onUploadCreate(req, res, upload) {
-    const {ok, expected, received} = validateMetadata(upload)
+    const { ok, expected, received } = validateMetadata(upload);
     if (!ok) {
-      const body = `Expected "${expected}" in "Upload-Metadata" but received "${received}"`
-      throw {status_code: 500, body} // if undefined, falls back to 500 with "Internal server error".
+      const body = `Expected "${expected}" in "Upload-Metadata" but received "${received}"`;
+      throw { status_code: 500, body }; // if undefined, falls back to 500 with "Internal server error".
     }
     // We have to return the (modified) response.
-    return res
+    return res;
   },
-})
+});
 
-server.listen({host, port})
+server.listen({ host, port });
 ```
 
 ## Types
