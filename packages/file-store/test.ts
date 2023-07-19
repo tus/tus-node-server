@@ -7,9 +7,10 @@ import path from 'node:path'
 import sinon from 'sinon'
 
 import {FileStore} from './'
-import {Upload, MemoryConfigstore} from '@tus/server'
+import {Upload} from '@tus/server'
 
 import * as shared from '../../test/stores.test'
+import {MemoryConfigstore} from './configstores/MemoryConfigstore'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
