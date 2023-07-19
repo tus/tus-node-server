@@ -21,7 +21,8 @@
     "test": "mocha test.ts --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "p-queue": "^7.3.4"
   },
   "devDependencies": {
     "@tus/server": "workspace:^",
