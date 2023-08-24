@@ -32,6 +32,10 @@ export type ServerOptions = {
     res: http.ServerResponse,
     upload: Upload
   ) => Promise<http.ServerResponse>
+  onIncomingRequest?: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ) => Promise<void>
 }
 
 export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void
