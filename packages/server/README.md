@@ -80,7 +80,7 @@ Default uses `crypto.randomBytes(16).toString('hex')`.
 `onUploadCreate` will be invoked before a new upload is created. (`(req, res, upload) => Promise<res>`).
 
 If the function returns the (modified) response, the upload will be created.
-If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks) will be sent to the client.
+You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
 This can be used to implement validation of upload metadata or add headers.
 
@@ -89,20 +89,16 @@ This can be used to implement validation of upload metadata or add headers.
 `onUploadFinish` will be invoked after an upload is completed but before a response is returned to the client (`(req, res, upload) => Promise<res>`).
 
 If the function returns the (modified) response, the upload will finish.
-If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks) will be sent to the client.
+You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
 This can be used to implement post-processing validation.
 
 #### `options.onIncomingRequest`
 
-`onIncomingRequest` is a middleware function invoked before all handlers (`(req, res, upload) => Promise<res>`)
+`onIncomingRequest` is a middleware function invoked before all handlers (`(req, res) => Promise<void>`)
 
 This can be used for things like access control.
-If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks) will be sent to the client.
-
-```js
-
-```
+You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
 #### `server.handle(req, res)`
 
@@ -334,7 +330,7 @@ const server = new Server({
 ### Example: access control
 
 Access control is opinionated and can be done in different ways.
-This examples is psuedo-code for what it could look like with JSON Web Tokens.
+This example is psuedo-code for what it could look like with JSON Web Tokens.
 
 ```js
 const { Server } = require("@tus/server");
