@@ -226,15 +226,14 @@ describe('Server', () => {
       done()
     })
 
-    it('should allow overriding the HTTP method', (done) => {
+    it('should allow overriding the HTTP method', async () => {
       const origin = 'vimeo.com'
       const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
       // @ts-expect-error todo
       const res = new http.ServerResponse({method: 'OPTIONS'})
       // @ts-expect-error todo
-      server.handle(req, res)
+      await server.handle(req, res)
       assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
-      done()
     })
   })
 
