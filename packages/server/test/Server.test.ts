@@ -3,6 +3,8 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import http from 'node:http'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
 import request from 'supertest'
 
@@ -15,6 +17,10 @@ import {TUS_RESUMABLE, EVENTS} from '../src/constants'
 const removeProtocol = (location: string) => location.slice(6)
 
 describe('Server', () => {
+  after(async () => {
+    await fs.rm(path.resolve(__dirname, 'output'), {force: true, recursive: true})
+  })
+
   describe('instantiation', () => {
     it('constructor must require options', () => {
       assert.throws(() => {
@@ -118,7 +124,7 @@ describe('Server', () => {
       listener = server.listen()
     })
 
-    after(() => {
+    after(async () => {
       listener.close()
     })
 
@@ -234,6 +240,24 @@ describe('Server', () => {
       // @ts-expect-error todo
       await server.handle(req, res)
       assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+    })
+
+    it('should not invoke handlers if onIncomingRequest throws', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
+        async onIncomingRequest() {
+          throw {status_code: 403, body: 'Access denied'}
+        },
+      })
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .set('Upload-Offset', '0')
+        .set('Content-Type', 'application/offset+octet-stream')
+        .send('test')
+        .expect(403, 'Access denied', done)
     })
   })
 
