@@ -16,11 +16,11 @@
     "test": "turbo run test --concurrency 1"
   },
   "devDependencies": {
-    "eslint": "^8.29.0",
+    "eslint": "^8.48.0",
     "eslint-config-custom": "workspace:*",
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
-    "turbo": "^1.6.3"
+    "turbo": "^1.10.13"
   },
   "packageManager": "yarn@3.2.3"
 }

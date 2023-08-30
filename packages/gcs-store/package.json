@@ -21,19 +21,19 @@
     "test": "mocha test.ts --timeout 30000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "debug": "^4.3.3"
+    "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@google-cloud/storage": "^6.9.3",
+    "@google-cloud/storage": "^6.12.0",
     "@tus/server": "workspace:^",
-    "@types/debug": "^4.1.7",
+    "@types/debug": "^4.1.8",
     "@types/mocha": "^10.0.1",
-    "@types/node": "latest",
-    "eslint": "^8.29.0",
+    "@types/node": "^20.5.7",
+    "eslint": "^8.48.0",
     "eslint-config-custom": "workspace:*",
-    "mocha": "^10.1.0",
+    "mocha": "^10.2.0",
     "should": "^13.2.3",
-    "typescript": "latest"
+    "typescript": "^5.2.2"
   },
   "peerDependencies": {
     "@google-cloud/storage": "*",
