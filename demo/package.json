@@ -12,7 +12,7 @@
     "@tus/gcs-store": "workspace:^",
     "@tus/s3-store": "workspace:^",
     "@tus/server": "workspace:^",
-    "tus-js-client": "^2.3.0"
+    "tus-js-client": "^2.3.2"
   },
   "devDependencies": {
     "cross-env": "^7.0.3"
