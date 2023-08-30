@@ -98,9 +98,8 @@ export class S3Store extends DataStore {
     await this.client.putObject({
       Bucket: this.bucket,
       Key: `${upload.id}.info`,
-      Body: '',
+      Body: JSON.stringify(upload),
       Metadata: {
-        file: JSON.stringify(upload),
         'upload-id': uploadId,
         'tus-version': TUS_RESUMABLE,
       },
@@ -114,29 +113,25 @@ export class S3Store extends DataStore {
    * HTTP calls to S3.
    */
   private async getMetadata(id: string): Promise<MetadataValue> {
-    log(`[${id}] retrieving metadata`)
     const cached = this.cache.get(id)
     if (cached?.file) {
-      log(`[${id}] metadata from cache`)
       return cached
     }
 
-    log(`[${id}] metadata from s3`)
-    const {Metadata} = await this.client.headObject({
+    const {Metadata, Body} = await this.client.getObject({
       Bucket: this.bucket,
       Key: `${id}.info`,
     })
-    const file = JSON.parse(Metadata?.file as string)
+    const file = JSON.parse((await Body?.transformToString()) as string)
     this.cache.set(id, {
-      ...Metadata,
       'tus-version': Metadata?.['tus-version'] as string,
+      'upload-id': Metadata?.['upload-id'] as string,
       file: new Upload({
         id,
         size: file.size ? Number.parseInt(file.size, 10) : undefined,
         offset: Number.parseInt(file.offset, 10),
         metadata: file.metadata,
       }),
-      'upload-id': Metadata?.['upload-id'] as string,
     })
     return this.cache.get(id) as MetadataValue
   }
@@ -400,33 +395,15 @@ export class S3Store extends DataStore {
    */
   public async create(upload: Upload) {
     log(`[${upload.id}] initializing multipart upload`)
-    type CreateRequest = Omit<AWS.CreateMultipartUploadCommandInput, 'Metadata'> & {
-      Metadata: Record<string, string>
-    }
-    const request: CreateRequest = {
+    const request: AWS.CreateMultipartUploadCommandInput = {
       Bucket: this.bucket,
       Key: upload.id,
       Metadata: {'tus-version': TUS_RESUMABLE},
-    }
-    const file: Record<string, string | number | Upload['metadata']> = {
-      id: upload.id,
-      offset: upload.offset,
-      metadata: upload.metadata,
-    }
-
-    if (upload.size) {
-      file.size = upload.size.toString()
-      file.isSizeDeferred = 'false'
-    } else {
-      file.isSizeDeferred = 'true'
     }
 
     if (upload.metadata?.contentType) {
       request.ContentType = upload.metadata.contentType
     }
-
-    // TODO: rename `file` to `upload` to align with the codebase
-    request.Metadata.file = JSON.stringify(file)
 
     const res = await this.client.createMultipartUpload(request)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
