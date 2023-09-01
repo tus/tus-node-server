@@ -19,7 +19,7 @@
     "@types/sinon": "^10.0.16",
     "@types/supertest": "^2.0.12",
     "mocha": "^10.2.0",
-    "rimraf": "^3.0.2",
+    "rimraf": "^5.0.1",
     "should": "^13.2.3",
     "sinon": "^15.2.0",
     "supertest": "^6.3.3",
