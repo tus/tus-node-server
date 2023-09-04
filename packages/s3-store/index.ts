@@ -256,9 +256,11 @@ export class S3Store extends DataStore {
 
             const readable = fs.createReadStream(path)
             readable.on('error', reject)
-            if (partSize > this.minPartSize || isFinalChunk) {
-              await this.uploadPart(metadata, readable, partNumber)
+            if (partSize >= this.minPartSize || isFinalChunk) {
+              // The stream splitter may be faster than we are able to upload to S3
+              // so we increment the offset before uploading the part.
               offset += partSize
+              await this.uploadPart(metadata, readable, partNumber)
             } else {
               await this.uploadIncompletePart(incompletePartId, readable)
             }

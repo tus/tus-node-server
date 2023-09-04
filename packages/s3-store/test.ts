@@ -72,6 +72,37 @@ describe('S3DataStore', function () {
     assert.equal(offset, size + incompleteSize)
   })
 
+  it('should process chunk size of exactly the min size', async function () {
+    this.datastore.minPartSize = 1024 * 1024 * 5
+    const store = this.datastore
+    const size = 1024 * 1024 * 5
+    const getIncompletePart = sinon.spy(store, 'getIncompletePart')
+    const deleteIncompletePart = sinon.spy(store, 'deleteIncompletePart')
+    const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
+    const uploadPart = sinon.spy(store, 'uploadPart')
+    const upload = new Upload({
+      id: 'min-part-size-test',
+      size: size + size,
+      offset: 0,
+    })
+
+    await store.create(upload)
+    const n1 = await store.write(
+      Readable.from(Buffer.alloc(size)),
+      upload.id,
+      upload.offset
+    )
+    assert.equal(n1, size)
+    const n2 = await store.write(Readable.from(Buffer.alloc(size)), upload.id, n1)
+    assert.equal(n2, n1 + size)
+    const {offset} = await store.getUpload(upload.id)
+    assert.equal(getIncompletePart.called, true)
+    assert.equal(deleteIncompletePart.called, false)
+    assert.equal(uploadIncompletePart.called, false)
+    assert.equal(uploadPart.calledTwice, true)
+    assert.equal(offset, size + size)
+  })
+
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension
