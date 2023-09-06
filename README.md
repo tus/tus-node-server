@@ -18,9 +18,7 @@ on disk, on Google Cloud Storage or on AWS S3 (or any other S3-compatible
 storage system). Due to its modularization and extensibility, support for
 nearly any other cloud provider could easily be added to tus-node-server
 
-> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
-> The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages.
+> 📣 [**Read the 1.0.0 announcement post: new packages, rewrite in TypeScript, and much more**](https://tus.io/blog/2023/09/04/tus-node-server-v100).
 
 ## Contents
 
