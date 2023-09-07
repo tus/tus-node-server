@@ -83,7 +83,7 @@ export class GCSStore extends DataStore {
               size: upload.size,
               sizeIsDeferred: `${upload.sizeIsDeferred}`,
               offset,
-              metadata: upload.metadata,
+              metadata: JSON.stringify(upload.metadata),
             },
           },
         }
