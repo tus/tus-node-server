@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "p-queue": "^6.6.2"
+    "p-queue": "^7.4.1"
   },
   "devDependencies": {
     "@tus/server": "workspace:^",
