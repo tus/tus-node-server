@@ -38,11 +38,10 @@ export class FileConfigstore implements Configstore {
   async list(): Promise<Array<string>> {
     return this.queue.add(async () => {
       const files = await fs.readdir(this.directory)
-      // readdir returns files without file extension.
-      // This means we will get two files,
-      // the actual file and the JSON info file, per upload.
-      // We de-duplicate here to only return one ID per upload.
-      return Array.from(new Set(files))
+      // list is expected to return an array of IDs,
+      // which is the same as the file name.
+      // But the JSON info files are also in the directory so we filter those.
+      return files.filter((file) => !file.endsWith('.json'))
     })
   }
 
