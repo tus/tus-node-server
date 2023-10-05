@@ -1,10 +1,12 @@
 import 'should'
 import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
+import fsProm from 'node:fs/promises'
 import stream from 'node:stream'
 import {setTimeout as promSetTimeout} from 'node:timers/promises'
 
 import {Upload} from '@tus/server'
+import path from 'node:path'
 
 export const shouldHaveStoreMethods = function () {
   describe('the class', () => {
@@ -75,6 +77,9 @@ export const shouldExpireUploads = function () {
     })
 
     it('should expire upload', async function () {
+      const output = path.resolve(__dirname, 'output')
+      await fsProm.rm(output, {recursive: true})
+      await fsProm.mkdir(output)
       const file = new Upload({
         id: 'expiration-test',
         size: this.testFileSize,
