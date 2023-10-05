@@ -69,7 +69,7 @@ export const shouldCreateUploads = function () {
 }
 
 export const shouldExpireUploads = function () {
-  describe.only('expiration extension', () => {
+  describe('expiration extension', () => {
     it("should report 'expiration' extension", function () {
       assert.equal(this.datastore.hasExtension('expiration'), true)
     })
