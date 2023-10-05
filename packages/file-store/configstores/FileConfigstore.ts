@@ -37,13 +37,9 @@ export class FileConfigstore implements Configstore {
 
   async list(): Promise<Array<string>> {
     return this.queue.add(async () => {
-      const files = await fs.readdir(this.directory, {withFileTypes: true})
-      const promises = files
-        .filter((file) => file.isFile() && file.name.endsWith('.json'))
-        .map((file) => fs.readFile(path.resolve(file.path, file.name), 'utf8'))
-
-      return Promise.all(promises)
-    }) as Promise<string[]>
+      const files = await fs.readdir(this.directory)
+      return Array.from(new Set(files))
+    })
   }
 
   private resolve(key: string): string {

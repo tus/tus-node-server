@@ -10,7 +10,6 @@ import {FileStore} from './'
 import {Upload} from '@tus/server'
 
 import * as shared from '../../test/stores.test'
-import {MemoryConfigstore} from './configstores/MemoryConfigstore'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
@@ -28,7 +27,6 @@ describe('FileStore', function () {
     sinon.spy(fs, 'mkdir')
     this.datastore = new FileStore({
       directory: this.storePath,
-      configstore: new MemoryConfigstore(),
     })
   })
 
@@ -92,6 +90,7 @@ describe('FileStore', function () {
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension
+  shared.shouldExpireUploads() // Expiration extension
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
   shared.shouldDeclareUploadLength() // Creation-defer-length extension

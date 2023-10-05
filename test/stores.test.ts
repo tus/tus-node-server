@@ -2,6 +2,7 @@ import 'should'
 import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
+import {setTimeout as promSetTimeout} from 'node:timers/promises'
 
 import {Upload} from '@tus/server'
 
@@ -63,6 +64,31 @@ export const shouldCreateUploads = function () {
       await this.datastore.create(file)
       const upload = await this.datastore.getUpload(file.id)
       assert.deepStrictEqual(upload.metadata, file.metadata)
+    })
+  })
+}
+
+export const shouldExpireUploads = function () {
+  describe.only('expiration extension', () => {
+    it("should report 'expiration' extension", function () {
+      assert.equal(this.datastore.hasExtension('expiration'), true)
+    })
+
+    it('should expire upload', async function () {
+      const file = new Upload({
+        id: 'expiration-test',
+        size: this.testFileSize,
+        offset: 0,
+        metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
+      })
+      this.datastore.expirationPeriodInMilliseconds = 100
+      await this.datastore.create(file)
+      const readable = fs.createReadStream(this.testFilePath)
+      const offset = await this.datastore.write(readable, file.id, 0)
+      await promSetTimeout(100)
+      const n = await this.datastore.deleteExpired()
+      assert.equal(offset, this.testFileSize)
+      assert.equal(n, 1)
     })
   })
 }
