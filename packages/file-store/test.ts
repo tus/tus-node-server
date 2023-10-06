@@ -4,7 +4,6 @@ import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import fsProm from 'node:fs/promises'
 import path from 'node:path'
-import os from 'node:os'
 
 import sinon from 'sinon'
 
@@ -97,10 +96,10 @@ describe('FileStore', function () {
 
   describe('FileConfigstore', () => {
     it('should ignore random files in directory when calling list()', async function () {
-      const store = new FileConfigstore(os.tmpdir())
+      const store = new FileConfigstore(storePath)
       const files = ['tus', 'tus.json', 'tu', 'tuss.json', 'random']
       for (const file of files) {
-        await fsProm.writeFile(path.resolve(os.tmpdir(), file), '')
+        await fsProm.writeFile(path.resolve(storePath, file), '')
       }
       const list = await store.list()
 
@@ -108,10 +107,6 @@ describe('FileStore', function () {
       // One upload consists of the file and the JSON info file.
       // But from the list perspective that is only one upload.
       assert.strictEqual(list.length, 1)
-
-      for (const file of files) {
-        await fsProm.rm(path.resolve(os.tmpdir(), file))
-      }
     })
   })
 
