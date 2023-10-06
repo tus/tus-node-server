@@ -2,17 +2,24 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
+import fsProm from 'node:fs/promises'
 import path from 'node:path'
+import os from 'node:os'
 
 import sinon from 'sinon'
 
-import {FileStore} from './'
+import {FileStore, FileConfigstore} from './'
 import {Upload} from '@tus/server'
 
 import * as shared from '../../test/stores.test'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
+
+async function cleanup() {
+  await fsProm.rm(storePath, {recursive: true})
+  await fsProm.mkdir(storePath)
+}
 
 describe('FileStore', function () {
   before(function () {
@@ -30,9 +37,10 @@ describe('FileStore', function () {
     })
   })
 
-  this.afterEach(() => {
+  this.afterEach(async () => {
     // @ts-expect-error ignore
     fs.mkdir.restore()
+    await cleanup()
   })
 
   it('should create a directory for the files', function (done) {
@@ -84,6 +92,26 @@ describe('FileStore', function () {
   describe('getUpload', () => {
     it('should reject directories', function () {
       return this.datastore.getUpload('').should.be.rejected()
+    })
+  })
+
+  describe('FileConfigstore', () => {
+    it('should ignore random files in directory when calling list()', async function () {
+      const store = new FileConfigstore(os.tmpdir())
+      const files = ['tus', 'tus.json', 'tu', 'tuss.json', 'random']
+      for (const file of files) {
+        await fsProm.writeFile(path.resolve(os.tmpdir(), file), '')
+      }
+      const list = await store.list()
+
+      // list returns the amount of uploads.
+      // One upload consists of the file and the JSON info file.
+      // But from the list perspective that is only one upload.
+      assert.strictEqual(list.length, 1)
+
+      for (const file of files) {
+        await fsProm.rm(path.resolve(os.tmpdir(), file))
+      }
     })
   })
 

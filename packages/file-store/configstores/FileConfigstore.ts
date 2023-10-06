@@ -38,10 +38,12 @@ export class FileConfigstore implements Configstore {
   async list(): Promise<Array<string>> {
     return this.queue.add(async () => {
       const files = await fs.readdir(this.directory)
-      // list is expected to return an array of IDs,
-      // which is the same as the file name.
-      // But the JSON info files are also in the directory so we filter those.
-      return files.filter((file) => !file.endsWith('.json'))
+      const sorted = files.sort((a, b) => a.localeCompare(b))
+      const name = (file: string) => path.basename(file, '.json')
+      // To only return tus file IDs we check if the file has a corresponding JSON info file
+      return sorted.filter(
+        (file, idx) => idx < sorted.length - 1 && name(file) === name(sorted[idx + 1])
+      )
     })
   }
 
