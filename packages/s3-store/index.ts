@@ -226,6 +226,8 @@ export class S3Store extends DataStore {
     const promises: Promise<void>[] = []
     let pendingChunkFilepath: string | null = null
     let bytesUploaded = 0
+    let currentChunkNumber = 0
+
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
       directory: os.tmpdir(),
@@ -237,29 +239,35 @@ export class S3Store extends DataStore {
         pendingChunkFilepath = null
 
         const partNumber = currentPartNumber++
+        const chunkNumber = currentChunkNumber++
+
         offset += partSize
-        const isFinalChunk = size === offset
+
+        const isFirstChunk = chunkNumber === 0
+        const isFinalPart = size === offset
 
         // eslint-disable-next-line no-async-promise-executor
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             const incompletePartId = this.partKey(metadata.file.id, true)
-            // If we received a chunk under the minimum part size in a previous iteration,
-            // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
+            if (isFirstChunk) {
+              // If we received a chunk under the minimum part size in a previous iteration,
+              // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
 
-            const incompletePart = await this.getIncompletePart(incompletePartId)
-            if (incompletePart) {
-              // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
-              // and delete the incomplete part from the bucket. This can be done in parallel.
-              await Promise.all([
-                this.prependIncompletePart(path, incompletePart),
-                this.deleteIncompletePart(incompletePartId),
-              ])
+              const incompletePart = await this.getIncompletePart(incompletePartId)
+              if (incompletePart) {
+                // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
+                // and delete the incomplete part from the bucket. This can be done in parallel.
+                await Promise.all([
+                  this.prependIncompletePart(path, incompletePart),
+                  this.deleteIncompletePart(incompletePartId),
+                ])
+              }
             }
 
             const readable = fs.createReadStream(path)
             readable.on('error', reject)
-            if (partSize >= this.minPartSize || isFinalChunk) {
+            if (partSize >= this.minPartSize || isFinalPart) {
               await this.uploadPart(metadata, readable, partNumber)
             } else {
               await this.uploadIncompletePart(incompletePartId, readable)
