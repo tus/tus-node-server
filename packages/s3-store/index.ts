@@ -173,6 +173,7 @@ export class S3Store extends DataStore {
       Key: id,
       Body: readStream,
     })
+    log(`[${id}] finished uploading incomplete part`)
     return data.ETag as string
   }
 
@@ -235,16 +236,18 @@ export class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
+        const partNumber = currentPartNumber++
+        offset += partSize
+        const isFinalChunk = size === offset
+
         // eslint-disable-next-line no-async-promise-executor
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
-            const partNumber = currentPartNumber++
             const incompletePartId = this.partKey(metadata.file.id, true)
             // If we received a chunk under the minimum part size in a previous iteration,
             // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
-            const incompletePart = await this.getIncompletePart(incompletePartId)
-            const isFinalChunk = size === offset + partSize
 
+            const incompletePart = await this.getIncompletePart(incompletePartId)
             if (incompletePart) {
               // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
               // and delete the incomplete part from the bucket. This can be done in parallel.
@@ -257,9 +260,6 @@ export class S3Store extends DataStore {
             const readable = fs.createReadStream(path)
             readable.on('error', reject)
             if (partSize >= this.minPartSize || isFinalChunk) {
-              // The stream splitter may be faster than we are able to upload to S3
-              // so we increment the offset before uploading the part.
-              offset += partSize
               await this.uploadPart(metadata, readable, partNumber)
             } else {
               await this.uploadIncompletePart(incompletePartId, readable)
@@ -408,8 +408,8 @@ export class S3Store extends DataStore {
     }
 
     const res = await this.client.createMultipartUpload(request)
-    log(`[${upload.id}] multipart upload created (${res.UploadId})`)
     await this.saveMetadata(upload, res.UploadId as string)
+    log(`[${upload.id}] multipart upload created (${res.UploadId})`)
 
     return upload
   }
