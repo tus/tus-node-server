@@ -486,7 +486,7 @@ export class S3Store extends DataStore {
       throw error
     }
 
-    const incompletePart = await this.getIncompletePart(this.partKey(id))
+    const incompletePart = await this.getIncompletePart(this.partKey(id, true))
 
     return new Upload({
       id,
