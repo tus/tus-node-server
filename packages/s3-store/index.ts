@@ -170,7 +170,7 @@ export class S3Store extends DataStore {
   ): Promise<string> {
     const data = await this.client.putObject({
       Bucket: this.bucket,
-      Key: id,
+      Key: this.partKey(id, true),
       Body: readStream,
     })
     return data.ETag as string
@@ -180,7 +180,7 @@ export class S3Store extends DataStore {
     try {
       const data = await this.client.getObject({
         Bucket: this.bucket,
-        Key: id,
+        Key: this.partKey(id, true),
       })
       return data.Body?.transformToByteArray()
     } catch (error) {
@@ -199,7 +199,7 @@ export class S3Store extends DataStore {
   private async deleteIncompletePart(id: string): Promise<void> {
     await this.client.deleteObject({
       Bucket: this.bucket,
-      Key: id,
+      Key: this.partKey(id, true),
     })
   }
 
@@ -239,10 +239,9 @@ export class S3Store extends DataStore {
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             const partNumber = currentPartNumber++
-            const incompletePartId = this.partKey(metadata.file.id, true)
             // If we received a chunk under the minimum part size in a previous iteration,
             // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
-            const incompletePart = await this.getIncompletePart(incompletePartId)
+            const incompletePart = await this.getIncompletePart(metadata.file.id)
             const isFinalChunk = size === offset + partSize
 
             if (incompletePart) {
@@ -250,7 +249,7 @@ export class S3Store extends DataStore {
               // and delete the incomplete part from the bucket. This can be done in parallel.
               await Promise.all([
                 this.prependIncompletePart(path, incompletePart),
-                this.deleteIncompletePart(incompletePartId),
+                this.deleteIncompletePart(metadata.file.id),
               ])
             }
 
@@ -262,7 +261,7 @@ export class S3Store extends DataStore {
               offset += partSize
               await this.uploadPart(metadata, readable, partNumber)
             } else {
-              await this.uploadIncompletePart(incompletePartId, readable)
+              await this.uploadIncompletePart(metadata.file.id, readable)
             }
 
             bytesUploaded += partSize
@@ -486,7 +485,7 @@ export class S3Store extends DataStore {
       throw error
     }
 
-    const incompletePart = await this.getIncompletePart(this.partKey(id, true))
+    const incompletePart = await this.getIncompletePart(id)
 
     return new Upload({
       id,
