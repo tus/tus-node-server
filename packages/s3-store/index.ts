@@ -250,6 +250,8 @@ export class S3Store extends DataStore {
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             const incompletePartId = this.partKey(metadata.file.id, true)
+            // Only the first chunk of each PATCH request can prepend
+            // an incomplete part (last chunk) from the previous request.
             if (isFirstChunk) {
               // If we received a chunk under the minimum part size in a previous iteration,
               // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
