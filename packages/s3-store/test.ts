@@ -7,7 +7,7 @@ import sinon from 'sinon'
 
 import {S3Store} from './'
 import * as shared from '../../test/stores.test'
-import {Upload} from '@tus/server'
+import {Upload, Uid} from '@tus/server'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
@@ -70,6 +70,38 @@ describe('S3DataStore', function () {
     assert.equal(uploadIncompletePart.calledOnce, true)
     assert.equal(uploadPart.calledOnce, true)
     assert.equal(offset, size + incompleteSize)
+  })
+
+  it('store shuld return proper offset when incomplete part exists', async function () {
+    const store = this.datastore
+    const size = 4096
+    const incompleteSize = 1024
+    const upload = new Upload({
+      id: `incomplete-part-test-${Uid.rand()}`,
+      size: size + incompleteSize,
+      offset: 0,
+    })
+
+    await store.create(upload)
+
+    {
+      const {offset} = await store.getUpload(upload.id)
+      assert.equal(offset, 0)
+    }
+
+    {
+      const offset = await store.write(
+        Readable.from(Buffer.alloc(incompleteSize)),
+        upload.id,
+        upload.offset
+      )
+      assert.equal(offset, incompleteSize)
+    }
+
+    {
+      const {offset} = await store.getUpload(upload.id)
+      assert.equal(offset, incompleteSize)
+    }
   })
 
   it('should process chunk size of exactly the min size', async function () {
