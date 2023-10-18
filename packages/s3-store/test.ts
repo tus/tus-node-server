@@ -104,6 +104,42 @@ describe('S3DataStore', function () {
     }
   })
 
+  it('upload as multipart upload when incomplete part grows beyond minimal part size', async function () {
+    const store = this.datastore
+    const size = 10 * 1024 * 1024 // 10MB
+    const incompleteSize = 2 * 1024 * 1024 // 2MB
+    const getIncompletePart = sinon.spy(store, 'getIncompletePart')
+    const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
+    const uploadPart = sinon.spy(store, 'uploadPart')
+    const upload = new Upload({
+      id: 'incomplete-part-test-' + Uid.rand(),
+      size: size + incompleteSize,
+      offset: 0,
+    })
+
+    let offset = upload.offset
+
+    await store.create(upload)
+    offset = await store.write(
+      Readable.from(Buffer.alloc(incompleteSize)),
+      upload.id,
+      offset
+    )
+    offset = await store.write(
+      Readable.from(Buffer.alloc(incompleteSize)),
+      upload.id,
+      offset
+    )
+
+    assert.equal(getIncompletePart.called, true)
+    assert.equal(uploadIncompletePart.called, true)
+    assert.equal(uploadPart.called, false)
+
+    await store.write(Readable.from(Buffer.alloc(incompleteSize)), upload.id, offset)
+
+    assert.equal(uploadPart.called, true)
+  })
+
   it('should process chunk size of exactly the min size', async function () {
     this.datastore.minPartSize = 1024 * 1024 * 5
     const store = this.datastore
