@@ -7,7 +7,7 @@ import sinon from 'sinon'
 
 import {S3Store} from './'
 import * as shared from '../../test/stores.test'
-import {Upload} from '@tus/server'
+import {Upload, Uid} from '@tus/server'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output')
@@ -77,7 +77,7 @@ describe('S3DataStore', function () {
     const size = 4096
     const incompleteSize = 1024
     const upload = new Upload({
-      id: 'incomplete-part-test-1',
+      id: `incomplete-part-test-${Uid.rand()}`,
       size: size + incompleteSize,
       offset: 0,
     })
