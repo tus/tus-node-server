@@ -249,6 +249,7 @@ export class S3Store extends DataStore {
         // eslint-disable-next-line no-async-promise-executor
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
+            let incompletePartSize = 0
             // Only the first chunk of each PATCH request can prepend
             // an incomplete part (last chunk) from the previous request.
             if (isFirstChunk) {
@@ -259,6 +260,7 @@ export class S3Store extends DataStore {
               if (incompletePart) {
                 // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
                 // and delete the incomplete part from the bucket. This can be done in parallel.
+                incompletePartSize = incompletePart.length
                 await Promise.all([
                   this.prependIncompletePart(path, incompletePart),
                   this.deleteIncompletePart(metadata.file.id),
@@ -268,7 +270,7 @@ export class S3Store extends DataStore {
 
             const readable = fs.createReadStream(path)
             readable.on('error', reject)
-            if (partSize >= this.minPartSize || isFinalPart) {
+            if (partSize + incompletePartSize >= this.minPartSize || isFinalPart) {
               await this.uploadPart(metadata, readable, partNumber)
             } else {
               await this.uploadIncompletePart(metadata.file.id, readable)
