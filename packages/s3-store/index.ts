@@ -470,8 +470,8 @@ export class S3Store extends DataStore {
       Bucket: this.bucket,
       Key: id,
     })
-    return data.Body as Readable;
-  }     
+    return data.Body as Readable
+  }
 
   /**
    * Write to the file, starting at the provided offset
