@@ -21,8 +21,9 @@ jobs:
       # We do not want to run CRUD tests in parallel
       max-parallel: 1
       matrix:
-        node-version: [18.x, 21.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+      node:
+        - lts/hydrogen
+        - node
 
     steps:
       - name: Checkout sources
