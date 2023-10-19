@@ -1,4 +1,4 @@
-name: Node.js CI
+name: main
 on:
   push:
     branches: [main]
@@ -14,7 +14,8 @@ on:
 concurrency: ${{ github.workflow }}--${{ github.ref }}
 
 jobs:
-  CI:
+  main:
+    name: ${{matrix.node}}
     runs-on: ubuntu-latest
     strategy:
       # We do not want to run CRUD tests in parallel
