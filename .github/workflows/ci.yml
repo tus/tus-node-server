@@ -21,9 +21,9 @@ jobs:
       # We do not want to run CRUD tests in parallel
       max-parallel: 1
       matrix:
-      node:
-        - lts/hydrogen
-        - node
+        node:
+          - lts/hydrogen
+          - node
 
     steps:
       - name: Checkout sources
