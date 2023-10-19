@@ -1,10 +1,10 @@
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
-import stream from 'node:stream/promises'
+import stream, {promises as streamProm} from 'node:stream'
 import type {Readable} from 'node:stream'
 import http from 'node:http'
 
-import AWS, {NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
+import AWS, {NoSuchKey, NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
 import debug from 'debug'
 
 import {DataStore, StreamSplitter, Upload} from '@tus/server'
@@ -177,19 +177,15 @@ export class S3Store extends DataStore {
     return data.ETag as string
   }
 
-  private async getIncompletePart(id: string) {
+  private async getIncompletePart(id: string): Promise<Readable | undefined> {
     try {
       const data = await this.client.getObject({
         Bucket: this.bucket,
         Key: this.partKey(id, true),
       })
-      return data.Body?.transformToByteArray()
+      return data.Body as Readable
     } catch (error) {
-      if (
-        error.Code === 'NoSuchKey' ||
-        error.Code === 'NoSuchUpload' ||
-        error.Code === 'AccessDenied'
-      ) {
+      if (error instanceof NoSuchKey) {
         return undefined
       }
 
@@ -221,11 +217,40 @@ export class S3Store extends DataStore {
 
   private async prependIncompletePart(
     newChunkPath: string,
-    previousIncompletePart: Uint8Array
-  ): Promise<void> {
-    const newChunk = await fsProm.readFile(newChunkPath)
-    const combined = Buffer.concat([previousIncompletePart, newChunk])
-    await fsProm.writeFile(newChunkPath, combined)
+    previousIncompletePart: Readable
+  ): Promise<number> {
+    const tempPath = `${newChunkPath}-prepend`
+    try {
+      let incompletePartSize = 0
+
+      const byteCounterTransform = new stream.Transform({
+        transform(chunk, _, callback) {
+          incompletePartSize += chunk.length
+          callback(null, chunk)
+        },
+      })
+
+      // write to temporary file, truncating if needed
+      await streamProm.pipeline(
+        previousIncompletePart,
+        byteCounterTransform,
+        fs.createWriteStream(tempPath)
+      )
+      // append to temporary file
+      await streamProm.pipeline(
+        fs.createReadStream(newChunkPath),
+        fs.createWriteStream(tempPath, {flags: 'a'})
+      )
+      // overwrite existing file
+      await fsProm.rename(tempPath, newChunkPath)
+
+      return incompletePartSize
+    } catch (err) {
+      fsProm.rm(tempPath).catch(() => {
+        /* ignore */
+      })
+      throw err
+    }
   }
 
   /**
@@ -275,11 +300,11 @@ export class S3Store extends DataStore {
               if (incompletePart) {
                 // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
                 // and delete the incomplete part from the bucket. This can be done in parallel.
-                incompletePartSize = incompletePart.length
-                await Promise.all([
-                  this.prependIncompletePart(path, incompletePart),
-                  this.deleteIncompletePart(metadata.file.id),
-                ])
+                incompletePartSize = await this.prependIncompletePart(
+                  path,
+                  incompletePart
+                )
+                await this.deleteIncompletePart(metadata.file.id)
               }
             }
 
@@ -306,7 +331,7 @@ export class S3Store extends DataStore {
       })
 
     try {
-      await stream.pipeline(readStream, splitterStream)
+      await streamProm.pipeline(readStream, splitterStream)
     } catch (error) {
       if (pendingChunkFilepath !== null) {
         try {
