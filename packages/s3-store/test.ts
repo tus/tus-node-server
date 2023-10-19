@@ -171,6 +171,34 @@ describe('S3DataStore', function () {
     assert.equal(offset, size + size)
   })
 
+  it('should not read incomplete part on HEAD request', async function () {
+    const store = this.datastore
+    const size = 4096
+    const incompleteSize = 1024
+
+    const upload = new Upload({
+      id: `get-incopmlete-part-size-test-${Uid.rand()}`,
+      size: size + incompleteSize,
+      offset: 0,
+    })
+
+    await store.create(upload)
+    upload.offset = await store.write(
+      Readable.from(Buffer.alloc(incompleteSize)),
+      upload.id,
+      upload.offset
+    )
+
+    const getIncompletePart = sinon.spy(store, 'getIncompletePart')
+    const getIncompletePartSize = sinon.spy(store, 'getIncompletePartSize')
+
+    const {offset} = await store.getUpload(upload.id)
+
+    assert.equal(getIncompletePart.called, false)
+    assert.equal(getIncompletePartSize.called, true)
+    assert.equal(offset, incompleteSize)
+  })
+
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension

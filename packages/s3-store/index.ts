@@ -4,7 +4,7 @@ import stream from 'node:stream/promises'
 import type {Readable} from 'node:stream'
 import http from 'node:http'
 
-import AWS, {S3, S3ClientConfig} from '@aws-sdk/client-s3'
+import AWS, {NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
 import debug from 'debug'
 
 import {DataStore, StreamSplitter, Upload} from '@tus/server'
@@ -193,6 +193,21 @@ export class S3Store extends DataStore {
         return undefined
       }
 
+      throw error
+    }
+  }
+
+  private async getIncompletePartSize(id: string): Promise<number | undefined> {
+    try {
+      const data = await this.client.headObject({
+        Bucket: this.bucket,
+        Key: this.partKey(id, true),
+      })
+      return data.ContentLength
+    } catch (error) {
+      if (error instanceof NotFound) {
+        return undefined
+      }
       throw error
     }
   }
@@ -497,12 +512,12 @@ export class S3Store extends DataStore {
       throw error
     }
 
-    const incompletePart = await this.getIncompletePart(id)
+    const incompletePartSize = await this.getIncompletePartSize(id)
 
     return new Upload({
       id,
       ...this.cache.get(id)?.file,
-      offset: offset + (incompletePart?.length ?? 0),
+      offset: offset + (incompletePartSize ?? 0),
       size: metadata.file.size,
     })
   }
