@@ -466,6 +466,18 @@ export class S3Store extends DataStore {
   }
 
   /**
+   * Read file by upload id
+   */
+  read(id: string) {
+    const request: S3.GetObjectRequest = {
+      Bucket: this.bucket,
+      Key: id,
+    }
+    
+    return this.client.getObject(request).createReadStream()
+  }
+
+  /**
    * Write to the file, starting at the provided offset
    */
   public async write(
