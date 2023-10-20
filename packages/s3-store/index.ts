@@ -465,6 +465,14 @@ export class S3Store extends DataStore {
     return upload
   }
 
+  async read(id: string) {
+    const data = await this.client.getObject({
+      Bucket: this.bucket,
+      Key: id,
+    })
+    return data.Body as Readable
+  }
+
   /**
    * Write to the file, starting at the provided offset
    */
