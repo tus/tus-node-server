@@ -113,6 +113,41 @@ describe('S3DataStore', function () {
     }
   })
 
+  it('completes an incomplete part when deferred length becomes resolved', async function () {
+    const store = this.datastore
+    const incompleteSize = 2 * 1024 * 1024 // 2MB
+    const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
+    const uploadPart = sinon.spy(store, 'uploadPart')
+    const finishMultipartUpload = sinon.spy(store, 'finishMultipartUpload')
+    const upload = new Upload({
+      id: 'deferred-incomplete-part-test-' + Uid.rand(),
+      // Deferred length
+      size: undefined,
+      offset: 0,
+    })
+    let offset = upload.offset
+    await store.create(upload)
+
+    // Upload a single chunk small enough to create an incomplete part
+    offset = await store.write(
+      Readable.from(Buffer.alloc(incompleteSize)),
+      upload.id,
+      offset
+    )
+    assert.equal(uploadIncompletePart.called, true)
+    assert.equal(uploadPart.called, false)
+
+    // Simulate the completion PATCH of a deferred length multipart upload
+    // Resolve the deferred length
+    await store.declareUploadLength(upload.id, incompleteSize)
+    // Notify the store to complete the multipart upload (empty payload)
+    await store.write(Readable.from(Buffer.alloc(0)), upload.id, offset)
+    // The incomplete part will now be completed
+    assert.equal(uploadPart.called, true)
+    // The multipart upload will now be completed
+    assert.equal(finishMultipartUpload.called, true)
+  })
+
   it('upload as multipart upload when incomplete part grows beyond minimal part size', async function () {
     const store = this.datastore
     const size = 10 * 1024 * 1024 // 10MiB

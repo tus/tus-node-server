@@ -504,7 +504,13 @@ export class S3Store extends DataStore {
 
     if (metadata.file.size === newOffset) {
       try {
+        // If no parts exist yet, then the incomplete part needs to be completed
+        const incompletePart = await this.getIncompletePart(id)
+        if (incompletePart) {
+          await this.uploadPart(metadata, incompletePart, nextPartNumber)
+        }
         const parts = await this.retrieveParts(id)
+
         await this.finishMultipartUpload(metadata, parts as Array<AWS.Part>)
         this.clearCache(id)
       } catch (error) {
