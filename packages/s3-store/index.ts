@@ -18,7 +18,7 @@ function calcOffsetFromParts(parts?: Array<AWS.Part>) {
 }
 
 type Options = {
-  // The preferred part size for parts send to S3. Can not be lower than 5MB or more than 500MB.
+  // The preferred part size for parts send to S3. Can not be lower than 5MB or more than 5GB.
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
