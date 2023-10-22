@@ -70,7 +70,8 @@ export class S3Store extends DataStore {
   private client: S3
   private preferredPartSize: number
   public maxMultipartParts = 10_000 as const
-  public minPartSize = 5_242_880 as const // 5MB
+  public minPartSize = 5_242_880 as const // 5MiB
+  public maxUploadSize = 5_497_558_138_880 as const // 5TiB
 
   constructor(options: Options) {
     super()
@@ -262,11 +263,13 @@ export class S3Store extends DataStore {
     currentPartNumber: number,
     offset: number
   ): Promise<number> {
-    const size = metadata.file.size as number
+    const size = metadata.file.size
     const promises: Promise<void>[] = []
     let pendingChunkFilepath: string | null = null
     let bytesUploaded = 0
     let currentChunkNumber = 0
+
+    console.log("this.calcOptimalPartSize(size)", this.calcOptimalPartSize(size));
 
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
@@ -422,7 +425,12 @@ export class S3Store extends DataStore {
     this.cache.delete(id)
   }
 
-  private calcOptimalPartSize(size: number): number {
+  private calcOptimalPartSize(size?: number): number {
+    // When upload size is not know we assume largest possible value (`maxUploadSize`)
+    if (size === undefined) {
+      size = this.maxUploadSize
+    }
+
     let optimalPartSize: number
 
     // When upload is smaller or equal to PreferredPartSize, we upload in just one part.
