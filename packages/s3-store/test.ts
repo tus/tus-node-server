@@ -29,7 +29,6 @@ describe('S3DataStore', function () {
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
         },
         region: process.env.AWS_REGION,
-        endpoint: process.env.AWS_HOST,
       },
     })
   })
