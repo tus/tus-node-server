@@ -269,8 +269,6 @@ export class S3Store extends DataStore {
     let bytesUploaded = 0
     let currentChunkNumber = 0
 
-    console.log("this.calcOptimalPartSize(size)", this.calcOptimalPartSize(size));
-
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
       directory: os.tmpdir(),

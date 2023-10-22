@@ -36,8 +36,8 @@ describe('S3DataStore', function () {
 
   it('calculated part size for deferred lenght should be finite', async function () {
     const store = this.datastore
-    
-    assert.strictEqual(Number.isFinite(store.calcOptimalPartSize(undefined)), true);
+
+    assert.strictEqual(Number.isFinite(store.calcOptimalPartSize(undefined)), true)
   })
 
   it('should correctly prepend a buffer to a file', async function () {
