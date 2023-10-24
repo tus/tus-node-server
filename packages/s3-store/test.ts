@@ -21,7 +21,7 @@ describe('S3DataStore', function () {
   })
   beforeEach(function () {
     this.datastore = new S3Store({
-      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
+      partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
       s3ClientConfig: {
         bucket: process.env.AWS_BUCKET as string,
         credentials: {
@@ -31,6 +31,12 @@ describe('S3DataStore', function () {
         region: process.env.AWS_REGION,
       },
     })
+  })
+
+  it('calculated part size for deferred lenght should be finite', async function () {
+    const store = this.datastore
+
+    assert.strictEqual(Number.isFinite(store.calcOptimalPartSize(undefined)), true)
   })
 
   it('should correctly prepend a buffer to a file', async function () {
@@ -109,8 +115,8 @@ describe('S3DataStore', function () {
 
   it('upload as multipart upload when incomplete part grows beyond minimal part size', async function () {
     const store = this.datastore
-    const size = 10 * 1024 * 1024 // 10MB
-    const incompleteSize = 2 * 1024 * 1024 // 2MB
+    const size = 10 * 1024 * 1024 // 10MiB
+    const incompleteSize = 2 * 1024 * 1024 // 2MiB
     const getIncompletePart = sinon.spy(store, 'getIncompletePart')
     const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
     const uploadPart = sinon.spy(store, 'uploadPart')
