@@ -29,7 +29,7 @@ describe('StreamSplitter', () => {
 
   it('should split to multiple chunks when single buffer exceeds chunk size', async () => {
     const optimalChunkSize = 1024
-    const expectedChunks = 7;
+    const expectedChunks = 7
 
     const readStream = Readable.from([Buffer.alloc(expectedChunks * optimalChunkSize)])
 
@@ -38,11 +38,13 @@ describe('StreamSplitter', () => {
     const splitterStream = new StreamSplitter({
       chunkSize: optimalChunkSize,
       directory: os.tmpdir(),
-    }).on('chunkStarted', () => {
-      chunksStarted++
-    }).on('chunkFinished', () => {
-      chunksFinished++
     })
+      .on('chunkStarted', () => {
+        chunksStarted++
+      })
+      .on('chunkFinished', () => {
+        chunksFinished++
+      })
 
     await stream.pipeline(readStream, splitterStream)
 
