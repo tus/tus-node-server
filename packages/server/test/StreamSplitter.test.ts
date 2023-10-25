@@ -4,6 +4,7 @@ import stream from 'node:stream/promises'
 import {strict as assert} from 'node:assert'
 
 import {StreamSplitter} from '../src/models'
+import {Readable} from 'node:stream'
 
 const fileSize = 20_971_520
 
@@ -24,5 +25,28 @@ describe('StreamSplitter', () => {
     })
     await stream.pipeline(readStream, splitterStream)
     assert.equal(offset, fileSize)
+  })
+
+  it('should split to multiple chunks when single buffer exceeds chunk size', async () => {
+    const optimalChunkSize = 1024
+    const expectedChunks = 7;
+
+    const readStream = Readable.from([Buffer.alloc(expectedChunks * optimalChunkSize)])
+
+    let chunksStarted = 0
+    let chunksFinished = 0
+    const splitterStream = new StreamSplitter({
+      chunkSize: optimalChunkSize,
+      directory: os.tmpdir(),
+    }).on('chunkStarted', () => {
+      chunksStarted++
+    }).on('chunkFinished', () => {
+      chunksFinished++
+    })
+
+    await stream.pipeline(readStream, splitterStream)
+
+    assert.equal(chunksStarted, expectedChunks)
+    assert.equal(chunksFinished, expectedChunks)
   })
 })

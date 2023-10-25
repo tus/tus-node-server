@@ -43,19 +43,20 @@ export class StreamSplitter extends stream.Writable {
       if (this.fileHandle === null) {
         await this._newChunk()
       }
+      
+      let overflow = this.currentChunkSize + chunk.length - this.chunkSize
 
-      const overflow = this.currentChunkSize + chunk.length - this.chunkSize
       // The current chunk will be more than our defined part size if we would
       // write all of it to disk.
-      if (overflow > 0) {
+      while (overflow > 0) {
         // Only write to disk the up to our defined part size.
-        await this._writeChunk(chunk.slice(0, chunk.length - overflow))
+        await this._writeChunk(chunk.subarray(0, chunk.length - overflow))
         await this._finishChunk()
+        
         // We still have some overflow left, so we write it to a new chunk.
         await this._newChunk()
-        await this._writeChunk(chunk.slice(chunk.length - overflow, chunk.length))
-        callback(null)
-        return
+        chunk = chunk.subarray(chunk.length - overflow, chunk.length)
+        overflow = this.currentChunkSize + chunk.length - this.chunkSize
       }
 
       // The chunk is smaller than our defined part size so we can just write it to disk.
