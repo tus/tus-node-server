@@ -378,7 +378,7 @@ export class S3Store extends DataStore {
   private async retrieveParts(
     id: string,
     partNumberMarker?: string
-  ): Promise<Array<AWS.Part> | undefined> {
+  ): Promise<Array<AWS.Part>> {
     const params: AWS.ListPartsCommandInput = {
       Bucket: this.bucket,
       Key: id,
@@ -392,9 +392,7 @@ export class S3Store extends DataStore {
 
     if (data.IsTruncated) {
       const rest = await this.retrieveParts(id, data.NextPartNumberMarker)
-      if (rest) {
-        parts = [...parts, ...rest]
-      }
+      parts = [...parts, ...rest]
     }
 
     if (!partNumberMarker) {
@@ -480,7 +478,8 @@ export class S3Store extends DataStore {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
     const parts = await this.retrieveParts(id)
-    const partNumber = parts?.length ?? 0
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const partNumber: number = parts.length > 0 ? parts[parts.length - 1].PartNumber! : 0
     const nextPartNumber = partNumber + 1
 
     const bytesUploaded = await this.processUpload(
@@ -495,7 +494,7 @@ export class S3Store extends DataStore {
     if (metadata.file.size === newOffset) {
       try {
         const parts = await this.retrieveParts(id)
-        await this.finishMultipartUpload(metadata, parts as Array<AWS.Part>)
+        await this.finishMultipartUpload(metadata, parts)
         this.clearCache(id)
       } catch (error) {
         log(`[${id}] failed to finish upload`, error)
