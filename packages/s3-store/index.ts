@@ -383,33 +383,23 @@ export class S3Store extends DataStore {
       Bucket: this.bucket,
       Key: id,
       UploadId: this.cache.get(id)?.['upload-id'],
-    }
-    if (partNumberMarker) {
-      params.PartNumberMarker = partNumberMarker
+      PartNumberMarker: partNumberMarker,
     }
 
     const data = await this.client.listParts(params)
 
-    // INFO: NextPartNumberMarker should be undefined when there are no more parts to retrieve,
-    // instead it keeps giving `0` so to prevent an infinite loop we check the number.
-    if (data.NextPartNumberMarker && Number(data.NextPartNumberMarker) > 0) {
-      return this.retrieveParts(id, data.NextPartNumberMarker).then((parts) => {
-        if (parts && data.Parts) {
-          return [...data.Parts, ...parts]
-        }
-        return data.Parts
-      })
+    let parts = data.Parts ?? []
+
+    if (data.IsTruncated) {
+      const rest = await this.retrieveParts(id, data.NextPartNumberMarker)
+      if (rest) {
+        parts = [...parts, ...rest]
+      }
     }
 
-    const parts = data.Parts
-
-    if (parts && !partNumberMarker) {
-      return (
-        parts
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          .sort((a, b) => a.PartNumber! - b.PartNumber!)
-          .filter((value, index) => value.PartNumber === index + 1)
-      )
+    if (!partNumberMarker) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      parts.sort((a, b) => a.PartNumber! - b.PartNumber!)
     }
 
     return parts
