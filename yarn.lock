@@ -1495,7 +1495,7 @@ __metadata:
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.8
     "@types/mocha": ^10.0.1
-    "@types/node": ^20.5.7
+    "@types/node": ^20.8.10
     debug: ^4.3.4
     eslint: ^8.48.0
     eslint-config-custom: "workspace:*"
@@ -1519,7 +1519,7 @@ __metadata:
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.8
     "@types/mocha": ^10.0.1
-    "@types/node": ^20.5.7
+    "@types/node": ^20.8.10
     debug: ^4.3.4
     eslint: ^8.48.0
     eslint-config-custom: "workspace:*"
@@ -1540,7 +1540,7 @@ __metadata:
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.8
     "@types/mocha": ^10.0.1
-    "@types/node": ^20.5.7
+    "@types/node": ^20.8.10
     debug: ^4.3.4
     eslint: ^8.48.0
     eslint-config-custom: "workspace:*"
@@ -1558,7 +1558,7 @@ __metadata:
   dependencies:
     "@types/debug": ^4.1.8
     "@types/mocha": ^10.0.1
-    "@types/node": ^20.5.7
+    "@types/node": ^20.8.10
     "@types/sinon": ^10.0.16
     "@types/supertest": ^2.0.12
     debug: ^4.3.4
@@ -1653,10 +1653,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.5.7":
-  version: 20.5.7
-  resolution: "@types/node@npm:20.5.7"
-  checksum: fc284c8e16ddc04569730d58e87eae349eb1c3dd9020cb79a1862d9d9add6f04e7367a236f3252db8db2572f90278e250f4cd43d27d264972b54394eaba1ed76
+"@types/node@npm:^20.8.10":
+  version: 20.8.10
+  resolution: "@types/node@npm:20.8.10"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: 7c61190e43e8074a1b571e52ff14c880bc67a0447f2fe5ed0e1a023eb8a23d5f815658edb98890f7578afe0f090433c4a635c7c87311762544e20dd78723e515
   languageName: node
   linkType: hard
 
@@ -4857,7 +4859,7 @@ __metadata:
     "@tus/s3-store": "workspace:^"
     "@tus/server": "workspace:^"
     "@types/mocha": ^10.0.1
-    "@types/node": ^20.5.7
+    "@types/node": ^20.8.10
     "@types/rimraf": ^3.0.2
     "@types/sinon": ^10.0.16
     "@types/supertest": ^2.0.12
@@ -5109,6 +5111,13 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 07106822b4305de3f22835cbba949a2b35451cad50888759b6818421290ff95d522b38ef7919e70fb381c5fe9c1c643d7dea22c8b31652a717ddbd57b7f4d554
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~5.26.4":
+  version: 5.26.5
+  resolution: "undici-types@npm:5.26.5"
+  checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
   languageName: node
   linkType: hard
 
