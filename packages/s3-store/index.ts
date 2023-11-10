@@ -9,6 +9,7 @@ import debug from 'debug'
 
 import {DataStore, StreamSplitter, Upload} from '@tus/server'
 import {ERRORS, TUS_RESUMABLE} from '@tus/server'
+import {DataStoreDefaultOptions} from '@tus/server/dist/models/DataStore'
 
 const log = debug('tus-node-server:stores:s3store')
 
@@ -31,6 +32,11 @@ type MetadataValue = {
   'upload-id': string
   'tus-version': string
 }
+
+interface WithAbortSignal {
+  signal?: AbortSignal | undefined
+}
+
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -94,17 +100,24 @@ export class S3Store extends DataStore {
    * on the S3 object's `Metadata` field, so that only a `headObject`
    * is necessary to retrieve the data.
    */
-  private async saveMetadata(upload: Upload, uploadId: string) {
+  private async saveMetadata(
+    upload: Upload,
+    uploadId: string,
+    options?: WithAbortSignal
+  ) {
     log(`[${upload.id}] saving metadata`)
-    await this.client.putObject({
-      Bucket: this.bucket,
-      Key: `${upload.id}.info`,
-      Body: JSON.stringify(upload),
-      Metadata: {
-        'upload-id': uploadId,
-        'tus-version': TUS_RESUMABLE,
+    await this.client.putObject(
+      {
+        Bucket: this.bucket,
+        Key: `${upload.id}.info`,
+        Body: JSON.stringify(upload),
+        Metadata: {
+          'upload-id': uploadId,
+          'tus-version': TUS_RESUMABLE,
+        },
       },
-    })
+      {abortSignal: options?.signal}
+    )
     log(`[${upload.id}] metadata file saved`)
   }
 
@@ -113,16 +126,23 @@ export class S3Store extends DataStore {
    * There's a small and simple caching mechanism to avoid multiple
    * HTTP calls to S3.
    */
-  private async getMetadata(id: string): Promise<MetadataValue> {
+  private async getMetadata(
+    id: string,
+    options?: WithAbortSignal
+  ): Promise<MetadataValue> {
     const cached = this.cache.get(id)
     if (cached?.file) {
       return cached
     }
 
-    const {Metadata, Body} = await this.client.getObject({
-      Bucket: this.bucket,
-      Key: `${id}.info`,
-    })
+    const {Metadata, Body} = await this.client.getObject(
+      {
+        Bucket: this.bucket,
+        Key: `${id}.info`,
+      },
+      {abortSignal: options?.signal}
+    )
+
     const file = JSON.parse((await Body?.transformToString()) as string)
     this.cache.set(id, {
       'tus-version': Metadata?.['tus-version'] as string,
@@ -152,38 +172,52 @@ export class S3Store extends DataStore {
   private async uploadPart(
     metadata: MetadataValue,
     readStream: fs.ReadStream | Readable,
-    partNumber: number
+    partNumber: number,
+    options?: WithAbortSignal
   ): Promise<string> {
-    const data = await this.client.uploadPart({
-      Bucket: this.bucket,
-      Key: metadata.file.id,
-      UploadId: metadata['upload-id'],
-      PartNumber: partNumber,
-      Body: readStream,
-    })
+    const data = await this.client.uploadPart(
+      {
+        Bucket: this.bucket,
+        Key: metadata.file.id,
+        UploadId: metadata['upload-id'],
+        PartNumber: partNumber,
+        Body: readStream,
+      },
+      {abortSignal: options?.signal}
+    )
     log(`[${metadata.file.id}] finished uploading part #${partNumber}`)
     return data.ETag as string
   }
 
   private async uploadIncompletePart(
     id: string,
-    readStream: fs.ReadStream | Readable
+    readStream: fs.ReadStream | Readable,
+    options?: WithAbortSignal
   ): Promise<string> {
-    const data = await this.client.putObject({
-      Bucket: this.bucket,
-      Key: this.partKey(id, true),
-      Body: readStream,
-    })
+    const data = await this.client.putObject(
+      {
+        Bucket: this.bucket,
+        Key: this.partKey(id, true),
+        Body: readStream,
+      },
+      {abortSignal: options?.signal}
+    )
     log(`[${id}] finished uploading incomplete part`)
     return data.ETag as string
   }
 
-  private async getIncompletePart(id: string): Promise<Readable | undefined> {
+  private async getIncompletePart(
+    id: string,
+    options?: WithAbortSignal
+  ): Promise<Readable | undefined> {
     try {
-      const data = await this.client.getObject({
-        Bucket: this.bucket,
-        Key: this.partKey(id, true),
-      })
+      const data = await this.client.getObject(
+        {
+          Bucket: this.bucket,
+          Key: this.partKey(id, true),
+        },
+        {abortSignal: options?.signal}
+      )
       return data.Body as Readable
     } catch (error) {
       if (error instanceof NoSuchKey) {
@@ -194,12 +228,18 @@ export class S3Store extends DataStore {
     }
   }
 
-  private async getIncompletePartSize(id: string): Promise<number | undefined> {
+  private async getIncompletePartSize(
+    id: string,
+    options?: WithAbortSignal
+  ): Promise<number | undefined> {
     try {
-      const data = await this.client.headObject({
-        Bucket: this.bucket,
-        Key: this.partKey(id, true),
-      })
+      const data = await this.client.headObject(
+        {
+          Bucket: this.bucket,
+          Key: this.partKey(id, true),
+        },
+        {abortSignal: options?.signal}
+      )
       return data.ContentLength
     } catch (error) {
       if (error instanceof NotFound) {
@@ -209,16 +249,23 @@ export class S3Store extends DataStore {
     }
   }
 
-  private async deleteIncompletePart(id: string): Promise<void> {
-    await this.client.deleteObject({
-      Bucket: this.bucket,
-      Key: this.partKey(id, true),
-    })
+  private async deleteIncompletePart(
+    id: string,
+    options?: WithAbortSignal
+  ): Promise<void> {
+    await this.client.deleteObject(
+      {
+        Bucket: this.bucket,
+        Key: this.partKey(id, true),
+      },
+      {abortSignal: options?.signal}
+    )
   }
 
   private async prependIncompletePart(
     newChunkPath: string,
-    previousIncompletePart: Readable
+    previousIncompletePart: Readable,
+    options?: WithAbortSignal
   ): Promise<number> {
     const tempPath = `${newChunkPath}-prepend`
     try {
@@ -235,12 +282,14 @@ export class S3Store extends DataStore {
       await streamProm.pipeline(
         previousIncompletePart,
         byteCounterTransform,
-        fs.createWriteStream(tempPath)
+        fs.createWriteStream(tempPath),
+        {signal: options?.signal}
       )
       // append to temporary file
       await streamProm.pipeline(
         fs.createReadStream(newChunkPath),
-        fs.createWriteStream(tempPath, {flags: 'a'})
+        fs.createWriteStream(tempPath, {flags: 'a'}),
+        {signal: options?.signal}
       )
       // overwrite existing file
       await fsProm.rename(tempPath, newChunkPath)
@@ -261,7 +310,8 @@ export class S3Store extends DataStore {
     metadata: MetadataValue,
     readStream: http.IncomingMessage | fs.ReadStream,
     currentPartNumber: number,
-    offset: number
+    offset: number,
+    options?: WithAbortSignal
   ): Promise<number> {
     const size = metadata.file.size
     const promises: Promise<void>[] = []
@@ -297,24 +347,28 @@ export class S3Store extends DataStore {
               // If we received a chunk under the minimum part size in a previous iteration,
               // we used a regular S3 upload to save it in the bucket. We try to get the incomplete part here.
 
-              const incompletePart = await this.getIncompletePart(metadata.file.id)
+              const incompletePart = await this.getIncompletePart(
+                metadata.file.id,
+                options
+              )
               if (incompletePart) {
                 // We found an incomplete part, prepend it to the chunk on disk we were about to upload,
                 // and delete the incomplete part from the bucket. This can be done in parallel.
                 incompletePartSize = await this.prependIncompletePart(
                   path,
-                  incompletePart
+                  incompletePart,
+                  options
                 )
-                await this.deleteIncompletePart(metadata.file.id)
+                await this.deleteIncompletePart(metadata.file.id, options)
               }
             }
 
             const readable = fs.createReadStream(path)
             readable.on('error', reject)
             if (partSize + incompletePartSize >= this.minPartSize || isFinalPart) {
-              await this.uploadPart(metadata, readable, partNumber)
+              await this.uploadPart(metadata, readable, partNumber, options)
             } else {
-              await this.uploadIncompletePart(metadata.file.id, readable)
+              await this.uploadIncompletePart(metadata.file.id, readable, options)
             }
 
             bytesUploaded += partSize
@@ -332,7 +386,7 @@ export class S3Store extends DataStore {
       })
 
     try {
-      await streamProm.pipeline(readStream, splitterStream)
+      await streamProm.pipeline(readStream, splitterStream, {signal: options?.signal})
     } catch (error) {
       if (pendingChunkFilepath !== null) {
         try {
@@ -354,20 +408,27 @@ export class S3Store extends DataStore {
    * Completes a multipart upload on S3.
    * This is where S3 concatenates all the uploaded parts.
    */
-  private async finishMultipartUpload(metadata: MetadataValue, parts: Array<AWS.Part>) {
-    const response = await this.client.completeMultipartUpload({
-      Bucket: this.bucket,
-      Key: metadata.file.id,
-      UploadId: metadata['upload-id'],
-      MultipartUpload: {
-        Parts: parts.map((part) => {
-          return {
-            ETag: part.ETag,
-            PartNumber: part.PartNumber,
-          }
-        }),
+  private async finishMultipartUpload(
+    metadata: MetadataValue,
+    parts: Array<AWS.Part>,
+    options?: WithAbortSignal
+  ) {
+    const response = await this.client.completeMultipartUpload(
+      {
+        Bucket: this.bucket,
+        Key: metadata.file.id,
+        UploadId: metadata['upload-id'],
+        MultipartUpload: {
+          Parts: parts.map((part) => {
+            return {
+              ETag: part.ETag,
+              PartNumber: part.PartNumber,
+            }
+          }),
+        },
       },
-    })
+      {abortSignal: options?.signal}
+    )
     return response.Location
   }
 
@@ -377,7 +438,8 @@ export class S3Store extends DataStore {
    */
   private async retrieveParts(
     id: string,
-    partNumberMarker?: string
+    partNumberMarker?: string,
+    options?: WithAbortSignal
   ): Promise<Array<AWS.Part>> {
     const params: AWS.ListPartsCommandInput = {
       Bucket: this.bucket,
@@ -386,12 +448,14 @@ export class S3Store extends DataStore {
       PartNumberMarker: partNumberMarker,
     }
 
-    const data = await this.client.listParts(params)
+    const data = await this.client.listParts(params, {
+      abortSignal: options?.signal,
+    })
 
     let parts = data.Parts ?? []
 
     if (data.IsTruncated) {
-      const rest = await this.retrieveParts(id, data.NextPartNumberMarker)
+      const rest = await this.retrieveParts(id, data.NextPartNumberMarker, options)
       parts = [...parts, ...rest]
     }
 
@@ -440,7 +504,7 @@ export class S3Store extends DataStore {
    * Also, a `${file_id}.info` file is created which holds some information
    * about the upload itself like: `upload-id`, `upload-length`, etc.
    */
-  public async create(upload: Upload) {
+  public async create(upload: Upload, options?: DataStoreDefaultOptions) {
     log(`[${upload.id}] initializing multipart upload`)
     const request: AWS.CreateMultipartUploadCommandInput = {
       Bucket: this.bucket,
@@ -453,17 +517,20 @@ export class S3Store extends DataStore {
     }
 
     const res = await this.client.createMultipartUpload(request)
-    await this.saveMetadata(upload, res.UploadId as string)
+    await this.saveMetadata(upload, res.UploadId as string, {signal: options?.signal})
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
 
     return upload
   }
 
-  async read(id: string) {
-    const data = await this.client.getObject({
-      Bucket: this.bucket,
-      Key: id,
-    })
+  async read(id: string, options?: WithAbortSignal) {
+    const data = await this.client.getObject(
+      {
+        Bucket: this.bucket,
+        Key: id,
+      },
+      {abortSignal: options?.signal}
+    )
     return data.Body as Readable
   }
 
@@ -473,7 +540,8 @@ export class S3Store extends DataStore {
   public async write(
     readable: http.IncomingMessage | fs.ReadStream,
     id: string,
-    offset: number
+    offset: number,
+    options?: DataStoreDefaultOptions
   ): Promise<number> {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
@@ -486,15 +554,16 @@ export class S3Store extends DataStore {
       metadata,
       readable,
       nextPartNumber,
-      offset
+      offset,
+      options
     )
 
     const newOffset = offset + bytesUploaded
 
     if (metadata.file.size === newOffset) {
       try {
-        const parts = await this.retrieveParts(id)
-        await this.finishMultipartUpload(metadata, parts)
+        const parts = await this.retrieveParts(id, undefined, options)
+        await this.finishMultipartUpload(metadata, parts, options)
         this.clearCache(id)
       } catch (error) {
         log(`[${id}] failed to finish upload`, error)
@@ -505,10 +574,10 @@ export class S3Store extends DataStore {
     return newOffset
   }
 
-  public async getUpload(id: string): Promise<Upload> {
+  public async getUpload(id: string, options?: DataStoreDefaultOptions): Promise<Upload> {
     let metadata: MetadataValue
     try {
-      metadata = await this.getMetadata(id)
+      metadata = await this.getMetadata(id, options)
     } catch (error) {
       log('getUpload: No file found.', error)
       throw ERRORS.FILE_NOT_FOUND
@@ -517,7 +586,7 @@ export class S3Store extends DataStore {
     let offset = 0
 
     try {
-      const parts = await this.retrieveParts(id)
+      const parts = await this.retrieveParts(id, undefined, options)
       offset = calcOffsetFromParts(parts)
     } catch (error) {
       // Check if the error is caused by the upload not being found. This happens
@@ -540,7 +609,7 @@ export class S3Store extends DataStore {
       throw error
     }
 
-    const incompletePartSize = await this.getIncompletePartSize(id)
+    const incompletePartSize = await this.getIncompletePartSize(id, options)
 
     return new Upload({
       id,
@@ -550,26 +619,33 @@ export class S3Store extends DataStore {
     })
   }
 
-  public async declareUploadLength(file_id: string, upload_length: number) {
-    const {file, 'upload-id': uploadId} = await this.getMetadata(file_id)
+  public async declareUploadLength(
+    file_id: string,
+    upload_length: number,
+    options?: DataStoreDefaultOptions
+  ) {
+    const {file, 'upload-id': uploadId} = await this.getMetadata(file_id, options)
     if (!file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
     file.size = upload_length
 
-    this.saveMetadata(file, uploadId)
+    await this.saveMetadata(file, uploadId, options)
   }
 
-  public async remove(id: string): Promise<void> {
+  public async remove(id: string, options?: DataStoreDefaultOptions): Promise<void> {
     try {
-      const {'upload-id': uploadId} = await this.getMetadata(id)
+      const {'upload-id': uploadId} = await this.getMetadata(id, options)
       if (uploadId) {
-        await this.client.abortMultipartUpload({
-          Bucket: this.bucket,
-          Key: id,
-          UploadId: uploadId,
-        })
+        await this.client.abortMultipartUpload(
+          {
+            Bucket: this.bucket,
+            Key: id,
+            UploadId: uploadId,
+          },
+          {abortSignal: options?.signal}
+        )
       }
     } catch (error) {
       if (error?.code && ['NotFound', 'NoSuchKey', 'NoSuchUpload'].includes(error.Code)) {
@@ -579,12 +655,15 @@ export class S3Store extends DataStore {
       throw error
     }
 
-    await this.client.deleteObjects({
-      Bucket: this.bucket,
-      Delete: {
-        Objects: [{Key: id}, {Key: `${id}.info`}],
+    await this.client.deleteObjects(
+      {
+        Bucket: this.bucket,
+        Delete: {
+          Objects: [{Key: id}, {Key: `${id}.info`}],
+        },
       },
-    })
+      {abortSignal: options?.signal}
+    )
 
     this.clearCache(id)
   }

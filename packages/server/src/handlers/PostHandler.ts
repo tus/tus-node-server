@@ -89,7 +89,6 @@ export class PostHandler extends BaseHandler {
 
     this.emit(EVENTS.POST_CREATE, req, res, upload, url)
 
-    let newOffset
     let isFinal = upload.size === 0 && !upload.sizeIsDeferred
     const headers: {
       'Upload-Offset'?: string
@@ -98,7 +97,10 @@ export class PostHandler extends BaseHandler {
 
     // The request MIGHT include a Content-Type header when using creation-with-upload extension
     if (validateHeader('content-type', req.headers['content-type'])) {
-      newOffset = await this.store.write(req, upload.id, 0)
+      const newOffset = await this.lock(req, id, async (signal) => {
+        return this.store.write(req, upload.id, 0, {signal: signal})
+      })
+
       headers['Upload-Offset'] = newOffset.toString()
       isFinal = newOffset === Number.parseInt(upload_length as string, 10)
       upload.offset = newOffset
@@ -119,7 +121,10 @@ export class PostHandler extends BaseHandler {
       this.store.getExpiration() > 0 &&
       upload.creation_date
     ) {
-      const created = await this.store.getUpload(upload.id)
+      const created = await this.lock(req, id, async (signal) => {
+        return this.store.getUpload(upload.id, {signal: signal})
+      })
+
       if (created.offset !== Number.parseInt(upload_length as string, 10)) {
         const creation = new Date(upload.creation_date)
         // Value MUST be in RFC 7231 datetime format

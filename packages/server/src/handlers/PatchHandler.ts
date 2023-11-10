@@ -30,7 +30,9 @@ export class PatchHandler extends BaseHandler {
       throw ERRORS.INVALID_CONTENT_TYPE
     }
 
-    const upload = await this.store.getUpload(id)
+    const upload = await this.lock(req, id, (signal) => {
+      return this.store.getUpload(id, {signal: signal})
+    })
 
     // If a Client does attempt to resume an upload which has since
     // been removed by the Server, the Server SHOULD respond with the
@@ -73,11 +75,16 @@ export class PatchHandler extends BaseHandler {
         throw ERRORS.INVALID_LENGTH
       }
 
-      await this.store.declareUploadLength(id, size)
+      await this.lock(req, id, (signal) => {
+        return this.store.declareUploadLength(id, size, {signal: signal})
+      })
       upload.size = size
     }
 
-    const newOffset = await this.store.write(req, id, offset)
+    const newOffset = await this.lock(req, id, (signal) => {
+      return this.store.write(req, id, offset, {signal: signal})
+    })
+
     upload.offset = newOffset
     this.emit(EVENTS.POST_RECEIVE, req, res, upload)
     if (newOffset === upload.size && this.options.onUploadFinish) {

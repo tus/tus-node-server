@@ -150,7 +150,19 @@ export class Server extends EventEmitter {
     const onError = (error: {status_code?: number; body?: string; message: string}) => {
       const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
       const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
-      return this.write(res, status_code, body)
+      const isAbortError =
+        status_code === ERRORS.ABORTED.status_code && error.body === ERRORS.ABORTED.body
+
+      if (isAbortError) {
+        res.setHeader('Connection', 'close')
+      }
+
+      const response = this.write(res, status_code, body)
+
+      if (isAbortError) {
+        req.destroy()
+      }
+      return response
     }
 
     try {

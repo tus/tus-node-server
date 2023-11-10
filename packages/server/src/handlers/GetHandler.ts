@@ -36,6 +36,7 @@ export class GetHandler extends BaseHandler {
     }
 
     const stats = await this.store.getUpload(id)
+
     if (!stats || stats.offset !== stats.size) {
       throw ERRORS.FILE_NOT_FOUND
     }
