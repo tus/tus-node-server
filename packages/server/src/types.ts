@@ -34,7 +34,8 @@ export type ServerOptions = {
   ) => Promise<http.ServerResponse>
   onIncomingRequest?: (
     req: http.IncomingMessage,
-    res: http.ServerResponse
+    res: http.ServerResponse,
+    uploadId: string
   ) => Promise<void>
 }
 
