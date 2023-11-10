@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages, currently in beta at `1.0.0-beta.1`.
+> Make sure to use the new packages.
 
 ## Contents
 
@@ -29,12 +29,14 @@ npm install @tus/gcs-store
 const {Server} = require('@tus/server')
 const {GCSStore} = require('@tus/gcs-store')
 
+const {Storage} = require('@google-cloud/storage')
+
+const storage = new Storage({keyFilename: 'key.json'})
+
 const server = new Server({
   path: '/files',
   datastore: new GCSStore({
-    projectId: 'id',
-    keyFilename: path.resolve('./some-path', 'keyfile.json'),
-    bucket: 'tus-node-server-ci',
+    bucket: storage.bucket('tus-node-server-ci'),
   }),
 })
 // ...
@@ -46,19 +48,11 @@ This package exports `GCSStore`. There is no default export.
 
 ### `new GCSStore(options)`
 
-Creates a new Google Cloud Storage store with options.
-
-#### `options.projectId`
-
-The GCS project ID (`string`).
-
-#### `options.keyFilename`
-
-Path to the keyfile with credentials (`string`).
+Creates a new Google Cloud Storage store by passing a GCS bucket instance.
 
 #### `options.bucket`
 
-The bucket name.
+The bucket instance
 
 ## Extensions
 

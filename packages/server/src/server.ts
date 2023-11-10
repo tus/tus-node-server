@@ -147,23 +147,30 @@ export class Server extends EventEmitter {
       req.method = (req.headers['x-http-method-override'] as string).toUpperCase()
     }
 
+    const onError = (error: {status_code?: number; body?: string; message: string}) => {
+      const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
+      const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
+      return this.write(res, status_code, body)
+    }
+
+    try {
+      await this.options.onIncomingRequest?.(req, res)
+    } catch (err) {
+      return onError(err)
+    }
+
     if (req.method === 'GET') {
       const handler = this.handlers.GET
-      return handler.send(req, res).catch((error) => {
-        log(`[${handler.constructor.name}]`, error)
-        const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
-        const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
-        return handler.write(res, status_code, {}, body)
-      })
+      return handler.send(req, res).catch(onError)
     }
 
     // The Tus-Resumable header MUST be included in every request and
     // response except for OPTIONS requests. The value MUST be the version
     // of the protocol used by the Client or the Server.
     res.setHeader('Tus-Resumable', TUS_RESUMABLE)
+
     if (req.method !== 'OPTIONS' && req.headers['tus-resumable'] === undefined) {
-      res.writeHead(412, 'Precondition Failed')
-      return res.end('Tus-Resumable Required\n')
+      return this.write(res, 412, 'Tus-Resumable Required\n')
     }
 
     // Validate all required headers to adhere to the tus protocol
@@ -189,9 +196,7 @@ export class Server extends EventEmitter {
     }
 
     if (invalid_headers.length > 0) {
-      // The request was not configured to the tus protocol
-      res.writeHead(400, 'Bad Request')
-      return res.end(`Invalid ${invalid_headers.join(' ')}\n`)
+      return this.write(res, 400, `Invalid ${invalid_headers.join(' ')}\n`)
     }
 
     // Enable CORS
@@ -203,17 +208,19 @@ export class Server extends EventEmitter {
     // Invoke the handler for the method requested
     const handler = this.handlers[req.method as keyof Handlers]
     if (handler) {
-      return handler.send(req, res).catch((error) => {
-        log(`[${handler.constructor.name}]`, error)
-        const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
-        const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
-        return handler.write(res, status_code, {}, body)
-      })
+      return handler.send(req, res).catch(onError)
     }
 
-    // 404 Anything else
-    res.writeHead(404, {})
-    res.write('Not found\n')
+    return this.write(res, 404, 'Not found\n')
+  }
+
+  write(res: http.ServerResponse, status: number, body = '', headers = {}) {
+    if (status !== 204) {
+      // @ts-expect-error not explicitly typed but possible
+      headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
+    }
+    res.writeHead(status, headers)
+    res.write(body)
     return res.end()
   }
 

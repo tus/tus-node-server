@@ -41,7 +41,7 @@ export class GetHandler extends BaseHandler {
     }
 
     // @ts-expect-error exists if supported
-    const file_stream = this.store.read(id)
+    const file_stream = await this.store.read(id)
     const headers = {'Content-Length': stats.offset}
     res.writeHead(200, headers)
     return stream.pipeline(file_stream, res, () => {

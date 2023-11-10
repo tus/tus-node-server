@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages, currently in beta at `1.0.0-beta.1`.
+> Make sure to use the new package.
 
 ## Contents
 
@@ -33,12 +33,14 @@ const {Server} = require('@tus/server')
 const {S3Store} = require('@tus/s3-store')
 
 const s3Store = new S3Store({
-  partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
+  partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
   s3ClientConfig: {
     bucket: process.env.AWS_BUCKET,
     region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
   },
 })
 const server = new Server({path: '/files', datastore: s3Store})
@@ -59,7 +61,7 @@ The bucket name.
 
 #### `options.partSize`
 
-The preferred part size for parts send to S3. Can not be lower than 5MB or more than 500MB.
+The preferred part size for parts send to S3. Can not be lower than 5MiB or more than 5GiB.
 The server calculates the optimal part size, which takes this size into account,
 but may increase it to not exceed the S3 10K parts limit.
 

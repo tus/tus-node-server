@@ -2,7 +2,7 @@
 
 > 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
 > The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new package, currently in beta at `1.0.0-beta.5`.
+> Make sure to use the new package.
 
 ## Contents
 
@@ -80,7 +80,7 @@ Default uses `crypto.randomBytes(16).toString('hex')`.
 `onUploadCreate` will be invoked before a new upload is created. (`(req, res, upload) => Promise<res>`).
 
 If the function returns the (modified) response, the upload will be created.
-If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks) will be sent to the client.
+You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
 This can be used to implement validation of upload metadata or add headers.
 
@@ -89,9 +89,16 @@ This can be used to implement validation of upload metadata or add headers.
 `onUploadFinish` will be invoked after an upload is completed but before a response is returned to the client (`(req, res, upload) => Promise<res>`).
 
 If the function returns the (modified) response, the upload will finish.
-If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks) will be sent to the client.
+You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
 This can be used to implement post-processing validation.
+
+#### `options.onIncomingRequest`
+
+`onIncomingRequest` is a middleware function invoked before all handlers (`(req, res) => Promise<void>`)
+
+This can be used for things like access control.
+You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
 #### `server.handle(req, res)`
 
@@ -228,13 +235,13 @@ server.listen(port)
 ### Example: integrate tus into Fastify
 
 ```js
-const fastify = require('fastify')({ logger: true })
+const fastify = require('fastify')({logger: true})
 const {Server} = require('@tus/server')
 const {FileStore} = require('@tus/file-store')
 
 const tusServer = new Server({
   path: '/files',
-  datastore: new FileStore({ directory: './files' }),
+  datastore: new FileStore({directory: './files'}),
 })
 
 /**
@@ -243,7 +250,8 @@ const tusServer = new Server({
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
 fastify.addContentTypeParser(
-  'application/offset+octet-stream', (request, payload, done) => done(null)
+  'application/offset+octet-stream',
+  (request, payload, done) => done(null)
 )
 
 /**
@@ -317,8 +325,39 @@ const server = new Server({
     return res
   },
 })
+```
 
-server.listen({host, port})
+### Example: access control
+
+Access control is opinionated and can be done in different ways.
+This example is psuedo-code for what it could look like with JSON Web Tokens.
+
+```js
+const { Server } = require("@tus/server");
+// ...
+
+const server = new Server({
+  // ..
+  async onIncomingRequest(req, res) {
+    const token = req.headers.authorization;
+
+    if (!token) {
+      throw { status_code: 401, body: 'Unauthorized' })
+    }
+
+    try {
+      const decodedToken = await jwt.verify(token, 'your_secret_key')
+      req.user = decodedToken
+    } catch (error) {
+      throw { status_code: 401, body: 'Invalid token' })
+    }
+
+    if (req.user.role !== 'admin') {
+      throw { status_code: 403, body: 'Access denied' })
+    }
+  },
+});
+
 ```
 
 ## Types

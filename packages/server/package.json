@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/server",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.1",
   "description": "Tus resumable upload protocol in Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,25 +21,24 @@
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "debug": "^4.3.3"
+    "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
+    "@types/debug": "^4.1.8",
     "@types/mocha": "^10.0.1",
-    "@types/node": "latest",
-    "@types/sinon": "^10.0.13",
+    "@types/node": "^20.5.7",
+    "@types/sinon": "^10.0.16",
     "@types/supertest": "^2.0.12",
-    "eslint": "^8.29.0",
+    "eslint": "^8.48.0",
     "eslint-config-custom": "workspace:*",
-    "mocha": "^10.1.0",
-    "node-mocks-http": "^1.12.1",
+    "mocha": "^10.2.0",
+    "node-mocks-http": "^1.13.0",
     "should": "^13.2.3",
-    "sinon": "^15.0.0",
-    "supertest": "^6.3.2",
+    "sinon": "^15.2.0",
+    "supertest": "^6.3.3",
     "ts-node": "^10.9.1",
     "tsconfig": "*",
-    "type-fest": "^3.1.0",
-    "typescript": "latest"
+    "typescript": "^5.2.2"
   },
   "engines": {
     "node": ">=16"

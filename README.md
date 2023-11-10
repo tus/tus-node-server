@@ -1,6 +1,6 @@
 # tus-node-server
 
-<img alt="Tus logo" src="https://github.com/tus/tus.io/blob/main/assets/img/tus1.png?raw=true" width="30%" align="right" />
+<img alt="Tus logo" src="https://github.com/tus/tus.io/blob/main/public/images/tus1.png?raw=true" width="30%" align="right" />
 
 > **tus** is a protocol based on HTTP for _resumable file uploads_. Resumable
 > means that an upload can be interrupted at any moment and can be resumed without
@@ -18,9 +18,7 @@ on disk, on Google Cloud Storage or on AWS S3 (or any other S3-compatible
 storage system). Due to its modularization and extensibility, support for
 nearly any other cloud provider could easily be added to tus-node-server
 
-> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
-> The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages (currently in beta).
+> 📣 [**Read the 1.0.0 announcement post: new packages, rewrite in TypeScript, and much more**](https://tus.io/blog/2023/09/04/tus-node-server-v100).
 
 ## Contents
 

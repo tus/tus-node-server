@@ -29,7 +29,7 @@ const stores = {
     assert.ok(process.env.AWS_REGION, 'environment variable `AWS_REGION` must be set')
 
     return new S3Store({
-      partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MB,
+      partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
       s3ClientConfig: {
         bucket: process.env.AWS_BUCKET,
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
