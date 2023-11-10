@@ -106,7 +106,7 @@ export class Server extends EventEmitter {
       DELETE: new DeleteHandler(this.datastore, this.options),
     }
     // Any handlers assigned to this object with the method as the key
-    // will be used to repond to those requests. They get set/re-set
+    // will be used to respond to those requests. They get set/re-set
     // when a datastore is assigned to the server.
     // Remove any event listeners from each handler as they are removed
     // from the server. This must come before adding a 'newListener' listener,
