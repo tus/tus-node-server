@@ -22,6 +22,7 @@ type Options = {
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
+  expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
   s3ClientConfig: S3ClientConfig & {bucket: string}
 }
@@ -69,6 +70,7 @@ export class S3Store extends DataStore {
   private cache: Map<string, MetadataValue> = new Map()
   private client: S3
   private preferredPartSize: number
+  private expirationPeriodInMilliseconds = 0
   public maxMultipartParts = 10_000 as const
   public minPartSize = 5_242_880 as const // 5MiB
   public maxUploadSize = 5_497_558_138_880 as const // 5TiB
@@ -82,9 +84,11 @@ export class S3Store extends DataStore {
       'creation-with-upload',
       'creation-defer-length',
       'termination',
+      'expiration',
     ]
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
+    this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.client = new S3(restS3ClientConfig)
   }
 
@@ -100,12 +104,27 @@ export class S3Store extends DataStore {
       Bucket: this.bucket,
       Key: `${upload.id}.info`,
       Body: JSON.stringify(upload),
+      Tagging: `Tus-Completed=false`,
       Metadata: {
         'upload-id': uploadId,
         'tus-version': TUS_RESUMABLE,
       },
     })
     log(`[${upload.id}] metadata file saved`)
+  }
+
+  private async completeMetadata(upload: Upload) {
+    const {'upload-id': uploadId} = await this.getMetadata(upload.id)
+    await this.client.putObject({
+      Bucket: this.bucket,
+      Key: `${upload.id}.info`,
+      Body: JSON.stringify(upload),
+      Tagging: `Tus-Completed=true`,
+      Metadata: {
+        'upload-id': uploadId,
+        'tus-version': TUS_RESUMABLE,
+      },
+    })
   }
 
   /**
@@ -132,6 +151,7 @@ export class S3Store extends DataStore {
         size: file.size ? Number.parseInt(file.size, 10) : undefined,
         offset: Number.parseInt(file.offset, 10),
         metadata: file.metadata,
+        creation_date: file.creation_date,
       }),
     })
     return this.cache.get(id) as MetadataValue
@@ -173,6 +193,7 @@ export class S3Store extends DataStore {
       Bucket: this.bucket,
       Key: this.partKey(id, true),
       Body: readStream,
+      Tagging: 'Tus-Completed=false',
     })
     log(`[${id}] finished uploading incomplete part`)
     return data.ETag as string
@@ -452,6 +473,8 @@ export class S3Store extends DataStore {
       request.ContentType = upload.metadata.contentType
     }
 
+    upload.creation_date = new Date().toISOString()
+
     const res = await this.client.createMultipartUpload(request)
     await this.saveMetadata(upload, res.UploadId as string)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
@@ -495,6 +518,7 @@ export class S3Store extends DataStore {
       try {
         const parts = await this.retrieveParts(id)
         await this.finishMultipartUpload(metadata, parts)
+        await this.completeMetadata(metadata.file)
         this.clearCache(id)
       } catch (error) {
         log(`[${id}] failed to finish upload`, error)
@@ -558,7 +582,7 @@ export class S3Store extends DataStore {
 
     file.size = upload_length
 
-    this.saveMetadata(file, uploadId)
+    await this.saveMetadata(file, uploadId)
   }
 
   public async remove(id: string): Promise<void> {
@@ -587,5 +611,92 @@ export class S3Store extends DataStore {
     })
 
     this.clearCache(id)
+  }
+
+  protected getExpirationDate(created_at: string) {
+    const date = new Date(created_at)
+
+    return new Date(date.getTime() + this.getExpiration())
+  }
+
+  getExpiration(): number {
+    return this.expirationPeriodInMilliseconds
+  }
+
+  async deleteExpired(): Promise<number> {
+    let keyMarker: string | undefined = undefined
+    let uploadIdMarker: string | undefined = undefined
+    let isTruncated = true
+    let deleted = 0
+
+    while (isTruncated) {
+      const listResponse: AWS.ListMultipartUploadsCommandOutput =
+        await this.client.listMultipartUploads({
+          Bucket: this.bucket,
+          KeyMarker: keyMarker,
+          UploadIdMarker: uploadIdMarker,
+        })
+
+      const expiredUploads =
+        listResponse.Uploads?.filter((multiPartUpload) => {
+          const initiatedDate = multiPartUpload.Initiated
+          return (
+            initiatedDate &&
+            this.getExpirationDate(initiatedDate.toISOString()).getTime() <
+              new Date().getTime()
+          )
+        }) || []
+
+      const objectsToDelete = expiredUploads.reduce((all, expiredUpload) => {
+        all.push(
+          {
+            key: expiredUpload.Key + '.info',
+          },
+          {
+            key: expiredUpload.Key + '.part',
+          }
+        )
+        return all
+      }, [] as {key: string}[])
+
+      const deletions: Promise<AWS.DeleteObjectsCommandOutput>[] = []
+
+      // Batch delete 1000 items at a time
+      while (objectsToDelete.length > 0) {
+        const objects = objectsToDelete.splice(0, 1000)
+        deletions.push(
+          this.client.deleteObjects({
+            Bucket: this.bucket,
+            Delete: {
+              Objects: objects.map((object) => ({
+                Key: object.key,
+              })),
+            },
+          })
+        )
+      }
+
+      const [objectsDeleted] = await Promise.all([
+        Promise.all(deletions),
+        ...expiredUploads.map((expiredUpload) => {
+          return this.client.abortMultipartUpload({
+            Bucket: this.bucket,
+            Key: expiredUpload.Key,
+            UploadId: expiredUpload.UploadId,
+          })
+        }),
+      ])
+
+      deleted += objectsDeleted.reduce((all, acc) => all + (acc.Deleted?.length ?? 0), 0)
+
+      isTruncated = Boolean(listResponse.IsTruncated)
+
+      if (isTruncated) {
+        keyMarker = listResponse.NextKeyMarker
+        uploadIdMarker = listResponse.NextUploadIdMarker
+      }
+    }
+
+    return deleted
   }
 }
