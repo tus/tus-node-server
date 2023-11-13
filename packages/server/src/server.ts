@@ -219,6 +219,13 @@ export class Server extends EventEmitter {
       // @ts-expect-error not explicitly typed but possible
       headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
     }
+
+    if (status === 413) {
+      // on maxFile exceeded we instruct the client to close the connection
+      // @ts-expect-error not explicitly typed but possible
+      headers['Connection'] = 'close'
+    }
+
     res.writeHead(status, headers)
     res.write(body)
     return res.end()

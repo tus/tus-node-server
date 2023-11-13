@@ -9,6 +9,9 @@ import httpMocks from 'node-mocks-http'
 import {PatchHandler} from '../src/handlers/PatchHandler'
 import {Upload, DataStore} from '../src/models'
 import {EVENTS} from '../src/constants'
+import {MockIncomingMessage} from './utils'
+import streamP from 'node:stream/promises'
+import stream from 'node:stream'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -20,7 +23,10 @@ describe('PatchHandler', () => {
   beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
     handler = new PatchHandler(store, {path})
-    req = {method: 'PATCH', url: `${path}/1234`} as http.IncomingMessage
+    req = new MockIncomingMessage({
+      method: 'PATCH',
+      url: `${path}/1234`,
+    }) as unknown as http.IncomingMessage
     res = httpMocks.createResponse({req})
   })
 
@@ -164,5 +170,59 @@ describe('PatchHandler', () => {
     assert.ok(spy.args[0][0])
     assert.ok(spy.args[0][1])
     assert.equal(spy.args[0][2].offset, 10)
+  })
+
+  it('should throw max size exceeded error when upload-length is higher then the maxSize', async () => {
+    handler = new PatchHandler(store, {path, maxSize: 5})
+    req.headers = {
+      'upload-offset': '0',
+      'upload-length': '10',
+      'content-type': 'application/offset+octet-stream',
+    }
+    req.url = `${path}/file`
+
+    store.hasExtension.withArgs('creation-defer-length').returns(true)
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
+    store.write.resolves(5)
+    store.declareUploadLength.resolves()
+
+    try {
+      await handler.send(req, res)
+      throw new Error('failed test')
+    } catch (e) {
+      assert.equal('body' in e, true)
+      assert.equal('status_code' in e, true)
+      assert.equal(e.body, 'Maximum size exceeded\n')
+      assert.equal(e.status_code, 413)
+    }
+  })
+
+  it('should throw max size exceeded error when the request body is bigger then the maxSize', async () => {
+    handler = new PatchHandler(store, {path, maxSize: 5})
+    req.headers = {
+      'upload-offset': '0',
+      'content-type': 'application/offset+octet-stream',
+    }
+    req.url = `${path}/file`
+    ;(req as unknown as MockIncomingMessage).addBodyChunk(Buffer.alloc(30))
+
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
+    store.write.callsFake(async (readable: http.IncomingMessage | stream.Readable) => {
+      const writeStream = new stream.Duplex()
+      await streamP.pipeline(readable, writeStream)
+      return writeStream.readableLength
+    })
+    store.declareUploadLength.resolves()
+
+    try {
+      await handler.send(req, res)
+      throw new Error('failed test')
+    } catch (e) {
+      assert.equal(e.message !== 'failed test', true, 'failed test')
+      assert.equal('body' in e, true)
+      assert.equal('status_code' in e, true)
+      assert.equal(e.body, 'Maximum size exceeded\n')
+      assert.equal(e.status_code, 413)
+    }
   })
 })

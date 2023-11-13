@@ -4,6 +4,7 @@ import EventEmitter from 'node:events'
 import {Upload} from './Upload'
 
 import type stream from 'node:stream'
+import type streamP from 'node:stream/promises'
 import type http from 'node:http'
 
 export class DataStore extends EventEmitter {

@@ -10,6 +10,7 @@ import sinon from 'sinon'
 import {Upload, DataStore} from '../src/models'
 import {PostHandler} from '../src/handlers/PostHandler'
 import {EVENTS} from '../src/constants'
+import {MockIncomingMessage} from './utils'
 
 const SERVER_OPTIONS = {
   path: '/test',
@@ -24,7 +25,10 @@ describe('PostHandler', () => {
   fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
   beforeEach(() => {
-    req = {url: '/files', method: 'POST'} as http.IncomingMessage
+    req = new MockIncomingMessage({
+      url: '/files',
+      method: 'POST',
+    }) as unknown as http.IncomingMessage
     res = httpMocks.createResponse({req})
   })
 

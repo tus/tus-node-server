@@ -49,6 +49,14 @@ export const ERRORS = {
     status_code: 410,
     body: 'The file for this url no longer exists\n',
   },
+  ERR_SIZE_EXCEEDED: {
+    status_code: 413,
+    body: "upload's size exceeded\n",
+  },
+  ERR_MAX_SIZE_EXCEEDED: {
+    status_code: 413,
+    body: 'Maximum size exceeded\n',
+  },
   INVALID_LENGTH: {
     status_code: 400,
     body: 'Upload-Length or Upload-Defer-Length header required\n',

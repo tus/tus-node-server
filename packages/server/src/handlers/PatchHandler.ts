@@ -4,6 +4,8 @@ import {BaseHandler} from './BaseHandler'
 import {ERRORS, EVENTS} from '../constants'
 
 import type http from 'node:http'
+import stream from 'node:stream/promises'
+import {StreamLimiter} from '../models/StreamLimiter'
 
 const log = debug('tus-node-server:handlers:patch')
 
@@ -55,6 +57,8 @@ export class PatchHandler extends BaseHandler {
       throw ERRORS.INVALID_OFFSET
     }
 
+    const maxFileSize = await this.getConfiguredMaxSize(req, id)
+
     // The request MUST validate upload-length related headers
     const upload_length = req.headers['upload-length'] as string | undefined
     if (upload_length !== undefined) {
@@ -73,11 +77,21 @@ export class PatchHandler extends BaseHandler {
         throw ERRORS.INVALID_LENGTH
       }
 
+      if (maxFileSize > 0 && size > maxFileSize) {
+        throw ERRORS.ERR_MAX_SIZE_EXCEEDED
+      }
+
       await this.store.declareUploadLength(id, size)
       upload.size = size
     }
 
-    const newOffset = await this.store.write(req, id, offset)
+    let newOffset = 0
+    const bodyMaxSize = await this.getBodyMaxSize(req, upload, maxFileSize)
+
+    await stream.pipeline(req, new StreamLimiter(bodyMaxSize), async (stream) => {
+      newOffset = await this.store.write(stream as StreamLimiter, id, offset)
+    })
+
     upload.offset = newOffset
     this.emit(EVENTS.POST_RECEIVE, req, res, upload)
     if (newOffset === upload.size && this.options.onUploadFinish) {

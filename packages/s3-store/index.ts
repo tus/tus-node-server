@@ -558,7 +558,7 @@ export class S3Store extends DataStore {
 
     file.size = upload_length
 
-    this.saveMetadata(file, uploadId)
+    return this.saveMetadata(file, uploadId)
   }
 
   public async remove(id: string): Promise<void> {

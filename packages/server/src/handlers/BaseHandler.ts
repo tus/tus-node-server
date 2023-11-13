@@ -3,6 +3,8 @@ import EventEmitter from 'node:events'
 import type {ServerOptions} from '../types'
 import type {DataStore} from '../models'
 import type http from 'node:http'
+import {Upload} from '../models'
+import {ERRORS} from '../constants'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -77,5 +79,54 @@ export class BaseHandler extends EventEmitter {
     }
 
     return decodeURIComponent(match[1])
+  }
+
+  getConfiguredMaxSize(req: http.IncomingMessage, id: string) {
+    if (typeof this.options.maxSize === 'function') {
+      return this.options.maxSize(req, id)
+    }
+    return this.options.maxSize ?? 0
+  }
+
+  async getBodyMaxSize(
+    req: http.IncomingMessage,
+    info: Upload,
+    configuredMaxSize?: number
+  ) {
+    configuredMaxSize =
+      configuredMaxSize ?? (await this.getConfiguredMaxSize(req, info.id))
+
+    const length = parseInt(req.headers['content-length'] || '0', 10)
+    const offset = info.offset
+
+    // Test if this upload fits into the file's size
+    if (!info.sizeIsDeferred && offset + length > (info.size || 0)) {
+      throw ERRORS.ERR_SIZE_EXCEEDED
+    }
+
+    let maxSize = (info.size || 0) - offset
+    // If the upload's length is deferred and the PATCH request does not contain the Content-Length
+    // header (which is allowed if 'Transfer-Encoding: chunked' is used), we still need to set limits for
+    // the body size.
+    if (info.sizeIsDeferred) {
+      if (configuredMaxSize > 0) {
+        // Ensure that the upload does not exceed the maximum upload size
+        maxSize = configuredMaxSize - offset
+      } else {
+        // If no upload limit is given, we allow arbitrary sizes
+        maxSize = Number.MAX_SAFE_INTEGER
+      }
+    }
+
+    if (length > 0) {
+      maxSize = length
+    }
+
+    // limit the request body to the maxSize if provided
+    if (configuredMaxSize > 0 && maxSize > configuredMaxSize) {
+      maxSize = configuredMaxSize
+    }
+
+    return maxSize
   }
 }

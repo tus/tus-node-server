@@ -5,6 +5,10 @@ import type {Upload} from './models'
 export type ServerOptions = {
   // The route to accept requests.
   path: string
+  // Number of
+  maxSize?:
+    | number
+    | ((req: http.IncomingMessage, uploadId: string) => Promise<number> | number)
   // Return a relative URL as the `Location` header.
   relativeLocation?: boolean
   // Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers
