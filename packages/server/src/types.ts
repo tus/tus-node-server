@@ -36,6 +36,14 @@ export type ServerOptions = {
     req: http.IncomingMessage,
     res: http.ServerResponse
   ) => Promise<void>
+  onResponseError?: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    err: Error | {status_code: number; body: string}
+  ) =>
+    | Promise<{status_code: number; body: string} | void>
+    | {status_code: number; body: string}
+    | void
 }
 
 export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void
