@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@tus/gridfs-store",
+  "version": "1.0.0-beta.1",
+  "description": "\"Mongo GridFs store for @tus/server\"",
+  "main": "dist/index.js",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "format": "eslint --fix .",
+    "test": "mocha test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tus/tus-node-server.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tus/tus-node-server/issues"
+  },
+  "homepage": "https://github.com/tus/tus-node-server#readme",
+  "dependencies": {
+    "debug": "^4.3.4",
+    "mongodb": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "devDependencies": {
+    "@tus/server": "workspace:^",
+    "@types/debug": "^4.1.8",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.5.7",
+    "eslint": "^8.48.0",
+    "eslint-config-custom": "workspace:*",
+    "mocha": "^10.2.0",
+    "should": "^13.2.3",
+    "typescript": "^5.2.2"
+  }
+}
