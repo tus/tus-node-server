@@ -52,6 +52,14 @@ export class GridFsStore extends DataStore {
       bucketName,
       chunkSizeBytes: chunkSizeBtyes,
     })
+
+    this.extensions = [
+      'creation',
+      'creation-with-upload',
+      'creation-defer-length',
+      'termination',
+      'expiration',
+    ]
   }
 
   create(file: Upload): Promise<Upload> {
