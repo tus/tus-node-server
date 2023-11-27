@@ -6,10 +6,6 @@ import {Upload} from './Upload'
 import type stream from 'node:stream'
 import type http from 'node:http'
 
-export interface DataStoreDefaultOptions {
-  signal?: AbortSignal
-}
-
 export class DataStore extends EventEmitter {
   extensions: string[] = []
 
@@ -23,7 +19,7 @@ export class DataStore extends EventEmitter {
    *
    * http://tus.io/protocols/resumable-upload.html#creation
    */
-  async create(file: Upload, options?: DataStoreDefaultOptions) {
+  async create(file: Upload) {
     return file
   }
 
@@ -31,7 +27,7 @@ export class DataStore extends EventEmitter {
    * Called in DELETE requests. This method just deletes the file from the store.
    * http://tus.io/protocols/resumable-upload.html#termination
    */
-  async remove(id: string, options?: DataStoreDefaultOptions) {}
+  async remove(id: string) {}
 
   /**
    * Called in PATCH requests. This method should write data
@@ -43,8 +39,7 @@ export class DataStore extends EventEmitter {
   async write(
     stream: http.IncomingMessage | stream.Readable,
     id: string,
-    offset: number,
-    options?: DataStoreDefaultOptions
+    offset: number
   ) {
     return 0
   }
@@ -54,23 +49,19 @@ export class DataStore extends EventEmitter {
    * writen to the DataStore, for the client to know where to resume
    * the upload.
    */
-  async getUpload(id: string, options?: DataStoreDefaultOptions): Promise<Upload> {
+  async getUpload(id: string): Promise<Upload> {
     return new Upload({id, size: 0, offset: 0})
   }
 
   /**
    * Called in PATCH requests when upload length is known after being defered.
    */
-  async declareUploadLength(
-    id: string,
-    upload_length: number,
-    options?: DataStoreDefaultOptions
-  ) {}
+  async declareUploadLength(id: string, upload_length: number) {}
 
   /**
    * Returns number of expired uploads that were deleted.
    */
-  async deleteExpired(options?: DataStoreDefaultOptions): Promise<number> {
+  async deleteExpired(): Promise<number> {
     return 0
   }
 

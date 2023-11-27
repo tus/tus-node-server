@@ -22,6 +22,7 @@ import {
 import type stream from 'node:stream'
 import type {ServerOptions, RouteHandler} from './types'
 import type {DataStore, Upload} from './models'
+import {CancellationContext} from './handlers/BaseHandler'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -139,6 +140,8 @@ export class Server extends EventEmitter {
     res: http.ServerResponse
     // TODO: this return type does not make sense
   ): Promise<http.ServerResponse | stream.Writable | void> {
+    const context = this.createContext(req)
+
     log(`[TusServer] handle: ${req.method} ${req.url}`)
     // Allow overriding the HTTP method. The reason for this is
     // that some libraries/environments to not support PATCH and
@@ -147,28 +150,16 @@ export class Server extends EventEmitter {
       req.method = (req.headers['x-http-method-override'] as string).toUpperCase()
     }
 
-    const onError = (error: {status_code?: number; body?: string; message: string}) => {
+    const onError = (error: {
+      status_code?: number
+      body?: string
+      message: string
+      name?: string
+    }) => {
       const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
       const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
-      const isAbortError =
-        status_code === ERRORS.ABORTED.status_code && error.body === ERRORS.ABORTED.body
 
-      if (isAbortError) {
-        res.setHeader('Connection', 'close')
-      }
-
-      const response = this.write(res, status_code, body)
-
-      if (isAbortError) {
-        req.destroy()
-      }
-      return response
-    }
-
-    try {
-      await this.options.onIncomingRequest?.(req, res)
-    } catch (err) {
-      return onError(err)
+      return this.write(req, res, status_code, body, {}, context)
     }
 
     if (req.method === 'GET') {
@@ -182,7 +173,7 @@ export class Server extends EventEmitter {
     res.setHeader('Tus-Resumable', TUS_RESUMABLE)
 
     if (req.method !== 'OPTIONS' && req.headers['tus-resumable'] === undefined) {
-      return this.write(res, 412, 'Tus-Resumable Required\n')
+      return this.write(req, res, 412, 'Tus-Resumable Required\n', {}, context)
     }
 
     // Validate all required headers to adhere to the tus protocol
@@ -208,7 +199,14 @@ export class Server extends EventEmitter {
     }
 
     if (invalid_headers.length > 0) {
-      return this.write(res, 400, `Invalid ${invalid_headers.join(' ')}\n`)
+      return this.write(
+        req,
+        res,
+        400,
+        `Invalid ${invalid_headers.join(' ')}\n`,
+        {},
+        context
+      )
     }
 
     // Enable CORS
@@ -220,17 +218,38 @@ export class Server extends EventEmitter {
     // Invoke the handler for the method requested
     const handler = this.handlers[req.method as keyof Handlers]
     if (handler) {
-      return handler.send(req, res).catch(onError)
+      return handler.send(req, res, context).catch(onError)
     }
 
-    return this.write(res, 404, 'Not found\n')
+    return this.write(req, res, 404, 'Not found\n', {}, context)
   }
 
-  write(res: http.ServerResponse, status: number, body = '', headers = {}) {
+  write(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    status: number,
+    body = '',
+    headers = {},
+    context: CancellationContext
+  ) {
+    const isAborted = context.signal.aborted
+
     if (status !== 204) {
       // @ts-expect-error not explicitly typed but possible
       headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
     }
+
+    if (isAborted) {
+      // @ts-expect-error not explicitly typed but possible
+      headers['Connection'] = 'close'
+      res.writeHead(status, headers)
+      res.write(body)
+      const sent = res.end()
+      req.destroy()
+
+      return sent
+    }
+
     res.writeHead(status, headers)
     res.write(body)
     return res.end()
@@ -247,5 +266,38 @@ export class Server extends EventEmitter {
     }
 
     return this.datastore.deleteExpired()
+  }
+
+  protected createContext(req: http.IncomingMessage) {
+    const abortController = new AbortController()
+    const delayedAbortController = new AbortController()
+
+    const onAbort = (err: unknown) => {
+      abortController.signal.removeEventListener('abort', onAbort)
+      setTimeout(() => {
+        delayedAbortController.abort(err)
+      }, 3000)
+    }
+    abortController.signal.addEventListener('abort', onAbort)
+
+    req.on('close', () => {
+      abortController.signal.removeEventListener('abort', onAbort)
+    })
+
+    return {
+      signal: delayedAbortController.signal,
+      abort: () => {
+        // abort the delayed signal right away
+        if (!delayedAbortController.signal.aborted) {
+          delayedAbortController.abort(ERRORS.ABORTED)
+        }
+      },
+      cancel: () => {
+        // cancel and wait until the delayedController time elapses
+        if (!abortController.signal.aborted) {
+          abortController.abort(ERRORS.ABORTED)
+        }
+      },
+    }
   }
 }

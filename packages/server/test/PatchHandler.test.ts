@@ -9,6 +9,9 @@ import httpMocks from 'node-mocks-http'
 import {PatchHandler} from '../src/handlers/PatchHandler'
 import {Upload, DataStore} from '../src/models'
 import {EVENTS} from '../src/constants'
+import {CancellationContext} from '../src/handlers/BaseHandler'
+import {EventEmitter} from 'node:events'
+import {addPipableStreamBody} from './utils'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -16,22 +19,35 @@ describe('PatchHandler', () => {
   let res: httpMocks.MockResponse<http.ServerResponse>
   let store: sinon.SinonStubbedInstance<DataStore>
   let handler: InstanceType<typeof PatchHandler>
+  let context: CancellationContext
 
   beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
     handler = new PatchHandler(store, {path})
-    req = {method: 'PATCH', url: `${path}/1234`} as http.IncomingMessage
+    req = addPipableStreamBody(
+      httpMocks.createRequest({
+        method: 'PATCH',
+        url: `${path}/1234`,
+        eventEmitter: EventEmitter,
+      })
+    )
     res = httpMocks.createResponse({req})
+    const abortController = new AbortController()
+    context = {
+      cancel: () => abortController.abort(),
+      abort: () => abortController.abort(),
+      signal: abortController.signal,
+    }
   })
 
   it('should 403 if no Content-Type header', () => {
     req.headers = {}
-    return assert.rejects(() => handler.send(req, res), {status_code: 403})
+    return assert.rejects(() => handler.send(req, res, context), {status_code: 403})
   })
 
   it('should 403 if no Upload-Offset header', () => {
     req.headers = {'content-type': 'application/offset+octet-stream'}
-    return assert.rejects(() => handler.send(req, res), {status_code: 403})
+    return assert.rejects(() => handler.send(req, res, context), {status_code: 403})
   })
 
   it('should call onUploadFinished hook', async function () {
@@ -48,7 +64,7 @@ describe('PatchHandler', () => {
     store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
     store.write.resolves(1024)
 
-    await handler.send(req, res)
+    await handler.send(req, res, context)
     assert.equal(spy.calledOnce, true)
     const upload = spy.args[0][2]
     assert.equal(upload.offset, 1024)
@@ -58,7 +74,7 @@ describe('PatchHandler', () => {
   describe('send()', () => {
     it('should 404 urls without a path', () => {
       req.url = `${path}/`
-      return assert.rejects(() => handler.send(req, res), {status_code: 404})
+      return assert.rejects(() => handler.send(req, res, context), {status_code: 404})
     })
 
     it('should 403 if the offset is omitted', () => {
@@ -66,13 +82,13 @@ describe('PatchHandler', () => {
         'content-type': 'application/offset+octet-stream',
       }
       req.url = `${path}/file`
-      return assert.rejects(() => handler.send(req, res), {status_code: 403})
+      return assert.rejects(() => handler.send(req, res, context), {status_code: 403})
     })
 
     it('should 403 the content-type is omitted', () => {
       req.headers = {'upload-offset': '0'}
       req.url = `${path}/file`
-      return assert.rejects(() => handler.send(req, res), {status_code: 403})
+      return assert.rejects(() => handler.send(req, res, context), {status_code: 403})
     })
 
     it('should declare upload-length once it is send', async () => {
@@ -88,7 +104,7 @@ describe('PatchHandler', () => {
       store.write.resolves(5)
       store.declareUploadLength.resolves()
 
-      await handler.send(req, res)
+      await handler.send(req, res, context)
 
       assert.equal(store.declareUploadLength.calledOnceWith('file', 10), true)
     })
@@ -104,7 +120,7 @@ describe('PatchHandler', () => {
       store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 20}))
       store.hasExtension.withArgs('creation-defer-length').returns(true)
 
-      return assert.rejects(() => handler.send(req, res), {status_code: 400})
+      return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
     })
 
     it('must return a promise if the headers validate', () => {
@@ -115,7 +131,7 @@ describe('PatchHandler', () => {
       }
       req.url = `${path}/1234`
       // eslint-disable-next-line new-cap
-      handler.send(req, res).should.be.a.Promise()
+      handler.send(req, res, context).should.be.a.Promise()
     })
 
     it('must 409 if the offset does not match', () => {
@@ -127,7 +143,7 @@ describe('PatchHandler', () => {
 
       store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 512}))
 
-      return assert.rejects(() => handler.send(req, res), {status_code: 409})
+      return assert.rejects(() => handler.send(req, res, context), {status_code: 409})
     })
 
     it('must acknowledge successful PATCH requests with the 204', async () => {
@@ -139,7 +155,7 @@ describe('PatchHandler', () => {
       store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
       store.write.resolves(10)
 
-      await handler.send(req, res)
+      await handler.send(req, res, context)
 
       assert.equal(res._getHeaders()['upload-offset'], 10)
       assert.equal(res.hasHeader('Content-Length'), false)
@@ -158,7 +174,7 @@ describe('PatchHandler', () => {
     store.write.resolves(10)
     handler.on(EVENTS.POST_RECEIVE, spy)
 
-    await handler.send(req, res)
+    await handler.send(req, res, context)
 
     assert.equal(spy.calledOnce, true)
     assert.ok(spy.args[0][0])

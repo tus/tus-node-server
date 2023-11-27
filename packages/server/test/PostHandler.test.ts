@@ -10,6 +10,8 @@ import sinon from 'sinon'
 import {Upload, DataStore} from '../src/models'
 import {PostHandler} from '../src/handlers/PostHandler'
 import {EVENTS} from '../src/constants'
+import {CancellationContext} from '../src/handlers/BaseHandler'
+import {addPipableStreamBody} from './utils'
 
 const SERVER_OPTIONS = {
   path: '/test',
@@ -19,13 +21,20 @@ const SERVER_OPTIONS = {
 describe('PostHandler', () => {
   let req: http.IncomingMessage
   let res: httpMocks.MockResponse<http.ServerResponse>
+  let context: CancellationContext
 
   const fake_store = sinon.createStubInstance(DataStore)
   fake_store.hasExtension.withArgs('creation-defer-length').returns(true)
 
   beforeEach(() => {
-    req = {url: '/files', method: 'POST'} as http.IncomingMessage
+    req = addPipableStreamBody(httpMocks.createRequest({method: 'POST'}))
     res = httpMocks.createResponse({req})
+    const abortController = new AbortController()
+    context = {
+      cancel: () => abortController.abort(),
+      abort: () => abortController.abort(),
+      signal: abortController.signal,
+    }
   })
 
   describe('constructor()', () => {
@@ -46,19 +55,19 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {}
-        return assert.rejects(() => handler.send(req, res), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
       })
 
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both present', async () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-length': '512', 'upload-defer-length': '1'}
-        return assert.rejects(() => handler.send(req, res), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
       })
 
       it("must 501 if the 'concatenation' extension is not supported", async () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-concat': 'partial'}
-        return assert.rejects(() => handler.send(req, res), {status_code: 501})
+        return assert.rejects(() => handler.send(req, res, context), {status_code: 501})
       })
 
       it('should send error when naming function throws', async () => {
@@ -69,7 +78,7 @@ describe('PostHandler', () => {
         })
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res), {status_code: 500})
+        return assert.rejects(() => handler.send(req, res, context), {status_code: 500})
       })
 
       it('should call custom namingFunction', async () => {
@@ -78,7 +87,7 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, {path: '/test/', namingFunction})
 
         req.headers = {'upload-length': '1000'}
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(namingFunction.calledOnce, true)
       })
 
@@ -89,7 +98,7 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res), {status_code: 500})
+        return assert.rejects(() => handler.send(req, res, context), {status_code: 500})
       })
     })
 
@@ -100,7 +109,7 @@ describe('PostHandler', () => {
           namingFunction: () => '1234',
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
@@ -120,7 +129,7 @@ describe('PostHandler', () => {
           'x-forwarded-host': 'foo.com',
           'x-forwarded-proto': 'https',
         }
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
@@ -131,7 +140,7 @@ describe('PostHandler', () => {
           host: 'localhost:3000',
           forwarded: 'for=localhost:3000;by=203.0.113.60;proto=https;host=foo.com',
         }
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(res._getHeaders().location, 'https://foo.com/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
@@ -142,7 +151,7 @@ describe('PostHandler', () => {
           host: 'localhost:3000',
           forwarded: 'invalid',
         }
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
@@ -153,7 +162,7 @@ describe('PostHandler', () => {
           host: 'localhost:3000',
           'x-forwarded-proto': 'foo',
         }
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(res._getHeaders().location, 'http://localhost:3000/test/output/1234')
         assert.equal(res.statusCode, 201)
       })
@@ -165,7 +174,7 @@ describe('PostHandler', () => {
           namingFunction: () => '1234',
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(res._getHeaders().location, 'http://localhost:3000/1234')
         assert.equal(res.statusCode, 201)
       })
@@ -182,7 +191,7 @@ describe('PostHandler', () => {
         store.create.resolves(file)
         handler.on(EVENTS.POST_CREATE, spy)
 
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(spy.calledOnce, true)
       })
 
@@ -202,7 +211,7 @@ describe('PostHandler', () => {
         })
 
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
-        handler.send(req, res)
+        handler.send(req, res, context)
       })
 
       it(`must fire the ${EVENTS.POST_CREATE} event with relative URL`, (done) => {
@@ -222,7 +231,7 @@ describe('PostHandler', () => {
         })
 
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
-        handler.send(req, res)
+        handler.send(req, res, context)
       })
 
       it(`must fire the ${EVENTS.POST_CREATE} event when upload is complete with single request`, (done) => {
@@ -243,7 +252,7 @@ describe('PostHandler', () => {
           host: 'localhost:3000',
           'content-type': 'application/offset+octet-stream',
         }
-        handler.send(req, res)
+        handler.send(req, res, context)
       })
 
       it('should call onUploadCreate hook', async function () {
@@ -260,7 +269,7 @@ describe('PostHandler', () => {
         }
         store.create.resolvesArg(0)
 
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(spy.calledOnce, true)
         const upload = spy.args[0][2]
         assert.equal(upload.offset, 0)
@@ -283,7 +292,7 @@ describe('PostHandler', () => {
         store.create.resolvesArg(0)
         store.write.resolves(1024)
 
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(spy.calledOnce, true)
         const upload = spy.args[0][2]
         assert.equal(upload.offset, 1024)
@@ -300,7 +309,7 @@ describe('PostHandler', () => {
 
         req.headers = {'upload-length': '0', host: 'localhost:3000'}
 
-        await handler.send(req, res)
+        await handler.send(req, res, context)
         assert.equal(spy.calledOnce, true)
         const upload = spy.args[0][2]
         assert.equal(upload.offset, 0)

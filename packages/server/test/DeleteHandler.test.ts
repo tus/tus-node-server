@@ -9,6 +9,7 @@ import httpMocks from 'node-mocks-http'
 import {DataStore} from '../src/models/DataStore'
 import {DeleteHandler} from '../src/handlers/DeleteHandler'
 import {ERRORS, EVENTS} from '../src/constants'
+import {CancellationContext} from '../src/handlers/BaseHandler'
 
 describe('DeleteHandler', () => {
   const path = '/test/output'
@@ -16,28 +17,35 @@ describe('DeleteHandler', () => {
   let handler: InstanceType<typeof DeleteHandler>
   let req: http.IncomingMessage
   let res: httpMocks.MockResponse<http.ServerResponse>
+  let context: CancellationContext
 
   beforeEach(() => {
     fake_store.remove.resetHistory()
     handler = new DeleteHandler(fake_store, {relativeLocation: true, path})
     req = {url: `${path}/1234`, method: 'DELETE'} as http.IncomingMessage
     res = httpMocks.createResponse()
+    const abortController = new AbortController()
+    context = {
+      signal: abortController.signal,
+      cancel: () => abortController.abort(),
+      abort: () => abortController.abort(),
+    }
   })
 
   it('should 404 if no file id match', () => {
     fake_store.remove.rejects(ERRORS.FILE_NOT_FOUND)
-    return assert.rejects(() => handler.send(req, res), {status_code: 404})
+    return assert.rejects(() => handler.send(req, res, context), {status_code: 404})
   })
 
   it('should 404 if no file ID', async () => {
     sinon.stub(handler, 'getFileIdFromRequest').returns(false)
-    await assert.rejects(() => handler.send(req, res), {status_code: 404})
+    await assert.rejects(() => handler.send(req, res, context), {status_code: 404})
     assert.equal(fake_store.remove.callCount, 0)
   })
 
   it('must acknowledge successful DELETE requests with the 204', async () => {
     fake_store.remove.resolves()
-    await handler.send(req, res)
+    await handler.send(req, res, context)
     assert.equal(res.statusCode, 204)
   })
 
@@ -48,6 +56,6 @@ describe('DeleteHandler', () => {
       assert.equal(id, '1234')
       done()
     })
-    handler.send(req, res)
+    handler.send(req, res, context)
   })
 })

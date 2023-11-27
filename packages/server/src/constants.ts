@@ -34,7 +34,7 @@ export const ERRORS = {
     body: 'Upload-Offset header required\n',
   },
   ABORTED: {
-    status_code: 409,
+    status_code: 400,
     body: 'Request aborted due to lock acquired',
   },
   ERR_LOCK_TIMEOUT: {

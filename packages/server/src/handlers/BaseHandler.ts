@@ -3,11 +3,18 @@ import EventEmitter from 'node:events'
 import type {ServerOptions} from '../types'
 import type {DataStore} from '../models'
 import type http from 'node:http'
+import stream from 'node:stream'
 import {ERRORS} from '../constants'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
+
+export interface CancellationContext {
+  signal: AbortSignal
+  abort: () => void
+  cancel: () => void
+}
 
 export class BaseHandler extends EventEmitter {
   options: ServerOptions
@@ -81,30 +88,56 @@ export class BaseHandler extends EventEmitter {
     return decodeURIComponent(match[1])
   }
 
-  getLocker(req: http.IncomingMessage) {
+  protected getLocker(req: http.IncomingMessage) {
     if (typeof this.options.locker === 'function') {
       return this.options.locker(req)
     }
     return this.options.locker
   }
 
-  async lock<T>(
+  protected async acquireLock(
     req: http.IncomingMessage,
     id: string,
-    fn: (signal: AbortSignal) => Promise<T>
+    context: CancellationContext
   ) {
-    const abortController = new AbortController()
     const locker = this.getLocker(req)
     await locker?.lock(id, () => {
-      if (!abortController.signal.aborted) {
-        abortController.abort(ERRORS.ABORTED)
-      }
+      context.cancel()
     })
 
-    try {
-      return await fn(abortController.signal)
-    } finally {
-      await locker?.unlock(id)
-    }
+    return () => locker?.unlock(id)
+  }
+
+  protected writeToStore(
+    req: http.IncomingMessage,
+    id: string,
+    offset: number,
+    context: CancellationContext
+  ) {
+    return new Promise<number>(async (resolve, reject) => {
+      if (context.signal.aborted) {
+        reject(ERRORS.ABORTED)
+        return
+      }
+
+      const proxy = new stream.PassThrough()
+      stream.addAbortSignal(context.signal, proxy)
+
+      proxy.on('error', (err) => {
+        if (err.name === 'AbortError') {
+          reject(ERRORS.ABORTED)
+        } else {
+          reject(err)
+        }
+      })
+
+      req.on('error', (err) => {
+        if (!proxy.closed) {
+          proxy.destroy(err)
+        }
+      })
+
+      this.store.write(req.pipe(proxy), id, offset).then(resolve).catch(reject)
+    })
   }
 }

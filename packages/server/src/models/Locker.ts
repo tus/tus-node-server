@@ -12,7 +12,6 @@ export interface MemoryLockerOptions {
 }
 
 class Lock {
-  public locked = false
   public requestRelease?: RequestRelease
 }
 
@@ -22,15 +21,6 @@ export class MemoryLocker implements Locker {
 
   constructor(options?: MemoryLockerOptions) {
     this.timeout = options?.acquireLockTimeout ?? 1000 * 30
-  }
-
-  private getLock(id: string): Lock {
-    let lock = this.locks.get(id)
-    if (lock === undefined) {
-      lock = new Lock()
-      this.locks.set(id, lock)
-    }
-    return lock
   }
 
   async lock(id: string, requestRelease: RequestRelease): Promise<void> {
@@ -53,19 +43,21 @@ export class MemoryLocker implements Locker {
       return
     }
 
-    const lock = this.getLock(id)
+    const lock = this.locks.get(id)
 
-    if (!lock.locked) {
-      lock.locked = true
+    if (!lock) {
+      const lock = new Lock()
+      this.locks.set(id, lock)
       return lock
     }
 
     await lock.requestRelease?.()
 
-    const potentialNewLock = this.getLock(id)
-    if (!potentialNewLock.locked) {
-      potentialNewLock.locked = true
-      return potentialNewLock
+    const potentialNewLock = this.locks.get(id)
+    if (!potentialNewLock) {
+      const lock = new Lock()
+      this.locks.set(id, lock)
+      return lock
     }
 
     return await new Promise((resolve, reject) => {
@@ -76,8 +68,8 @@ export class MemoryLocker implements Locker {
   }
 
   async unlock(id: string): Promise<void> {
-    const lock = this.getLock(id)
-    if (!lock.locked) {
+    const lock = this.locks.get(id)
+    if (!lock) {
       throw new Error('Releasing an unlocked lock!')
     }
 

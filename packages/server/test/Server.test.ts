@@ -12,6 +12,7 @@ import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
 import {DataStore} from '../src/models'
 import {TUS_RESUMABLE, EVENTS} from '../src/constants'
+import httpMocks from 'node-mocks-http'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
@@ -220,13 +221,13 @@ describe('Server', () => {
     })
 
     it('should allow overriding the HTTP method', (done) => {
-      const req = {
+      const req = httpMocks.createRequest({
         headers: {'x-http-method-override': 'OPTIONS'},
         method: 'GET',
-      }
+      })
+
       // @ts-expect-error todo
       const res = new http.ServerResponse({method: 'OPTIONS'})
-      // @ts-expect-error todo
       server.handle(req, res)
       assert.equal(req.method, 'OPTIONS')
       done()
@@ -234,10 +235,13 @@ describe('Server', () => {
 
     it('should allow overriding the HTTP method', async () => {
       const origin = 'vimeo.com'
-      const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
+      const req = httpMocks.createRequest({
+        headers: {origin},
+        method: 'OPTIONS',
+        url: '/',
+      })
       // @ts-expect-error todo
       const res = new http.ServerResponse({method: 'OPTIONS'})
-      // @ts-expect-error todo
       await server.handle(req, res)
       assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
     })
