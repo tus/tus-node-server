@@ -1,7 +1,14 @@
 import {DataStore, ERRORS, TUS_RESUMABLE, Upload} from '@tus/server'
 import stream from 'node:stream'
 import debug from 'debug'
-import {GridFSBucket, MongoClient, ObjectId, Db, GridFSFile} from 'mongodb'
+import {
+  GridFSBucket,
+  MongoClient,
+  ObjectId,
+  Db,
+  GridFSFile,
+  GridFSBucketOptions,
+} from 'mongodb'
 const log = debug('tus-node-server:stores:gridfsstore')
 import http from 'node:http'
 
@@ -23,7 +30,7 @@ type StoredPayload = {
   }
 }
 export class GridFsStore extends DataStore {
-  private bucket: GridFSBucket
+  readonly bucket: GridFSBucket
   private bucketName: string
   private client: MongoClient
   private filesInProcess: Map<string, ObjectId> = new Map() // map the files to mongodb IDs;
@@ -48,10 +55,15 @@ export class GridFsStore extends DataStore {
     this.Db = this.client.db(dbName)
     this.bucketName = bucketName
     this.expirationPeriod = expirationPeriodinMs ?? 0
-    this.bucket = new GridFSBucket(this.Db, {
-      bucketName,
-      chunkSizeBytes: chunkSizeBtyes,
-    })
+
+    const bucketOptions: GridFSBucketOptions = {bucketName}
+
+    if (chunkSizeBtyes) {
+      bucketOptions.chunkSizeBytes = chunkSizeBtyes
+    }
+
+    this.bucket = new GridFSBucket(this.Db, bucketOptions)
+    this.addRequireIndexes()
 
     this.extensions = [
       'creation',
@@ -74,13 +86,15 @@ export class GridFsStore extends DataStore {
           metadata: {
             tus_version: TUS_RESUMABLE,
             size: file.size,
-            sizeIsDeferred: `${file.sizeIsDeferred}`,
+            sizeIsDeferred: file.sizeIsDeferred,
             offset: file.offset,
             metadata: JSON.stringify(file.metadata),
           },
         },
       }
+
       const gridfs_stream = this.bucket.openUploadStream(file.id, options)
+
       const fake_stream = new stream.PassThrough()
       fake_stream.end()
       fake_stream
@@ -170,9 +184,9 @@ export class GridFsStore extends DataStore {
 
           const upload = new Upload({
             id,
-            size: meta ? parseInt(meta.size) : file.length,
+            size: meta?.size ? parseInt(meta.size) : undefined,
             offset: file.length,
-            metadata: meta ? JSON.parse(meta.metadata) : undefined,
+            metadata: meta?.metadata ? JSON.parse(meta.metadata) : undefined,
             creation_date: file.uploadDate.toString(),
           })
 
@@ -182,6 +196,18 @@ export class GridFsStore extends DataStore {
           log('[GridFsStore] findFile error', err)
           reject(err)
         })
+    })
+  }
+  addRequireIndexes() {
+    const db = this.Db
+
+    db.collection((this.bucketName as string) + '.chunks').createIndex(
+      {files_id: 1, n: 1},
+      {unique: true}
+    )
+
+    db.collection((this.bucketName as string) + '.files').createIndex({
+      uploadDate: 1,
     })
   }
 
