@@ -1,8 +1,14 @@
 import {Upload} from '@tus/server'
 
 import {Db, Collection} from 'mongodb'
-import {Configstore} from '@tus/file-store/configstores/Types'
 
+export interface Configstore {
+  get(key: string): Promise<Upload | undefined>
+  set(key: string, value: Upload): Promise<void>
+  delete(key: string): Promise<void>
+
+  list?(): Promise<Array<string>>
+}
 interface ConfigData {
   id: string
   size?: number
