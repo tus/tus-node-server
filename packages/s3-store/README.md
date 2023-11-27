@@ -90,7 +90,7 @@ After a multipart upload is aborted, no additional parts can be uploaded using t
 
 ### Expiration
 
-Unlike other stores, the expiration extension on the S3 store does not need to call [`server.cleanExpiredUploads()`][cleanExpiredUploads].
+Unlike other stores, the expiration extension on the S3 store does not need to call [`server.cleanUpExpiredUploads()`][cleanExpiredUploads].
 The store creates a `Tus-Complete` tag for all objects, including `.part` and `.info` files, to indicate whether an upload is finished.
 This means you could setup a [lifecyle][] policy to automatically clean them up without a CRON job.
 
