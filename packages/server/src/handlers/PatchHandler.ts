@@ -30,6 +30,10 @@ export class PatchHandler extends BaseHandler {
       throw ERRORS.INVALID_CONTENT_TYPE
     }
 
+    if (this.options.onIncomingRequest) {
+      await this.options.onIncomingRequest(req, res, id)
+    }
+
     const upload = await this.store.getUpload(id)
 
     // If a Client does attempt to resume an upload which has since
