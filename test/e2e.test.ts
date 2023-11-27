@@ -360,63 +360,57 @@ describe('EndToEnd', () => {
     })
 
     describe('PATCH', () => {
-      it('unfinished upload response contains header Upload-Expires', (done) => {
-        agent
+      it('unfinished upload response contains header Upload-Expires', async () => {
+        const res = await agent
           .post(STORE_PATH)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Length', `${TEST_FILE_SIZE}`)
           .set('Upload-Metadata', TEST_METADATA)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .expect(201)
-          .end((_, res) => {
-            assert.equal('upload-expires' in res.headers, true)
-            file_id = res.headers.location.split('/').pop()
-          })
+
+        assert.equal('upload-expires' in res.headers, true)
+        file_id = res.headers.location.split('/').pop()
 
         const msg = 'tus test'
-        const write_stream = agent
+        const patch_res = await agent
           .patch(`${STORE_PATH}/${file_id}`)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Offset', '0')
           .set('Content-Type', 'application/offset+octet-stream')
-        write_stream.on('response', (res) => {
-          assert.equal(res.statusCode, 204)
-          assert.equal(res.header['tus-resumable'], TUS_RESUMABLE)
-          assert.equal(res.header['upload-offset'], `${msg.length}`)
-          assert.equal('upload-expires' in res.headers, true)
-          done()
-        })
-        write_stream.write(msg)
-        write_stream.end(() => {})
+          .send(msg)
+        assert.equal(patch_res.statusCode, 204)
+        assert.equal(patch_res.header['tus-resumable'], TUS_RESUMABLE)
+        assert.equal(patch_res.header['upload-offset'], `${msg.length}`)
+        assert.equal('upload-expires' in patch_res.headers, true)
       })
 
-      it('expired upload responds with 410 Gone', (done) => {
-        agent
+      it('expired upload responds with 410 Gone', async () => {
+        const res = await agent
           .post(STORE_PATH)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .set('Upload-Length', `${TEST_FILE_SIZE}`)
           .set('Upload-Metadata', TEST_METADATA)
           .set('Tus-Resumable', TUS_RESUMABLE)
           .expect(201)
-          .end((_, res) => {
-            assert.equal('upload-expires' in res.headers, true)
-            file_id = res.headers.location.split('/').pop()
 
-            setTimeout(() => {
-              const msg = 'tus test'
-              const write_stream = agent
-                .patch(`${STORE_PATH}/${file_id}`)
-                .set('Tus-Resumable', TUS_RESUMABLE)
-                .set('Upload-Offset', '0')
-                .set('Content-Type', 'application/offset+octet-stream')
-              write_stream.on('response', (res) => {
-                assert.equal(res.statusCode, 410)
-                done()
-              })
-              write_stream.write(msg)
-              write_stream.end(() => {})
-            }, 51)
-          })
+        assert.equal('upload-expires' in res.headers, true)
+        file_id = res.headers.location.split('/').pop()
+
+        await new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+            const msg = 'tus test'
+            agent
+              .patch(`${STORE_PATH}/${file_id}`)
+              .set('Tus-Resumable', TUS_RESUMABLE)
+              .set('Upload-Offset', '0')
+              .set('Content-Type', 'application/offset+octet-stream')
+              .send(msg)
+              .expect(410)
+              .then(() => resolve())
+              .catch(reject)
+          }, 51)
+        })
       })
     })
 

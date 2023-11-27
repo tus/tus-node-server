@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "test": "mocha e2e.test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha e2e.test.ts s3.e2e.ts --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
     "@tus/file-store": "workspace:^",
