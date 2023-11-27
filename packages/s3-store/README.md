@@ -79,7 +79,7 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 | ------------------------ | --------------- |
 | [Creation][]             | ✅              |
 | [Creation With Upload][] | ✅              |
-| [Expiration][]           | ❌              |
+| [Expiration][]           | ✅              |
 | [Checksum][]             | ❌              |
 | [Termination][]          | ✅              |
 | [Concatenation][]        | ❌              |
@@ -87,6 +87,32 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 ### Termination
 
 After a multipart upload is aborted, no additional parts can be uploaded using that upload ID. The storage consumed by any previously uploaded parts will be freed. However, if any part uploads are currently in progress, those part uploads might or might not succeed. As a result, it might be necessary to set an [S3 Lifecycle configuration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html) to abort incomplete multipart uploads.
+
+### Expiration
+
+Unlike other stores, the expiration extension on the S3 store does not need to call [`server.cleanUpExpiredUploads()`][cleanExpiredUploads].
+The store creates a `Tus-Complete` tag for all objects, including `.part` and `.info` files, to indicate whether an upload is finished.
+This means you could setup a [lifecyle][] policy to automatically clean them up without a CRON job.
+
+```json
+{
+  "Rules": [
+    {
+      "Filter": {
+        "Tag": {
+          "Key": "Tus-Complete",
+          "Value": "false"
+        }
+      },
+      "Expiration": {
+        "Days": 2
+      }
+    }
+  ]
+}
+```
+
+If you want more granularity, it is still possible to configure a CRON job to call [`server.cleanExpiredUploads()`][cleanExpiredUploads] yourself.
 
 ## Examples
 
@@ -137,3 +163,5 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
+[cleanExpiredUploads]: https://github.com/tus/tus-node-server/tree/main/packages/server#servercleanupexpireduploads
+[lifecyle]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
