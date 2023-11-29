@@ -1,6 +1,6 @@
 import type http from 'node:http'
 
-import type {Upload, UploadIdGenerator} from './models'
+import type {Upload} from './models'
 
 export type ServerOptions = {
   // The route to accept requests.
@@ -11,7 +11,12 @@ export type ServerOptions = {
   // to override the `Location` header returned by the server.
   respectForwardedHeaders?: boolean
   // Provides a custom implementation for generating the upload url and retrieving the upload-id from the request
-  uploadIdGenerator?: UploadIdGenerator
+  generateUrl?: (
+    req: http.IncomingMessage,
+    options: {proto: string; host: string; baseUrl: string; path: string; id: string}
+  ) => string
+  getFileIdFromRequest?: (req: http.IncomingMessage) => string | void
+
   // Control how you want to name files.
   // It is important to make these unique to prevent data loss. Only use it if you really need to.
   // Default uses `crypto.randomBytes(16).toString('hex')`.
