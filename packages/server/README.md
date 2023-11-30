@@ -68,6 +68,10 @@ Return a relative URL as the `Location` header to the client (`boolean`).
 
 Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers to override the `Location` header returned by the server (`boolean`).
 
+#### `options.allowedHeaders`
+
+Additional headers sent in `Access-Control-Allow-Headers` (`string[]`).
+
 #### `options.generateUrl`
 Control how the upload url is generated (`(req, { proto, host, baseUrl, path, id }) => string)`)
 

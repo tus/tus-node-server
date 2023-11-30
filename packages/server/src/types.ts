@@ -10,6 +10,8 @@ export type ServerOptions = {
   // Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers
   // to override the `Location` header returned by the server.
   respectForwardedHeaders?: boolean
+  // adds custom headers sent in `Access-Control-Allow-Headers`.
+  allowedHeaders?: string[]
   // Provides a custom implementation for generating the upload url and retrieving the upload-id from the request
   generateUrl?: (
     req: http.IncomingMessage,
@@ -41,7 +43,8 @@ export type ServerOptions = {
   ) => Promise<http.ServerResponse>
   onIncomingRequest?: (
     req: http.IncomingMessage,
-    res: http.ServerResponse
+    res: http.ServerResponse,
+    uploadId: string
   ) => Promise<void>
 }
 
