@@ -33,7 +33,7 @@ export class BaseHandler extends EventEmitter {
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
-    // @ts-expect-error
+    // @ts-expect-error req.baseUrl does exist
     const baseUrl = req.baseUrl ?? ''
     const path = this.options.path === '/' ? '' : this.options.path
 
