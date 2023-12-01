@@ -28,7 +28,7 @@
     "@tus/server": "workspace:^",
     "@types/debug": "^4.1.8",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.10.1",
     "eslint": "^8.48.0",
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.2.0",
