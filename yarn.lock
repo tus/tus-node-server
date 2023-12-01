@@ -1494,7 +1494,7 @@ __metadata:
     "@redis/client": ^1.5.9
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.8
-    "@types/mocha": ^10.0.1
+    "@types/mocha": ^10.0.6
     "@types/node": ^20.5.7
     debug: ^4.3.4
     eslint: ^8.48.0
@@ -1518,7 +1518,7 @@ __metadata:
     "@google-cloud/storage": ^6.12.0
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.8
-    "@types/mocha": ^10.0.1
+    "@types/mocha": ^10.0.6
     "@types/node": ^20.5.7
     debug: ^4.3.4
     eslint: ^8.48.0
@@ -1539,7 +1539,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.400.0
     "@tus/server": "workspace:^"
     "@types/debug": ^4.1.8
-    "@types/mocha": ^10.0.1
+    "@types/mocha": ^10.0.6
     "@types/node": ^20.5.7
     debug: ^4.3.4
     eslint: ^8.48.0
@@ -1557,7 +1557,7 @@ __metadata:
   resolution: "@tus/server@workspace:packages/server"
   dependencies:
     "@types/debug": ^4.1.8
-    "@types/mocha": ^10.0.1
+    "@types/mocha": ^10.0.6
     "@types/node": ^20.5.7
     "@types/sinon": ^10.0.16
     "@types/supertest": ^2.0.12
@@ -1632,10 +1632,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/mocha@npm:^10.0.1":
-  version: 10.0.1
-  resolution: "@types/mocha@npm:10.0.1"
-  checksum: 224ea9fce7b1734ccdb9aa99a622d902a538ce1847bca7fd22c5fb38adcf3ed536f50f48f587085db988a4bb3c2eb68f4b98e1cd6a38bc5547bd3bbbedc54495
+"@types/mocha@npm:^10.0.6":
+  version: 10.0.6
+  resolution: "@types/mocha@npm:10.0.6"
+  checksum: f7c836cf6cf27dc0f5970d262591b56f2a3caeaec8cfdc612c12e1cfbb207f601f710ece207e935164d4e3343b93be5054d0db5544f31f453b3923775d82099f
   languageName: node
   linkType: hard
 
@@ -4856,7 +4856,7 @@ __metadata:
     "@tus/gcs-store": "workspace:^"
     "@tus/s3-store": "workspace:^"
     "@tus/server": "workspace:^"
-    "@types/mocha": ^10.0.1
+    "@types/mocha": ^10.0.6
     "@types/node": ^20.5.7
     "@types/rimraf": ^3.0.2
     "@types/sinon": ^10.0.16
