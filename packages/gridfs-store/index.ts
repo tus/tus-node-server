@@ -1,16 +1,25 @@
-import {DataStore, ERRORS, TUS_RESUMABLE, Upload} from '@tus/server'
+import {DataStore, ERRORS, Upload} from '@tus/server'
 import stream from 'node:stream'
 import debug from 'debug'
+import {callbackify} from 'node:util'
 import {
-  GridFSBucket,
+  GridFsBucketUpdateStream,
+  GridFsBucketExtended,
+  countChunks,
+} from './mongoutils/mongoExtension'
+import {
   MongoClient,
   ObjectId,
   Db,
-  GridFSFile,
   GridFSBucketOptions,
+  Collection,
+  GridFSBucket,
+  GridFSChunk,
+  Binary,
 } from 'mongodb'
 const log = debug('tus-node-server:stores:gridfsstore')
 import http from 'node:http'
+import {MongodbConfigStore} from './mongoutils/Configstore'
 
 type Options = {
   mongoUri: string
@@ -20,22 +29,18 @@ type Options = {
   expirationPeriodinMs?: number
 }
 
-type StoredPayload = {
-  metadata?: {
-    tus_version: string
-    size: string
-    sizeIsDeferred: string
-    offset: string
-    metadata: string
-  }
-}
-export class GridFsStore extends DataStore {
+class GridFsStore extends DataStore {
+  configstore: MongodbConfigStore
   readonly bucket: GridFSBucket
+  readonly bucketOptions: GridFSBucketOptions
   private bucketName: string
-  private client: MongoClient
-  private filesInProcess: Map<string, ObjectId> = new Map() // map the files to mongodb IDs;
+  readonly clientConnection: MongoClient
+  readonly chunkCollection: Collection<GridFSChunk>
   private Db: Db
-  private expirationPeriod: number
+  private fileCollection: Collection
+  expirationPeriodInMilliseconds: number
+
+  lostBytes = 0
   constructor({
     dbName,
     mongoUri,
@@ -51,18 +56,25 @@ export class GridFsStore extends DataStore {
       )
     }
 
-    this.client = new MongoClient(mongoUri)
-    this.Db = this.client.db(dbName)
-    this.bucketName = bucketName
-    this.expirationPeriod = expirationPeriodinMs ?? 0
+    this.clientConnection = new MongoClient(mongoUri)
+    callbackify(this.clientConnection.connect)(() => {})
 
-    const bucketOptions: GridFSBucketOptions = {bucketName}
+    this.Db = this.clientConnection.db(dbName, {
+      ignoreUndefined: true,
+    })
+    this.bucketName = bucketName
+    this.expirationPeriodInMilliseconds = expirationPeriodinMs ?? 0
+
+    this.bucketOptions = {bucketName}
 
     if (chunkSizeBtyes) {
-      bucketOptions.chunkSizeBytes = chunkSizeBtyes
+      this.bucketOptions.chunkSizeBytes = chunkSizeBtyes
     }
 
-    this.bucket = new GridFSBucket(this.Db, bucketOptions)
+    this.bucket = new GridFSBucket(this.Db, this.bucketOptions)
+    this.configstore = new MongodbConfigStore(this.Db)
+    this.fileCollection = this.Db.collection(this.bucketName + '.files')
+    this.chunkCollection = this.Db.collection(this.bucketName + '.chunks')
     this.addRequireIndexes()
 
     this.extensions = [
@@ -75,127 +87,163 @@ export class GridFsStore extends DataStore {
   }
 
   create(file: Upload): Promise<Upload> {
-    return new Promise((resolve, reject) => {
-      if (!file.id) {
-        reject(ERRORS.FILE_NOT_FOUND)
-        return
-      }
+    return this.exists(file.id).then((fileExists) => {
+      return new Promise(async (resolve, reject) => {
+        if (!fileExists) {
+          const gridfs_stream = this.bucket.openUploadStream(file.id)
 
-      const options = {
-        metadata: {
-          metadata: {
-            tus_version: TUS_RESUMABLE,
-            size: file.size,
-            sizeIsDeferred: file.sizeIsDeferred,
-            offset: file.offset,
-            metadata: JSON.stringify(file.metadata),
-          },
-        },
-      }
-
-      const gridfs_stream = this.bucket.openUploadStream(file.id, options)
-
-      const fake_stream = new stream.PassThrough()
-      fake_stream.end()
-      fake_stream
-        .pipe(gridfs_stream)
-        .on('error', reject)
-        .on('finish', () => {
-          this.filesInProcess.set(file.id, gridfs_stream.id)
-          resolve(file)
-        })
+          const fake_stream = new stream.PassThrough()
+          fake_stream.end()
+          fake_stream
+            .pipe(gridfs_stream)
+            .on('error', reject)
+            .on('finish', () => {
+              this.configstore.set(file.id, file)
+              return resolve(file)
+            })
+        } else {
+          this.configstore.set(file.id, file)
+          return resolve(file)
+        }
+      })
     })
+  }
+
+  findOne(file_name: string) {
+    return this.fileCollection.findOne({filename: file_name})
   }
 
   read(file_id: string) {
     return this.bucket.openDownloadStreamByName(file_id)
   }
+  async exists(id: string): Promise<boolean> {
+    return this.configstore.exists(id)
+  }
 
   remove(id: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const gridFsFileId = this.filesInProcess.get(id)
-      if (!gridFsFileId) {
-        log('[GridFsStore] delete:err', ERRORS.FILE_NOT_FOUND)
-        reject(ERRORS.FILE_NOT_FOUND)
-        return
-      }
+    return new Promise(async (resolve, reject) => {
+      try {
+        const found = await this.findOne(id)
+        if (!found) {
+          throw ERRORS.FILE_NOT_FOUND
+        }
+        await this.bucket.delete(found._id)
 
-      this.bucket
-        .delete(gridFsFileId)
-        .then(() => {
-          this.filesInProcess.delete(id)
-          resolve()
-        })
-        .catch(reject)
+        return resolve(this.configstore.delete(id))
+      } catch (err) {
+        log('[GridFsStore] delete: Error', err)
+        reject(err)
+      }
     })
   }
 
   write(
     readable: http.IncomingMessage | stream.Readable,
-    file_id: string,
+    id: string,
     offset: number
   ): Promise<number> {
-    const writeable = this.bucket.openUploadStream(file_id, {})
+    // check if stream exist
 
-    let bytes_received = 0
-    const transform = new stream.Transform({
-      transform(chunk, _, callback) {
-        bytes_received += chunk.length
-        callback(null, chunk)
-      },
-    })
+    return this.configstore.getStats(id).then((upload) => {
+      return new Promise(async (resolve, reject) => {
+        if (!upload) {
+          return reject(ERRORS.FILE_NOT_FOUND)
+        }
+        const gridfsId = await this.findOne(id)
+        const extendedBucket = new GridFsBucketExtended(this.Db, this.bucketOptions)
+        let chunkCount = 0
 
-    return new Promise((resolve, reject) => {
-      stream.pipeline(readable, transform, writeable, (err) => {
-        if (err) {
-          log('[GridFsStore] write: Error', err)
-          return reject(ERRORS.FILE_WRITE_ERROR)
+        const bytes_received = upload?.current_size || offset
+        if (gridfsId) {
+          chunkCount = await countChunks(this.chunkCollection, gridfsId._id)
         }
 
-        log(
-          `[GridFsStore] write: ${bytes_received} bytes written to gridsFiles with id${writeable.id}`
-        )
-        offset += bytes_received
-        log(`[GridFsStore] write: File is now ${offset} bytes`)
+        const file = new GridFsBucketUpdateStream(extendedBucket, id, {
+          id: gridfsId?._id,
+          chunkCount,
+          offset: offset,
+          paused: upload?.paused,
+          fileSizeHint: upload?.size,
+        })
 
-        return resolve(offset)
+        const destination = file
+
+        const write_stream = destination
+        if (offset > 0) {
+          log(
+            `[GridFsStore] file resumed with ${chunkCount} chunks store, offset = ${offset} bytes, currentSize in database:${upload?.current_size} bytes`
+          )
+          await this.configstore.setPaused(id, false)
+        }
+        if (!write_stream || readable.destroyed) {
+          return reject(ERRORS.FILE_NO_LONGER_EXISTS)
+        }
+
+        readable.on('data', async () => {
+          if (write_stream instanceof GridFsBucketUpdateStream) {
+          }
+        })
+        readable.on('close', async () => {
+          if (
+            readable.readableAborted &&
+            upload?.size &&
+            bytes_received < upload.size &&
+            write_stream instanceof GridFsBucketUpdateStream
+          ) {
+            write_stream.pause(async () => {
+              await this.configstore.setCurrentSize(id, write_stream.bytesWritten)
+            })
+            await this.configstore.setPaused(id, true)
+          }
+        })
+
+        readable.on('error', (err) => {
+          console.log(err.message)
+          log('[GridFsStore] write: Error', err)
+          return reject(ERRORS.FILE_WRITE_ERROR)
+        })
+        readable.pipe(write_stream)
+
+        write_stream.on('finish', async () => {
+          log(`[GridFsStore] write: ${write_stream.bytesRecieved} bytes written to ${id}`)
+          offset = write_stream.bytesWritten
+          log(`[GridFsStore] write: File is now ${offset} bytes`)
+          log(`[GridFsStore], missing ${Number(upload?.size) - offset} bytes`)
+
+          await this.configstore.setCurrentSize(id, write_stream.bytesWritten)
+
+          return resolve(offset)
+        })
       })
     })
   }
 
+  updateMetadata(id: ObjectId, update: Record<string, unknown>) {
+    return this.Db.collection(this.bucketName + '.files').findOneAndUpdate(
+      {_id: id},
+      {
+        $set: {metadata: update},
+      },
+      {returnDocument: 'after'}
+    )
+  }
+
   getUpload(id: string): Promise<Upload> {
-    const gridfsId = this.filesInProcess.get(id)
+    return this.configstore.getStats(id).then((file) => {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          return reject(ERRORS.FILE_NOT_FOUND)
+        }
 
-    if (!gridfsId) {
-      throw ERRORS.FILE_NOT_FOUND
-    }
-    return new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.bucket
-        .find({_id: gridfsId})
-        .toArray()
-        .then((docs) => {
-          const file = docs[0]
-          if (!file) {
-            reject(ERRORS.FILE_NOT_FOUND)
-          }
-
-          const {metadata: meta} = file.metadata as unknown as StoredPayload
-
-          const upload = new Upload({
-            id,
-            size: meta?.size ? parseInt(meta.size) : undefined,
-            offset: file.length,
-            metadata: meta?.metadata ? JSON.parse(meta.metadata) : undefined,
-            creation_date: file.uploadDate.toString(),
-          })
-
-          resolve(upload)
+        const upload = new Upload({
+          id,
+          size: file.size,
+          offset: file.current_size,
+          metadata: file.metadata,
+          creation_date: file.creation_date,
         })
-        .catch((err: unknown) => {
-          log('[GridFsStore] findFile error', err)
-          reject(err)
-        })
+        return resolve(upload)
+      })
     })
   }
   addRequireIndexes() {
@@ -206,54 +254,79 @@ export class GridFsStore extends DataStore {
       {unique: true}
     )
 
-    db.collection((this.bucketName as string) + '.files').createIndex({
+    this.fileCollection.createIndex({
       uploadDate: 1,
     })
   }
 
-  async declareUploadLength(id: string, upload_length: number): Promise<void> {
-    const gridfsId = await this.filesInProcess.get(id)
-    if (!gridfsId) {
-      throw ERRORS.FILE_NOT_FOUND
-    }
+  declareUploadLength(id: string, upload_length: number): Promise<void> {
+    return this.configstore.get(id).then((file) => {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          return reject(ERRORS.FILE_NOT_FOUND)
+        }
+        file.size = upload_length
 
-    return this.Db.collection<GridFSFile>(this.bucketName + '.files')
-      .findOneAndUpdate({_id: gridfsId}, {'metadata.metadata.size': upload_length})
-      .then(() => {}) // do nothing
-
-      .catch((e) => log('[GridFsStore] error', e))
+        resolve(this.configstore.set(id, file))
+      })
+    })
   }
 
   async deleteExpired(): Promise<number> {
     const now = new Date()
     const toDelete: Promise<void>[] = []
-    try {
-      const files = await this.bucket.find({}).toArray()
-      for (const file of files) {
-        if (
-          this.filesInProcess.has(file.filename) &&
-          file?.metadata?.creation_date &&
-          this.getExpiration() > 0 &&
-          file?.metadata.size !== file.metadata?.offset
-        ) {
-          const creation = new Date(file?.metadata.creation_date)
-          const expires = new Date(creation.getTime() + this.getExpiration())
 
+    if (!this.configstore.list) {
+      throw ERRORS.UNSUPPORTED_EXPIRATION_EXTENSION
+    }
+
+    const uploadKeys = await this.configstore.list()
+
+    for (const file_id of uploadKeys) {
+      try {
+        const info = await this.configstore.get(file_id)
+
+        if (
+          info &&
+          'creation_date' in info &&
+          this.getExpiration() > 0 &&
+          info.size !== info.offset &&
+          info.creation_date
+        ) {
+          const creation = new Date(info.creation_date)
+          const expires = new Date(creation.getTime() + this.getExpiration())
           if (now > expires) {
-            toDelete.push(this.remove(file.filename))
+            toDelete.push(this.remove(file_id))
           }
         }
-      }
-    } catch (error) {
-      if (error !== ERRORS.FILE_NO_LONGER_EXISTS) {
-        throw error
+      } catch (error) {
+        if (error !== ERRORS.FILE_NO_LONGER_EXISTS) {
+          throw error
+        }
       }
     }
+
     await Promise.all(toDelete)
     return toDelete.length
   }
+  async getSize(id: ObjectId) {
+    const chunks = await this.chunkCollection.find({files_id: id}, {}).toArray()
+    if (!chunks.length) {
+      return 0
+    }
+    let totalSize = 0
+    const files = chunks.filter((v) => v)
+    for (const chunk of files) {
+      const data = chunk.data as unknown as Binary
+      totalSize += data.length()
+    }
+
+    return totalSize
+  }
 
   getExpiration(): number {
-    return this.expirationPeriod
+    return this.expirationPeriodInMilliseconds
   }
 }
+
+export {GridFsStore, MongodbConfigStore}
