@@ -10,6 +10,8 @@ export type ServerOptions = {
   // Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers
   // to override the `Location` header returned by the server.
   respectForwardedHeaders?: boolean
+  // adds custom headers sent in `Access-Control-Allow-Headers`.
+  allowedHeaders?: string[]
   // Control how you want to name files.
   // It is important to make these unique to prevent data loss. Only use it if you really need to.
   // Default uses `crypto.randomBytes(16).toString('hex')`.
@@ -34,7 +36,8 @@ export type ServerOptions = {
   ) => Promise<http.ServerResponse>
   onIncomingRequest?: (
     req: http.IncomingMessage,
-    res: http.ServerResponse
+    res: http.ServerResponse,
+    uploadId: string
   ) => Promise<void>
 }
 

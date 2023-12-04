@@ -153,12 +153,6 @@ export class Server extends EventEmitter {
       return this.write(res, status_code, body)
     }
 
-    try {
-      await this.options.onIncomingRequest?.(req, res)
-    } catch (err) {
-      return onError(err)
-    }
-
     if (req.method === 'GET') {
       const handler = this.handlers.GET
       return handler.send(req, res).catch(onError)

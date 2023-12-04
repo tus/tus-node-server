@@ -68,6 +68,10 @@ export class PostHandler extends BaseHandler {
       }
     }
 
+    if (this.options.onIncomingRequest) {
+      await this.options.onIncomingRequest(req, res, id)
+    }
+
     const upload = new Upload({
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
