@@ -72,6 +72,12 @@ Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers to overri
 
 Additional headers sent in `Access-Control-Allow-Headers` (`string[]`).
 
+#### `options.generateUrl`
+Control how the upload url is generated (`(req, { proto, host, baseUrl, path, id }) => string)`)
+
+#### `options.getFileIdFromRequest`
+Control how the Upload-ID is extracted from the request (`(req) => string | void`)
+
 #### `options.namingFunction`
 
 Control how you want to name files (`(req) => string`)

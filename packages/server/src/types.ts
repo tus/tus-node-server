@@ -12,6 +12,13 @@ export type ServerOptions = {
   respectForwardedHeaders?: boolean
   // adds custom headers sent in `Access-Control-Allow-Headers`.
   allowedHeaders?: string[]
+  // Control how the upload url is generated
+  generateUrl?: (
+    req: http.IncomingMessage,
+    options: {proto: string; host: string; baseUrl: string; path: string; id: string}
+  ) => string
+  // Control how the Upload-ID is extracted from the request
+  getFileIdFromRequest?: (req: http.IncomingMessage) => string | void
   // Control how you want to name files.
   // It is important to make these unique to prevent data loss. Only use it if you really need to.
   // Default uses `crypto.randomBytes(16).toString('hex')`.
