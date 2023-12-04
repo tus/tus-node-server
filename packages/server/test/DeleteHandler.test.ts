@@ -30,7 +30,7 @@ describe('DeleteHandler', () => {
   })
 
   it('should 404 if no file ID', async () => {
-    sinon.stub(handler, 'getFileIdFromRequest').returns(false)
+    sinon.stub(handler, 'getFileIdFromRequest').returns(undefined)
     await assert.rejects(() => handler.send(req, res), {status_code: 404})
     assert.equal(fake_store.remove.callCount, 0)
   })
