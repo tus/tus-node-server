@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: ${{matrix.node-version}}
       - name: Install dependencies
-        run: corepack yarn install
+        run: YARN_ENABLE_IMMUTABLE_INSTALLS=true corepack yarn install
       - name: Build
         run: corepack yarn build
       - name: Run linters
