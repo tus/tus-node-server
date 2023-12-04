@@ -31,7 +31,7 @@ export class GetHandler extends BaseHandler {
     }
 
     const id = this.getFileIdFromRequest(req)
-    if (id === false) {
+    if (!id) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
