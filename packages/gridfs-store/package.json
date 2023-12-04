@@ -13,7 +13,7 @@
     "build": "tsc",
     "lint": "eslint .",
     "format": "eslint --fix .",
-    "test": "mocha test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha   --parallel   test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "repository": {
     "type": "git",
@@ -40,6 +40,7 @@
     "eslint": "^8.48.0",
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.2.0",
+    "mongodb-memory-server": "^9.1.1",
     "should": "^13.2.3",
     "typescript": "^5.2.2"
   }
