@@ -12,6 +12,7 @@ import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
 import {DataStore} from '../src/models'
 import {TUS_RESUMABLE, EVENTS} from '../src/constants'
+import sinon from 'sinon'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
@@ -425,6 +426,32 @@ describe('Server', () => {
               }
             })
         })
+    })
+
+    it('should fire onResponseError hook when an error is thrown', async () => {
+      const spy = sinon.spy()
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
+        onResponseError: () => {
+          spy()
+          return {status_code: 404, body: 'custom-error'}
+        },
+        onUploadFinish() {
+          throw {body: 'no', status_code: 500}
+        },
+      })
+
+      await request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .set('Upload-Offset', '0')
+        .set('Content-Type', 'application/offset+octet-stream')
+        .send('test')
+        .expect(404, 'custom-error')
+
+      assert.equal(spy.calledOnce, true)
     })
   })
 })

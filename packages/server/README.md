@@ -100,6 +100,11 @@ This can be used to implement post-processing validation.
 This can be used for things like access control.
 You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
 
+#### `options.onResponseError`
+
+`onResponseError` will be invoked when an error response is about to be sent by the server.
+you use this function to map custom errors to tus errors or for custom observability. (`(req, res, err) =>  Promise<{status_code: number; body: string} | void> | {status_code: number; body: string} | void`)
+
 #### `server.handle(req, res)`
 
 The main server request handler invoked on every request.

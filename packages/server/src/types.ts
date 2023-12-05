@@ -36,6 +36,8 @@ export type ServerOptions = {
     req: http.IncomingMessage,
     res: http.ServerResponse
   ) => Promise<void>
+  // `onResponseError` will be invoked when an error response is about to be sent by the server.
+  // you use this function to map custom errors to tus errors or for custom observability.
   onResponseError?: (
     req: http.IncomingMessage,
     res: http.ServerResponse,
