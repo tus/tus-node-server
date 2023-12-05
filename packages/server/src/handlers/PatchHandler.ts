@@ -13,7 +13,7 @@ export class PatchHandler extends BaseHandler {
    */
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const id = this.getFileIdFromRequest(req)
-    if (id === false) {
+    if (!id) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
@@ -28,6 +28,10 @@ export class PatchHandler extends BaseHandler {
     const content_type = req.headers['content-type']
     if (content_type === undefined) {
       throw ERRORS.INVALID_CONTENT_TYPE
+    }
+
+    if (this.options.onIncomingRequest) {
+      await this.options.onIncomingRequest(req, res, id)
     }
 
     const upload = await this.store.getUpload(id)
