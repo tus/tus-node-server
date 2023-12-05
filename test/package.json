@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "test": "mocha e2e.test.ts s3.e2e.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha e2e.test.ts s3.e2e.ts gridfs.e2e.ts --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
     "@tus/file-store": "workspace:^",
     "@tus/gcs-store": "workspace:^",
     "@tus/s3-store": "workspace:^",
-    "@tus/server": "workspace:^"
+    "@tus/server": "workspace:^",
+    "@tus/gridfs-store": "workspace:^"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
