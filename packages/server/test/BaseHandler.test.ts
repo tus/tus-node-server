@@ -65,4 +65,39 @@ describe('BaseHandler', () => {
 
     assert.equal(id, '1234 5#')
   })
+
+  it('should allow to to generate a url with a custom function', () => {
+    const handler = new BaseHandler(store, {
+      path: '/path',
+      generateUrl: (req: http.IncomingMessage, info) => {
+        const {proto, host, baseUrl, path, id} = info
+        return `${proto}://${host}${baseUrl}${path}/${id}?customParam=1`
+      },
+    })
+
+    const req = httpMocks.createRequest({
+      headers: {
+        host: 'localhost',
+      },
+      url: '/upload',
+    })
+    const id = '123'
+    const url = handler.generateUrl(req, id)
+    assert.equal(url, `http://localhost/upload/path/123?customParam=1`)
+  })
+
+  it('should allow extracting the request id with a custom function', () => {
+    const handler = new BaseHandler(store, {
+      path: '/path',
+      getFileIdFromRequest: (req: http.IncomingMessage) => {
+        return req.url?.split('/').pop() + '-custom'
+      },
+    })
+
+    const req = httpMocks.createRequest({
+      url: '/upload/1234',
+    })
+    const url = handler.getFileIdFromRequest(req)
+    assert.equal(url, `1234-custom`)
+  })
 })

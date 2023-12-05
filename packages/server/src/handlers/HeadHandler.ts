@@ -8,7 +8,7 @@ import type http from 'node:http'
 export class HeadHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const id = this.getFileIdFromRequest(req)
-    if (id === false) {
+    if (!id) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
