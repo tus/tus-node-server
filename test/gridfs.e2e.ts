@@ -54,7 +54,7 @@ describe('GridfsStore E2E', () => {
       const deletions = files_created.map((file) => GfsStore.remove(file))
       await Promise.all(deletions)
 
-      //await GfsStore.clientConnection.close()
+      await GfsStore.clientConnection.close()
       await mongod.stop()
       listener.close()
     })
@@ -262,6 +262,7 @@ describe('GridfsStore E2E', () => {
     after(async () => {
       // clear the data
       await clearDatabase(GfsStore)
+      await GfsStore.clientConnection.close()
       await mongod.stop()
       listener.close()
     })
