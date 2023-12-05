@@ -2,6 +2,11 @@ import {ERRORS} from '../constants'
 
 export type RequestRelease = () => Promise<void> | void
 
+// The Locker interface defines methods for implementing a locking mechanism.
+// This is crucial for ensuring exclusive access to uploads and their metadata.
+// Following TUS recommendations, it's important to cancel locks from previous requests
+// to avoid holding locks for too long and to manage half-open TCP connections effectively.
+// The lock method includes a cancel callback to facilitate the cancellation of a request that previously acquired the lock.
 export interface Locker {
   lock(id: string, cancelReq: RequestRelease): Promise<void>
   unlock(id: string): Promise<void>
@@ -15,6 +20,10 @@ class Lock {
   public requestRelease?: RequestRelease
 }
 
+// MemoryLocker is an implementation of the Locker interface, maintaining locks in memory.
+// It ensures exclusive access to upload resources by managing locks for each upload.
+// The lock() method ensures that any previously held lock is released before acquiring a new one.
+// Lock acquisition attempts will timeout based on the specified 'acquireLockTimeout' duration.
 export class MemoryLocker implements Locker {
   private locks = new Map<string, Lock>()
   protected timeout: number
@@ -61,6 +70,10 @@ export class MemoryLocker implements Locker {
     }
 
     return await new Promise((resolve, reject) => {
+      // Using setImmediate to:
+      // 1. Prevent stack overflow by deferring recursive calls to the next event loop iteration.
+      // 2. Allow event loop to process other pending events, maintaining server responsiveness.
+      // 3. Ensure fairness in lock acquisition by giving other requests a chance to acquire the lock.
       setImmediate(() => {
         this.acquireLock(id, signal).then(resolve).catch(reject)
       })

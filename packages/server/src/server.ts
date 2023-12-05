@@ -159,7 +159,7 @@ export class Server extends EventEmitter {
       const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
       const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
 
-      return this.write(req, res, status_code, body, {}, context)
+      return this.write(context, req, res, status_code, body, {})
     }
 
     if (req.method === 'GET') {
@@ -173,7 +173,7 @@ export class Server extends EventEmitter {
     res.setHeader('Tus-Resumable', TUS_RESUMABLE)
 
     if (req.method !== 'OPTIONS' && req.headers['tus-resumable'] === undefined) {
-      return this.write(req, res, 412, 'Tus-Resumable Required\n', {}, context)
+      return this.write(context, req, res, 412, 'Tus-Resumable Required\n')
     }
 
     // Validate all required headers to adhere to the tus protocol
@@ -199,14 +199,7 @@ export class Server extends EventEmitter {
     }
 
     if (invalid_headers.length > 0) {
-      return this.write(
-        req,
-        res,
-        400,
-        `Invalid ${invalid_headers.join(' ')}\n`,
-        {},
-        context
-      )
+      return this.write(context, req, res, 400, `Invalid ${invalid_headers.join(' ')}\n`)
     }
 
     // Enable CORS
@@ -221,16 +214,16 @@ export class Server extends EventEmitter {
       return handler.send(req, res, context).catch(onError)
     }
 
-    return this.write(req, res, 404, 'Not found\n', {}, context)
+    return this.write(context, req, res, 404, 'Not found\n')
   }
 
   write(
+    context: CancellationContext,
     req: http.IncomingMessage,
     res: http.ServerResponse,
     status: number,
     body = '',
-    headers = {},
-    context: CancellationContext
+    headers = {}
   ) {
     const isAborted = context.signal.aborted
 
@@ -269,33 +262,37 @@ export class Server extends EventEmitter {
   }
 
   protected createContext(req: http.IncomingMessage) {
-    const abortController = new AbortController()
-    const delayedAbortController = new AbortController()
+    // Initialize two AbortControllers:
+    // 1. `requestAbortController` for instant request termination, particularly useful for stopping clients to upload when errors occur.
+    // 2. `abortWithDelayController` to introduce a delay before aborting, allowing the server time to complete ongoing operations.
+    // This is particularly useful when a future request may need to acquire a lock currently held by this request.
+    const requestAbortController = new AbortController()
+    const abortWithDelayController = new AbortController()
 
     const onAbort = (err: unknown) => {
-      abortController.signal.removeEventListener('abort', onAbort)
+      abortWithDelayController.signal.removeEventListener('abort', onAbort)
       setTimeout(() => {
-        delayedAbortController.abort(err)
+        requestAbortController.abort(err)
       }, 3000)
     }
-    abortController.signal.addEventListener('abort', onAbort)
+    abortWithDelayController.signal.addEventListener('abort', onAbort)
 
     req.on('close', () => {
-      abortController.signal.removeEventListener('abort', onAbort)
+      abortWithDelayController.signal.removeEventListener('abort', onAbort)
     })
 
     return {
-      signal: delayedAbortController.signal,
+      signal: requestAbortController.signal,
       abort: () => {
-        // abort the delayed signal right away
-        if (!delayedAbortController.signal.aborted) {
-          delayedAbortController.abort(ERRORS.ABORTED)
+        // abort the request immediately
+        if (!requestAbortController.signal.aborted) {
+          requestAbortController.abort(ERRORS.ABORTED)
         }
       },
       cancel: () => {
-        // cancel and wait until the delayedController time elapses
-        if (!abortController.signal.aborted) {
-          abortController.abort(ERRORS.ABORTED)
+        // Initiates the delayed abort sequence unless it's already in progress.
+        if (!abortWithDelayController.signal.aborted) {
+          abortWithDelayController.abort(ERRORS.ABORTED)
         }
       },
     }

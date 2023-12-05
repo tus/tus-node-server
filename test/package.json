@@ -10,8 +10,7 @@
     "@tus/file-store": "workspace:^",
     "@tus/gcs-store": "workspace:^",
     "@tus/s3-store": "workspace:^",
-    "@tus/server": "workspace:^",
-    "throttle": "^1.0.3"
+    "@tus/server": "workspace:^"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
@@ -25,6 +24,7 @@
     "should": "^13.2.3",
     "sinon": "^15.2.0",
     "supertest": "^6.3.3",
+    "throttle": "^1.0.3",
     "ts-node": "^10.9.1",
     "tsconfig": "*",
     "typescript": "^5.2.2"
