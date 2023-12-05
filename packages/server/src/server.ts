@@ -107,7 +107,7 @@ export class Server extends EventEmitter {
       DELETE: new DeleteHandler(this.datastore, this.options),
     }
     // Any handlers assigned to this object with the method as the key
-    // will be used to repond to those requests. They get set/re-set
+    // will be used to respond to those requests. They get set/re-set
     // when a datastore is assigned to the server.
     // Remove any event listeners from each handler as they are removed
     // from the server. This must come before adding a 'newListener' listener,
@@ -159,7 +159,7 @@ export class Server extends EventEmitter {
       const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
       const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
 
-      return this.write(context, req, res, status_code, body, {})
+      return this.write(context, req, res, status_code, body)
     }
 
     if (req.method === 'GET') {
@@ -269,16 +269,16 @@ export class Server extends EventEmitter {
     const requestAbortController = new AbortController()
     const abortWithDelayController = new AbortController()
 
-    const onAbort = (err: unknown) => {
-      abortWithDelayController.signal.removeEventListener('abort', onAbort)
+    const onDelayedAbort = (err: unknown) => {
+      abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
       setTimeout(() => {
         requestAbortController.abort(err)
       }, 3000)
     }
-    abortWithDelayController.signal.addEventListener('abort', onAbort)
+    abortWithDelayController.signal.addEventListener('abort', onDelayedAbort)
 
     req.on('close', () => {
-      abortWithDelayController.signal.removeEventListener('abort', onAbort)
+      abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
     })
 
     return {

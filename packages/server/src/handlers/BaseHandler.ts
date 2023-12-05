@@ -42,20 +42,53 @@ export class BaseHandler extends EventEmitter {
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
-    id = encodeURIComponent(id)
-
-    const forwarded = req.headers.forwarded as string | undefined
-    const path = this.options.path === '/' ? '' : this.options.path
-    // @ts-expect-error baseUrl type doesn't exist?
+    // @ts-expect-error req.baseUrl does exist
     const baseUrl = req.baseUrl ?? ''
-    let proto
-    let host
+    const path = this.options.path === '/' ? '' : this.options.path
 
+    if (this.options.generateUrl) {
+      // user-defined generateUrl function
+      const {proto, host} = this.extractHostAndProto(req)
+
+      return this.options.generateUrl(req, {
+        proto,
+        host,
+        // @ts-expect-error we can pass undefined
+        baseUrl: req.baseUrl,
+        path: path,
+        id,
+      })
+    }
+
+    // Default implementation
     if (this.options.relativeLocation) {
       return `${baseUrl}${path}/${id}`
     }
 
+    const {proto, host} = this.extractHostAndProto(req)
+
+    return `${proto}://${host}${baseUrl}${path}/${id}`
+  }
+
+  getFileIdFromRequest(req: http.IncomingMessage) {
+    if (this.options.getFileIdFromRequest) {
+      return this.options.getFileIdFromRequest(req)
+    }
+    const match = reExtractFileID.exec(req.url as string)
+
+    if (!match || this.options.path.includes(match[1])) {
+      return
+    }
+
+    return decodeURIComponent(match[1])
+  }
+
+  protected extractHostAndProto(req: http.IncomingMessage) {
+    let proto
+    let host
+
     if (this.options.respectForwardedHeaders) {
+      const forwarded = req.headers.forwarded as string | undefined
       if (forwarded) {
         host ??= reForwardedHost.exec(forwarded)?.[1]
         proto ??= reForwardedProto.exec(forwarded)?.[1]
@@ -75,17 +108,7 @@ export class BaseHandler extends EventEmitter {
     host ??= req.headers.host
     proto ??= 'http'
 
-    return `${proto}://${host}${baseUrl}${path}/${id}`
-  }
-
-  getFileIdFromRequest(req: http.IncomingMessage) {
-    const match = reExtractFileID.exec(req.url as string)
-
-    if (!match || this.options.path.includes(match[1])) {
-      return false
-    }
-
-    return decodeURIComponent(match[1])
+    return {host: host as string, proto}
   }
 
   protected getLocker(req: http.IncomingMessage) {
@@ -124,6 +147,7 @@ export class BaseHandler extends EventEmitter {
       stream.addAbortSignal(context.signal, proxy)
 
       proxy.on('error', (err) => {
+        req.unpipe(proxy)
         if (err.name === 'AbortError') {
           reject(ERRORS.ABORTED)
         } else {

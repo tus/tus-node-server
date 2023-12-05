@@ -10,7 +10,7 @@ export class DeleteHandler extends BaseHandler {
     context: CancellationContext
   ) {
     const id = this.getFileIdFromRequest(req)
-    if (id === false) {
+    if (!id) {
       throw ERRORS.FILE_NOT_FOUND
     }
 

@@ -165,7 +165,7 @@ describe('S3 Store E2E', () => {
       assert(infoFile.$metadata.httpStatusCode === 200)
       assert(partFile.$metadata.httpStatusCode === 200)
 
-      await wait(expireTime)
+      await wait(expireTime + 100)
 
       // .info file and .part should be deleted since now they should be expired
       const deletedFiles = await store.deleteExpired()

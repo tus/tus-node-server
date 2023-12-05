@@ -146,6 +146,19 @@ describe('Server', () => {
         })
     })
 
+    it('OPTIONS should return returns custom headers in Access-Control-Allow-Headers', (done) => {
+      server.options.allowedHeaders = ['Custom-Header']
+
+      request(listener)
+        .options('/')
+        .expect(204, '', (err, res) => {
+          res.headers.should.have.property('access-control-allow-headers')
+          res.headers['access-control-allow-headers'].should.containEql('Custom-Header')
+          server.options.allowedHeaders = []
+          done(err)
+        })
+    })
+
     it('HEAD should 404 non files', (done) => {
       request(listener)
         .head('/')

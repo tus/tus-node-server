@@ -19,7 +19,7 @@ export class PatchHandler extends BaseHandler {
   ) {
     try {
       const id = this.getFileIdFromRequest(req)
-      if (id === false) {
+      if (!id) {
         throw ERRORS.FILE_NOT_FOUND
       }
 
@@ -128,7 +128,7 @@ export class PatchHandler extends BaseHandler {
       }
 
       // The Server MUST acknowledge successful PATCH requests with the 204
-      const writtenRes = this.write(res, 204, headers, '')
+      const writtenRes = this.write(res, 204, headers)
 
       if (newOffset === upload.size) {
         this.emit(EVENTS.POST_FINISH, req, writtenRes, upload)
