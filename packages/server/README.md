@@ -203,6 +203,7 @@ const port = 1080
 const app = express()
 const uploadApp = express()
 const server = new Server({
+  path: '/uploads',
   datastore: new FileStore({directory: '/files'}),
 })
 
