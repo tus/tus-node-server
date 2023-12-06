@@ -22,7 +22,7 @@ export class DeleteHandler extends BaseHandler {
     try {
       await this.store.remove(id)
     } finally {
-      await unlock()
+      await unlock?.()
     }
     const writtenRes = this.write(res, 204, {})
     this.emit(EVENTS.POST_TERMINATE, req, writtenRes, id)

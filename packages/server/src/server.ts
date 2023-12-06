@@ -233,14 +233,23 @@ export class Server extends EventEmitter {
     }
 
     if (isAborted) {
+      // This condition handles situations where the request has been flagged as aborted.
+      // In such cases, the server informs the client that the connection will be closed.
+      // This is communicated by setting the 'Connection' header to 'close' in the response.
+      // This step is essential to prevent the server from continuing to process a request
+      // that is no longer needed, thereby saving resources.
+
       // @ts-expect-error not explicitly typed but possible
       headers['Connection'] = 'close'
-      res.writeHead(status, headers)
-      res.write(body)
-      const sent = res.end()
-      req.destroy()
 
-      return sent
+      // An event listener is added to the response ('res') for the 'finish' event.
+      // The 'finish' event is triggered when the response has been sent to the client.
+      // Once the response is complete, the request ('req') object is destroyed.
+      // Destroying the request object is a crucial step to release any resources
+      // tied to this request, as it has already been aborted.
+      res.on('finish', () => {
+        req.destroy()
+      })
     }
 
     res.writeHead(status, headers)

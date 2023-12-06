@@ -1,7 +1,6 @@
-import {MemoryLocker} from '../src/models/Locker'
 import assert from 'node:assert'
 import sinon from 'sinon'
-import {ERRORS} from '../src'
+import {ERRORS, MemoryLocker} from '../src'
 
 describe('MemoryLocker', () => {
   it('will acquire a lock by notifying another to release it', async () => {

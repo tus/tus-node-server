@@ -92,7 +92,7 @@ export class PatchHandler extends BaseHandler {
 
         newOffset = await this.writeToStore(req, id, offset, context)
       } finally {
-        await unlock()
+        await unlock?.()
       }
 
       upload.offset = newOffset

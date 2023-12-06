@@ -120,7 +120,7 @@ export class PostHandler extends BaseHandler {
       context.abort()
       throw e
     } finally {
-      await unlock()
+      await unlock?.()
     }
 
     if (isFinal && this.options.onUploadFinish) {
