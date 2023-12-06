@@ -46,6 +46,16 @@ export type ServerOptions = {
     res: http.ServerResponse,
     uploadId: string
   ) => Promise<void>
+  // `onResponseError` will be invoked when an error response is about to be sent by the server.
+  // you use this function to map custom errors to tus errors or for custom observability.
+  onResponseError?: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    err: Error | {status_code: number; body: string}
+  ) =>
+    | Promise<{status_code: number; body: string} | void>
+    | {status_code: number; body: string}
+    | void
 }
 
 export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void
