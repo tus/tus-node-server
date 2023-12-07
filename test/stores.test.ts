@@ -179,9 +179,9 @@ export const shouldWriteUploads = function () {
       const readable = new stream.Readable({
         read() {
           this.push('some data')
-          this.destroy()
         },
       })
+      readable.destroy()
       const offset = this.datastore.write(readable, file.id, 0)
       return offset.should.be.rejected()
     })

@@ -11,6 +11,7 @@
     "demo": "yarn workspace demo start",
     "demo:gcs": "yarn workspace demo start:gcs",
     "demo:s3": "yarn workspace demo start:s3",
+    "demo:gridfs": "yarn workspace demo start:gridfs",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "test": "turbo run test --concurrency 1"
@@ -19,6 +20,7 @@
     "eslint": "^8.48.0",
     "eslint-config-custom": "workspace:*",
     "eslint-plugin-prettier": "^4.2.1",
+    "mongodb-memory-server": "^9.1.1",
     "prettier": "^2.8.8",
     "turbo": "^1.10.13"
   },
