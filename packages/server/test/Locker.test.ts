@@ -10,16 +10,19 @@ describe('MemoryLocker', () => {
     const cancel = sinon.spy()
     const cancel2 = sinon.spy()
 
-    await locker.lock(lockId, async () => {
-      await locker.unlock(lockId)
+    const lock1 = locker.newLock(lockId)
+    const lock2 = locker.newLock(lockId)
+
+    await lock1.lock(async () => {
+      await lock1.unlock()
       cancel()
     })
 
-    await locker.lock(lockId, async () => {
+    await lock2.lock(async () => {
       cancel2()
     })
 
-    await locker.unlock(lockId)
+    await lock2.unlock()
 
     assert(cancel.callCount === 1, `calls count dont match ${cancel.callCount} !== 1`)
     assert(cancel2.callCount === 0, `calls count dont match ${cancel.callCount} !== 1`)
@@ -30,17 +33,18 @@ describe('MemoryLocker', () => {
       acquireLockTimeout: 500,
     })
     const lockId = 'upload-id-1'
+    const lock = locker.newLock(lockId)
 
     const cancel = sinon.spy()
 
-    await locker.lock(lockId, async () => {
+    await lock.lock(async () => {
       cancel()
       // We note that the function has been called, but do not
       // release the lock
     })
 
     try {
-      await locker.lock(lockId, async () => {
+      await lock.lock(async () => {
         throw new Error('panic should not be called')
       })
     } catch (e) {
@@ -53,20 +57,22 @@ describe('MemoryLocker', () => {
   it('request lock and unlock', async () => {
     const locker = new MemoryLocker()
     const lockId = 'upload-id-1'
+    const lock = locker.newLock(lockId)
+    const lock2 = locker.newLock(lockId)
 
     const cancel = sinon.spy()
-    await locker.lock(lockId, () => {
+    await lock.lock(() => {
       cancel()
       setTimeout(async () => {
-        await locker.unlock(lockId)
+        await lock.unlock()
       }, 50)
     })
 
-    await locker.lock(lockId, () => {
+    await lock2.lock(() => {
       throw new Error('should not be called')
     })
 
-    await locker.unlock(lockId)
+    await lock2.unlock()
 
     assert(
       cancel.callCount > 0,

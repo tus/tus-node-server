@@ -149,14 +149,21 @@ export class Server extends EventEmitter {
       req.method = (req.headers['x-http-method-override'] as string).toUpperCase()
     }
 
-    const onError = (error: {
+    const onError = async (error: {
       status_code?: number
       body?: string
       message: string
-      name?: string
     }) => {
-      const status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
-      const body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
+      let status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
+      let body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
+
+      if (this.options.onResponseError) {
+        const errorMapping = await this.options.onResponseError(req, res, error as Error)
+        if (errorMapping) {
+          status_code = errorMapping.status_code
+          body = errorMapping.body
+        }
+      }
 
       return this.write(context, req, res, status_code, body)
     }
