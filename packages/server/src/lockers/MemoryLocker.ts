@@ -1,13 +1,5 @@
 import {ERRORS} from '../constants'
-import {Locker, RequestRelease} from '../models/Locker'
-
-export interface MemoryLockerOptions {
-  acquireLockTimeout: number
-}
-
-class Lock {
-  public requestRelease?: RequestRelease
-}
+import {Lock, Locker, RequestRelease} from '../models'
 
 /**
  * MemoryLocker is an implementation of the Locker interface that manages locks in memory.
@@ -29,19 +21,40 @@ class Lock {
  *   or fail after the timeout period.
  * - The `unlock` method releases a lock, making the resource available for other requests.
  */
+
+export interface MemoryLockerOptions {
+  acquireLockTimeout: number
+}
+
+interface LockEntry {
+  requestRelease: RequestRelease
+}
+
 export class MemoryLocker implements Locker {
-  private locks = new Map<string, Lock>()
-  protected timeout: number
+  timeout: number
+  locks = new Map<string, LockEntry>()
 
   constructor(options?: MemoryLockerOptions) {
     this.timeout = options?.acquireLockTimeout ?? 1000 * 30
   }
 
-  async lock(id: string, requestRelease: RequestRelease): Promise<void> {
+  newLock(id: string) {
+    return new MemoryLock(id, this, this.timeout)
+  }
+}
+
+class MemoryLock implements Lock {
+  constructor(
+    private id: string,
+    private locker: MemoryLocker,
+    private timeout: number = 1000 * 30
+  ) {}
+
+  async lock(requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
     const lock = await Promise.race([
       this.waitTimeout(abortController.signal),
-      this.acquireLock(id, abortController.signal),
+      this.acquireLock(this.id, requestRelease, abortController.signal),
     ])
 
     abortController.abort()
@@ -49,20 +62,25 @@ export class MemoryLocker implements Locker {
     if (!lock) {
       throw ERRORS.ERR_LOCK_TIMEOUT
     }
-    lock.requestRelease = requestRelease
   }
 
-  protected async acquireLock(id: string, signal: AbortSignal): Promise<Lock | void> {
+  protected async acquireLock(
+    id: string,
+    requestRelease: RequestRelease,
+    signal: AbortSignal
+  ): Promise<boolean> {
     if (signal.aborted) {
-      return
+      return false
     }
 
-    const lock = this.locks.get(id)
+    const lock = this.locker.locks.get(id)
 
     if (!lock) {
-      const lock = new Lock()
-      this.locks.set(id, lock)
-      return lock
+      const lock = {
+        requestRelease,
+      }
+      this.locker.locks.set(id, lock)
+      return true
     }
 
     await lock.requestRelease?.()
@@ -73,30 +91,30 @@ export class MemoryLocker implements Locker {
       // 2. Allow event loop to process other pending events, maintaining server responsiveness.
       // 3. Ensure fairness in lock acquisition by giving other requests a chance to acquire the lock.
       setImmediate(() => {
-        this.acquireLock(id, signal).then(resolve).catch(reject)
+        this.acquireLock(id, requestRelease, signal).then(resolve).catch(reject)
       })
     })
   }
 
-  async unlock(id: string): Promise<void> {
-    const lock = this.locks.get(id)
+  async unlock(): Promise<void> {
+    const lock = this.locker.locks.get(this.id)
     if (!lock) {
       throw new Error('Releasing an unlocked lock!')
     }
 
-    this.locks.delete(id)
+    this.locker.locks.delete(this.id)
   }
 
   protected waitTimeout(signal: AbortSignal) {
-    return new Promise<void>((resolve) => {
+    return new Promise<boolean>((resolve) => {
       const timeout = setTimeout(() => {
-        resolve()
+        resolve(false)
       }, this.timeout)
 
       const abortListener = () => {
         clearTimeout(timeout)
         signal.removeEventListener('abort', abortListener)
-        resolve()
+        resolve(false)
       }
       signal.addEventListener('abort', abortListener)
     })

@@ -1,5 +1,6 @@
-import {BaseHandler, CancellationContext} from './BaseHandler'
+import {BaseHandler} from './BaseHandler'
 import {ERRORS, EVENTS} from '../constants'
+import {CancellationContext} from '../models'
 
 import type http from 'node:http'
 
@@ -18,11 +19,11 @@ export class DeleteHandler extends BaseHandler {
       await this.options.onIncomingRequest(req, res, id)
     }
 
-    const unlock = await this.acquireLock(req, id, context)
+    const lock = await this.acquireLock(req, id, context)
     try {
       await this.store.remove(id)
     } finally {
-      await unlock?.()
+      await lock?.unlock()
     }
     const writtenRes = this.write(res, 204, {})
     this.emit(EVENTS.POST_TERMINATE, req, writtenRes, id)

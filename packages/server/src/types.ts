@@ -24,7 +24,7 @@ export type ServerOptions = {
   // Default uses `crypto.randomBytes(16).toString('hex')`.
   namingFunction?: (req: http.IncomingMessage) => string
   // locker implementation to support distributed locks
-  locker?: Locker | ((req: http.IncomingMessage) => Locker)
+  locker?: Locker | ((req: http.IncomingMessage) => Locker | Promise<Locker>)
   // `onUploadCreate` will be invoked before a new upload is created.
   // If the function returns the (modified) response, the upload will be created.
   // If an error is thrown, the HTTP request will be aborted and the provided `body` and `status_code` (or their fallbacks)

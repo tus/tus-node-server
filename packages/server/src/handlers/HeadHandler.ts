@@ -1,7 +1,7 @@
-import {BaseHandler, CancellationContext} from './BaseHandler'
+import {BaseHandler} from './BaseHandler'
 
 import {ERRORS} from '../constants'
-import {Metadata, Upload} from '../models'
+import {Metadata, Upload, CancellationContext} from '../models'
 
 import type http from 'node:http'
 
@@ -20,13 +20,13 @@ export class HeadHandler extends BaseHandler {
       await this.options.onIncomingRequest(req, res, id)
     }
 
-    const unlock = await this.acquireLock(req, id, context)
+    const lock = await this.acquireLock(req, id, context)
 
     let file: Upload
     try {
       file = await this.store.getUpload(id)
     } finally {
-      await unlock?.()
+      await lock?.unlock()
     }
 
     // If a Client does attempt to resume an upload which has since

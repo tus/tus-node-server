@@ -21,8 +21,7 @@ import {
 
 import type stream from 'node:stream'
 import type {ServerOptions, RouteHandler} from './types'
-import type {DataStore, Upload} from './models'
-import {CancellationContext} from './handlers/BaseHandler'
+import type {DataStore, Upload, CancellationContext} from './models'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>

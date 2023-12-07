@@ -7,9 +7,8 @@ import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
 import {PatchHandler} from '../src/handlers/PatchHandler'
-import {Upload, DataStore} from '../src/models'
+import {Upload, DataStore, CancellationContext} from '../src/models'
 import {EVENTS} from '../src/constants'
-import {CancellationContext} from '../src/handlers/BaseHandler'
 import {EventEmitter} from 'node:events'
 import {addPipableStreamBody} from './utils'
 

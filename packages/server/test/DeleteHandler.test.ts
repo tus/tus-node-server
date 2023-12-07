@@ -9,7 +9,7 @@ import httpMocks from 'node-mocks-http'
 import {DataStore} from '../src/models/DataStore'
 import {DeleteHandler} from '../src/handlers/DeleteHandler'
 import {ERRORS, EVENTS} from '../src/constants'
-import {CancellationContext} from '../src/handlers/BaseHandler'
+import {CancellationContext} from '../src/models'
 
 describe('DeleteHandler', () => {
   const path = '/test/output'

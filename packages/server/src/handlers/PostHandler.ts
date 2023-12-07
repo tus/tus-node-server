@@ -1,13 +1,13 @@
 import debug from 'debug'
 
-import {BaseHandler, CancellationContext} from './BaseHandler'
+import {BaseHandler} from './BaseHandler'
 import {Upload, Uid, Metadata} from '../models'
 import {validateHeader} from '../validators/HeaderValidator'
 import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
 import type {ServerOptions} from '../types'
-import {DataStore} from '../models'
+import {DataStore, CancellationContext} from '../models'
 
 const log = debug('tus-node-server:handlers:post')
 
@@ -92,7 +92,7 @@ export class PostHandler extends BaseHandler {
       }
     }
 
-    const unlock = await this.acquireLock(req, id, context)
+    const lock = await this.acquireLock(req, id, context)
     let isFinal: boolean
     let url: string
     let headers: {
@@ -120,7 +120,7 @@ export class PostHandler extends BaseHandler {
       context.abort()
       throw e
     } finally {
-      await unlock?.()
+      await lock?.unlock()
     }
 
     if (isFinal && this.options.onUploadFinish) {

@@ -4,10 +4,9 @@ import http from 'node:http'
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {DataStore, Upload} from '../src/models'
+import {DataStore, Upload, CancellationContext} from '../src/models'
 import {HeadHandler} from '../src/handlers/HeadHandler'
 import {ERRORS} from '../src/constants'
-import {CancellationContext} from '../src/handlers/BaseHandler'
 
 describe('HeadHandler', () => {
   const path = '/test/output'

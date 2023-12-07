@@ -1,10 +1,10 @@
 import debug from 'debug'
 
-import {BaseHandler, CancellationContext} from './BaseHandler'
+import {BaseHandler} from './BaseHandler'
 import {ERRORS, EVENTS} from '../constants'
 
 import type http from 'node:http'
-import {Upload} from '../models'
+import {CancellationContext, Upload} from '../models'
 
 const log = debug('tus-node-server:handlers:patch')
 
@@ -36,7 +36,7 @@ export class PatchHandler extends BaseHandler {
         throw ERRORS.INVALID_CONTENT_TYPE
       }
 
-      const unlock = await this.acquireLock(req, id, context)
+      const lock = await this.acquireLock(req, id, context)
 
       let upload: Upload
       let newOffset: number
@@ -92,7 +92,7 @@ export class PatchHandler extends BaseHandler {
 
         newOffset = await this.writeToStore(req, id, offset, context)
       } finally {
-        await unlock?.()
+        await lock?.unlock()
       }
 
       upload.offset = newOffset

@@ -7,10 +7,9 @@ import http from 'node:http'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
-import {Upload, DataStore} from '../src/models'
+import {Upload, DataStore, CancellationContext} from '../src/models'
 import {PostHandler} from '../src/handlers/PostHandler'
 import {EVENTS} from '../src/constants'
-import {CancellationContext} from '../src/handlers/BaseHandler'
 import {addPipableStreamBody} from './utils'
 
 const SERVER_OPTIONS = {

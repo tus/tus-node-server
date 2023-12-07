@@ -1,7 +1,14 @@
 export type RequestRelease = () => Promise<void> | void
 
 /**
- * The Locker interface defines methods for implementing a locking mechanism.
+ * The Locker interface creates a Lock instance for a given resource identifier.
+ */
+export interface Locker {
+  newLock(id: string): Lock
+}
+
+/**
+ * The Lock interface defines methods for implementing a locking mechanism.
  * It is primarily used to ensure exclusive access to resources, such as uploads and their metadata.
  *
  * The interface adheres to TUS protocol recommendations, emphasizing the need to prevent prolonged lock retention.
@@ -18,7 +25,7 @@ export type RequestRelease = () => Promise<void> | void
  *   attempting to acquire the lock.
  *
  */
-export interface Locker {
-  lock(id: string, cancelReq: RequestRelease): Promise<void>
-  unlock(id: string): Promise<void>
+export interface Lock {
+  lock(cancelReq: RequestRelease): Promise<void>
+  unlock(): Promise<void>
 }
