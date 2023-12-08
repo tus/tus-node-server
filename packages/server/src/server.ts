@@ -22,6 +22,7 @@ import {
 import type stream from 'node:stream'
 import type {ServerOptions, RouteHandler} from './types'
 import type {DataStore, Upload, CancellationContext} from './models'
+import {MemoryLocker} from './lockers'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -58,6 +59,7 @@ interface TusEvents {
 
 type on = EventEmitter['on']
 type emit = EventEmitter['emit']
+
 export declare interface Server {
   on<Event extends keyof TusEvents>(event: Event, listener: TusEvents[Event]): this
   on(eventName: Parameters<on>[0], listener: Parameters<on>[1]): this
@@ -90,6 +92,10 @@ export class Server extends EventEmitter {
 
     if (!options.datastore) {
       throw new Error("'datastore' is not defined; must have a datastore")
+    }
+
+    if (!options.locker) {
+      options.locker = new MemoryLocker()
     }
 
     const {datastore, ...rest} = options

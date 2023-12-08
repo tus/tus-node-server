@@ -5,13 +5,16 @@ import type {DataStore, CancellationContext} from '../models'
 import type http from 'node:http'
 import stream from 'node:stream'
 import {ERRORS} from '../constants'
+import {MemoryLocker} from '../lockers'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
 
+type WithRequired<T, K extends keyof T> = T & {[P in K]-?: T[P]}
+
 export class BaseHandler extends EventEmitter {
-  options: ServerOptions
+  options: WithRequired<ServerOptions, 'locker'>
   store: DataStore
 
   constructor(store: DataStore, options: ServerOptions) {
@@ -20,8 +23,12 @@ export class BaseHandler extends EventEmitter {
       throw new Error('Store must be defined')
     }
 
+    if (!options.locker) {
+      options.locker = new MemoryLocker()
+    }
+
     this.store = store
-    this.options = options
+    this.options = options as WithRequired<ServerOptions, 'locker'>
   }
 
   write(res: http.ServerResponse, status: number, headers = {}, body = '') {
@@ -118,10 +125,6 @@ export class BaseHandler extends EventEmitter {
     context: CancellationContext
   ) {
     const locker = await this.getLocker(req)
-
-    if (!locker) {
-      return
-    }
 
     const lock = locker.newLock(id)
 

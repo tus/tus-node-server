@@ -26,7 +26,7 @@ export class HeadHandler extends BaseHandler {
     try {
       file = await this.store.getUpload(id)
     } finally {
-      await lock?.unlock()
+      await lock.unlock()
     }
 
     // If a Client does attempt to resume an upload which has since

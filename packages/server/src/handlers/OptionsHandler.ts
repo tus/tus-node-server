@@ -16,6 +16,6 @@ export class OptionsHandler extends BaseHandler {
       res.setHeader('Tus-Extension', this.store.extensions.join(','))
     }
 
-    return this.write(res, 204, {})
+    return this.write(res, 204)
   }
 }

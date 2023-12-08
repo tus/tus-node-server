@@ -10,6 +10,7 @@ import {DataStore} from '../src/models/DataStore'
 import {DeleteHandler} from '../src/handlers/DeleteHandler'
 import {ERRORS, EVENTS} from '../src/constants'
 import {CancellationContext} from '../src/models'
+import {MemoryLocker} from '../src'
 
 describe('DeleteHandler', () => {
   const path = '/test/output'
@@ -21,7 +22,11 @@ describe('DeleteHandler', () => {
 
   beforeEach(() => {
     fake_store.remove.resetHistory()
-    handler = new DeleteHandler(fake_store, {relativeLocation: true, path})
+    handler = new DeleteHandler(fake_store, {
+      relativeLocation: true,
+      path,
+      locker: new MemoryLocker(),
+    })
     req = {url: `${path}/1234`, method: 'DELETE'} as http.IncomingMessage
     res = httpMocks.createResponse()
     const abortController = new AbortController()
