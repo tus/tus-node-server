@@ -105,7 +105,7 @@ export class BaseHandler extends EventEmitter {
     return {host: host as string, proto}
   }
 
-  protected getLocker(req: http.IncomingMessage) {
+  protected async getLocker(req: http.IncomingMessage) {
     if (typeof this.options.locker === 'function') {
       return this.options.locker(req)
     }
