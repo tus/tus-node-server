@@ -1,34 +1,27 @@
 import EventEmitter from 'node:events'
 
-import type {ServerOptions} from '../types'
+import type {ServerOptions, WithRequired} from '../types'
 import type {DataStore, CancellationContext} from '../models'
 import type http from 'node:http'
 import stream from 'node:stream'
 import {ERRORS} from '../constants'
-import {MemoryLocker} from '../lockers'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
 
-type WithRequired<T, K extends keyof T> = T & {[P in K]-?: T[P]}
-
 export class BaseHandler extends EventEmitter {
   options: WithRequired<ServerOptions, 'locker'>
   store: DataStore
 
-  constructor(store: DataStore, options: ServerOptions) {
+  constructor(store: DataStore, options: WithRequired<ServerOptions, 'locker'>) {
     super()
     if (!store) {
       throw new Error('Store must be defined')
     }
 
-    if (!options.locker) {
-      options.locker = new MemoryLocker()
-    }
-
     this.store = store
-    this.options = options as WithRequired<ServerOptions, 'locker'>
+    this.options = options
   }
 
   write(res: http.ServerResponse, status: number, headers = {}, body = '') {

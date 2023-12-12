@@ -5,10 +5,14 @@ import httpMocks from 'node-mocks-http'
 
 import {BaseHandler} from '../src/handlers//BaseHandler'
 import {DataStore} from '../src/models'
+import {MemoryLocker} from '../src'
 
 describe('BaseHandler', () => {
   const store = new DataStore()
-  const handler = new BaseHandler(store, {path: '/test/output'})
+  const handler = new BaseHandler(store, {
+    path: '/test/output',
+    locker: new MemoryLocker(),
+  })
   let res: httpMocks.MockResponse<http.ServerResponse>
 
   beforeEach(() => {
@@ -69,6 +73,7 @@ describe('BaseHandler', () => {
   it('should allow to to generate a url with a custom function', () => {
     const handler = new BaseHandler(store, {
       path: '/path',
+      locker: new MemoryLocker(),
       generateUrl: (req: http.IncomingMessage, info) => {
         const {proto, host, baseUrl, path, id} = info
         return `${proto}://${host}${baseUrl}${path}/${id}?customParam=1`
@@ -89,6 +94,7 @@ describe('BaseHandler', () => {
   it('should allow extracting the request id with a custom function', () => {
     const handler = new BaseHandler(store, {
       path: '/path',
+      locker: new MemoryLocker(),
       getFileIdFromRequest: (req: http.IncomingMessage) => {
         return req.url?.split('/').pop() + '-custom'
       },

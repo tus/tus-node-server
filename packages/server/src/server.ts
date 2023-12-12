@@ -20,8 +20,9 @@ import {
 } from './constants'
 
 import type stream from 'node:stream'
-import type {ServerOptions, RouteHandler} from './types'
+import type {ServerOptions, RouteHandler, WithRequired} from './types'
 import type {DataStore, Upload, CancellationContext} from './models'
+import {MemoryLocker} from './lockers'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -76,7 +77,7 @@ const log = debug('tus-node-server')
 export class Server extends EventEmitter {
   datastore: DataStore
   handlers: Handlers
-  options: ServerOptions
+  options: WithRequired<ServerOptions, 'locker'>
 
   constructor(options: ServerOptions & {datastore: DataStore}) {
     super()
@@ -93,8 +94,12 @@ export class Server extends EventEmitter {
       throw new Error("'datastore' is not defined; must have a datastore")
     }
 
+    if (!options.locker) {
+      options.locker = new MemoryLocker()
+    }
+
     const {datastore, ...rest} = options
-    this.options = rest
+    this.options = rest as WithRequired<ServerOptions, 'locker'>
     this.datastore = datastore
     this.handlers = {
       // GET handlers should be written in the implementations

@@ -6,7 +6,7 @@ import {validateHeader} from '../validators/HeaderValidator'
 import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
-import type {ServerOptions} from '../types'
+import type {ServerOptions, WithRequired} from '../types'
 import {DataStore, CancellationContext} from '../models'
 
 const log = debug('tus-node-server:handlers:post')
@@ -16,7 +16,7 @@ export class PostHandler extends BaseHandler {
   options!: Required<Pick<ServerOptions, 'namingFunction' | 'locker'>> &
     Omit<ServerOptions, 'namingFunction' | 'locker'>
 
-  constructor(store: DataStore, options: ServerOptions) {
+  constructor(store: DataStore, options: WithRequired<ServerOptions, 'locker'>) {
     if (options.namingFunction && typeof options.namingFunction !== 'function') {
       throw new Error("'namingFunction' must be a function")
     }

@@ -11,6 +11,7 @@ import {Upload, DataStore, CancellationContext} from '../src/models'
 import {EVENTS} from '../src/constants'
 import {EventEmitter} from 'node:events'
 import {addPipableStreamBody} from './utils'
+import {MemoryLocker} from '../src'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -22,7 +23,7 @@ describe('PatchHandler', () => {
 
   beforeEach(() => {
     store = sinon.createStubInstance(DataStore)
-    handler = new PatchHandler(store, {path})
+    handler = new PatchHandler(store, {path, locker: new MemoryLocker()})
     req = addPipableStreamBody(
       httpMocks.createRequest({
         method: 'PATCH',
@@ -54,6 +55,7 @@ describe('PatchHandler', () => {
     const handler = new PatchHandler(store, {
       path: '/test/output',
       onUploadFinish: spy,
+      locker: new MemoryLocker(),
     })
 
     req.headers = {

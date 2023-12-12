@@ -11,10 +11,12 @@ import {Upload, DataStore, CancellationContext} from '../src/models'
 import {PostHandler} from '../src/handlers/PostHandler'
 import {EVENTS} from '../src/constants'
 import {addPipableStreamBody} from './utils'
+import {MemoryLocker} from '../src'
 
 const SERVER_OPTIONS = {
   path: '/test',
   namingFunction: () => '1234',
+  locker: new MemoryLocker(),
 }
 
 describe('PostHandler', () => {
@@ -73,6 +75,7 @@ describe('PostHandler', () => {
         const fake_store = sinon.createStubInstance(DataStore)
         const handler = new PostHandler(fake_store, {
           path: '/test',
+          locker: new MemoryLocker(),
           namingFunction: sinon.stub().throws(),
         })
 
@@ -83,7 +86,11 @@ describe('PostHandler', () => {
       it('should call custom namingFunction', async () => {
         const fake_store = sinon.createStubInstance(DataStore)
         const namingFunction = sinon.stub().returns('1234')
-        const handler = new PostHandler(fake_store, {path: '/test/', namingFunction})
+        const handler = new PostHandler(fake_store, {
+          path: '/test/',
+          namingFunction,
+          locker: new MemoryLocker(),
+        })
 
         req.headers = {'upload-length': '1000'}
         await handler.send(req, res, context)
@@ -105,6 +112,7 @@ describe('PostHandler', () => {
       it('must acknowledge successful POST requests with the 201', async () => {
         const handler = new PostHandler(fake_store, {
           path: '/test/output',
+          locker: new MemoryLocker(),
           namingFunction: () => '1234',
         })
         req.headers = {'upload-length': '1000', host: 'localhost:3000'}
@@ -117,6 +125,7 @@ describe('PostHandler', () => {
     describe('respect forwarded headers', () => {
       const handler = new PostHandler(fake_store, {
         path: '/test/output',
+        locker: new MemoryLocker(),
         respectForwardedHeaders: true,
         namingFunction: () => '1234',
       })
@@ -169,6 +178,7 @@ describe('PostHandler', () => {
       it('should handle root as path', async () => {
         const handler = new PostHandler(fake_store, {
           path: '/',
+          locker: new MemoryLocker(),
           respectForwardedHeaders: true,
           namingFunction: () => '1234',
         })
@@ -202,6 +212,7 @@ describe('PostHandler', () => {
 
         const handler = new PostHandler(fake_store, {
           path: '/test/output',
+          locker: new MemoryLocker(),
           namingFunction: () => '1234',
         })
         handler.on(EVENTS.POST_CREATE, (_, __, ___, url) => {
@@ -221,6 +232,7 @@ describe('PostHandler', () => {
 
         const handler = new PostHandler(fake_store, {
           path: '/test/output',
+          locker: new MemoryLocker(),
           relativeLocation: true,
           namingFunction: () => '1234',
         })
@@ -241,7 +253,10 @@ describe('PostHandler', () => {
         fake_store.create.resolvesArg(0)
         fake_store.write.resolves(upload_length)
 
-        const handler = new PostHandler(fake_store, {path: '/test/output'})
+        const handler = new PostHandler(fake_store, {
+          path: '/test/output',
+          locker: new MemoryLocker(),
+        })
         handler.on(EVENTS.POST_CREATE, () => {
           done()
         })
@@ -259,6 +274,7 @@ describe('PostHandler', () => {
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
           path: '/test/output',
+          locker: new MemoryLocker(),
           onUploadCreate: spy,
         })
 
@@ -280,6 +296,7 @@ describe('PostHandler', () => {
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
           path: '/test/output',
+          locker: new MemoryLocker(),
           onUploadFinish: spy,
         })
 
@@ -303,6 +320,7 @@ describe('PostHandler', () => {
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
           path: '/test/output',
+          locker: new MemoryLocker(),
           onUploadFinish: spy,
         })
 

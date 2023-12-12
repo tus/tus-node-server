@@ -7,11 +7,16 @@ import httpMocks from 'node-mocks-http'
 import {DataStore, Upload, CancellationContext} from '../src/models'
 import {HeadHandler} from '../src/handlers/HeadHandler'
 import {ERRORS} from '../src/constants'
+import {MemoryLocker} from '../src'
 
 describe('HeadHandler', () => {
   const path = '/test/output'
   const fake_store = sinon.createStubInstance(DataStore)
-  const handler = new HeadHandler(fake_store, {relativeLocation: true, path})
+  const handler = new HeadHandler(fake_store, {
+    relativeLocation: true,
+    path,
+    locker: new MemoryLocker(),
+  })
   let req: http.IncomingMessage
   let res: httpMocks.MockResponse<http.ServerResponse>
   let context: CancellationContext

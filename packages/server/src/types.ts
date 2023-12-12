@@ -64,3 +64,5 @@ export type ServerOptions = {
 }
 
 export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void
+
+export type WithRequired<T, K extends keyof T> = T & {[P in K]-?: T[P]}
