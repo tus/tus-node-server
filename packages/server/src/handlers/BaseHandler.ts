@@ -1,18 +1,20 @@
 import EventEmitter from 'node:events'
 
-import type {ServerOptions} from '../types'
-import type {DataStore} from '../models'
+import type {ServerOptions, WithRequired} from '../types'
+import type {DataStore, CancellationContext} from '../models'
 import type http from 'node:http'
+import stream from 'node:stream'
+import {ERRORS} from '../constants'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
 
 export class BaseHandler extends EventEmitter {
-  options: ServerOptions
+  options: WithRequired<ServerOptions, 'locker'>
   store: DataStore
 
-  constructor(store: DataStore, options: ServerOptions) {
+  constructor(store: DataStore, options: WithRequired<ServerOptions, 'locker'>) {
     super()
     if (!store) {
       throw new Error('Store must be defined')
@@ -27,6 +29,7 @@ export class BaseHandler extends EventEmitter {
       // @ts-expect-error not explicitly typed but possible
       headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
     }
+
     res.writeHead(status, headers)
     res.write(body)
     return res.end()
@@ -100,5 +103,62 @@ export class BaseHandler extends EventEmitter {
     proto ??= 'http'
 
     return {host: host as string, proto}
+  }
+
+  protected async getLocker(req: http.IncomingMessage) {
+    if (typeof this.options.locker === 'function') {
+      return this.options.locker(req)
+    }
+    return this.options.locker
+  }
+
+  protected async acquireLock(
+    req: http.IncomingMessage,
+    id: string,
+    context: CancellationContext
+  ) {
+    const locker = await this.getLocker(req)
+
+    const lock = locker.newLock(id)
+
+    await lock.lock(() => {
+      context.cancel()
+    })
+
+    return lock
+  }
+
+  protected writeToStore(
+    req: http.IncomingMessage,
+    id: string,
+    offset: number,
+    context: CancellationContext
+  ) {
+    return new Promise<number>(async (resolve, reject) => {
+      if (context.signal.aborted) {
+        reject(ERRORS.ABORTED)
+        return
+      }
+
+      const proxy = new stream.PassThrough()
+      stream.addAbortSignal(context.signal, proxy)
+
+      proxy.on('error', (err) => {
+        req.unpipe(proxy)
+        if (err.name === 'AbortError') {
+          reject(ERRORS.ABORTED)
+        } else {
+          reject(err)
+        }
+      })
+
+      req.on('error', (err) => {
+        if (!proxy.closed) {
+          proxy.destroy(err)
+        }
+      })
+
+      this.store.write(req.pipe(proxy), id, offset).then(resolve).catch(reject)
+    })
   }
 }

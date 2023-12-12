@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {Upload} from '@tus/server'
-import PQueue from 'p-queue'
 
 import {Configstore} from './Types'
 
@@ -11,16 +10,14 @@ import {Configstore} from './Types'
  */
 export class FileConfigstore implements Configstore {
   directory: string
-  queue: PQueue
 
   constructor(path: string) {
     this.directory = path
-    this.queue = new PQueue({concurrency: 1})
   }
 
   async get(key: string): Promise<Upload | undefined> {
     try {
-      const buffer = await this.queue.add(() => fs.readFile(this.resolve(key), 'utf8'))
+      const buffer = await fs.readFile(this.resolve(key), 'utf8')
       return JSON.parse(buffer as string)
     } catch {
       return undefined
@@ -28,23 +25,21 @@ export class FileConfigstore implements Configstore {
   }
 
   async set(key: string, value: Upload): Promise<void> {
-    await this.queue.add(() => fs.writeFile(this.resolve(key), JSON.stringify(value)))
+    await fs.writeFile(this.resolve(key), JSON.stringify(value))
   }
 
   async delete(key: string): Promise<void> {
-    await this.queue.add(() => fs.rm(this.resolve(key)))
+    await fs.rm(this.resolve(key))
   }
 
   async list(): Promise<Array<string>> {
-    return this.queue.add(async () => {
-      const files = await fs.readdir(this.directory)
-      const sorted = files.sort((a, b) => a.localeCompare(b))
-      const name = (file: string) => path.basename(file, '.json')
-      // To only return tus file IDs we check if the file has a corresponding JSON info file
-      return sorted.filter(
-        (file, idx) => idx < sorted.length - 1 && name(file) === name(sorted[idx + 1])
-      )
-    })
+    const files = await fs.readdir(this.directory)
+    const sorted = files.sort((a, b) => a.localeCompare(b))
+    const name = (file: string) => path.basename(file, '.json')
+    // To only return tus file IDs we check if the file has a corresponding JSON info file
+    return sorted.filter(
+      (file, idx) => idx < sorted.length - 1 && name(file) === name(sorted[idx + 1])
+    )
   }
 
   private resolve(key: string): string {

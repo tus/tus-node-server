@@ -8,9 +8,10 @@ import httpMocks from 'node-mocks-http'
 import {OptionsHandler} from '../src/handlers/OptionsHandler'
 import {DataStore} from '../src/models/DataStore'
 import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../src/constants'
+import {MemoryLocker} from '../src'
 
 describe('OptionsHandler', () => {
-  const options = {path: '/test/output'}
+  const options = {path: '/test/output', locker: new MemoryLocker()}
   const store = new DataStore()
   const handler = new OptionsHandler(store, options)
 
