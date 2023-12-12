@@ -20,7 +20,7 @@ import {
 } from './constants'
 
 import type stream from 'node:stream'
-import type {ServerOptions, RouteHandler, WithRequired} from './types'
+import type {ServerOptions, RouteHandler, WithOptional} from './types'
 import type {DataStore, Upload, CancellationContext} from './models'
 import {MemoryLocker} from './lockers'
 
@@ -77,9 +77,9 @@ const log = debug('tus-node-server')
 export class Server extends EventEmitter {
   datastore: DataStore
   handlers: Handlers
-  options: WithRequired<ServerOptions, 'locker'>
+  options: ServerOptions
 
-  constructor(options: ServerOptions & {datastore: DataStore}) {
+  constructor(options: WithOptional<ServerOptions, 'locker'> & {datastore: DataStore}) {
     super()
 
     if (!options) {
@@ -99,7 +99,7 @@ export class Server extends EventEmitter {
     }
 
     const {datastore, ...rest} = options
-    this.options = rest as WithRequired<ServerOptions, 'locker'>
+    this.options = rest as ServerOptions
     this.datastore = datastore
     this.handlers = {
       // GET handlers should be written in the implementations

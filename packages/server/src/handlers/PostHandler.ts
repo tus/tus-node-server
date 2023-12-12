@@ -13,10 +13,9 @@ const log = debug('tus-node-server:handlers:post')
 
 export class PostHandler extends BaseHandler {
   // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
-  options!: Required<Pick<ServerOptions, 'namingFunction' | 'locker'>> &
-    Omit<ServerOptions, 'namingFunction' | 'locker'>
+  options!: WithRequired<ServerOptions, 'namingFunction'>
 
-  constructor(store: DataStore, options: WithRequired<ServerOptions, 'locker'>) {
+  constructor(store: DataStore, options: ServerOptions) {
     if (options.namingFunction && typeof options.namingFunction !== 'function') {
       throw new Error("'namingFunction' must be a function")
     }

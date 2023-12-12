@@ -13,7 +13,7 @@ export function addPipableStreamBody<T extends httpMocks.MockRequest<unknown>>(
   })
 
   // Add the pipe method to the mockRequest
-  // @ts-ignore
+  // @ts-expect-error pipe exists
   mockRequest.pipe = function (dest: stream.Writable) {
     bodyStream.pipe(dest)
   }

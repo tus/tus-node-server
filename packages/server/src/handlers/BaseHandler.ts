@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events'
 
-import type {ServerOptions, WithRequired} from '../types'
+import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '../models'
 import type http from 'node:http'
 import stream from 'node:stream'
@@ -11,10 +11,10 @@ const reForwardedHost = /host="?([^";]+)/
 const reForwardedProto = /proto=(https?)/
 
 export class BaseHandler extends EventEmitter {
-  options: WithRequired<ServerOptions, 'locker'>
+  options: ServerOptions
   store: DataStore
 
-  constructor(store: DataStore, options: WithRequired<ServerOptions, 'locker'>) {
+  constructor(store: DataStore, options: ServerOptions) {
     super()
     if (!store) {
       throw new Error('Store must be defined')
