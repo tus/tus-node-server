@@ -6,17 +6,14 @@ import {validateHeader} from '../validators/HeaderValidator'
 import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
-import type {ServerOptions} from '../types'
-import type {DataStore} from '../models'
-import stream from 'node:stream/promises'
-import {StreamLimiter} from '../models/StreamLimiter'
+import type {ServerOptions, WithRequired} from '../types'
+import {DataStore, CancellationContext} from '../models'
 
 const log = debug('tus-node-server:handlers:post')
 
 export class PostHandler extends BaseHandler {
   // Overriding the `BaseHandler` type. We always set `namingFunction` in the constructor.
-  options!: Required<Pick<ServerOptions, 'namingFunction'>> &
-    Omit<ServerOptions, 'namingFunction'>
+  options!: WithRequired<ServerOptions, 'namingFunction'>
 
   constructor(store: DataStore, options: ServerOptions) {
     if (options.namingFunction && typeof options.namingFunction !== 'function') {
@@ -33,7 +30,11 @@ export class PostHandler extends BaseHandler {
   /**
    * Create a file in the DataStore.
    */
-  async send(req: http.IncomingMessage, res: http.ServerResponse) {
+  async send(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    context: CancellationContext
+  ) {
     if ('upload-concat' in req.headers && !this.store.hasExtension('concatentation')) {
       throw ERRORS.UNSUPPORTED_CONCATENATION_EXTENSION
     }
@@ -70,17 +71,16 @@ export class PostHandler extends BaseHandler {
       }
     }
 
+    if (this.options.onIncomingRequest) {
+      await this.options.onIncomingRequest(req, res, id)
+    }
+
     const upload = new Upload({
       id,
       size: upload_length ? Number.parseInt(upload_length, 10) : undefined,
       offset: 0,
       metadata,
     })
-
-    const maxFileSize = await this.getConfiguredMaxSize(req, id)
-    if (maxFileSize > 0 && (upload.size || 0) > maxFileSize) {
-      throw ERRORS.ERR_MAX_SIZE_EXCEEDED
-    }
 
     if (this.options.onUploadCreate) {
       try {
@@ -91,29 +91,41 @@ export class PostHandler extends BaseHandler {
       }
     }
 
-    await this.store.create(upload)
-    const url = this.generateUrl(req, upload.id)
+    const maxFileSize = await this.getConfiguredMaxSize(req, id)
+    const lock = await this.acquireLock(req, id, context)
 
-    this.emit(EVENTS.POST_CREATE, req, res, upload, url)
-
-    let newOffset = 0
-    let isFinal = upload.size === 0 && !upload.sizeIsDeferred
-    const headers: {
+    let isFinal: boolean
+    let url: string
+    let headers: {
       'Upload-Offset'?: string
       'Upload-Expires'?: string
-    } = {}
-
-    // The request MIGHT include a Content-Type header when using creation-with-upload extension
-    if (validateHeader('content-type', req.headers['content-type'])) {
-      const bodyMaxSize = await this.getBodyMaxSize(req, upload, maxFileSize)
-      await stream.pipeline(req, new StreamLimiter(bodyMaxSize), async (stream) => {
-        newOffset = await this.store.write(stream as StreamLimiter, upload.id, 0)
-      })
-
-      headers['Upload-Offset'] = newOffset.toString()
-      isFinal = newOffset === Number.parseInt(upload_length as string, 10)
-      upload.offset = newOffset
     }
+
+    try {
+      await this.store.create(upload)
+      url = this.generateUrl(req, upload.id)
+
+      this.emit(EVENTS.POST_CREATE, req, res, upload, url)
+
+      isFinal = upload.size === 0 && !upload.sizeIsDeferred
+      headers = {}
+
+      // The request MIGHT include a Content-Type header when using creation-with-upload extension
+      if (validateHeader('content-type', req.headers['content-type'])) {
+        const bodyMaxSize = await this.calculateMaxBodySize(req, upload, maxFileSize)
+        const newOffset = await this.writeToStore(req, id, 0, bodyMaxSize, context)
+
+        headers['Upload-Offset'] = newOffset.toString()
+        isFinal = newOffset === Number.parseInt(upload_length as string, 10)
+        upload.offset = newOffset
+      }
+    } catch (e) {
+      context.abort()
+      throw e
+    } finally {
+      await lock.unlock()
+    }
+
     if (isFinal && this.options.onUploadFinish) {
       try {
         res = await this.options.onUploadFinish(req, res, upload)
@@ -131,6 +143,7 @@ export class PostHandler extends BaseHandler {
       upload.creation_date
     ) {
       const created = await this.store.getUpload(upload.id)
+
       if (created.offset !== Number.parseInt(upload_length as string, 10)) {
         const creation = new Date(upload.creation_date)
         // Value MUST be in RFC 7231 datetime format

@@ -1,6 +1,7 @@
 import {Transform, TransformCallback} from 'stream'
 import {ERRORS} from '../constants'
 
+// TODO: create HttpError and use it everywhere instead of throwing objects
 export class MaxFileExceededError extends Error {
   status_code: number
   body: string
@@ -27,8 +28,7 @@ export class StreamLimiter extends Transform {
     if (this.currentSize > this.maxSize) {
       callback(new MaxFileExceededError())
     } else {
-      this.push(chunk)
-      callback()
+      callback(null, chunk)
     }
   }
 }

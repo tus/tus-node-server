@@ -12,10 +12,11 @@ import {GetHandler} from '../src/handlers/GetHandler'
 import {DataStore} from '../src/models/DataStore'
 import {FileStore} from '@tus/file-store'
 import {Upload} from '../src/models/Upload'
+import {MemoryLocker} from '../src'
 
 describe('GetHandler', () => {
   const path = '/test/output'
-  const serverOptions = {path}
+  const serverOptions = {path, locker: new MemoryLocker()}
   let req: http.IncomingMessage
   let res: http.ServerResponse
 
@@ -28,7 +29,7 @@ describe('GetHandler', () => {
     it('should 404 when file does not exist', async () => {
       const store = sinon.createStubInstance(FileStore)
       store.getUpload.rejects({status_code: 404})
-      const handler = new GetHandler(store, {path})
+      const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
       req.url = `${path}/1234`
       await assert.rejects(() => handler.send(req, res), {status_code: 404})
@@ -37,7 +38,7 @@ describe('GetHandler', () => {
 
     it('should 404 for non registered path', async () => {
       const store = sinon.createStubInstance(FileStore)
-      const handler = new GetHandler(store, {path})
+      const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
       req.url = `/not_a_valid_file_path`
       await assert.rejects(() => handler.send(req, res), {status_code: 404})
@@ -47,7 +48,7 @@ describe('GetHandler', () => {
     it('should 404 when file is not complete', async () => {
       const store = sinon.createStubInstance(FileStore)
       store.getUpload.resolves(new Upload({id: '1234', offset: 512, size: 1024}))
-      const handler = new GetHandler(store, {path})
+      const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
       await assert.rejects(() => handler.send(req, res), {status_code: 404})
@@ -71,7 +72,7 @@ describe('GetHandler', () => {
       store.getUpload.resolves(new Upload({id: '1234', offset: size, size}))
       // @ts-expect-error what should this be?
       store.read.returns(stream.Readable.from(fs.createReadStream('invalid_path')))
-      const handler = new GetHandler(store, {path})
+      const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
       await handler.send(req, res)
@@ -87,7 +88,7 @@ describe('GetHandler', () => {
       store.getUpload.resolves(new Upload({id: '1234', offset: 512, size: 512}))
       // @ts-expect-error should
       store.read.returns(stream.Readable.from(Buffer.alloc(512)))
-      const handler = new GetHandler(store, {path})
+      const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
       await handler.send(req, res)
@@ -101,7 +102,7 @@ describe('GetHandler', () => {
       store.getUpload.resolves(new Upload({id: '1234', offset: size, size}))
       // @ts-expect-error what should this be?
       store.read.returns(stream.Readable.from(Buffer.alloc(size), {objectMode: false}))
-      const handler = new GetHandler(store, {path})
+      const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const fileId = '1234'
       req.url = `${path}/${fileId}`
       await handler.send(req, res)

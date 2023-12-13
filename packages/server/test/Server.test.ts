@@ -12,6 +12,8 @@ import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
 import {DataStore} from '../src/models'
 import {TUS_RESUMABLE, EVENTS} from '../src/constants'
+import httpMocks from 'node-mocks-http'
+import sinon from 'sinon'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
@@ -145,6 +147,19 @@ describe('Server', () => {
         })
     })
 
+    it('OPTIONS should return returns custom headers in Access-Control-Allow-Headers', (done) => {
+      server.options.allowedHeaders = ['Custom-Header']
+
+      request(listener)
+        .options('/')
+        .expect(204, '', (err, res) => {
+          res.headers.should.have.property('access-control-allow-headers')
+          res.headers['access-control-allow-headers'].should.containEql('Custom-Header')
+          server.options.allowedHeaders = []
+          done(err)
+        })
+    })
+
     it('HEAD should 404 non files', (done) => {
       request(listener)
         .head('/')
@@ -220,13 +235,13 @@ describe('Server', () => {
     })
 
     it('should allow overriding the HTTP method', (done) => {
-      const req = {
+      const req = httpMocks.createRequest({
         headers: {'x-http-method-override': 'OPTIONS'},
         method: 'GET',
-      }
+      })
+
       // @ts-expect-error todo
       const res = new http.ServerResponse({method: 'OPTIONS'})
-      // @ts-expect-error todo
       server.handle(req, res)
       assert.equal(req.method, 'OPTIONS')
       done()
@@ -234,10 +249,13 @@ describe('Server', () => {
 
     it('should allow overriding the HTTP method', async () => {
       const origin = 'vimeo.com'
-      const req = {headers: {origin}, method: 'OPTIONS', url: '/'}
+      const req = httpMocks.createRequest({
+        headers: {origin},
+        method: 'OPTIONS',
+        url: '/',
+      })
       // @ts-expect-error todo
       const res = new http.ServerResponse({method: 'OPTIONS'})
-      // @ts-expect-error todo
       await server.handle(req, res)
       assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
     })
@@ -425,6 +443,32 @@ describe('Server', () => {
               }
             })
         })
+    })
+
+    it('should fire onResponseError hook when an error is thrown', async () => {
+      const spy = sinon.spy()
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory: './test/output'}),
+        onResponseError: () => {
+          spy()
+          return {status_code: 404, body: 'custom-error'}
+        },
+        onUploadFinish() {
+          throw {body: 'no', status_code: 500}
+        },
+      })
+
+      await request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .set('Upload-Offset', '0')
+        .set('Content-Type', 'application/offset+octet-stream')
+        .send('test')
+        .expect(404, 'custom-error')
+
+      assert.equal(spy.calledOnce, true)
     })
   })
 })

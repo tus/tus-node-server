@@ -1,18 +1,33 @@
 import {BaseHandler} from './BaseHandler'
 
 import {ERRORS} from '../constants'
-import {Metadata} from '../models'
+import {Metadata, Upload, CancellationContext} from '../models'
 
 import type http from 'node:http'
 
 export class HeadHandler extends BaseHandler {
-  async send(req: http.IncomingMessage, res: http.ServerResponse) {
+  async send(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    context: CancellationContext
+  ) {
     const id = this.getFileIdFromRequest(req)
-    if (id === false) {
+    if (!id) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    const file = await this.store.getUpload(id)
+    if (this.options.onIncomingRequest) {
+      await this.options.onIncomingRequest(req, res, id)
+    }
+
+    const lock = await this.acquireLock(req, id, context)
+
+    let file: Upload
+    try {
+      file = await this.store.getUpload(id)
+    } finally {
+      await lock.unlock()
+    }
 
     // If a Client does attempt to resume an upload which has since
     // been removed by the Server, the Server SHOULD respond with the

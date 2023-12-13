@@ -60,6 +60,10 @@ Creates a new tus server with options.
 
 The route to accept requests (`string`).
 
+#### `options.maxSize`
+
+Max file size (in bytes) allowed when uploading (`number`)
+
 #### `options.relativeLocation`
 
 Return a relative URL as the `Location` header to the client (`boolean`).
@@ -67,6 +71,16 @@ Return a relative URL as the `Location` header to the client (`boolean`).
 #### `options.respectForwardedHeaders`
 
 Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers to override the `Location` header returned by the server (`boolean`).
+
+#### `options.allowedHeaders`
+
+Additional headers sent in `Access-Control-Allow-Headers` (`string[]`).
+
+#### `options.generateUrl`
+Control how the upload url is generated (`(req, { proto, host, baseUrl, path, id }) => string)`)
+
+#### `options.getFileIdFromRequest`
+Control how the Upload-ID is extracted from the request (`(req) => string | void`)
 
 #### `options.namingFunction`
 
@@ -99,6 +113,11 @@ This can be used to implement post-processing validation.
 
 This can be used for things like access control.
 You can `throw` an Object and the HTTP request will be aborted with the provided `body` and `status_code` (or their fallbacks).
+
+#### `options.onResponseError`
+
+`onResponseError` will be invoked when an error response is about to be sent by the server.
+you use this function to map custom errors to tus errors or for custom observability. (`(req, res, err) =>  Promise<{status_code: number; body: string} | void> | {status_code: number; body: string} | void`)
 
 #### `server.handle(req, res)`
 
@@ -193,6 +212,7 @@ const port = 1080
 const app = express()
 const uploadApp = express()
 const server = new Server({
+  path: '/uploads',
   datastore: new FileStore({directory: '/files'}),
 })
 

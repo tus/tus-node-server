@@ -33,6 +33,14 @@ export const ERRORS = {
     status_code: 403,
     body: 'Upload-Offset header required\n',
   },
+  ABORTED: {
+    status_code: 400,
+    body: 'Request aborted due to lock acquired',
+  },
+  ERR_LOCK_TIMEOUT: {
+    status_code: 500,
+    body: 'failed to acquire lock before timeout',
+  },
   INVALID_CONTENT_TYPE: {
     status_code: 403,
     body: 'Content-Type header required\n',

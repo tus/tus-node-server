@@ -1,10 +1,13 @@
 import EventEmitter from 'node:events'
 
 import type {ServerOptions} from '../types'
-import type {DataStore} from '../models'
+import type {DataStore, CancellationContext} from '../models'
 import type http from 'node:http'
 import {Upload} from '../models'
 import {ERRORS} from '../constants'
+import stream from 'node:stream/promises'
+import {addAbortSignal, PassThrough} from 'stream'
+import {StreamLimiter} from '../models/StreamLimiter'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -29,26 +32,60 @@ export class BaseHandler extends EventEmitter {
       // @ts-expect-error not explicitly typed but possible
       headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
     }
+
     res.writeHead(status, headers)
     res.write(body)
     return res.end()
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
-    id = encodeURIComponent(id)
-
-    const forwarded = req.headers.forwarded as string | undefined
-    const path = this.options.path === '/' ? '' : this.options.path
-    // @ts-expect-error baseUrl type doesn't exist?
+    // @ts-expect-error req.baseUrl does exist
     const baseUrl = req.baseUrl ?? ''
-    let proto
-    let host
+    const path = this.options.path === '/' ? '' : this.options.path
 
+    if (this.options.generateUrl) {
+      // user-defined generateUrl function
+      const {proto, host} = this.extractHostAndProto(req)
+
+      return this.options.generateUrl(req, {
+        proto,
+        host,
+        // @ts-expect-error we can pass undefined
+        baseUrl: req.baseUrl,
+        path: path,
+        id,
+      })
+    }
+
+    // Default implementation
     if (this.options.relativeLocation) {
       return `${baseUrl}${path}/${id}`
     }
 
+    const {proto, host} = this.extractHostAndProto(req)
+
+    return `${proto}://${host}${baseUrl}${path}/${id}`
+  }
+
+  getFileIdFromRequest(req: http.IncomingMessage) {
+    if (this.options.getFileIdFromRequest) {
+      return this.options.getFileIdFromRequest(req)
+    }
+    const match = reExtractFileID.exec(req.url as string)
+
+    if (!match || this.options.path.includes(match[1])) {
+      return
+    }
+
+    return decodeURIComponent(match[1])
+  }
+
+  protected extractHostAndProto(req: http.IncomingMessage) {
+    let proto
+    let host
+
     if (this.options.respectForwardedHeaders) {
+      const forwarded = req.headers.forwarded as string | undefined
       if (forwarded) {
         host ??= reForwardedHost.exec(forwarded)?.[1]
         proto ??= reForwardedProto.exec(forwarded)?.[1]
@@ -68,17 +105,70 @@ export class BaseHandler extends EventEmitter {
     host ??= req.headers.host
     proto ??= 'http'
 
-    return `${proto}://${host}${baseUrl}${path}/${id}`
+    return {host: host as string, proto}
   }
 
-  getFileIdFromRequest(req: http.IncomingMessage) {
-    const match = reExtractFileID.exec(req.url as string)
-
-    if (!match || this.options.path.includes(match[1])) {
-      return false
+  protected async getLocker(req: http.IncomingMessage) {
+    if (typeof this.options.locker === 'function') {
+      return this.options.locker(req)
     }
+    return this.options.locker
+  }
 
-    return decodeURIComponent(match[1])
+  protected async acquireLock(
+    req: http.IncomingMessage,
+    id: string,
+    context: CancellationContext
+  ) {
+    const locker = await this.getLocker(req)
+
+    const lock = locker.newLock(id)
+
+    await lock.lock(() => {
+      context.cancel()
+    })
+
+    return lock
+  }
+
+  protected writeToStore(
+    req: http.IncomingMessage,
+    id: string,
+    offset: number,
+    maxFileSize: number,
+    context: CancellationContext
+  ) {
+    return new Promise<number>(async (resolve, reject) => {
+      if (context.signal.aborted) {
+        reject(ERRORS.ABORTED)
+        return
+      }
+
+      const proxy = new PassThrough()
+      addAbortSignal(context.signal, proxy)
+
+      proxy.on('error', (err) => {
+        req.unpipe(proxy)
+        if (err.name === 'AbortError') {
+          reject(ERRORS.ABORTED)
+        } else {
+          reject(err)
+        }
+      })
+
+      req.on('error', (err) => {
+        if (!proxy.closed) {
+          proxy.destroy(err)
+        }
+      })
+
+      stream
+        .pipeline(req.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
+          return this.store.write(stream as StreamLimiter, id, offset)
+        })
+        .then(resolve)
+        .catch(reject)
+    })
   }
 
   getConfiguredMaxSize(req: http.IncomingMessage, id: string) {
@@ -88,42 +178,62 @@ export class BaseHandler extends EventEmitter {
     return this.options.maxSize ?? 0
   }
 
-  async getBodyMaxSize(
+  /**
+   * Calculates the maximum allowed size for the body of an upload request.
+   * This function considers both the server's configured maximum size and
+   * the specifics of the upload, such as whether the size is deferred or fixed.
+   */
+  async calculateMaxBodySize(
     req: http.IncomingMessage,
-    info: Upload,
+    file: Upload,
     configuredMaxSize?: number
   ) {
-    configuredMaxSize =
-      configuredMaxSize ?? (await this.getConfiguredMaxSize(req, info.id))
+    // Use the server-configured maximum size if it's not explicitly provided.
+    configuredMaxSize ??= await this.getConfiguredMaxSize(req, file.id)
 
+    // Parse the Content-Length header from the request (default to 0 if not set).
     const length = parseInt(req.headers['content-length'] || '0', 10)
-    const offset = info.offset
+    const offset = file.offset
 
-    // Test if this upload fits into the file's size
-    if (!info.sizeIsDeferred && offset + length > (info.size || 0)) {
+    const hasContentLengthSet = length > 0
+    const hasConfiguredMaxSizeSet = configuredMaxSize > 0
+
+    // Check if the upload fits into the file's size when the size is not deferred.
+    if (!file.sizeIsDeferred && offset + length > (file.size || 0)) {
       throw ERRORS.ERR_SIZE_EXCEEDED
     }
 
-    let maxSize = (info.size || 0) - offset
-    // If the upload's length is deferred and the PATCH request does not contain the Content-Length
-    // header (which is allowed if 'Transfer-Encoding: chunked' is used), we still need to set limits for
-    // the body size.
-    if (info.sizeIsDeferred) {
-      if (configuredMaxSize > 0) {
-        // Ensure that the upload does not exceed the maximum upload size
+    // For deferred size uploads, if it's not a chunked transfer, check against the configured maximum size.
+    if (
+      file.sizeIsDeferred &&
+      hasContentLengthSet &&
+      hasConfiguredMaxSizeSet &&
+      offset + length > configuredMaxSize
+    ) {
+      throw ERRORS.ERR_SIZE_EXCEEDED
+    }
+
+    // Calculate the maximum allowable size based on the file's total size and current offset.
+    let maxSize = (file.size || 0) - offset
+
+    // Handle deferred size uploads where no Content-Length is provided (possible with chunked transfers).
+    if (file.sizeIsDeferred) {
+      if (hasConfiguredMaxSizeSet) {
+        // Limit the upload to not exceed the maximum configured upload size.
         maxSize = configuredMaxSize - offset
       } else {
-        // If no upload limit is given, we allow arbitrary sizes
+        // Allow arbitrary sizes if no upload limit is configured.
         maxSize = Number.MAX_SAFE_INTEGER
       }
     }
 
-    if (length > 0) {
+    // Override maxSize with the Content-Length if it's provided.
+    if (hasContentLengthSet) {
       maxSize = length
     }
 
-    // limit the request body to the maxSize if provided
-    if (configuredMaxSize > 0 && maxSize > configuredMaxSize) {
+    // Enforce the server-configured maximum size limit, if applicable.
+    if (hasConfiguredMaxSizeSet && maxSize > configuredMaxSize) {
       maxSize = configuredMaxSize
     }
 

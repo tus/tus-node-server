@@ -1,5 +1,5 @@
 import {BaseHandler} from './BaseHandler'
-import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../constants'
+import {ALLOWED_METHODS, MAX_AGE, HEADERS} from '../constants'
 
 import type http from 'node:http'
 
@@ -9,12 +9,14 @@ export class OptionsHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const maxSize = await this.getConfiguredMaxSize(req, '')
 
-    if (maxSize > 0) {
+    if (maxSize) {
       res.setHeader('Tus-Max-Size', maxSize)
     }
 
+    const allowedHeaders = [...HEADERS, ...(this.options.allowedHeaders ?? [])]
+
     res.setHeader('Access-Control-Allow-Methods', ALLOWED_METHODS)
-    res.setHeader('Access-Control-Allow-Headers', ALLOWED_HEADERS)
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '))
     res.setHeader('Access-Control-Max-Age', MAX_AGE)
     if (this.store.extensions.length > 0) {
       res.setHeader('Tus-Extension', this.store.extensions.join(','))
