@@ -37,6 +37,10 @@ export const ERRORS = {
     status_code: 400,
     body: 'Request aborted due to lock acquired',
   },
+  INVALID_TERMINATION: {
+    status_code: 400,
+    body: 'Cannot terminate an already completed upload',
+  },
   ERR_LOCK_TIMEOUT: {
     status_code: 500,
     body: 'failed to acquire lock before timeout',

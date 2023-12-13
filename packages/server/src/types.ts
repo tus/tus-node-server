@@ -62,6 +62,11 @@ export type ServerOptions = {
     | ((req: http.IncomingMessage) => Locker | Promise<Locker>)
 
   /**
+   * Disallow termination for finished uploads.
+   */
+  disableTerminationForFinishedUploads?: boolean
+
+  /**
    * `onUploadCreate` will be invoked before a new upload is created.
    * If the function returns the (modified) response, the upload will be created.
    * If an error is thrown, the HTTP request will be aborted, and the provided `body` and `status_code`

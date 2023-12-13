@@ -63,4 +63,25 @@ describe('DeleteHandler', () => {
     })
     handler.send(req, res, context)
   })
+
+  it('must not allow terminating an upload if already completed', async () => {
+    const handler = new DeleteHandler(fake_store, {
+      relativeLocation: true,
+      disableTerminationForFinishedUploads: true,
+      path,
+      locker: new MemoryLocker(),
+    })
+
+    fake_store.getUpload.resolves({
+      id: 'abc',
+      metadata: undefined,
+      get sizeIsDeferred(): boolean {
+        return false
+      },
+      creation_date: undefined,
+      offset: 1000,
+      size: 1000,
+    })
+    await assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+  })
 })
