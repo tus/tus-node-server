@@ -16,7 +16,7 @@ export type ServerOptions = {
    */
   maxSize?:
     | number
-    | ((req: http.IncomingMessage, uploadId: string) => Promise<number> | number)
+    | ((req: http.IncomingMessage, uploadId: string | null) => Promise<number> | number)
 
   /**
    * Return a relative URL as the `Location` header.

@@ -62,6 +62,16 @@ export class PostHandler extends BaseHandler {
       throw ERRORS.FILE_WRITE_ERROR
     }
 
+    const maxFileSize = await this.getConfiguredMaxSize(req, id)
+
+    if (
+      upload_length &&
+      maxFileSize > 0 &&
+      Number.parseInt(upload_length, 10) > maxFileSize
+    ) {
+      throw ERRORS.ERR_MAX_SIZE_EXCEEDED
+    }
+
     let metadata
     if ('upload-metadata' in req.headers) {
       try {
@@ -91,7 +101,6 @@ export class PostHandler extends BaseHandler {
       }
     }
 
-    const maxFileSize = await this.getConfiguredMaxSize(req, id)
     const lock = await this.acquireLock(req, id, context)
 
     let isFinal: boolean

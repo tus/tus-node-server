@@ -7,7 +7,7 @@ import type http from 'node:http'
 // the Tus-Version header. It MAY include the Tus-Extension and Tus-Max-Size headers.
 export class OptionsHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
-    const maxSize = await this.getConfiguredMaxSize(req, '')
+    const maxSize = await this.getConfiguredMaxSize(req, null)
 
     if (maxSize) {
       res.setHeader('Tus-Max-Size', maxSize)

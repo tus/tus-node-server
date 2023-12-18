@@ -62,7 +62,8 @@ The route to accept requests (`string`).
 
 #### `options.maxSize`
 
-Max file size (in bytes) allowed when uploading (`number`)
+Max file size (in bytes) allowed when uploading (`number` | (`(req, id: string | null) => Promise<number> | number`)).
+When providing a function during the OPTIONS request the id will be `null`.
 
 #### `options.relativeLocation`
 

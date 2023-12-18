@@ -139,21 +139,20 @@ export class BaseHandler extends EventEmitter {
     context: CancellationContext
   ) {
     return new Promise<number>(async (resolve, reject) => {
+      // Abort early if the operation has been cancelled.
       if (context.signal.aborted) {
         reject(ERRORS.ABORTED)
         return
       }
 
+      // Create a PassThrough stream as a proxy to manage the request stream.
+      // This allows for aborting the write process without affecting the incoming request stream.
       const proxy = new PassThrough()
       addAbortSignal(context.signal, proxy)
 
       proxy.on('error', (err) => {
         req.unpipe(proxy)
-        if (err.name === 'AbortError') {
-          reject(ERRORS.ABORTED)
-        } else {
-          reject(err)
-        }
+        reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
       req.on('error', (err) => {
@@ -162,6 +161,9 @@ export class BaseHandler extends EventEmitter {
         }
       })
 
+      // Pipe the request stream through the proxy. We use the proxy instead of the request stream directly
+      // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
+      // which would result in a socket hangup error for the client.
       stream
         .pipeline(req.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
           return this.store.write(stream as StreamLimiter, id, offset)
@@ -171,7 +173,7 @@ export class BaseHandler extends EventEmitter {
     })
   }
 
-  getConfiguredMaxSize(req: http.IncomingMessage, id: string) {
+  getConfiguredMaxSize(req: http.IncomingMessage, id: string | null) {
     if (typeof this.options.maxSize === 'function') {
       return this.options.maxSize(req, id)
     }
@@ -195,48 +197,35 @@ export class BaseHandler extends EventEmitter {
     const length = parseInt(req.headers['content-length'] || '0', 10)
     const offset = file.offset
 
-    const hasContentLengthSet = length > 0
+    const hasContentLengthSet = req.headers['content-length'] !== undefined
     const hasConfiguredMaxSizeSet = configuredMaxSize > 0
 
-    // Check if the upload fits into the file's size when the size is not deferred.
-    if (!file.sizeIsDeferred && offset + length > (file.size || 0)) {
-      throw ERRORS.ERR_SIZE_EXCEEDED
-    }
-
-    // For deferred size uploads, if it's not a chunked transfer, check against the configured maximum size.
-    if (
-      file.sizeIsDeferred &&
-      hasContentLengthSet &&
-      hasConfiguredMaxSizeSet &&
-      offset + length > configuredMaxSize
-    ) {
-      throw ERRORS.ERR_SIZE_EXCEEDED
-    }
-
-    // Calculate the maximum allowable size based on the file's total size and current offset.
-    let maxSize = (file.size || 0) - offset
-
-    // Handle deferred size uploads where no Content-Length is provided (possible with chunked transfers).
     if (file.sizeIsDeferred) {
+      // For deferred size uploads, if it's not a chunked transfer, check against the configured maximum size.
+      if (
+        hasContentLengthSet &&
+        hasConfiguredMaxSizeSet &&
+        offset + length > configuredMaxSize
+      ) {
+        throw ERRORS.ERR_SIZE_EXCEEDED
+      }
+
       if (hasConfiguredMaxSizeSet) {
-        // Limit the upload to not exceed the maximum configured upload size.
-        maxSize = configuredMaxSize - offset
+        return configuredMaxSize - offset
       } else {
-        // Allow arbitrary sizes if no upload limit is configured.
-        maxSize = Number.MAX_SAFE_INTEGER
+        return Number.MAX_SAFE_INTEGER
       }
     }
 
-    // Override maxSize with the Content-Length if it's provided.
+    // Check if the upload fits into the file's size when the size is not deferred.
+    if (offset + length > (file.size || 0)) {
+      throw ERRORS.ERR_SIZE_EXCEEDED
+    }
+
     if (hasContentLengthSet) {
-      maxSize = length
+      return length
     }
 
-    // Enforce the server-configured maximum size limit, if applicable.
-    if (hasConfiguredMaxSizeSet && maxSize > configuredMaxSize) {
-      maxSize = configuredMaxSize
-    }
-
-    return maxSize
+    return (file.size || 0) - offset
   }
 }
