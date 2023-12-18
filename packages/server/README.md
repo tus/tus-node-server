@@ -362,18 +362,18 @@ const server = new Server({
     const token = req.headers.authorization;
 
     if (!token) {
-      throw { status_code: 401, body: 'Unauthorized' })
+      throw { status_code: 401, body: 'Unauthorized' }
     }
 
     try {
       const decodedToken = await jwt.verify(token, 'your_secret_key')
       req.user = decodedToken
     } catch (error) {
-      throw { status_code: 401, body: 'Invalid token' })
+      throw { status_code: 401, body: 'Invalid token' }
     }
 
     if (req.user.role !== 'admin') {
-      throw { status_code: 403, body: 'Access denied' })
+      throw { status_code: 403, body: 'Access denied' }
     }
   },
 });
