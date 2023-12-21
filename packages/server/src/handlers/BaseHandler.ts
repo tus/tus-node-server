@@ -3,8 +3,11 @@ import EventEmitter from 'node:events'
 import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '../models'
 import type http from 'node:http'
-import stream from 'node:stream'
+import {Upload} from '../models'
 import {ERRORS} from '../constants'
+import stream from 'node:stream/promises'
+import {addAbortSignal, PassThrough} from 'stream'
+import {StreamLimiter} from '../models/StreamLimiter'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -132,24 +135,24 @@ export class BaseHandler extends EventEmitter {
     req: http.IncomingMessage,
     id: string,
     offset: number,
+    maxFileSize: number,
     context: CancellationContext
   ) {
     return new Promise<number>(async (resolve, reject) => {
+      // Abort early if the operation has been cancelled.
       if (context.signal.aborted) {
         reject(ERRORS.ABORTED)
         return
       }
 
-      const proxy = new stream.PassThrough()
-      stream.addAbortSignal(context.signal, proxy)
+      // Create a PassThrough stream as a proxy to manage the request stream.
+      // This allows for aborting the write process without affecting the incoming request stream.
+      const proxy = new PassThrough()
+      addAbortSignal(context.signal, proxy)
 
       proxy.on('error', (err) => {
         req.unpipe(proxy)
-        if (err.name === 'AbortError') {
-          reject(ERRORS.ABORTED)
-        } else {
-          reject(err)
-        }
+        reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
       req.on('error', (err) => {
@@ -158,7 +161,71 @@ export class BaseHandler extends EventEmitter {
         }
       })
 
-      this.store.write(req.pipe(proxy), id, offset).then(resolve).catch(reject)
+      // Pipe the request stream through the proxy. We use the proxy instead of the request stream directly
+      // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
+      // which would result in a socket hangup error for the client.
+      stream
+        .pipeline(req.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
+          return this.store.write(stream as StreamLimiter, id, offset)
+        })
+        .then(resolve)
+        .catch(reject)
     })
+  }
+
+  getConfiguredMaxSize(req: http.IncomingMessage, id: string | null) {
+    if (typeof this.options.maxSize === 'function') {
+      return this.options.maxSize(req, id)
+    }
+    return this.options.maxSize ?? 0
+  }
+
+  /**
+   * Calculates the maximum allowed size for the body of an upload request.
+   * This function considers both the server's configured maximum size and
+   * the specifics of the upload, such as whether the size is deferred or fixed.
+   */
+  async calculateMaxBodySize(
+    req: http.IncomingMessage,
+    file: Upload,
+    configuredMaxSize?: number
+  ) {
+    // Use the server-configured maximum size if it's not explicitly provided.
+    configuredMaxSize ??= await this.getConfiguredMaxSize(req, file.id)
+
+    // Parse the Content-Length header from the request (default to 0 if not set).
+    const length = parseInt(req.headers['content-length'] || '0', 10)
+    const offset = file.offset
+
+    const hasContentLengthSet = req.headers['content-length'] !== undefined
+    const hasConfiguredMaxSizeSet = configuredMaxSize > 0
+
+    if (file.sizeIsDeferred) {
+      // For deferred size uploads, if it's not a chunked transfer, check against the configured maximum size.
+      if (
+        hasContentLengthSet &&
+        hasConfiguredMaxSizeSet &&
+        offset + length > configuredMaxSize
+      ) {
+        throw ERRORS.ERR_SIZE_EXCEEDED
+      }
+
+      if (hasConfiguredMaxSizeSet) {
+        return configuredMaxSize - offset
+      } else {
+        return Number.MAX_SAFE_INTEGER
+      }
+    }
+
+    // Check if the upload fits into the file's size when the size is not deferred.
+    if (offset + length > (file.size || 0)) {
+      throw ERRORS.ERR_SIZE_EXCEEDED
+    }
+
+    if (hasContentLengthSet) {
+      return length
+    }
+
+    return (file.size || 0) - offset
   }
 }

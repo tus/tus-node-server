@@ -12,6 +12,13 @@ export type ServerOptions = {
   path: string
 
   /**
+   * Max file size allowed when uploading
+   */
+  maxSize?:
+    | number
+    | ((req: http.IncomingMessage, uploadId: string | null) => Promise<number> | number)
+
+  /**
    * Return a relative URL as the `Location` header.
    */
   relativeLocation?: boolean

@@ -16,6 +16,10 @@ import http from 'node:http'
 import sinon from 'sinon'
 import Throttle from 'throttle'
 import {Agent} from 'http'
+import {Buffer} from 'buffer'
+import {Readable} from 'stream'
+import {AddressInfo} from 'net'
+import {strict} from 'assert'
 
 const STORE_PATH = '/output'
 const PROJECT_ID = 'tus-node-server'
@@ -430,6 +434,254 @@ describe('EndToEnd', () => {
         const deleted = await server.datastore.deleteExpired()
         assert.equal(deleted >= 1, true)
       })
+    })
+  })
+
+  describe('FileStore with MaxFileSize', () => {
+    before(() => {
+      server = new Server({
+        path: STORE_PATH,
+        maxSize: 1024 * 1024,
+        datastore: new FileStore({directory: `./${STORE_PATH}`}),
+      })
+      listener = server.listen()
+      agent = request.agent(listener)
+    })
+
+    after(() => {
+      listener.close()
+    })
+
+    it('should not allow creating an upload that exceed the max-file-size', async () => {
+      await agent
+        .post(STORE_PATH)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', (1024 * 1024 * 2).toString())
+        .set('Upload-Metadata', TEST_METADATA)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .expect(413)
+    })
+
+    it('should not allow uploading with fixed length more than the defined MaxFileSize', async () => {
+      const body = Buffer.alloc(1024 * 1024 * 2)
+      const chunkSize = (1024 * 1024 * 2) / 4
+      // purposely set this to 1MB even if we will try uploading 2MB via transfer-encoding: chunked
+      const uploadLength = 1024 * 1024
+
+      const res = await agent
+        .post(STORE_PATH)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', uploadLength.toString())
+        .set('Upload-Metadata', TEST_METADATA)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .expect(201)
+
+      assert.equal('location' in res.headers, true)
+      assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
+
+      const uploadId = res.headers.location.split('/').pop()
+
+      const uploadChunk = async (body: Buffer, offset = 0) => {
+        const res = await agent
+          .patch(`${STORE_PATH}/${uploadId}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Offset', offset.toString())
+          .set('Content-Type', 'application/offset+octet-stream')
+          .send(body)
+          .expect(204)
+          .expect('Tus-Resumable', TUS_RESUMABLE)
+
+        return parseInt(res.headers['upload-offset'] || '0', 0)
+      }
+
+      let offset = 0
+      offset = await uploadChunk(body.subarray(offset, chunkSize)) // 500Kb
+      offset = await uploadChunk(body.subarray(offset, offset + chunkSize), offset) // 1MB
+
+      try {
+        // this request should fail since it exceeds the 1MB mark
+        await uploadChunk(body.subarray(offset, offset + chunkSize), offset) // 1.5MB
+        throw new Error('failed test')
+      } catch (e) {
+        assert.equal(e instanceof Error, true)
+        assert.equal(
+          e.message.includes('got 413 "Payload Too Large"'),
+          true,
+          `wrong message received "${e.message}"`
+        )
+      }
+    })
+
+    it('should not allow uploading with fixed length more than the defined MaxFileSize using chunked encoding', async () => {
+      const body = Buffer.alloc(1024 * 1024 * 2)
+      const chunkSize = (1024 * 1024 * 2) / 4
+      // purposely set this to 1MB even if we will try uploading 2MB via transfer-encoding: chunked
+      const uploadLength = 1024 * 1024
+
+      const res = await agent
+        .post(STORE_PATH)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', uploadLength.toString())
+        .set('Upload-Metadata', TEST_METADATA)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .expect(201)
+
+      assert.equal('location' in res.headers, true)
+      assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
+
+      const uploadId = res.headers.location.split('/').pop()
+      const address = listener.address() as AddressInfo
+      // Options for the HTTP request.
+      // transfer-encoding doesn't seem to be supported by superagent
+      const options = {
+        hostname: 'localhost',
+        port: address.port,
+        path: `${STORE_PATH}/${uploadId}`,
+        method: 'PATCH',
+        headers: {
+          'Tus-Resumable': TUS_RESUMABLE,
+          'Upload-Offset': '0',
+          'Content-Type': 'application/offset+octet-stream',
+          'Transfer-Encoding': 'chunked',
+        },
+      }
+
+      const {res: patchResp, body: resBody} = await new Promise<{
+        res: http.IncomingMessage
+        body: string
+      }>((resolve, reject) => {
+        const req = http.request(options, (res) => {
+          let body = ''
+          res.on('data', (chunk) => {
+            body += chunk.toString()
+          })
+          res.on('end', () => {
+            resolve({res, body})
+          })
+        })
+
+        req.on('error', (e) => {
+          reject(e)
+        })
+
+        req.write(body.subarray(0, chunkSize))
+        req.write(body.subarray(chunkSize, chunkSize * 2))
+        req.write(body.subarray(chunkSize * 2, chunkSize * 3))
+        req.end()
+      })
+
+      assert.equal(patchResp.statusCode, 413)
+      assert.equal(resBody, 'Maximum size exceeded\n')
+    })
+
+    it('should not allow uploading with deferred length more than the defined MaxFileSize', async () => {
+      const res = await agent
+        .post(STORE_PATH)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Defer-Length', '1')
+        .set('Upload-Metadata', TEST_METADATA)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .expect(201)
+
+      assert.equal('location' in res.headers, true)
+      assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
+
+      const uploadId = res.headers.location.split('/').pop()
+      const body = Buffer.alloc(1024 * 1024 * 2)
+      const chunkSize = (1024 * 1024 * 2) / 4
+
+      const uploadChunk = async (body: Buffer, offset = 0, uploadLength = 0) => {
+        const req = agent
+          .patch(`${STORE_PATH}/${uploadId}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Defer-Length', '1')
+          .set('Upload-Offset', offset.toString())
+          .set('Content-Type', 'application/offset+octet-stream')
+
+        if (uploadLength) {
+          req.set('Upload-Length', uploadLength.toString())
+        }
+
+        const res = await req
+          .send(body)
+          .expect(204)
+          .expect('Tus-Resumable', TUS_RESUMABLE)
+        return parseInt(res.headers['upload-offset'] || '0', 0)
+      }
+
+      let offset = 0
+      offset = await uploadChunk(body.subarray(offset, chunkSize)) // 500Kb
+      offset = await uploadChunk(body.subarray(offset, offset + chunkSize), offset) // 1MB
+
+      try {
+        // this request should fail since it exceeds the 1MB mark
+        await uploadChunk(body.subarray(offset, offset + chunkSize), offset) // 1.5MB
+        throw new Error('failed test')
+      } catch (e) {
+        assert.equal(e instanceof Error, true)
+        assert.equal(e.message.includes('got 413 "Payload Too Large"'), true)
+      }
+    })
+
+    it('should not allow uploading with deferred length more than the defined MaxFileSize using chunked encoding', async () => {
+      const res = await agent
+        .post(STORE_PATH)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Defer-Length', '1')
+        .set('Upload-Metadata', TEST_METADATA)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .expect(201)
+
+      assert.equal('location' in res.headers, true)
+      assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
+
+      const uploadId = res.headers.location.split('/').pop()
+      const body = Buffer.alloc(1024 * 1024 * 2)
+      const chunkSize = (1024 * 1024 * 2) / 4
+
+      const address = listener.address() as AddressInfo
+      // Options for the HTTP request.
+      // transfer-encoding doesn't seem to be supported by superagent
+      const options = {
+        hostname: 'localhost',
+        port: address.port,
+        path: `${STORE_PATH}/${uploadId}`,
+        method: 'PATCH',
+        headers: {
+          'Tus-Resumable': TUS_RESUMABLE,
+          'Upload-Defer-Length': '1',
+          'Upload-Offset': '0',
+          'Content-Type': 'application/offset+octet-stream',
+          'Transfer-Encoding': 'chunked',
+        },
+      }
+
+      const {res: patchResp, body: resBody} = await new Promise<{
+        res: http.IncomingMessage
+        body: string
+      }>((resolve, reject) => {
+        const req = http.request(options, (res) => {
+          let body = ''
+          res.on('data', (chunk) => {
+            body += chunk.toString()
+          })
+          res.on('end', () => {
+            resolve({res, body})
+          })
+        })
+
+        req.on('error', (e) => {
+          reject(e)
+        })
+
+        req.write(body.subarray(0, chunkSize))
+        req.write(body.subarray(chunkSize, chunkSize * 2))
+        req.write(body.subarray(chunkSize * 2, chunkSize * 3))
+        req.end()
+      })
+
+      assert.equal(patchResp.statusCode, 413)
+      assert.equal(resBody, 'Maximum size exceeded\n')
     })
   })
 
