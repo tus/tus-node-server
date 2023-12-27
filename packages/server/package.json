@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/server",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Tus resumable upload protocol in Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.8",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.10.4",
     "@types/sinon": "^10.0.16",
     "@types/supertest": "^2.0.12",
     "eslint": "^8.48.0",

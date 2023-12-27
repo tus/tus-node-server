@@ -60,6 +60,11 @@ Creates a new tus server with options.
 
 The route to accept requests (`string`).
 
+#### `options.maxSize`
+
+Max file size (in bytes) allowed when uploading (`number` | (`(req, id: string | null) => Promise<number> | number`)).
+When providing a function during the OPTIONS request the id will be `null`.
+
 #### `options.relativeLocation`
 
 Return a relative URL as the `Location` header to the client (`boolean`).
@@ -361,18 +366,18 @@ const server = new Server({
     const token = req.headers.authorization;
 
     if (!token) {
-      throw { status_code: 401, body: 'Unauthorized' })
+      throw { status_code: 401, body: 'Unauthorized' }
     }
 
     try {
       const decodedToken = await jwt.verify(token, 'your_secret_key')
       req.user = decodedToken
     } catch (error) {
-      throw { status_code: 401, body: 'Invalid token' })
+      throw { status_code: 401, body: 'Invalid token' }
     }
 
     if (req.user.role !== 'admin') {
-      throw { status_code: 403, body: 'Access denied' })
+      throw { status_code: 403, body: 'Access denied' }
     }
   },
 });

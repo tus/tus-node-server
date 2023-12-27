@@ -36,6 +36,12 @@ export class PatchHandler extends BaseHandler {
         throw ERRORS.INVALID_CONTENT_TYPE
       }
 
+      if (this.options.onIncomingRequest) {
+        await this.options.onIncomingRequest(req, res, id)
+      }
+
+      const maxFileSize = await this.getConfiguredMaxSize(req, id)
+
       const lock = await this.acquireLock(req, id, context)
 
       let upload: Upload
@@ -86,11 +92,16 @@ export class PatchHandler extends BaseHandler {
             throw ERRORS.INVALID_LENGTH
           }
 
+          if (maxFileSize > 0 && size > maxFileSize) {
+            throw ERRORS.ERR_MAX_SIZE_EXCEEDED
+          }
+
           await this.store.declareUploadLength(id, size)
           upload.size = size
         }
 
-        newOffset = await this.writeToStore(req, id, offset, context)
+        const maxBodySize = await this.calculateMaxBodySize(req, upload, maxFileSize)
+        newOffset = await this.writeToStore(req, id, offset, maxBodySize, context)
       } finally {
         await lock.unlock()
       }
