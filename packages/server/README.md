@@ -91,7 +91,8 @@ It is important to make these unique to prevent data loss. Only use it if you ne
 Default uses `crypto.randomBytes(16).toString('hex')`.
 
 #### `disableTerminationForFinishedUploads`
-Disallow termination for finished uploads. (`boolean`)
+
+Disallow the [termination extension](https://tus.io/protocols/resumable-upload#termination) for finished uploads. (`boolean`)
 
 #### `options.onUploadCreate`
 
