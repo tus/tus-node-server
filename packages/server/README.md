@@ -90,6 +90,10 @@ Control how you want to name files (`(req) => string`)
 It is important to make these unique to prevent data loss. Only use it if you need to.
 Default uses `crypto.randomBytes(16).toString('hex')`.
 
+#### `disableTerminationForFinishedUploads`
+
+Disallow the [termination extension](https://tus.io/protocols/resumable-upload#termination) for finished uploads. (`boolean`)
+
 #### `options.onUploadCreate`
 
 `onUploadCreate` will be invoked before a new upload is created. (`(req, res, upload) => Promise<res>`).

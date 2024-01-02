@@ -17,9 +17,7 @@ import sinon from 'sinon'
 import Throttle from 'throttle'
 import {Agent} from 'http'
 import {Buffer} from 'buffer'
-import {Readable} from 'stream'
 import {AddressInfo} from 'net'
-import {strict} from 'assert'
 
 const STORE_PATH = '/output'
 const PROJECT_ID = 'tus-node-server'
@@ -272,6 +270,117 @@ describe('EndToEnd', () => {
           .expect('Upload-Length', `${TEST_FILE_SIZE}`)
           .expect('Tus-Resumable', TUS_RESUMABLE)
           .end(done)
+      })
+    })
+
+    describe('DELETE', () => {
+      let server: Server
+      let listener: http.Server
+
+      before(() => {
+        server = new Server({
+          path: STORE_PATH,
+          datastore: new FileStore({directory: `./${STORE_PATH}`}),
+        })
+        listener = server.listen()
+        agent = request.agent(listener)
+      })
+
+      after((done) => {
+        // Remove the files directory
+        rimraf(FILES_DIRECTORY, (err) => {
+          if (err) {
+            return done(err)
+          }
+
+          // Clear the config
+          // @ts-expect-error we can consider a generic to pass to
+          // datastore to narrow down the store type
+          const uploads = (server.datastore.configstore as Configstore).list?.() ?? []
+          for (const upload in uploads) {
+            // @ts-expect-error we can consider a generic to pass to
+            // datastore to narrow down the store type
+            await(server.datastore.configstore as Configstore).delete(upload)
+          }
+          listener.close()
+          return done()
+        })
+      })
+
+      it('will allow terminating finished uploads', async () => {
+        const body = Buffer.alloc(parseInt(TEST_FILE_SIZE, 10))
+        const res = await agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', TEST_FILE_SIZE)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+
+        assert.equal('location' in res.headers, true)
+        assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
+        // Save the id for subsequent tests
+        const file_id = res.headers.location.split('/').pop()
+
+        await agent
+          .patch(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Offset', '0')
+          .set('Content-Type', 'application/offset+octet-stream')
+          .send(body)
+
+        // try terminating the upload
+        await agent
+          .delete(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(204)
+      })
+
+      it('will disallow terminating an upload if the upload is already completed', async () => {
+        const server = new Server({
+          path: STORE_PATH,
+          disableTerminationForFinishedUploads: true,
+          datastore: new FileStore({directory: `./${STORE_PATH}`}),
+        })
+        const listener = server.listen()
+        const agent = request.agent(listener)
+
+        const body = Buffer.alloc(parseInt(TEST_FILE_SIZE, 10))
+        const res = await agent
+          .post(STORE_PATH)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', TEST_FILE_SIZE)
+          .set('Upload-Metadata', TEST_METADATA)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(201)
+
+        assert.equal('location' in res.headers, true)
+        assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
+        // Save the id for subsequent tests
+        const file_id = res.headers.location.split('/').pop()
+
+        await agent
+          .patch(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Offset', '0')
+          .set('Content-Type', 'application/offset+octet-stream')
+          .send(body)
+
+        // try terminating the upload
+        await agent
+          .delete(`${STORE_PATH}/${file_id}`)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .expect(400)
+
+        await new Promise<void>((resolve, reject) => {
+          listener.close((err) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve()
+          })
+        })
       })
     })
   })
