@@ -477,6 +477,10 @@ export class S3Store extends DataStore {
       request.ContentType = upload.metadata.contentType
     }
 
+    if (upload.metadata?.cacheControl) {
+      request.CacheControl = upload.metadata.cacheControl
+    }
+
     upload.creation_date = new Date().toISOString()
 
     const res = await this.client.createMultipartUpload(request)
