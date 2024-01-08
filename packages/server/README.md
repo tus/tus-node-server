@@ -89,10 +89,11 @@ Returning `prefix-1234` in `namingFunction` means the `id` argument in `generate
 function generateUrl(req, {proto, host, path, id}) {
   const prefix = getPrefixForUser(req) // your custom logic
   return `${proto}://${host}${path}/${prefix}/${id}?query=param`
-},
+}
 ```
 
-> [!NOTE] > `@tus/server` expects everything after the last `/` to be the upload id.
+> [!NOTE]
+> `@tus/server` expects everything after the last `/` to be the upload id.
 > If you change that you have to use `getFileIdFromRequest` as well.
 
 #### `options.getFileIdFromRequest`
@@ -114,7 +115,7 @@ Default uses `crypto.randomBytes(16).toString('hex')`.
 function namingFunction(req) {
   const prefix = getPrefixForUser(req) // your custom logic
   return `${prefix}-${crypto.randomBytes(16).toString('hex')}`
-},
+}
 ```
 
 > [!CAUTION]
