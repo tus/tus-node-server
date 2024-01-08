@@ -78,17 +78,47 @@ Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers to overri
 Additional headers sent in `Access-Control-Allow-Headers` (`string[]`).
 
 #### `options.generateUrl`
-Control how the upload url is generated (`(req, { proto, host, baseUrl, path, id }) => string)`)
+
+Control how the upload URL is generated (`(req, { proto, host, path, id }) => string)`)
+
+This only changes the upload URL (`Location` header).
+If you also want to change the file name in storage use `namingFunction`.
+Returning `prefix-1234` in `namingFunction` means the `id` argument in `generateUrl` is `prefix-1234`.
+
+```js
+function generateUrl(req, {proto, host, path, id}) {
+  const prefix = getPrefixForUser(req) // your custom logic
+  return `${proto}://${host}${path}/${prefix}/${id}?query=param`
+},
+```
+
+> [!NOTE] > `@tus/server` expects everything after the last `/` to be the upload id.
+> If you change that you have to use `getFileIdFromRequest` as well.
 
 #### `options.getFileIdFromRequest`
+
 Control how the Upload-ID is extracted from the request (`(req) => string | void`)
 
 #### `options.namingFunction`
 
 Control how you want to name files (`(req) => string`)
 
+In `@tus/server`, the upload ID in the URL is the same as the file name.
+This means using a custom `namingFunction` will return a different `Location` header for uploading
+and result in a different file name in storage.
+
 It is important to make these unique to prevent data loss. Only use it if you need to.
 Default uses `crypto.randomBytes(16).toString('hex')`.
+
+```js
+function namingFunction(req) {
+  const prefix = getPrefixForUser(req) // your custom logic
+  return `${prefix}-${crypto.randomBytes(16).toString('hex')}`
+},
+```
+
+> [!CAUTION]
+> You can not use slashes (`/`) in your name.
 
 #### `disableTerminationForFinishedUploads`
 
@@ -358,31 +388,30 @@ Access control is opinionated and can be done in different ways.
 This example is psuedo-code for what it could look like with JSON Web Tokens.
 
 ```js
-const { Server } = require("@tus/server");
+const {Server} = require('@tus/server')
 // ...
 
 const server = new Server({
   // ..
   async onIncomingRequest(req, res) {
-    const token = req.headers.authorization;
+    const token = req.headers.authorization
 
     if (!token) {
-      throw { status_code: 401, body: 'Unauthorized' }
+      throw {status_code: 401, body: 'Unauthorized'}
     }
 
     try {
       const decodedToken = await jwt.verify(token, 'your_secret_key')
       req.user = decodedToken
     } catch (error) {
-      throw { status_code: 401, body: 'Invalid token' }
+      throw {status_code: 401, body: 'Invalid token'}
     }
 
     if (req.user.role !== 'admin') {
-      throw { status_code: 403, body: 'Access denied' }
+      throw {status_code: 403, body: 'Access denied'}
     }
   },
-});
-
+})
 ```
 
 ## Types
