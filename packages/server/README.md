@@ -93,12 +93,13 @@ function generateUrl(req, {proto, host, path, id}) {
 ```
 
 > [!NOTE]
-> `@tus/server` expects everything after the last `/` to be the upload id.
+> `@tus/server` expects everything in the path after the last `/` to be the upload id.
 > If you change that you have to use `getFileIdFromRequest` as well.
 
 #### `options.getFileIdFromRequest`
 
 Control how the Upload-ID is extracted from the request (`(req) => string | void`)
+By default, it expects everything in the path after the last `/` to be the upload id.
 
 #### `options.namingFunction`
 
