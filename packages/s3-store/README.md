@@ -71,6 +71,12 @@ Options to pass to the AWS S3 SDK.
 Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
 docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication.
 
+#### `options.cache`
+
+An optional cache implementation. If not provided, the store will use an in-memory cache.
+When running multiple instances of the server, you need to provide a cache implementation that is shared between all instances,
+alternatively, you can disable the cache by using the `NullCache` implementation.
+
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.

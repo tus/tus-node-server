@@ -12,9 +12,49 @@ import {ERRORS, TUS_RESUMABLE} from '@tus/server'
 
 const log = debug('tus-node-server:stores:s3store')
 
-function calcOffsetFromParts(parts?: Array<AWS.Part>) {
-  // @ts-expect-error not undefined
-  return parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0
+/**
+ * A cache interface for upload metadata.
+ */
+export interface MetadataCache {
+  set(key: string, value: MetadataValue): Promise<void> | void
+  get(value: string): Promise<MetadataValue | void> | (MetadataValue | void)
+  delete(value: string): Promise<void> | void
+}
+
+/**
+ * In memory cache for upload metadata.
+ */
+export class MemoryMetadataCache implements MetadataCache {
+  private cache = new Map<string, MetadataValue>()
+
+  set(key: string, value: MetadataValue) {
+    this.cache.set(key, value)
+  }
+
+  get(key: string) {
+    return this.cache.get(key)
+  }
+
+  delete(key: string) {
+    this.cache.delete(key)
+  }
+}
+
+/**
+ * Null cache for upload metadata, does not cache anything.
+ */
+export class NullMetadataCache implements MetadataCache {
+  set() {
+    return
+  }
+
+  get() {
+    return
+  }
+
+  delete() {
+    return
+  }
 }
 
 type Options = {
@@ -22,6 +62,7 @@ type Options = {
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
+  cache?: MetadataCache
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
   s3ClientConfig: S3ClientConfig & {bucket: string}
@@ -32,6 +73,12 @@ type MetadataValue = {
   'upload-id': string
   'tus-version': string
 }
+
+function calcOffsetFromParts(parts?: Array<AWS.Part>) {
+  // @ts-expect-error not undefined
+  return parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0
+}
+
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
 //
 // Once a new tus upload is initiated, multiple objects in S3 are created:
@@ -67,7 +114,7 @@ type MetadataValue = {
 // to S3.
 export class S3Store extends DataStore {
   private bucket: string
-  private cache: Map<string, MetadataValue> = new Map()
+  private cache: MetadataCache
   private client: S3
   private preferredPartSize: number
   private expirationPeriodInMilliseconds = 0
@@ -90,6 +137,7 @@ export class S3Store extends DataStore {
     this.preferredPartSize = partSize || 8 * 1024 * 1024
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.client = new S3(restS3ClientConfig)
+    this.cache = options.cache ?? new MemoryMetadataCache()
   }
 
   /**
@@ -133,7 +181,7 @@ export class S3Store extends DataStore {
    * HTTP calls to S3.
    */
   private async getMetadata(id: string): Promise<MetadataValue> {
-    const cached = this.cache.get(id)
+    const cached = await this.cache.get(id)
     if (cached?.file) {
       return cached
     }
@@ -143,7 +191,7 @@ export class S3Store extends DataStore {
       Key: this.infoKey(id),
     })
     const file = JSON.parse((await Body?.transformToString()) as string)
-    this.cache.set(id, {
+    const metadata: MetadataValue = {
       'tus-version': Metadata?.['tus-version'] as string,
       'upload-id': Metadata?.['upload-id'] as string,
       file: new Upload({
@@ -153,8 +201,9 @@ export class S3Store extends DataStore {
         metadata: file.metadata,
         creation_date: file.creation_date,
       }),
-    })
-    return this.cache.get(id) as MetadataValue
+    }
+    await this.cache.set(id, metadata)
+    return metadata
   }
 
   private infoKey(id: string) {
@@ -404,10 +453,12 @@ export class S3Store extends DataStore {
     id: string,
     partNumberMarker?: string
   ): Promise<Array<AWS.Part>> {
+    const metadata = await this.getMetadata(id)
+
     const params: AWS.ListPartsCommandInput = {
       Bucket: this.bucket,
       Key: id,
-      UploadId: this.cache.get(id)?.['upload-id'],
+      UploadId: metadata['upload-id'],
       PartNumberMarker: partNumberMarker,
     }
 
@@ -431,9 +482,9 @@ export class S3Store extends DataStore {
   /**
    * Removes cached data for a given file.
    */
-  private clearCache(id: string) {
+  private async clearCache(id: string) {
     log(`[${id}] removing cached data`)
-    this.cache.delete(id)
+    await this.cache.delete(id)
   }
 
   private calcOptimalPartSize(size?: number): number {
@@ -527,7 +578,7 @@ export class S3Store extends DataStore {
         const parts = await this.retrieveParts(id)
         await this.finishMultipartUpload(metadata, parts)
         await this.completeMetadata(metadata.file)
-        this.clearCache(id)
+        await this.clearCache(id)
       } catch (error) {
         log(`[${id}] failed to finish upload`, error)
         throw error
@@ -560,8 +611,7 @@ export class S3Store extends DataStore {
       // Spaces, can also return NoSuchKey.
       if (error.Code === 'NoSuchUpload' || error.Code === 'NoSuchKey') {
         return new Upload({
-          id,
-          ...this.cache.get(id)?.file,
+          ...metadata.file,
           offset: metadata.file.size as number,
           size: metadata.file.size,
           metadata: metadata.file.metadata,
@@ -575,8 +625,7 @@ export class S3Store extends DataStore {
     const incompletePartSize = await this.getIncompletePartSize(id)
 
     return new Upload({
-      id,
-      ...this.cache.get(id)?.file,
+      ...metadata.file,
       offset: offset + (incompletePartSize ?? 0),
       size: metadata.file.size,
     })
