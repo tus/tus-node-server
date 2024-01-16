@@ -1,5 +1,6 @@
 // TODO: use /promises versions
 import fs from 'node:fs'
+import fsProm from 'node:fs/promises'
 import path from 'node:path'
 import stream from 'node:stream'
 import http from 'node:http'
@@ -57,26 +58,14 @@ export class FileStore extends DataStore {
   /**
    * Create an empty file.
    */
-  create(file: Upload): Promise<Upload> {
-    return new Promise((resolve, reject) => {
-      fs.open(path.join(this.directory, file.id), 'w', async (err, fd) => {
-        if (err) {
-          log('[FileStore] create: Error', err)
-          return reject(err)
-        }
+  async create(file: Upload): Promise<Upload> {
+    const dirs = file.id.split('/').slice(0, -1)
 
-        await this.configstore.set(file.id, file)
+    await fsProm.mkdir(path.join(this.directory, ...dirs), {recursive: true})
+    await fsProm.writeFile(path.join(this.directory, file.id), '')
+    await this.configstore.set(file.id, file)
 
-        return fs.close(fd, (exception) => {
-          if (exception) {
-            log('[FileStore] create: Error', exception)
-            return reject(exception)
-          }
-
-          return resolve(file)
-        })
-      })
-    })
+    return file
   }
 
   read(file_id: string) {

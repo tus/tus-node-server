@@ -17,6 +17,7 @@
   - [Example: integrate tus into Fastify](#example-integrate-tus-into-fastify)
   - [Example: integrate tus into Next.js](#example-integrate-tus-into-nextjs)
   - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
+  - [Example: store files in custom nested directories](#example-store-files-in-custom-nested-directories)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -85,21 +86,21 @@ This only changes the upload URL (`Location` header).
 If you also want to change the file name in storage use `namingFunction`.
 Returning `prefix-1234` in `namingFunction` means the `id` argument in `generateUrl` is `prefix-1234`.
 
-```js
-function generateUrl(req, {proto, host, path, id}) {
-  const prefix = getPrefixForUser(req) // your custom logic
-  return `${proto}://${host}${path}/${prefix}/${id}?query=param`
-}
-```
+`@tus/server` expects everything in the path after the last `/` to be the upload id.
+If you change that you have to use `getFileIdFromRequest` as well.
 
-> [!NOTE]
-> `@tus/server` expects everything in the path after the last `/` to be the upload id.
-> If you change that you have to use `getFileIdFromRequest` as well.
+A common use case of this function and `getFileIdFromRequest` is to base65 encode a complex id into the URL.
+
+> [!TIP]
+> Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
 
 #### `options.getFileIdFromRequest`
 
 Control how the Upload-ID is extracted from the request (`(req) => string | void`)
 By default, it expects everything in the path after the last `/` to be the upload id.
+
+> [!TIP]
+> Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
 
 #### `options.namingFunction`
 
@@ -112,15 +113,8 @@ and result in a different file name in storage.
 It is important to make these unique to prevent data loss. Only use it if you need to.
 Default uses `crypto.randomBytes(16).toString('hex')`.
 
-```js
-function namingFunction(req) {
-  const prefix = getPrefixForUser(req) // your custom logic
-  return `${prefix}-${crypto.randomBytes(16).toString('hex')}`
-}
-```
-
-> [!CAUTION]
-> You can not use slashes (`/`) in your name.
+> [!TIP]
+> Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
 
 #### `disableTerminationForFinishedUploads`
 
@@ -414,6 +408,43 @@ const server = new Server({
     }
   },
 })
+```
+
+### Example: store files in custom nested directories
+
+You can use `namingFunction` to change the name of the stored file.
+If you’re only adding a prefix or suffix without a slash (`/`),
+you don’t need to implement `generateUrl` and `getFileIdFromRequest`.
+
+Adding a slash means you create a new directory, for which you need
+to implement all three functions as we need encode the id with base64 into the URL.
+
+```js
+const path = '/files'
+const server = new Server({
+  path,
+  datastore: new FileStore({directory: './test/output'}),
+  namingFunction(req) {
+    const id = crypto.randomBytes(16).toString('hex')
+    const folder = getFolderForUser(req) // your custom logic
+    return `users/${folder}/${id}`
+  },
+  generateUrl(req, {proto, host, path, id}) {
+    id = Buffer.from(id, 'utf-8').toString('base64url')
+    return `${proto}://${host}${path}/${id}`
+  },
+  getFileIdFromRequest(req) {
+    const reExtractFileID = /([^/]+)\/?$/
+    const match = reExtractFileID.exec(req.url as string)
+
+    if (!match || path.includes(match[1])) {
+      return
+    }
+
+    return Buffer.from(match[1], 'base64url').toString('utf-8')
+  },
+})
+
 ```
 
 ## Types
