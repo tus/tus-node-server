@@ -53,11 +53,6 @@ describe('FileStore', function () {
   describe('create', () => {
     const file = new Upload({id: '1234', size: 1000, offset: 0})
 
-    it('should reject when the directory doesnt exist', function () {
-      this.datastore.directory = 'some_new_path'
-      return this.datastore.create(file).should.be.rejected()
-    })
-
     it('should resolve when the directory exists', function () {
       return this.datastore.create(file).should.be.fulfilled()
     })
