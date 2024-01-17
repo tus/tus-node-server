@@ -76,11 +76,13 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, {
           path: '/test',
           locker: new MemoryLocker(),
-          namingFunction: sinon.stub().throws(),
+          namingFunction: () => {
+            throw {status_code: 400}
+          },
         })
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 500})
+        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
       })
 
       it('should call custom namingFunction', async () => {
