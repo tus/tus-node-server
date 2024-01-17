@@ -1,9 +1,10 @@
 import httpMocks from 'node-mocks-http'
 import stream from 'node:stream'
+import type http from 'node:http'
 
-export function addPipableStreamBody<T extends httpMocks.MockRequest<unknown>>(
-  mockRequest: T
-) {
+export function addPipableStreamBody<
+  T extends httpMocks.MockRequest<http.IncomingMessage>
+>(mockRequest: T) {
   // Create a Readable stream that simulates the request body
   const bodyStream = new stream.Duplex({
     read() {
