@@ -57,7 +57,10 @@ export type ServerOptions = {
    * Default uses `crypto.randomBytes(16).toString('hex')`.
    * @param req - The incoming HTTP request.
    */
-  namingFunction?: (req: http.IncomingMessage) => string
+  namingFunction?: (
+    req: http.IncomingMessage,
+    metadata?: Record<string, string | null>
+  ) => string
 
   /**
    * The Lock interface defines methods for implementing a locking mechanism.
