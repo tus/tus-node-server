@@ -897,7 +897,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redis/client@npm:^1.5.13, @redis/client@npm:^1.5.9":
+"@redis/client@npm:^1.5.13":
   version: 1.5.13
   resolution: "@redis/client@npm:1.5.13"
   dependencies:
@@ -1735,7 +1735,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tus/server@workspace:packages/server"
   dependencies:
-    "@redis/client": "npm:^1.5.9"
+    "@redis/client": "npm:^1.5.13"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
     "@types/node": "npm:^20.11.5"

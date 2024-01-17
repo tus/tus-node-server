@@ -13,8 +13,8 @@ import {
   Upload,
   ERRORS,
   TUS_RESUMABLE,
-  Configstore,
-  MemoryConfigstore,
+  KvStore,
+  MemoryKvStore,
 } from '@tus/server'
 
 const log = debug('tus-node-server:stores:s3store')
@@ -25,7 +25,7 @@ type Options = {
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   useTags?: boolean
-  cache?: Configstore<MetadataValue>
+  cache?: KvStore<MetadataValue>
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
   s3ClientConfig: S3ClientConfig & {bucket: string}
@@ -77,7 +77,7 @@ function calcOffsetFromParts(parts?: Array<AWS.Part>) {
 // to S3.
 export class S3Store extends DataStore {
   private bucket: string
-  private cache: Configstore<MetadataValue>
+  private cache: KvStore<MetadataValue>
   private client: S3
   private preferredPartSize: number
   private expirationPeriodInMilliseconds = 0
@@ -102,7 +102,7 @@ export class S3Store extends DataStore {
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.useTags = options.useTags ?? true
     this.client = new S3(restS3ClientConfig)
-    this.cache = options.cache ?? new MemoryConfigstore<MetadataValue>()
+    this.cache = options.cache ?? new MemoryKvStore<MetadataValue>()
   }
 
   protected shouldUseExpirationTags() {

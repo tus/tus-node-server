@@ -1,5 +1,5 @@
 import {RedisClientType} from '@redis/client'
-import {Configstore} from './Types'
+import {KvStore} from './Types'
 import {Upload} from '../models'
 
 /**
@@ -7,7 +7,7 @@ import {Upload} from '../models'
  *
  * @author Mitja Puzigaća <mitjap@gmail.com>
  */
-export class RedisConfigstore<T = Upload> implements Configstore<T> {
+export class RedisKvStore<T = Upload> implements KvStore<T> {
   constructor(private redis: RedisClientType, private prefix: string = '') {
     this.redis = redis
     this.prefix = prefix

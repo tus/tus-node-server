@@ -1,14 +1,14 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import {Configstore} from './Types'
+import {KvStore} from './Types'
 import {Upload} from '../models'
 
 /**
  * FileConfigstore writes the `Upload` JSON metadata to disk next the uploaded file itself.
  * It uses a queue which only processes one operation at a time to prevent unsafe concurrent access.
  */
-export class FileConfigstore<T = Upload> implements Configstore<T> {
+export class FileKvStore<T = Upload> implements KvStore<T> {
   directory: string
 
   constructor(path: string) {

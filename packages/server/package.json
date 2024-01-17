@@ -41,7 +41,7 @@
     "typescript": "^5.3.3"
   },
   "optionalDependencies": {
-    "@redis/client": "^1.5.9"
+    "@redis/client": "^1.5.13"
   },
   "engines": {
     "node": ">=16"

@@ -1,11 +1,11 @@
 import {Upload} from '../models'
-import {Configstore} from './Types'
+import {KvStore} from './Types'
 
 /**
  * Memory based configstore.
  * Used mostly for unit tests.
  */
-export class MemoryConfigstore<T = Upload> implements Configstore<T> {
+export class MemoryKvStore<T = Upload> implements KvStore<T> {
   data: Map<string, T> = new Map()
 
   async get(key: string): Promise<T | undefined> {
