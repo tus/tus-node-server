@@ -2488,7 +2488,7 @@ __metadata:
     "@tus/s3-store": "workspace:^"
     "@tus/server": "workspace:^"
     cross-env: "npm:^7.0.3"
-    tus-js-client: "npm:^2.3.2"
+    tus-js-client: "npm:^4.0.1"
   languageName: unknown
   linkType: soft
 
@@ -3276,7 +3276,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.1.2, graceful-fs@npm:^4.2.6":
+"graceful-fs@npm:^4.2.4, graceful-fs@npm:^4.2.6":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: bf152d0ed1dc159239db1ba1f74fdbc40cb02f626770dcd5815c427ce0688c2635a06ed69af364396da4636d0408fcf7d4afdf7881724c3307e46aff30ca49e2
@@ -3563,10 +3563,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-base64@npm:^2.6.1":
-  version: 2.6.4
-  resolution: "js-base64@npm:2.6.4"
-  checksum: c1a740a34fbb0ad0a528c2ab8749d7f873b1856a0638826306fcd98502e3c8c833334dff233085407e3201be543e5e71bf9692da7891ca680d9b03d027247a6a
+"js-base64@npm:^3.7.2":
+  version: 3.7.5
+  resolution: "js-base64@npm:3.7.5"
+  checksum: 97642fdef112cb99aed25a092156029e2f44cef0e4e3bf64dba0b6f8d85b9f4ee80b65ab8fa11a051dfcd09133bcd96c130167afdf90e4e4b21933632157a4f9
   languageName: node
   linkType: hard
 
@@ -4350,13 +4350,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proper-lockfile@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "proper-lockfile@npm:2.0.1"
+"proper-lockfile@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "proper-lockfile@npm:4.1.2"
   dependencies:
-    graceful-fs: "npm:^4.1.2"
-    retry: "npm:^0.10.0"
-  checksum: 0f9e5fff1c0bf94cb8f89c411d061cf63b1f38463f73d31e94ad87e8240ef3c45146ae550af059a0d91b1344be4c0b9911f9117c73e8df34f29d17336843af35
+    graceful-fs: "npm:^4.2.4"
+    retry: "npm:^0.12.0"
+    signal-exit: "npm:^3.0.2"
+  checksum: 000a4875f543f591872b36ca94531af8a6463ddb0174f41c0b004d19e231d7445268b422ff1ea595e43d238655c702250cd3d27f408e7b9d97b56f1533ba26bf
   languageName: node
   linkType: hard
 
@@ -4474,13 +4475,6 @@ __metadata:
   version: 0.13.1
   resolution: "retry@npm:0.13.1"
   checksum: 6125ec2e06d6e47e9201539c887defba4e47f63471db304c59e4b82fc63c8e89ca06a77e9d34939a9a42a76f00774b2f46c0d4a4cbb3e287268bd018ed69426d
-  languageName: node
-  linkType: hard
-
-"retry@npm:^0.10.0":
-  version: 0.10.1
-  resolution: "retry@npm:0.10.1"
-  checksum: 97d165ac7d70c74754ac0855f5b1c9fc31f90aa6ecb10b0702dca3abe8b78e3c7fc18ba0a4e8da928cf7bcae1c92ba7902843127f29b630b5ac986e9b2d4e2e4
   languageName: node
   linkType: hard
 
@@ -4654,7 +4648,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"signal-exit@npm:^3.0.7":
+"signal-exit@npm:^3.0.2, signal-exit@npm:^3.0.7":
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
   checksum: a2f098f247adc367dffc27845853e9959b9e88b01cb301658cfe4194352d8d2bb32e18467c786a7fe15f1d44b233ea35633d076d5e737870b7139949d1ab6318
@@ -5102,18 +5096,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tus-js-client@npm:^2.3.2":
-  version: 2.3.2
-  resolution: "tus-js-client@npm:2.3.2"
+"tus-js-client@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "tus-js-client@npm:4.0.1"
   dependencies:
     buffer-from: "npm:^1.1.2"
     combine-errors: "npm:^3.0.3"
     is-stream: "npm:^2.0.0"
-    js-base64: "npm:^2.6.1"
+    js-base64: "npm:^3.7.2"
     lodash.throttle: "npm:^4.1.1"
-    proper-lockfile: "npm:^2.0.1"
+    proper-lockfile: "npm:^4.1.2"
     url-parse: "npm:^1.5.7"
-  checksum: 2cc591681fb4b25123966ef0ee9fb6b96c0bf1b0c3acebf5ea64fb909b6beb5f53ec645ff5a37eb5d970db317afbcda3ff1c2f5c6b2d73cda100eeb4c7d3312c
+  checksum: 869c2fdd70423dc25ce98ad0d7ea001035150dbe8a7b3d9aba3d0103ee26b39aec65baaf4bc32aece8e34aa7d3bd9c69fc99cf5baad4e6c0a48812e9ab030316
   languageName: node
   linkType: hard
 
