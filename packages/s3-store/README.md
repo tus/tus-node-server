@@ -84,9 +84,8 @@ If you are using certain features like the expiration extension and your provide
 
 #### `options.cache`
 
-An optional cache implementation. If not provided, the store will use an in-memory cache.
-When running multiple instances of the server, you need to provide a cache implementation that is shared between all instances,
-alternatively, you can disable the cache by using the `NullCache` implementation.
+An optional cache implementation. If not provided, the store will use an in-memory cache (`MemoryConfigStore`).
+When running multiple instances of the server, you need to provide a cache implementation that is shared between all instances like the `RedisConfigStore`.
 
 ## Extensions
 

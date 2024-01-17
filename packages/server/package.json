@@ -40,6 +40,9 @@
     "tsconfig": "*",
     "typescript": "^5.2.2"
   },
+  "optionalDependencies": {
+    "@redis/client": "^1.5.9"
+  },
   "engines": {
     "node": ">=16"
   }

@@ -7,55 +7,17 @@ import http from 'node:http'
 import AWS, {NoSuchKey, NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
 import debug from 'debug'
 
-import {DataStore, StreamSplitter, Upload} from '@tus/server'
-import {ERRORS, TUS_RESUMABLE} from '@tus/server'
+import {
+  DataStore,
+  StreamSplitter,
+  Upload,
+  ERRORS,
+  TUS_RESUMABLE,
+  Configstore,
+  MemoryConfigstore,
+} from '@tus/server'
 
 const log = debug('tus-node-server:stores:s3store')
-
-/**
- * A cache interface for upload metadata.
- */
-export interface MetadataCache {
-  set(key: string, value: MetadataValue): Promise<void> | void
-  get(value: string): Promise<MetadataValue | void> | (MetadataValue | void)
-  delete(value: string): Promise<void> | void
-}
-
-/**
- * In memory cache for upload metadata.
- */
-export class MemoryMetadataCache implements MetadataCache {
-  private cache = new Map<string, MetadataValue>()
-
-  set(key: string, value: MetadataValue) {
-    this.cache.set(key, value)
-  }
-
-  get(key: string) {
-    return this.cache.get(key)
-  }
-
-  delete(key: string) {
-    this.cache.delete(key)
-  }
-}
-
-/**
- * Null cache for upload metadata, does not cache anything.
- */
-export class NullMetadataCache implements MetadataCache {
-  set() {
-    return
-  }
-
-  get() {
-    return
-  }
-
-  delete() {
-    return
-  }
-}
 
 type Options = {
   // The preferred part size for parts send to S3. Can not be lower than 5MiB or more than 5GiB.
@@ -63,7 +25,7 @@ type Options = {
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   useTags?: boolean
-  cache?: MetadataCache
+  cache?: Configstore<MetadataValue>
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
   s3ClientConfig: S3ClientConfig & {bucket: string}
@@ -115,7 +77,7 @@ function calcOffsetFromParts(parts?: Array<AWS.Part>) {
 // to S3.
 export class S3Store extends DataStore {
   private bucket: string
-  private cache: MetadataCache
+  private cache: Configstore<MetadataValue>
   private client: S3
   private preferredPartSize: number
   private expirationPeriodInMilliseconds = 0
@@ -140,7 +102,7 @@ export class S3Store extends DataStore {
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.useTags = options.useTags ?? true
     this.client = new S3(restS3ClientConfig)
-    this.cache = options.cache ?? new MemoryMetadataCache()
+    this.cache = options.cache ?? new MemoryConfigstore<MetadataValue>()
   }
 
   protected shouldUseExpirationTags() {
@@ -201,7 +163,7 @@ export class S3Store extends DataStore {
    */
   private async getMetadata(id: string): Promise<MetadataValue> {
     const cached = await this.cache.get(id)
-    if (cached?.file) {
+    if (cached) {
       return cached
     }
 
