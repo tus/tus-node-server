@@ -41,7 +41,7 @@ export type ServerOptions = {
    */
   generateUrl?: (
     req: http.IncomingMessage,
-    options: {proto: string; host: string; baseUrl: string; path: string; id: string}
+    options: {proto: string; host: string; path: string; id: string}
   ) => string
 
   /**

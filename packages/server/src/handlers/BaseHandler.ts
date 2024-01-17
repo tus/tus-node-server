@@ -39,8 +39,6 @@ export class BaseHandler extends EventEmitter {
   }
 
   generateUrl(req: http.IncomingMessage, id: string) {
-    // @ts-expect-error req.baseUrl does exist
-    const baseUrl = req.baseUrl ?? ''
     const path = this.options.path === '/' ? '' : this.options.path
 
     if (this.options.generateUrl) {
@@ -50,8 +48,6 @@ export class BaseHandler extends EventEmitter {
       return this.options.generateUrl(req, {
         proto,
         host,
-        // @ts-expect-error we can pass undefined
-        baseUrl: req.baseUrl,
         path: path,
         id,
       })
@@ -59,12 +55,12 @@ export class BaseHandler extends EventEmitter {
 
     // Default implementation
     if (this.options.relativeLocation) {
-      return `${baseUrl}${path}/${id}`
+      return `${path}/${id}`
     }
 
     const {proto, host} = this.extractHostAndProto(req)
 
-    return `${proto}://${host}${baseUrl}${path}/${id}`
+    return `${proto}://${host}${path}/${id}`
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {
