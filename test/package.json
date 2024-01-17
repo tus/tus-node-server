@@ -13,20 +13,20 @@
     "@tus/server": "workspace:^"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.1",
-    "@types/node": "^20.10.4",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.5",
     "@types/rimraf": "^3.0.2",
-    "@types/sinon": "^10.0.16",
-    "@types/supertest": "^2.0.12",
+    "@types/sinon": "^10.0.20",
+    "@types/supertest": "^2.0.16",
     "@types/throttle": "^1.0.4",
     "mocha": "^10.2.0",
     "rimraf": "^3.0.2",
     "should": "^13.2.3",
     "sinon": "^15.2.0",
-    "supertest": "^6.3.3",
+    "supertest": "^6.3.4",
     "throttle": "^1.0.3",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "tsconfig": "*",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   }
 }

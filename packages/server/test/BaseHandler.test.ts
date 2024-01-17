@@ -74,9 +74,9 @@ describe('BaseHandler', () => {
     const handler = new BaseHandler(store, {
       path: '/path',
       locker: new MemoryLocker(),
-      generateUrl: (req: http.IncomingMessage, info) => {
-        const {proto, host, baseUrl, path, id} = info
-        return `${proto}://${host}${baseUrl}${path}/${id}?customParam=1`
+      generateUrl: (_, info) => {
+        const {proto, host, path, id} = info
+        return `${proto}://${host}${path}/${id}?customParam=1`
       },
     })
 
@@ -84,11 +84,10 @@ describe('BaseHandler', () => {
       headers: {
         host: 'localhost',
       },
-      url: '/upload',
     })
     const id = '123'
     const url = handler.generateUrl(req, id)
-    assert.equal(url, `http://localhost/upload/path/123?customParam=1`)
+    assert.equal(url, `http://localhost/path/123?customParam=1`)
   })
 
   it('should allow extracting the request id with a custom function', () => {

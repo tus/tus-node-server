@@ -277,6 +277,50 @@ describe('Server', () => {
         .send('test')
         .expect(403, 'Access denied', done)
     })
+
+    it('can use namingFunction to create a nested directory structure', (done) => {
+      const route = '/test/output'
+      const server = new Server({
+        path: route,
+        datastore: new FileStore({directory: './test/output'}),
+        namingFunction() {
+          return `foo/bar/id`
+        },
+        generateUrl(_, {proto, host, path, id}) {
+          id = Buffer.from(id, 'utf-8').toString('base64url')
+          return `${proto}://${host}${path}/${id}`
+        },
+        getFileIdFromRequest(req) {
+          const reExtractFileID = /([^/]+)\/?$/
+          const match = reExtractFileID.exec(req.url as string)
+
+          if (!match || route.includes(match[1])) {
+            return
+          }
+
+          return Buffer.from(match[1], 'base64url').toString('utf-8')
+        },
+      })
+      const length = Buffer.byteLength('test', 'utf8').toString()
+      const s = server.listen()
+      request(s)
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', length)
+        .then((res) => {
+          console.log(res.headers.location)
+          request(s)
+            .patch(removeProtocol(res.headers.location))
+            .send('test')
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .expect(204, () => {
+              s.close()
+              done()
+            })
+        })
+    })
   })
 
   describe('hooks', () => {
