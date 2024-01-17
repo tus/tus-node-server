@@ -62,6 +62,7 @@ type Options = {
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
+  useTags?: boolean
   cache?: MetadataCache
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
@@ -118,6 +119,7 @@ export class S3Store extends DataStore {
   private client: S3
   private preferredPartSize: number
   private expirationPeriodInMilliseconds = 0
+  private useTags = true
   public maxMultipartParts = 10_000 as const
   public minPartSize = 5_242_880 as const // 5MiB
   public maxUploadSize = 5_497_558_138_880 as const // 5TiB
@@ -136,8 +138,21 @@ export class S3Store extends DataStore {
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
+    this.useTags = options.useTags ?? true
     this.client = new S3(restS3ClientConfig)
     this.cache = options.cache ?? new MemoryMetadataCache()
+  }
+
+  protected shouldUseExpirationTags() {
+    return this.expirationPeriodInMilliseconds !== 0 && this.useTags
+  }
+
+  protected useCompleteTag(value: 'true' | 'false') {
+    if (!this.shouldUseExpirationTags()) {
+      return undefined
+    }
+
+    return `Tus-Completed=${value}`
   }
 
   /**
@@ -152,7 +167,7 @@ export class S3Store extends DataStore {
       Bucket: this.bucket,
       Key: this.infoKey(upload.id),
       Body: JSON.stringify(upload),
-      Tagging: `Tus-Completed=false`,
+      Tagging: this.useCompleteTag('false'),
       Metadata: {
         'upload-id': uploadId,
         'tus-version': TUS_RESUMABLE,
@@ -162,12 +177,16 @@ export class S3Store extends DataStore {
   }
 
   private async completeMetadata(upload: Upload) {
+    if (!this.shouldUseExpirationTags()) {
+      return
+    }
+
     const {'upload-id': uploadId} = await this.getMetadata(upload.id)
     await this.client.putObject({
       Bucket: this.bucket,
       Key: this.infoKey(upload.id),
       Body: JSON.stringify(upload),
-      Tagging: `Tus-Completed=true`,
+      Tagging: this.useCompleteTag('true'),
       Metadata: {
         'upload-id': uploadId,
         'tus-version': TUS_RESUMABLE,
@@ -246,7 +265,7 @@ export class S3Store extends DataStore {
       Bucket: this.bucket,
       Key: this.partKey(id, true),
       Body: readStream,
-      Tagging: 'Tus-Completed=false',
+      Tagging: this.useCompleteTag('false'),
     })
     log(`[${id}] finished uploading incomplete part`)
     return data.ETag as string
