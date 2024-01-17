@@ -71,6 +71,17 @@ Options to pass to the AWS S3 SDK.
 Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
 docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication.
 
+
+#### `options.expirationPeriodInMilliseconds`
+
+Enables the expiration extension and sets the expiration period of an upload url in milliseconds.
+Once the expiration period has passed, the upload url will return a 410 Gone status code.
+
+#### `options.useTags`
+
+Some S3 providers don't support tagging objects.
+If you are using certain features like the expiration extension and your provider doesn't support tagging, you can set this option to `false` to disable tagging.
+
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.

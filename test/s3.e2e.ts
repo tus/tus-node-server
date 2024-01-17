@@ -11,6 +11,7 @@ const STORE_PATH = '/upload'
 
 interface S3Options {
   partSize?: number
+  useTags?: boolean
   expirationPeriodInMilliseconds?: number
 }
 
@@ -141,6 +142,66 @@ describe('S3 Store E2E', () => {
         TagSet?.find((tag) => tag.Key === 'Tus-Completed')?.Value === 'true',
         'object tag Tus-Completed not set to "true"'
       )
+    })
+
+    it('should not set tags when using useTags and the upload is not completed', async () => {
+      const store = createStore({
+        useTags: false,
+        expirationPeriodInMilliseconds: expireTime,
+        partSize: 5_242_880,
+      })
+      const server = new Server({
+        path: STORE_PATH,
+        datastore: store,
+      })
+      const listener = server.listen()
+      agent = request.agent(listener)
+
+      const data = allocMB(11)
+      const {uploadId} = await createUpload(agent, data.length)
+      await patchUpload(agent, uploadId, data.subarray(0, 1024 * 1024 * 6))
+
+      const {TagSet} = await s3Client.getObjectTagging({
+        Bucket: s3Credentials.bucket,
+        Key: uploadId + '.info',
+      })
+
+      assert.equal(TagSet?.length, 0)
+
+      await new Promise((resolve) => listener.close(resolve))
+    })
+
+    it('should not set tags when using useTags and the upload is completed', async () => {
+      const store = createStore({
+        useTags: false,
+        expirationPeriodInMilliseconds: expireTime,
+        partSize: 5_242_880,
+      })
+      const server = new Server({
+        path: STORE_PATH,
+        datastore: store,
+      })
+      const listener = server.listen()
+      agent = request.agent(listener)
+
+      const data = allocMB(11)
+      const {uploadId} = await createUpload(agent, data.length)
+      const {offset} = await patchUpload(
+        agent,
+        uploadId,
+        data.subarray(0, 1024 * 1024 * 6)
+      )
+
+      await patchUpload(agent, uploadId, data.subarray(offset), offset)
+
+      const {TagSet} = await s3Client.getObjectTagging({
+        Bucket: s3Credentials.bucket,
+        Key: uploadId + '.info',
+      })
+
+      assert.equal(TagSet?.length, 0)
+
+      await new Promise((resolve) => listener.close(resolve))
     })
 
     it('calling deleteExpired will delete all expired objects', async () => {
