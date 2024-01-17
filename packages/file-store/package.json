@@ -25,20 +25,20 @@
   },
   "devDependencies": {
     "@tus/server": "workspace:^",
-    "@types/debug": "^4.1.8",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "^20.10.4",
-    "eslint": "^8.48.0",
+    "@types/debug": "^4.1.12",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.5",
+    "eslint": "^8.56.0",
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.2.0",
     "should": "^13.2.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "peerDependencies": {
     "@tus/server": "workspace:^"
   },
   "optionalDependencies": {
-    "@redis/client": "^1.5.9"
+    "@redis/client": "^1.5.13"
   },
   "engines": {
     "node": ">=16"
