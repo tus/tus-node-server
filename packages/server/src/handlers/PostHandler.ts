@@ -59,7 +59,7 @@ export class PostHandler extends BaseHandler {
       id = this.options.namingFunction(req)
     } catch (error) {
       log('create: check your `namingFunction`. Error', error)
-      throw ERRORS.FILE_WRITE_ERROR
+      throw error
     }
 
     const maxFileSize = await this.getConfiguredMaxSize(req, id)
