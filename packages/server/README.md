@@ -104,7 +104,7 @@ By default, it expects everything in the path after the last `/` to be the uploa
 
 #### `options.namingFunction`
 
-Control how you want to name files (`(req) => string`)
+Control how you want to name files (`(req, metadata) => string`)
 
 In `@tus/server`, the upload ID in the URL is the same as the file name.
 This means using a custom `namingFunction` will return a different `Location` header for uploading

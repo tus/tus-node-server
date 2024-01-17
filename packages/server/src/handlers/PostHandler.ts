@@ -54,9 +54,18 @@ export class PostHandler extends BaseHandler {
       throw ERRORS.INVALID_LENGTH
     }
 
+    let metadata
+    if ('upload-metadata' in req.headers) {
+      try {
+        metadata = Metadata.parse(upload_metadata)
+      } catch {
+        throw ERRORS.INVALID_METADATA
+      }
+    }
+
     let id
     try {
-      id = this.options.namingFunction(req)
+      id = this.options.namingFunction(req, metadata)
     } catch (error) {
       log('create: check your `namingFunction`. Error', error)
       throw error
@@ -70,15 +79,6 @@ export class PostHandler extends BaseHandler {
       Number.parseInt(upload_length, 10) > maxFileSize
     ) {
       throw ERRORS.ERR_MAX_SIZE_EXCEEDED
-    }
-
-    let metadata
-    if ('upload-metadata' in req.headers) {
-      try {
-        metadata = Metadata.parse(upload_metadata)
-      } catch {
-        throw ERRORS.INVALID_METADATA
-      }
     }
 
     if (this.options.onIncomingRequest) {
