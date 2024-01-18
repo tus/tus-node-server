@@ -71,7 +71,6 @@ Options to pass to the AWS S3 SDK.
 Checkout the [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/interfaces/s3clientconfig.html)
 docs for the supported options. You need to at least set the `region`, `bucket` name, and your preferred method of authentication.
 
-
 #### `options.expirationPeriodInMilliseconds`
 
 Enables the expiration extension and sets the expiration period of an upload url in milliseconds.
@@ -84,8 +83,13 @@ If you are using certain features like the expiration extension and your provide
 
 #### `options.cache`
 
-An optional cache implementation. If not provided, the store will use an in-memory cache (`MemoryConfigStore`).
-When running multiple instances of the server, you need to provide a cache implementation that is shared between all instances like the `RedisConfigStore`.
+An optional cache implementation ([`KvStore`][]).
+
+Default uses an in-memory cache (`MemoryKvStore`).
+When running multiple instances of the server,
+you need to provide a cache implementation that is shared between all instances like the `RedisKvStore`.
+
+See the exported [KV stores][kvstores] from `@tus/server` for more information.
 
 ## Extensions
 
@@ -181,3 +185,5 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
 [cleanExpiredUploads]: https://github.com/tus/tus-node-server/tree/main/packages/server#servercleanupexpireduploads
 [lifecyle]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
+[kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
+[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/kvstores/Types.ts

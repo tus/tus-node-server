@@ -31,7 +31,7 @@ type Options = {
   s3ClientConfig: S3ClientConfig & {bucket: string}
 }
 
-type MetadataValue = {
+export type MetadataValue = {
   file: Upload
   'upload-id': string
   'tus-version': string

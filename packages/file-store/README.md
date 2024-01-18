@@ -53,16 +53,17 @@ The directory to store the files on disk (`string`).
 
 #### `options.configstore`
 
-Provide your own storage solution for the metadata of uploads (`Class`).
+Provide your own storage solution for the metadata of uploads ([`KvStore`][]).
 
-Default uses [`configstore`](https://www.npmjs.com/package/configstore).
+Default uses `FileKvStore` which puts the metadata file next to the uploaded file.
+See the exported [KV stores][kvstores] from `@tus/server` for more information.
 
 #### `options.expirationPeriodInMilliseconds`
 
 The time before an _ongoing_ upload is considered expired (`number`).
 
 This is since the time of creation, not modification. Once an upload is considered expired,
-uploads can be removed with [`cleanUpExpiredUploads`](https://github.com/tus/tus-node-server/tree/main/packages/server#)#servercleanupexpireduploads
+uploads can be removed with [`cleanUpExpiredUploads`][].
 
 ## Extensions
 
@@ -102,7 +103,7 @@ export class MemoryConfigstore {
     return this.data.delete(key)
   }
 
-  get all(): Record<string, Upload> {
+  get list(): Record<string, Upload> {
     return Object.fromEntries(this.data.entries())
   }
 }
@@ -139,3 +140,6 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
+[`cleanUpExpiredUploads`]: https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
+[kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
+[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/kvstores/Types.ts
