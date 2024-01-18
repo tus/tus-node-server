@@ -1,6 +1,7 @@
 .idea
 .eslintcache
 dist
+.turbo
 
 # Yarn
 .pnp.*
