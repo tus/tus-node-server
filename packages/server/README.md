@@ -50,8 +50,8 @@ server.listen({host, port})
 
 ## API
 
-This package exports `Server` and all [`constants`][], [`types`][], and [`models`][]. There is no default export.
-You should only need the `Server` and `EVENTS` exports.
+This package exports `Server` and all [`constants`][], [`types`][], [`models`][], and [`kvstores`][]. There is no default export.
+You should only need the `Server`, `EVENTS`, and KV store exports.
 
 ### `new Server(options)`
 
@@ -227,6 +227,57 @@ Called after an upload has been terminated and a response has been sent to the c
 const {EVENTS} = require('@tus/server')
 // ...
 server.on(EVENTS.POST_TERMINATE, (req, res, id => {})
+```
+
+### Key-Value Stores
+
+All stores (as in the `datastore` option) save two files,
+the uploaded file and an info file with metadata, usually adjacent to each other.
+
+In `@tus/file-store` the `FileKvStore` is used to persist upload info but the KV stores
+can also be used as a cache in other stores, such as `@tus/s3-store`.
+
+#### `MemoryKvStore`
+
+```ts
+import {MemoryKvStore} from '@tus/server'
+import S3Store, {type MetadataValue} from '@tus/s3-store'
+
+new S3Store({
+  // ...
+  cache: new MemoryKvStore<MetadataValue>(),
+})
+```
+
+#### `FileKvStore`
+
+```ts
+import {FileKvStore} from '@tus/server'
+import S3Store, {type MetadataValue} from '@tus/s3-store'
+
+const path = './uploads'
+
+new S3Store({
+  // ...
+  cache: new FileKvStore<MetadataValue>(path),
+})
+```
+
+#### `RedisKvStore`
+
+```ts
+import {RedisKvStore} from '@tus/server'
+import S3Store, {type MetadataValue} from '@tus/s3-store'
+import {createClient} from '@redis/client'
+
+const client = await createClient().connect()
+const path = './uploads'
+const prefix = 'foo' // prefix for the key (foo${id})
+
+new S3Store({
+  // ...
+  cache: new RedisKvStore<MetadataValue>(client, prefix),
+})
 ```
 
 ## Examples
@@ -469,4 +520,5 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [`constants`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/constants.ts
 [`types`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/types.ts
 [`models`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/models/index.ts
+[`kvstores`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/kvstores/index.ts
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
