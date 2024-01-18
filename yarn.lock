@@ -1735,6 +1735,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tus/server@workspace:packages/server"
   dependencies:
+    "@redis/client": "npm:^1.5.13"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
     "@types/node": "npm:^20.11.5"
@@ -1751,6 +1752,9 @@ __metadata:
     ts-node: "npm:^10.9.2"
     tsconfig: "npm:*"
     typescript: "npm:^5.3.3"
+  dependenciesMeta:
+    "@redis/client":
+      optional: true
   languageName: unknown
   linkType: soft
 

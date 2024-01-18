@@ -82,6 +82,11 @@ Once the expiration period has passed, the upload url will return a 410 Gone sta
 Some S3 providers don't support tagging objects.
 If you are using certain features like the expiration extension and your provider doesn't support tagging, you can set this option to `false` to disable tagging.
 
+#### `options.cache`
+
+An optional cache implementation. If not provided, the store will use an in-memory cache (`MemoryConfigStore`).
+When running multiple instances of the server, you need to provide a cache implementation that is shared between all instances like the `RedisConfigStore`.
+
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.
