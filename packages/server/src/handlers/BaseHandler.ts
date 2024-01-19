@@ -151,9 +151,11 @@ export class BaseHandler extends EventEmitter {
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
-      req.on('error', (err) => {
+      req.on('error', () => {
         if (!proxy.closed) {
-          proxy.destroy(err)
+          // we end the stream gracefully here so that we can upload the remaining bytes to the store
+          // as an incompletePart
+          proxy.end()
         }
       })
 

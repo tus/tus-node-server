@@ -1,5 +1,4 @@
 import path from 'node:path'
-import fs from 'node:fs/promises'
 import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
 
@@ -37,17 +36,6 @@ describe('S3DataStore', function () {
     const store = this.datastore
 
     assert.strictEqual(Number.isFinite(store.calcOptimalPartSize(undefined)), true)
-  })
-
-  it('should correctly prepend a buffer to a file', async function () {
-    const p = path.resolve(fixturesPath, 'foo.txt')
-    await fs.writeFile(p, 'world!')
-    await this.datastore.prependIncompletePart(
-      p,
-      Readable.from([new TextEncoder().encode('Hello, ')])
-    )
-    assert.strictEqual(await fs.readFile(p, 'utf8'), 'Hello, world!')
-    await fs.unlink(p)
   })
 
   it('should store in between chunks under the minimum part size and prepend it to the next call', async function () {
