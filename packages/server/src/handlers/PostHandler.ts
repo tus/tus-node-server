@@ -65,7 +65,7 @@ export class PostHandler extends BaseHandler {
 
     let id
     try {
-      id = this.options.namingFunction(req, metadata)
+      id = await Promise.resolve(this.options.namingFunction(req, metadata))
     } catch (error) {
       log('create: check your `namingFunction`. Error', error)
       throw error

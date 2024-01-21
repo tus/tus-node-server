@@ -60,7 +60,7 @@ export type ServerOptions = {
   namingFunction?: (
     req: http.IncomingMessage,
     metadata?: Record<string, string | null>
-  ) => string
+  ) => string | Promise<string>
 
   /**
    * The Lock interface defines methods for implementing a locking mechanism.
