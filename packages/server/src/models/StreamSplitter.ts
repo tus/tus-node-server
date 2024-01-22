@@ -11,7 +11,6 @@ function randomString(size: number) {
 type Options = {
   chunkSize: number
   directory: string
-  asyncEvents?: boolean
 }
 
 type Callback = (error: Error | null) => void
@@ -24,12 +23,8 @@ export class StreamSplitter extends stream.Writable {
   filenameTemplate: string
   chunkSize: Options['chunkSize']
   part: number
-  asyncEvents?: boolean
 
-  constructor(
-    {chunkSize, directory, asyncEvents}: Options,
-    options?: stream.WritableOptions
-  ) {
+  constructor({chunkSize, directory}: Options, options?: stream.WritableOptions) {
     super(options)
     this.chunkSize = chunkSize
     this.currentChunkPath = null
@@ -38,7 +33,6 @@ export class StreamSplitter extends stream.Writable {
     this.directory = directory
     this.filenameTemplate = randomString(10)
     this.part = 0
-    this.asyncEvents = asyncEvents
 
     this.on('error', this._handleError.bind(this))
   }
@@ -126,20 +120,9 @@ export class StreamSplitter extends stream.Writable {
   }
 
   async emitEvent<T>(name: string, payload: T) {
-    if (this.asyncEvents) {
-      await new Promise<void>((resolve, reject) => {
-        const doneCb = (err?: unknown) => {
-          if (err) {
-            reject(err)
-            return
-          }
-          resolve()
-        }
-
-        this.emit(name, payload, doneCb)
-      })
-    } else {
-      this.emit(name, payload)
+    const listeners = this.listeners(name)
+    for (const listener of listeners) {
+      await listener(payload)
     }
   }
 

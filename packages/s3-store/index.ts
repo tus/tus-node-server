@@ -389,22 +389,14 @@ export class S3Store extends DataStore {
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
       directory: os.tmpdir(),
-      asyncEvents: true,
     })
-      .on('beforeChunkStarted', (_, done) => {
-        this.semaphore
-          .acquire()
-          .catch(done)
-          .then((acquiredPermit) => {
-            permit = acquiredPermit
-            done()
-          })
+      .on('beforeChunkStarted', async () => {
+        permit = await this.semaphore.acquire()
       })
-      .on('chunkStarted', (filepath, done) => {
+      .on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
-        done()
       })
-      .on('chunkFinished', ({path, size: partSize}, done) => {
+      .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
         const partNumber = currentPartNumber++
@@ -441,11 +433,9 @@ export class S3Store extends DataStore {
         })
 
         promises.push(deferred)
-        done()
       })
-      .on('chunkError', (_, done) => {
+      .on('chunkError', () => {
         permit?.release()
-        done()
       })
 
     try {
@@ -811,24 +801,27 @@ export class S3Store extends DataStore {
   }
 
   private async uniqueTmpFileName(template: string): Promise<string> {
-    const fileName = template + crypto.randomBytes(10).toString('base64url').slice(0, 10)
-    const filePath = path.join(os.tmpdir(), fileName)
+    let tries = 0
+    const maxTries = 10
 
-    const fileExists = await new Promise<boolean>((resolve, reject) => {
-      fs.lstat(filePath, (error) => {
-        if (!error) {
-          return resolve(true)
-        }
-        if (error.code === 'ENOENT') {
-          return resolve(false)
-        }
-        reject(error)
-      })
-    })
+    while (tries < maxTries) {
+      const fileName =
+        template + crypto.randomBytes(10).toString('base64url').slice(0, 10)
+      const filePath = path.join(os.tmpdir(), fileName)
 
-    if (fileExists) {
-      return this.uniqueTmpFileName(template)
+      try {
+        await fsProm.lstat(filePath)
+        // If no error, file exists, so try again
+        tries++
+      } catch (e) {
+        if (e.code === 'ENOENT') {
+          // File does not exist, return the path
+          return filePath
+        }
+        throw e // For other errors, rethrow
+      }
     }
-    return filePath
+
+    throw new Error(`Could not find a unique file name after ${maxTries} tries`)
   }
 }
