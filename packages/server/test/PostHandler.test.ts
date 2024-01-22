@@ -99,6 +99,20 @@ describe('PostHandler', () => {
         assert.equal(namingFunction.calledOnce, true)
       })
 
+      it('should call custom async namingFunction', async () => {
+        const fake_store = sinon.createStubInstance(DataStore)
+        const namingFunction = sinon.stub().resolves('1234')
+        const handler = new PostHandler(fake_store, {
+          path: '/test/',
+          namingFunction,
+          locker: new MemoryLocker(),
+        })
+
+        req.headers = {'upload-length': '1000'}
+        await handler.send(req, res, context)
+        assert.equal(namingFunction.calledOnce, true)
+      })
+
       it('should send error when store rejects', () => {
         const fake_store = sinon.createStubInstance(DataStore)
         fake_store.create.rejects({status_code: 500})
