@@ -93,11 +93,6 @@ See the exported [KV stores][kvstores] from `@tus/server` for more information.
 
 ### `options.maxConcurrentPartUploads`
 
-
-Certainly! Here's a revised and more clear description of the options.maxConcurrentPartUploads configuration option:
-
-### `options.maxConcurrentPartUploads`
-
 This setting determines the maximum number of simultaneous part uploads to an S3 storage service.
 The default value is 60. This default is chosen in conjunction with the typical partSize of 8MiB, aiming for an effective transfer rate of approximately 480MiB/s.
 
