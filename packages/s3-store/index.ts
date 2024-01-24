@@ -147,7 +147,7 @@ export class S3Store extends DataStore {
     this.useTags = options.useTags ?? true
     this.cache = options.cache ?? new MemoryKvStore<MetadataValue>()
     this.client = new S3(restS3ClientConfig)
-    this.semaphore = new Semaphore(options.maxConcurrentPartUploads ?? 30)
+    this.semaphore = new Semaphore(options.maxConcurrentPartUploads ?? 60)
   }
 
   protected shouldUseExpirationTags() {
