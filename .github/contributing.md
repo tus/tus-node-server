@@ -14,6 +14,12 @@ yarn install || corepack yarn install
 This means running `yarn build` in the root will build all packages in parallel.
 The same goes for `lint` and `format`.
 
+## Changesets
+
+We use [changesets](https://github.com/changesets/changesets) to manage versioning, changelogs and publishing.
+This means when you contribute a PR you have to run `yarn changeset` to indicate the semver bump you are making
+and to add a changelog entry.
+
 ## Tests
 
 You can run tests for individual packages by running a Yarn workspace command.
