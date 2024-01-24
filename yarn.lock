@@ -1750,7 +1750,6 @@ __metadata:
     sinon: "npm:^15.2.0"
     supertest: "npm:^6.3.4"
     ts-node: "npm:^10.9.2"
-    tsconfig: "npm:*"
     typescript: "npm:^5.3.3"
   dependenciesMeta:
     "@redis/client":
@@ -5209,7 +5208,6 @@ __metadata:
     supertest: "npm:^6.3.4"
     throttle: "npm:^1.0.3"
     ts-node: "npm:^10.9.2"
-    tsconfig: "npm:*"
     typescript: "npm:^5.3.3"
   languageName: unknown
   linkType: soft
@@ -5293,12 +5291,6 @@ __metadata:
   checksum: a91a15b3c9f76ac462f006fa88b6bfa528130dcfb849dd7ef7f9d640832ab681e235b8a2bc58ecde42f72851cc1d5d4e22c901b0c11aa51001ea1d395074b794
   languageName: node
   linkType: hard
-
-"tsconfig@npm:*, tsconfig@workspace:packages/tsconfig":
-  version: 0.0.0-use.local
-  resolution: "tsconfig@workspace:packages/tsconfig"
-  languageName: unknown
-  linkType: soft
 
 "tslib@npm:^1.11.1, tslib@npm:^1.8.1":
   version: 1.14.1
