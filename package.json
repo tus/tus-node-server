@@ -14,7 +14,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "test": "turbo run test --concurrency 1",
-    "release": "gh actions run release",
+    "release": "gh workflow run release",
     "release:local": "turbo run build && changesets publish"
   },
   "devDependencies": {
