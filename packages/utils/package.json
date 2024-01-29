@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@tus/gcs-store",
-  "version": "1.1.0",
-  "description": "Google Cloud Storage for @tus/server",
+  "name": "@tus/utils",
+  "version": "1.0.0",
+  "description": "Internal utils for tus Node.js server and stores",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "homepage": "https://github.com/tus/tus-node-server#readme",
@@ -18,15 +18,9 @@
     "build": "tsc",
     "lint": "eslint .",
     "format": "eslint --fix .",
-    "test": "mocha test.ts --timeout 30000 --exit --extension ts --require ts-node/register"
-  },
-  "dependencies": {
-    "@tus/utils": "workspace:*",
-    "debug": "^4.3.4"
+    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "devDependencies": {
-    "@google-cloud/storage": "^6.12.0",
-    "@tus/server": "workspace:^",
     "@types/debug": "^4.1.12",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.5",
@@ -34,10 +28,8 @@
     "eslint-config-custom": "workspace:*",
     "mocha": "^10.2.0",
     "should": "^13.2.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
-  },
-  "peerDependencies": {
-    "@google-cloud/storage": "*"
   },
   "engines": {
     "node": ">=16"

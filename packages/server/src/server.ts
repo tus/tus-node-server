@@ -11,17 +11,11 @@ import {PostHandler} from './handlers/PostHandler'
 import {DeleteHandler} from './handlers/DeleteHandler'
 import {validateHeader} from './validators/HeaderValidator'
 
-import {
-  EVENTS,
-  ERRORS,
-  EXPOSED_HEADERS,
-  REQUEST_METHODS,
-  TUS_RESUMABLE,
-} from './constants'
+import {EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
 
 import type stream from 'node:stream'
 import type {ServerOptions, RouteHandler, WithOptional} from './types'
-import type {DataStore, Upload, CancellationContext} from './models'
+import type {DataStore, Upload, CancellationContext} from '@tus/utils'
 import {MemoryLocker} from './lockers'
 
 type Handlers = {

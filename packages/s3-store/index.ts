@@ -15,7 +15,7 @@ import {
   TUS_RESUMABLE,
   KvStore,
   MemoryKvStore,
-} from '@tus/server'
+} from '@tus/utils'
 
 const log = debug('tus-node-server:stores:s3store')
 

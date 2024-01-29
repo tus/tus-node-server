@@ -1970,7 +1970,7 @@ __metadata:
   resolution: "@tus/file-store@workspace:packages/file-store"
   dependencies:
     "@redis/client": "npm:^1.5.13"
-    "@tus/server": "workspace:^"
+    "@tus/utils": "workspace:*"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
     "@types/node": "npm:^20.11.5"
@@ -1980,8 +1980,6 @@ __metadata:
     mocha: "npm:^10.2.0"
     should: "npm:^13.2.3"
     typescript: "npm:^5.3.3"
-  peerDependencies:
-    "@tus/server": "workspace:^"
   dependenciesMeta:
     "@redis/client":
       optional: true
@@ -1994,6 +1992,7 @@ __metadata:
   dependencies:
     "@google-cloud/storage": "npm:^6.12.0"
     "@tus/server": "workspace:^"
+    "@tus/utils": "workspace:*"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
     "@types/node": "npm:^20.11.5"
@@ -2005,7 +2004,6 @@ __metadata:
     typescript: "npm:^5.3.3"
   peerDependencies:
     "@google-cloud/storage": "*"
-    "@tus/server": "workspace:^"
   languageName: unknown
   linkType: soft
 
@@ -2014,7 +2012,7 @@ __metadata:
   resolution: "@tus/s3-store@workspace:packages/s3-store"
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.490.0"
-    "@tus/server": "workspace:^"
+    "@tus/utils": "workspace:*"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
     "@types/node": "npm:^20.11.5"
@@ -2024,8 +2022,6 @@ __metadata:
     mocha: "npm:^10.2.0"
     should: "npm:^13.2.3"
     typescript: "npm:^5.3.3"
-  peerDependencies:
-    "@tus/server": "workspace:^"
   languageName: unknown
   linkType: soft
 
@@ -2034,6 +2030,7 @@ __metadata:
   resolution: "@tus/server@workspace:packages/server"
   dependencies:
     "@redis/client": "npm:^1.5.13"
+    "@tus/utils": "workspace:*"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
     "@types/node": "npm:^20.11.5"
@@ -2052,6 +2049,22 @@ __metadata:
   dependenciesMeta:
     "@redis/client":
       optional: true
+  languageName: unknown
+  linkType: soft
+
+"@tus/utils@workspace:*, @tus/utils@workspace:packages/utils":
+  version: 0.0.0-use.local
+  resolution: "@tus/utils@workspace:packages/utils"
+  dependencies:
+    "@types/debug": "npm:^4.1.12"
+    "@types/mocha": "npm:^10.0.6"
+    "@types/node": "npm:^20.11.5"
+    eslint: "npm:^8.56.0"
+    eslint-config-custom: "workspace:*"
+    mocha: "npm:^10.2.0"
+    should: "npm:^13.2.3"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.3.3"
   languageName: unknown
   linkType: soft
 

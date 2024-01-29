@@ -10,8 +10,7 @@ import request from 'supertest'
 
 import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
-import {DataStore} from '../src/models'
-import {TUS_RESUMABLE, EVENTS} from '../src/constants'
+import {TUS_RESUMABLE, EVENTS, DataStore} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 

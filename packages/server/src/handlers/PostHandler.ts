@@ -1,13 +1,19 @@
 import debug from 'debug'
 
 import {BaseHandler} from './BaseHandler'
-import {Upload, Uid, Metadata} from '../models'
+import {
+  Upload,
+  Uid,
+  Metadata,
+  EVENTS,
+  ERRORS,
+  DataStore,
+  CancellationContext,
+} from '@tus/utils'
 import {validateHeader} from '../validators/HeaderValidator'
-import {EVENTS, ERRORS} from '../constants'
 
 import type http from 'node:http'
 import type {ServerOptions, WithRequired} from '../types'
-import {DataStore, CancellationContext} from '../models'
 
 const log = debug('tus-node-server:handlers:post')
 

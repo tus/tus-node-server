@@ -1,7 +1,7 @@
 import stream from 'node:stream'
 
 import {BaseHandler} from './BaseHandler'
-import {ERRORS} from '../constants'
+import {ERRORS} from '@tus/utils'
 
 import type http from 'node:http'
 import type {RouteHandler} from '../types'

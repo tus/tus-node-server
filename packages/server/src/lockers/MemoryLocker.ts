@@ -1,5 +1,4 @@
-import {ERRORS} from '../constants'
-import {Lock, Locker, RequestRelease} from '../models'
+import {ERRORS, Lock, Locker, RequestRelease} from '@tus/utils'
 
 /**
  * MemoryLocker is an implementation of the Locker interface that manages locks in memory.

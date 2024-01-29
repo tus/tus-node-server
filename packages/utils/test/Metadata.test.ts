@@ -1,5 +1,5 @@
 import {strict as assert} from 'node:assert'
-import {parse, stringify} from '@tus/utils/Metadata'
+import {parse, stringify} from '../src/models/Metadata'
 
 describe('Metadata', () => {
   it('parse valid metadata string', () => {

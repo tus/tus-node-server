@@ -9,9 +9,8 @@ import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
 import {GetHandler} from '../src/handlers/GetHandler'
-import {DataStore} from '../src/models/DataStore'
+import {DataStore, Upload} from '@tus/utils'
 import {FileStore} from '@tus/file-store'
-import {Upload} from '../src/models/Upload'
 import {MemoryLocker} from '../src'
 
 describe('GetHandler', () => {

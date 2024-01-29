@@ -8,7 +8,7 @@ import http from 'node:http'
 import debug from 'debug'
 
 import {Configstore, FileConfigstore} from './configstores'
-import {DataStore, Upload, ERRORS} from '@tus/server'
+import {DataStore, Upload, ERRORS} from '@tus/utils'
 
 export * from './configstores'
 

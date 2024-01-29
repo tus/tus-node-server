@@ -6,10 +6,8 @@ import type http from 'node:http'
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {DataStore} from '../src/models/DataStore'
+import {ERRORS, EVENTS, DataStore, CancellationContext} from '@tus/utils'
 import {DeleteHandler} from '../src/handlers/DeleteHandler'
-import {ERRORS, EVENTS} from '../src/constants'
-import {CancellationContext} from '../src/models'
 import {MemoryLocker} from '../src'
 
 describe('DeleteHandler', () => {

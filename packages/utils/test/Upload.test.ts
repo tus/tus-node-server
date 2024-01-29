@@ -1,7 +1,8 @@
 import 'should'
 import {strict as assert} from 'node:assert'
 
-import {Upload, Uid} from '@tus/utils'
+import {Upload} from '../src/models/Upload'
+import {Uid} from '../src/models/Uid'
 
 describe('Upload', () => {
   describe('constructor', () => {
