@@ -19,11 +19,11 @@ import {Agent} from 'http'
 import {Buffer} from 'buffer'
 import {AddressInfo} from 'net'
 
-const STORE_PATH = './output/e2e'
+const STORE_PATH = '/test'
 const PROJECT_ID = 'tus-node-server'
 const KEYFILE = '../keyfile.json'
 const BUCKET = 'tus-node-server-ci'
-const FILES_DIRECTORY = path.resolve(STORE_PATH)
+const FILES_DIRECTORY = path.resolve('./output/e2e')
 const TEST_FILE_SIZE = '960244'
 const TEST_FILE_PATH = path.resolve('fixtures', 'test.mp4')
 const TEST_METADATA = 'filename d29ybGRfZG9taW5hdGlvbl9wbGFuLnBkZg==,is_confidential'
@@ -281,7 +281,7 @@ describe('EndToEnd', () => {
       before(() => {
         server = new Server({
           path: STORE_PATH,
-          datastore: new FileStore({directory: `./${STORE_PATH}`}),
+          datastore: new FileStore({directory: FILES_DIRECTORY}),
         })
         listener = server.listen()
         agent = request.agent(listener)
