@@ -10,7 +10,7 @@ import * as shared from '../../test/stores.test'
 import {Upload, Uid} from '@tus/server'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
-const storePath = path.resolve('../', '../', 'test', 'output')
+const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
 
 describe('S3DataStore', function () {
   before(function () {

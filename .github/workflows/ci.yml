@@ -18,8 +18,6 @@ jobs:
     name: ${{matrix.node}}
     runs-on: ubuntu-latest
     strategy:
-      # We do not want to run CRUD tests in parallel
-      max-parallel: 1
       matrix:
         node:
           - lts/hydrogen

@@ -19,7 +19,7 @@ import {Agent} from 'http'
 import {Buffer} from 'buffer'
 import {AddressInfo} from 'net'
 
-const STORE_PATH = '/output'
+const STORE_PATH = './output/e2e'
 const PROJECT_ID = 'tus-node-server'
 const KEYFILE = '../keyfile.json'
 const BUCKET = 'tus-node-server-ci'
@@ -53,7 +53,8 @@ describe('EndToEnd', () => {
     let file_id: string
     let deferred_file_id: string
 
-    before(() => {
+    before(async function () {
+      await fs.promises.mkdir(FILES_DIRECTORY, {recursive: true})
       server = new Server({
         path: STORE_PATH,
         datastore: new FileStore({directory: `./${STORE_PATH}`}),
