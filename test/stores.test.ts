@@ -4,7 +4,14 @@ import fs from 'node:fs'
 import stream from 'node:stream'
 import {setTimeout as promSetTimeout} from 'node:timers/promises'
 
-import {Upload} from '@tus/server'
+import {Upload, Uid} from '@tus/server'
+
+// In CI we run multiple jobs in parallel,
+// so we need to make sure that the IDs are unique.
+export function testId(id: string) {
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  return `${id}-${process.env.GITHUB_JOB ?? Uid.rand()}`
+}
 
 export const shouldHaveStoreMethods = function () {
   describe('the class', () => {
@@ -23,13 +30,13 @@ export const shouldHaveStoreMethods = function () {
 export const shouldCreateUploads = function () {
   describe('create', () => {
     const file = new Upload({
-      id: 'create-test',
+      id: testId('create-test'),
       size: 1000,
       offset: 0,
       metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
     })
     const file_defered = new Upload({
-      id: 'create-test-deferred',
+      id: testId('create-test-deferred'),
       offset: 0,
     })
 
@@ -76,7 +83,7 @@ export const shouldExpireUploads = function () {
 
     it('should expire upload', async function () {
       const file = new Upload({
-        id: 'expiration-test',
+        id: testId('expiration-test'),
         size: this.testFileSize,
         offset: 0,
         metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
@@ -94,7 +101,7 @@ export const shouldExpireUploads = function () {
 }
 
 export const shouldRemoveUploads = function () {
-  const file = new Upload({id: 'remove-test', size: 1000, offset: 0})
+  const file = new Upload({id: testId('remove-test'), size: 1000, offset: 0})
 
   describe('remove (termination extension)', () => {
     it("should report 'termination' extension", function () {
@@ -112,7 +119,7 @@ export const shouldRemoveUploads = function () {
 
     it('should delete the file during upload', async function () {
       const file = new Upload({
-        id: 'termination-test',
+        id: testId('termination-test'),
         size: this.testFileSize,
         offset: 0,
         metadata: {filename: 'terminate_during_upload.pdf', is_confidential: null},
@@ -157,7 +164,7 @@ export const shouldWriteUploads = function () {
 
     it('should write a stream and resolve the new offset', async function () {
       const file = new Upload({
-        id: 'write-test',
+        id: testId('write-test'),
         size: this.testFileSize,
         offset: 0,
         metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
@@ -170,7 +177,7 @@ export const shouldWriteUploads = function () {
 
     it('should reject when stream is destroyed', async function () {
       const file = new Upload({
-        id: 'write-test-reject',
+        id: testId('write-test-reject'),
         size: this.testFileSize,
         offset: 0,
         metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
@@ -196,7 +203,7 @@ export const shouldHandleOffset = function () {
 
     it('should resolve the stats for existing files', async function () {
       const file = new Upload({
-        id: 'offset-test',
+        id: testId('offset-test'),
         size: this.testFileSize,
         offset: 0,
         metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
@@ -222,7 +229,7 @@ export const shouldDeclareUploadLength = function () {
 
     it('should update upload_length after declaring upload length', async function () {
       const file = new Upload({
-        id: 'declare-length-test',
+        id: testId('declare-length-test'),
         offset: 0,
         metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
       })
