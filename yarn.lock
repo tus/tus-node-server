@@ -1973,7 +1973,7 @@ __metadata:
     "@tus/server": "workspace:^"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
-    "@types/node": "npm:^20.11.5"
+    "@types/node": "npm:^20.11.14"
     debug: "npm:^4.3.4"
     eslint: "npm:^8.56.0"
     eslint-config-custom: "workspace:*"
@@ -1996,7 +1996,7 @@ __metadata:
     "@tus/server": "workspace:^"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
-    "@types/node": "npm:^20.11.5"
+    "@types/node": "npm:^20.11.14"
     debug: "npm:^4.3.4"
     eslint: "npm:^8.56.0"
     eslint-config-custom: "workspace:*"
@@ -2017,7 +2017,7 @@ __metadata:
     "@tus/server": "workspace:^"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
-    "@types/node": "npm:^20.11.5"
+    "@types/node": "npm:^20.11.14"
     debug: "npm:^4.3.4"
     eslint: "npm:^8.56.0"
     eslint-config-custom: "workspace:*"
@@ -2036,7 +2036,7 @@ __metadata:
     "@redis/client": "npm:^1.5.13"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
-    "@types/node": "npm:^20.11.5"
+    "@types/node": "npm:^20.11.14"
     "@types/sinon": "npm:^10.0.20"
     "@types/supertest": "npm:^2.0.16"
     debug: "npm:^4.3.4"
@@ -2211,12 +2211,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.10.6, @types/node@npm:^20.11.5":
+"@types/node@npm:^20.10.6":
   version: 20.11.5
   resolution: "@types/node@npm:20.11.5"
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 9f31c471047d7b3e240ce7b77ff29b0d15e83be7e3feafb3d0b0d0931122b438b1eefa302a5a2e1e9849914ff3fd76aafbd8ccb372efb1331ba048da63bce6f8
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^20.11.14":
+  version: 20.11.14
+  resolution: "@types/node@npm:20.11.14"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 129104b80a33b92ffcd139593b51d39b85e9dce0e7065a39eca23cd3c629da9f06a747509cdcbf0e6bd89349d944d1a4b112b598d122d0d33f10765d51a39334
   languageName: node
   linkType: hard
 
@@ -6948,7 +6957,7 @@ __metadata:
     "@tus/s3-store": "workspace:^"
     "@tus/server": "workspace:^"
     "@types/mocha": "npm:^10.0.6"
-    "@types/node": "npm:^20.11.5"
+    "@types/node": "npm:^20.11.14"
     "@types/rimraf": "npm:^3.0.2"
     "@types/sinon": "npm:^10.0.20"
     "@types/supertest": "npm:^2.0.16"
