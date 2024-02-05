@@ -15,7 +15,7 @@
     "format": "turbo run format",
     "test": "turbo run test",
     "release": "gh workflow run release",
-    "release:local": "turbo run build && changesets publish"
+    "release:local": "turbo run build && corepack yarn changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
