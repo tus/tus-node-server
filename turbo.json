@@ -7,7 +7,13 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "env": ["AWS_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
+      "env": [
+        "AWS_BUCKET",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_REGION",
+        "GITHUB_JOB"
+      ],
       "outputs": []
     },
     "lint": {

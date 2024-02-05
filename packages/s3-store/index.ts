@@ -14,7 +14,8 @@ import {
   TUS_RESUMABLE,
   KvStore,
   MemoryKvStore,
-} from '@tus/server'
+} from '@tus/utils'
+
 import {Semaphore, Permit} from '@shopify/semaphore'
 import MultiStream from 'multistream'
 import crypto from 'node:crypto'
@@ -28,7 +29,7 @@ type Options = {
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   useTags?: boolean
-  maxConcurrentPartUploads?: number | Semaphore
+  maxConcurrentPartUploads?: number
   cache?: KvStore<MetadataValue>
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
@@ -108,10 +109,7 @@ export class S3Store extends DataStore {
     this.useTags = options.useTags ?? true
     this.cache = options.cache ?? new MemoryKvStore<MetadataValue>()
     this.client = new S3(restS3ClientConfig)
-    this.partUploadSemaphore =
-      options.maxConcurrentPartUploads instanceof Semaphore
-        ? options.maxConcurrentPartUploads
-        : new Semaphore(options.maxConcurrentPartUploads ?? 60)
+    this.partUploadSemaphore = new Semaphore(options.maxConcurrentPartUploads ?? 60)
   }
 
   protected shouldUseExpirationTags() {

@@ -1,13 +1,11 @@
 import EventEmitter from 'node:events'
 
 import type {ServerOptions} from '../types'
-import type {DataStore, CancellationContext} from '../models'
+import type {DataStore, CancellationContext} from '@tus/utils'
 import type http from 'node:http'
-import {Upload} from '../models'
-import {ERRORS} from '../constants'
+import {ERRORS, Upload, StreamLimiter} from '@tus/utils'
 import stream from 'node:stream/promises'
 import {addAbortSignal, PassThrough} from 'stream'
-import {StreamLimiter} from '../models/StreamLimiter'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/

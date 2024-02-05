@@ -7,9 +7,8 @@ import http from 'node:http'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
-import {Upload, DataStore, CancellationContext} from '../src/models'
+import {EVENTS, Upload, DataStore, CancellationContext} from '@tus/utils'
 import {PostHandler} from '../src/handlers/PostHandler'
-import {EVENTS} from '../src/constants'
 import {addPipableStreamBody} from './utils'
 import {MemoryLocker} from '../src'
 

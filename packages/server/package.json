@@ -21,6 +21,7 @@
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
+    "@tus/utils": "workspace:*",
     "debug": "^4.3.4"
   },
   "devDependencies": {

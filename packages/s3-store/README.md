@@ -107,8 +107,6 @@ The ideal value for `maxConcurrentPartUploads` varies based on your `partSize` a
 
 - **Bandwidth Considerations**: It's important to note that if your upload bandwidth to S3 is a limiting factor, increasing `maxConcurrentPartUploads` won’t lead to higher throughput. Instead, it will result in additional resource consumption without proportional gains in transfer speed.
 
-- If you run multiple instances of TusServer you can share a Semaphore instance with the `maxConcurrentPartUploads: new Semaphore(10)` option.
-
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.

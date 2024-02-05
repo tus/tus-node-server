@@ -1,5 +1,5 @@
 import {BaseHandler} from './BaseHandler'
-import {ALLOWED_METHODS, MAX_AGE, HEADERS} from '../constants'
+import {ALLOWED_METHODS, MAX_AGE, HEADERS} from '@tus/utils'
 
 import type http from 'node:http'
 

@@ -3,8 +3,7 @@ import stream from 'node:stream'
 import http from 'node:http'
 import debug from 'debug'
 
-import {ERRORS, TUS_RESUMABLE} from '@tus/server'
-import {Upload, DataStore} from '@tus/server'
+import {ERRORS, TUS_RESUMABLE, Upload, DataStore} from '@tus/utils'
 
 const log = debug('tus-node-server:stores:gcsstore')
 

@@ -1,6 +1,6 @@
 import type http from 'node:http'
 
-import type {Locker, Upload} from './models'
+import type {Locker, Upload} from '@tus/utils'
 
 /**
  * Represents the configuration options for a server.

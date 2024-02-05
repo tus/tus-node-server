@@ -3,8 +3,8 @@ import http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
-import {BaseHandler} from '../src/handlers//BaseHandler'
-import {DataStore} from '../src/models'
+import {BaseHandler} from '../src/handlers/BaseHandler'
+import {DataStore} from '@tus/utils'
 import {MemoryLocker} from '../src'
 
 describe('BaseHandler', () => {

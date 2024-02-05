@@ -6,10 +6,10 @@ import sinon from 'sinon'
 
 import {S3Store} from './'
 import * as shared from '../../test/stores.test'
-import {Upload, Uid} from '@tus/server'
+import {Upload} from '@tus/utils'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
-const storePath = path.resolve('../', '../', 'test', 'output')
+const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
 
 describe('S3DataStore', function () {
   before(function () {
@@ -47,7 +47,7 @@ describe('S3DataStore', function () {
     const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
     const uploadPart = sinon.spy(store, 'uploadPart')
     const upload = new Upload({
-      id: 'incomplete-part-test',
+      id: shared.testId('incomplete-part-test'),
       size: size + incompleteSize,
       offset: 0,
     })
@@ -74,7 +74,7 @@ describe('S3DataStore', function () {
     const size = 4096
     const incompleteSize = 1024
     const upload = new Upload({
-      id: `incomplete-part-test-${Uid.rand()}`,
+      id: shared.testId('incomplete-part-test'),
       size: size + incompleteSize,
       offset: 0,
     })
@@ -109,7 +109,7 @@ describe('S3DataStore', function () {
     const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
     const uploadPart = sinon.spy(store, 'uploadPart')
     const upload = new Upload({
-      id: 'incomplete-part-test-' + Uid.rand(),
+      id: shared.testId('incomplete-part-test'),
       size: size + incompleteSize,
       offset: 0,
     })
@@ -146,7 +146,7 @@ describe('S3DataStore', function () {
     const uploadIncompletePart = sinon.spy(store, 'uploadIncompletePart')
     const uploadPart = sinon.spy(store, 'uploadPart')
     const upload = new Upload({
-      id: 'min-part-size-test',
+      id: shared.testId('min-part-size-test'),
       size: size + size,
       offset: 0,
     })
@@ -174,7 +174,7 @@ describe('S3DataStore', function () {
     const incompleteSize = 1024
 
     const upload = new Upload({
-      id: `get-incopmlete-part-size-test-${Uid.rand()}`,
+      id: shared.testId('get-incomplete-part-size-test'),
       size: size + incompleteSize,
       offset: 0,
     })

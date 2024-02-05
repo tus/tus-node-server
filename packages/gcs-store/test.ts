@@ -7,7 +7,7 @@ import * as shared from '../../test/stores.test'
 import {Storage} from '@google-cloud/storage'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
-const storePath = path.resolve('../', '../', 'test', 'output')
+const storePath = path.resolve('../', '../', 'test', 'output', 'gcs-store')
 
 describe('GCSStore', () => {
   before(function () {

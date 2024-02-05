@@ -13,9 +13,12 @@
     "demo:s3": "yarn workspace demo start:s3",
     "lint": "turbo run lint",
     "format": "turbo run format",
-    "test": "turbo run test --concurrency 1"
+    "test": "turbo run test",
+    "release": "gh workflow run release",
+    "release:local": "turbo run build && changesets publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.1",
     "eslint": "^8.56.0",
     "eslint-config-custom": "workspace:*",
     "eslint-plugin-prettier": "^4.2.1",

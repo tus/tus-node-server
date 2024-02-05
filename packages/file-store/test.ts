@@ -8,16 +8,18 @@ import path from 'node:path'
 import sinon from 'sinon'
 
 import {FileStore, FileConfigstore} from './'
-import {Upload} from '@tus/server'
+import {Upload} from '@tus/utils'
 
 import * as shared from '../../test/stores.test'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
-const storePath = path.resolve('../', '../', 'test', 'output')
+const storePath = path.resolve('../', '../', 'test', 'output', 'file-store')
 
 async function cleanup() {
-  await fsProm.rm(storePath, {recursive: true})
-  await fsProm.mkdir(storePath)
+  if (fs.existsSync(storePath)) {
+    await fsProm.rm(storePath, {recursive: true})
+    await fsProm.mkdir(storePath)
+  }
 }
 
 describe('FileStore', function () {

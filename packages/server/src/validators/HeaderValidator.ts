@@ -1,5 +1,4 @@
-import {TUS_VERSION, TUS_RESUMABLE} from '../constants'
-import {Metadata} from '../models'
+import {TUS_VERSION, TUS_RESUMABLE, Metadata} from '@tus/utils'
 
 type validator = (value?: string) => boolean
 

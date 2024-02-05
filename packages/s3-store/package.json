@@ -23,11 +23,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
     "@shopify/semaphore": "^3.0.2",
+    "@tus/utils": "workspace:*",
     "debug": "^4.3.4",
     "multistream": "^4.1.0"
   },
   "devDependencies": {
-    "@tus/server": "workspace:^",
     "@types/debug": "^4.1.12",
     "@types/mocha": "^10.0.6",
     "@types/multistream": "^4.1.3",
@@ -37,9 +37,6 @@
     "mocha": "^10.2.0",
     "should": "^13.2.3",
     "typescript": "^5.3.3"
-  },
-  "peerDependencies": {
-    "@tus/server": "workspace:^"
   },
   "engines": {
     "node": ">=16"

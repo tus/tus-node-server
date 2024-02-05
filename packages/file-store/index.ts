@@ -8,7 +8,7 @@ import http from 'node:http'
 import debug from 'debug'
 
 import {Configstore, FileConfigstore} from './configstores'
-import {DataStore, Upload, ERRORS} from '@tus/server'
+import {DataStore, Upload, ERRORS} from '@tus/utils'
 
 export * from './configstores'
 
@@ -48,7 +48,7 @@ export class FileStore extends DataStore {
    *  Ensure the directory exists.
    */
   private checkOrCreateDirectory() {
-    fs.mkdir(this.directory, MASK, (error) => {
+    fs.mkdir(this.directory, {mode: MASK, recursive: true}, (error) => {
       if (error && error.code !== IGNORED_MKDIR_ERROR) {
         throw error
       }

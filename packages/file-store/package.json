@@ -21,10 +21,10 @@
     "test": "mocha test.ts --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
+    "@tus/utils": "workspace:*",
     "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@tus/server": "workspace:^",
     "@types/debug": "^4.1.12",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.5",
@@ -33,9 +33,6 @@
     "mocha": "^10.2.0",
     "should": "^13.2.3",
     "typescript": "^5.3.3"
-  },
-  "peerDependencies": {
-    "@tus/server": "workspace:^"
   },
   "optionalDependencies": {
     "@redis/client": "^1.5.13"

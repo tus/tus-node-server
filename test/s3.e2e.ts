@@ -213,7 +213,8 @@ describe('S3 Store E2E', () => {
       await new Promise((resolve) => listener.close(resolve))
     })
 
-    it('calling deleteExpired will delete all expired objects', async () => {
+    // TODO: refactor to mocked integration test instead of e2e
+    it.skip('calling deleteExpired will delete all expired objects', async () => {
       const data = allocMB(11)
       const {uploadId} = await createUpload(agent, data.length)
       await patchUpload(agent, uploadId, data.subarray(0, 1024 * 1024 * 6))

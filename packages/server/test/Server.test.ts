@@ -10,17 +10,20 @@ import request from 'supertest'
 
 import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
-import {DataStore} from '../src/models'
-import {TUS_RESUMABLE, EVENTS} from '../src/constants'
+import {TUS_RESUMABLE, EVENTS, DataStore} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
+const directory = path.resolve(__dirname, 'output', 'server')
 
 describe('Server', () => {
+  before(async () => {
+    await fs.mkdir(directory, {recursive: true})
+  })
   after(async () => {
-    await fs.rm(path.resolve(__dirname, 'output'), {force: true, recursive: true})
+    await fs.rm(directory, {force: true, recursive: true})
   })
 
   describe('instantiation', () => {
@@ -121,7 +124,7 @@ describe('Server', () => {
     before(() => {
       server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
       })
       listener = server.listen()
     })
@@ -263,7 +266,7 @@ describe('Server', () => {
     it('should not invoke handlers if onIncomingRequest throws', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
         async onIncomingRequest() {
           throw {status_code: 403, body: 'Access denied'}
         },
@@ -282,7 +285,7 @@ describe('Server', () => {
       const route = '/test/output'
       const server = new Server({
         path: route,
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
         namingFunction() {
           return `foo/bar/id`
         },
@@ -330,7 +333,7 @@ describe('Server', () => {
     beforeEach(() => {
       server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
       })
       listener = server.listen()
     })
@@ -408,7 +411,7 @@ describe('Server', () => {
     it('should call onUploadCreate and return its error to the client', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
         async onUploadCreate() {
           throw {body: 'no', status_code: 500}
         },
@@ -423,7 +426,7 @@ describe('Server', () => {
     it('should call onUploadFinish and return its error to the client', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
         onUploadFinish() {
           throw {body: 'no', status_code: 500}
         },
@@ -446,7 +449,7 @@ describe('Server', () => {
     it('should call onUploadFinish and return its error to the client with creation-with-upload ', (done) => {
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
         async onUploadFinish() {
           throw {body: 'no', status_code: 500}
         },
@@ -493,7 +496,7 @@ describe('Server', () => {
       const spy = sinon.spy()
       const server = new Server({
         path: '/test/output',
-        datastore: new FileStore({directory: './test/output'}),
+        datastore: new FileStore({directory}),
         onResponseError: () => {
           spy()
           return {status_code: 404, body: 'custom-error'}
