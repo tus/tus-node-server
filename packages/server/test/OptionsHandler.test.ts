@@ -6,8 +6,7 @@ import http from 'node:http'
 import httpMocks from 'node-mocks-http'
 
 import {OptionsHandler} from '../src/handlers/OptionsHandler'
-import {DataStore} from '../src/models/DataStore'
-import {ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '../src/constants'
+import {DataStore, ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '@tus/utils'
 import {MemoryLocker} from '../src'
 
 describe('OptionsHandler', () => {

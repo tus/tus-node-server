@@ -1,7 +1,7 @@
 import {strict as assert} from 'node:assert'
 
 import {validateHeader} from '../src/validators/HeaderValidator'
-import {TUS_RESUMABLE} from '../src/constants'
+import {TUS_RESUMABLE} from '@tus/utils'
 
 describe('HeaderValidator', () => {
   describe('upload-offset', () => {

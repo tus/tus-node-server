@@ -1,4 +1,6 @@
-export {FileConfigstore} from './FileConfigstore'
-export {MemoryConfigstore} from './MemoryConfigstore'
-export {RedisConfigstore} from './RedisConfigstore'
-export {Configstore} from './Types'
+export {
+  FileKvStore as FileConfigstore,
+  MemoryKvStore as MemoryConfigstore,
+  RedisKvStore as RedisConfigstore,
+  KvStore as Configstore,
+} from '@tus/utils'
