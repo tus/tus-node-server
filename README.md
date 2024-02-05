@@ -5,7 +5,7 @@
 > **tus** is a protocol based on HTTP for _resumable file uploads_. Resumable
 > means that an upload can be interrupted at any moment and can be resumed without
 > re-uploading the previous data again. An interruption may happen willingly, if
-> the user wants to pause, or by accident in case of an network issue or server
+> the user wants to pause, or bn accident in case of an network issue or server
 > outage.
 
 tus-node-server is an official implementation of the [tus resumable upload protocol](http://www.tus.io/protocols/resumable-upload.html).
@@ -116,20 +116,20 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 Start the demo server using Local File Storage
 
 ```bash
-yarn build && yarn demo
+npm run build && npm run demo
 ```
 
 Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` need to be present.
 
 ```bash
-yarn build && yarn demo:s3
+npm run build && npm run demo:s3
 ```
 
 Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present in the root of the repository.
 
 ```bash
-yarn build && yarn demo:gcs
+npm run build && npm run demo:gcs
 ```
 
 Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client).
@@ -151,7 +151,6 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
 
 [corepack]: https://nodejs.org/api/corepack.html
-[yarn]: https://yarnpkg.com/
 [`@tus/server`]: https://github.com/tus/tus-node-server/tree/main/packages/server
 [`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
 [`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store

@@ -30,22 +30,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Decrypt keyfile
         run: ./.github/scripts/decrypt_secret.sh
         env:
           KEYFILE_PASSPHRASE: ${{secrets.KEYFILE_PASSPHRASE}}
+
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{matrix.node-version}}
+
       - name: Install dependencies
-        run: corepack yarn install
+        run: npm ci --no-fund --no-audit
+
       - name: Build
-        run: corepack yarn build
+        run: npm run build
+
       - name: Run linters
-        run: corepack yarn lint
+        run: npm run lint
+
       - name: Run tests
-        run: corepack yarn test
+        run: npm run test
         env:
           AWS_BUCKET: ${{secrets.AWS_BUCKET}}
           AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}

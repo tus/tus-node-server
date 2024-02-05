@@ -21,7 +21,7 @@
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "@tus/utils": "workspace:*",
+    "@tus/utils": "^0.1.0",
     "debug": "^4.3.4"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@types/sinon": "^10.0.20",
     "@types/supertest": "^2.0.16",
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
+    "eslint-config-custom": "^0.0.0",
     "mocha": "^10.2.0",
     "node-mocks-http": "^1.14.1",
     "should": "^13.2.3",
