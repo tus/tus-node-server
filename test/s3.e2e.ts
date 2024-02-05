@@ -33,12 +33,16 @@ const createStore = (options: S3Options = {}) =>
     s3ClientConfig: s3Credentials,
   })
 
-const createUpload = async (agent: SuperAgentTest, uploadLength: number) => {
-  const response = await agent
-    .post(STORE_PATH)
-    .set('Tus-Resumable', TUS_RESUMABLE)
-    .set('Upload-Length', uploadLength.toString())
-    .expect(201)
+const createUpload = async (agent: SuperAgentTest, uploadLength?: number) => {
+  const req = agent.post(STORE_PATH).set('Tus-Resumable', TUS_RESUMABLE)
+
+  if (uploadLength) {
+    req.set('Upload-Length', uploadLength.toString())
+  } else {
+    req.set('Upload-Defer-Length', '1')
+  }
+
+  const response = await req.expect(201)
 
   assert(Boolean(response.headers.location), 'location not returned')
   const uploadId = response.headers.location.split('/').pop()
@@ -52,15 +56,20 @@ const patchUpload = async (
   agent: SuperAgentTest,
   uploadId: string,
   data: Buffer,
-  offset = 0
+  offset = 0,
+  uploadLength?: number
 ) => {
-  const res = await agent
+  const req = agent
     .patch(`${STORE_PATH}/${uploadId}`)
     .set('Tus-Resumable', TUS_RESUMABLE)
     .set('Upload-Offset', offset.toString())
     .set('Content-Type', 'application/offset+octet-stream')
-    .send(data)
-    .expect(204)
+
+  if (uploadLength) {
+    req.set('Upload-Length', uploadLength.toString())
+  }
+
+  const res = await req.send(data).expect(204)
 
   return {offset: parseInt(res.headers['upload-offset'], 10)}
 }
@@ -281,6 +290,52 @@ describe('S3 Store E2E', () => {
         .set('Content-Type', 'application/offset+octet-stream')
         .send(data.subarray(offset))
         .expect(410)
+    })
+  })
+
+  describe('Upload', () => {
+    let server: Server
+    let listener: http.Server
+    let agent: SuperAgentTest
+    let store: S3Store
+
+    before((done) => {
+      store = createStore({
+        partSize: 5_242_880,
+      })
+      server = new Server({
+        path: STORE_PATH,
+        datastore: store,
+      })
+      listener = server.listen()
+      agent = request.agent(listener)
+      done()
+    })
+
+    after((done) => {
+      listener.close(done)
+    })
+
+    it('can a upload a smaller file than the minPreferred size using a deferred length', async () => {
+      const data = allocMB(1)
+      const {uploadId} = await createUpload(agent)
+      const {offset} = await patchUpload(agent, uploadId, data)
+      const {offset: offset2} = await patchUpload(
+        agent,
+        uploadId,
+        new Buffer(0),
+        offset,
+        data.length
+      )
+
+      assert.equal(offset2, data.length)
+
+      const head = await s3Client.headObject({
+        Bucket: s3Credentials.bucket,
+        Key: uploadId,
+      })
+
+      assert.equal(head.$metadata.httpStatusCode, 200)
     })
   })
 })

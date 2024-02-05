@@ -33,6 +33,7 @@ export class StreamSplitter extends stream.Writable {
     this.directory = directory
     this.filenameTemplate = randomString(10)
     this.part = 0
+
     this.on('error', this._handleError.bind(this))
   }
 
@@ -87,6 +88,7 @@ export class StreamSplitter extends stream.Writable {
   }
 
   async _handleError() {
+    await this.emitEvent('chunkError', this.currentChunkPath)
     // If there was an error, we want to stop allowing to write on disk as we cannot advance further.
     // At this point the chunk might be incomplete advancing further might cause data loss.
     // some scenarios where this might happen is if the disk is full or if we abort the stream midway.
@@ -106,7 +108,7 @@ export class StreamSplitter extends stream.Writable {
 
     await this.fileHandle.close()
 
-    this.emit('chunkFinished', {
+    await this.emitEvent('chunkFinished', {
       path: this.currentChunkPath,
       size: this.currentChunkSize,
     })
@@ -117,13 +119,23 @@ export class StreamSplitter extends stream.Writable {
     this.part += 1
   }
 
+  async emitEvent<T>(name: string, payload: T) {
+    const listeners = this.listeners(name)
+    for (const listener of listeners) {
+      await listener(payload)
+    }
+  }
+
   async _newChunk(): Promise<void> {
-    this.currentChunkPath = path.join(
+    const currentChunkPath = path.join(
       this.directory,
       `${this.filenameTemplate}-${this.part}`
     )
+    await this.emitEvent('beforeChunkStarted', currentChunkPath)
+    this.currentChunkPath = currentChunkPath
+
     const fileHandle = await fs.open(this.currentChunkPath, 'w')
-    this.emit('chunkStarted', this.currentChunkPath)
+    await this.emitEvent('chunkStarted', this.currentChunkPath)
     this.currentChunkSize = 0
     this.fileHandle = fileHandle
   }

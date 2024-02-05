@@ -1206,6 +1206,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shopify/semaphore@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@shopify/semaphore@npm:3.0.2"
+  checksum: fcee7f95830539f0fb4a085cd8c3f6b39c5fa99aa8067c4718aa088a4fb1d6096d80635e97f146651da5acc00a2d72ce977b9c54cd5ebee5cb1aec8af9dc6181
+  languageName: node
+  linkType: hard
+
 "@sinonjs/commons@npm:^2.0.0":
   version: 2.0.0
   resolution: "@sinonjs/commons@npm:2.0.0"
@@ -2012,14 +2019,17 @@ __metadata:
   resolution: "@tus/s3-store@workspace:packages/s3-store"
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.490.0"
+    "@shopify/semaphore": "npm:^3.0.2"
     "@tus/utils": "workspace:*"
     "@types/debug": "npm:^4.1.12"
     "@types/mocha": "npm:^10.0.6"
+    "@types/multistream": "npm:^4.1.3"
     "@types/node": "npm:^20.11.5"
     debug: "npm:^4.3.4"
     eslint: "npm:^8.56.0"
     eslint-config-custom: "workspace:*"
     mocha: "npm:^10.2.0"
+    multistream: "npm:^4.1.0"
     should: "npm:^13.2.3"
     typescript: "npm:^5.3.3"
   languageName: unknown
@@ -2207,6 +2217,15 @@ __metadata:
   version: 0.7.31
   resolution: "@types/ms@npm:0.7.31"
   checksum: 6647b295fb2a5b8347c35efabaaed1777221f094be9941d387b4bf11df0eeacb3f8a4e495b8b66ce0e4c00593bc53ab5fc25f01ebb274cd989a834ae578099de
+  languageName: node
+  linkType: hard
+
+"@types/multistream@npm:^4.1.3":
+  version: 4.1.3
+  resolution: "@types/multistream@npm:4.1.3"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 9b91fbc513a030e45491c6f79e6165d4c7ca56360bc7ab355feb3a57b1fd3c5eda9096b56e78fcdce7a2e4526da8ff59dbc6c1bd52844258e31677e5ca3208fc
   languageName: node
   linkType: hard
 
@@ -5623,6 +5642,16 @@ __metadata:
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
+  languageName: node
+  linkType: hard
+
+"multistream@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "multistream@npm:4.1.0"
+  dependencies:
+    once: "npm:^1.4.0"
+    readable-stream: "npm:^3.6.0"
+  checksum: 305c49a1aadcb7f63f64d8ca2bb6e7852e5f7dba94c7329e9a72ce53cd0046686b71668dc1adbf123f17d2dd107765fc946e64c36a26b15c470a3146ea3bc923
   languageName: node
   linkType: hard
 

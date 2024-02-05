@@ -91,6 +91,22 @@ you need to provide a cache implementation that is shared between all instances 
 
 See the exported [KV stores][kvstores] from `@tus/server` for more information.
 
+#### `options.maxConcurrentPartUploads`
+
+This setting determines the maximum number of simultaneous part uploads to an S3 storage service.
+The default value is 60. This default is chosen in conjunction with the typical partSize of 8MiB, aiming for an effective transfer rate of 3.84Gbit/s.
+
+**Considerations:**
+The ideal value for `maxConcurrentPartUploads` varies based on your `partSize` and the upload bandwidth to your S3 bucket. A larger partSize means less overall upload bandwidth available for other concurrent uploads.
+
+- **Lowering the Value**: Reducing `maxConcurrentPartUploads` decreases the number of simultaneous upload requests to S3. This can be beneficial for conserving memory, CPU, and disk I/O resources, especially in environments with limited system resources or where the upload speed it low or the part size is large.
+
+
+- **Increasing the Value**: A higher value potentially enhances the data transfer rate to the server, but at the cost of increased resource usage (memory, CPU, and disk I/O). This can be advantageous when the goal is to maximize throughput, and sufficient system resources are available.
+
+
+- **Bandwidth Considerations**: It's important to note that if your upload bandwidth to S3 is a limiting factor, increasing `maxConcurrentPartUploads` won’t lead to higher throughput. Instead, it will result in additional resource consumption without proportional gains in transfer speed.
+
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/s3-store`.
