@@ -21,17 +21,17 @@
     "test": "mocha test.ts --timeout 30000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "@tus/utils": "workspace:*",
+    "@tus/utils": "^0.1.0",
     "debug": "^4.3.4"
   },
   "devDependencies": {
     "@google-cloud/storage": "^6.12.0",
-    "@tus/server": "workspace:^",
+    "@tus/server": "^1.4.0",
     "@types/debug": "^4.1.12",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.5",
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
+    "eslint-config-custom": "^0.0.0",
     "mocha": "^10.2.0",
     "should": "^13.2.3",
     "typescript": "^5.3.3"

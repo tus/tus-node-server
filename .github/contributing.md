@@ -1,32 +1,22 @@
 # Contributing
 
-We are using [Corepack][] so you don’t have to worry about installing the right package manager and managing the version of [Yarn][].
-Corepack comes pre-installed with Node.js >=16.x, or can be installed through `npm`.
-You can run `corepack enable` to install a `yarn` executable in your `$PATH`, or prefix all yarn commands with `corepack yarn`.
-
-```sh
-corepack -v || npm i -g corepack
-yarn -v || corepack enable
-yarn install || corepack yarn install
-```
-
 `tus-node-server` is a mono-repository managed by [Turborepo](https://turbo.build/repo).
-This means running `yarn build` in the root will build all packages in parallel.
+This means running `npm run build` in the root will build all packages in parallel.
 The same goes for `lint` and `format`.
 
 ## Changesets
 
 We use [changesets](https://github.com/changesets/changesets) to manage versioning, changelogs and publishing.
-This means when you contribute a PR you have to run `yarn changeset` to indicate the semver bump you are making
+This means when you contribute a PR you have to run `npx changeset add` to indicate the semver bump you are making
 and to add a changelog entry.
 
 ## Tests
 
-You can run tests for individual packages by running a Yarn workspace command.
+You can run tests for individual packages by running a NPM workspace command.
 For instance, for the `@tus/server`:
 
 ```bash
-yarn workspace @tus/server test
+npm run --workspace @tus/server test
 ```
 
 Running tests for `@tus/gcs-store` requires a `keyfile.json` with credentials to be present in root.
@@ -44,13 +34,13 @@ export AWS_REGION="***"
 And run it:
 
 ```bash
-source .env.sh && yarn workspace @tus/s3-store test
+source .env.sh && npm run --workspace @tus/s3-store test
 ```
 
 You can run all tests with (requires both S3 and GCS credentials):
 
 ```bash
-yarn test
+npm test
 ```
 
 ---

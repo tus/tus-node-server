@@ -18,10 +18,10 @@ jobs:
           node-version: lts/*
 
       - name: Install dependencies
-        run: corepack yarn install
+        run: npm install
 
       - name: Build
-        run: corepack yarn build
+        run: npm run build
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets

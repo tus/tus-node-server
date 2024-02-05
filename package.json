@@ -8,22 +8,21 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "demo": "yarn workspace demo start",
-    "demo:gcs": "yarn workspace demo start:gcs",
-    "demo:s3": "yarn workspace demo start:s3",
+    "demo": "npm run --workspace demo start",
+    "demo:gcs": "npm run --workspace demo start:gcs",
+    "demo:s3": "npm run --workspace demo start:s3",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "test": "turbo run test",
     "release": "gh workflow run release",
-    "release:local": "turbo run build && corepack yarn changeset publish"
+    "release:local": "turbo run build && npx changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
+    "eslint-config-custom": "^0.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
     "turbo": "^1.11.3"
-  },
-  "packageManager": "yarn@4.0.2+sha256.825003a0f561ad09a3b1ac4a3b3ea6207af2796d54f62a9420520915721f5186"
+  }
 }
