@@ -17,7 +17,7 @@
     "@types/node": "^20.11.5",
     "@types/rimraf": "^3.0.2",
     "@types/sinon": "^10.0.20",
-    "@types/supertest": "^2.0.16",
+    "@types/supertest": "^6.0.2",
     "@types/throttle": "^1.0.4",
     "mocha": "^10.2.0",
     "rimraf": "^3.0.2",
