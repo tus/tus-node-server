@@ -500,11 +500,9 @@ export class S3Store extends DataStore {
     else if (size <= this.preferredPartSize * this.maxMultipartParts) {
       optimalPartSize = this.preferredPartSize
       // The upload is too big for the preferred size.
-      // We divide the size with the max amount of parts and round it up.
-    } else if (size % this.maxMultipartParts === 0) {
-      optimalPartSize = size / this.maxMultipartParts
+      // We devide the size with the max amount of parts and round it up.
     } else {
-      optimalPartSize = size / this.maxMultipartParts + 1
+      optimalPartSize = Math.ceil(size / this.maxMultipartParts)
     }
 
     return optimalPartSize
