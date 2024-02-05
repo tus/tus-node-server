@@ -116,20 +116,20 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 Start the demo server using Local File Storage
 
 ```bash
-npm build && npm demo
+npm run build && npm run demo
 ```
 
 Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` need to be present.
 
 ```bash
-npm build && npm demo:s3
+npm run build && npm run demo:s3
 ```
 
 Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present in the root of the repository.
 
 ```bash
-npm build && npm demo:gcs
+npm run build && npm run demo:gcs
 ```
 
 Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client).
