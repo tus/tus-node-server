@@ -1,6 +1,6 @@
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
-import stream, {PassThrough, promises as streamProm} from 'node:stream'
+import stream, {promises as streamProm} from 'node:stream'
 import type {Readable} from 'node:stream'
 
 import AWS, {NoSuchKey, NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
@@ -14,9 +14,9 @@ import {
   TUS_RESUMABLE,
   KvStore,
   MemoryKvStore,
-  Semaphore,
-  Permit,
 } from '@tus/server'
+import {Semaphore, Permit} from '@shopify/semaphore'
+import MultiStream from 'multistream'
 import crypto from 'node:crypto'
 import path from 'node:path'
 
@@ -28,7 +28,7 @@ type Options = {
   // but may increase it to not exceed the S3 10K parts limit.
   partSize?: number
   useTags?: boolean
-  maxConcurrentPartUploads?: number
+  maxConcurrentPartUploads?: number | Semaphore
   cache?: KvStore<MetadataValue>
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
@@ -44,45 +44,6 @@ export type MetadataValue = {
 function calcOffsetFromParts(parts?: Array<AWS.Part>) {
   // @ts-expect-error not undefined
   return parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0
-}
-
-function concatenateStreams(streams: Readable[]): Readable {
-  const passThrough = new PassThrough()
-  let currentStreamIndex = 0
-  let errorOccurred = false
-
-  const pipeNextStream = (): void => {
-    if (errorOccurred || currentStreamIndex >= streams.length) {
-      passThrough.end()
-      return
-    }
-
-    const stream = streams[currentStreamIndex]
-    stream.on('error', (err: Error) => {
-      if (!errorOccurred) {
-        errorOccurred = true
-        passThrough.emit('error', err)
-        passThrough.end()
-
-        // notify the other subsequent streams that an error has occurred
-        streams.slice(currentStreamIndex + 1).forEach((s) => {
-          if (typeof s.destroy === 'function') {
-            s.destroy(err)
-          }
-        })
-      }
-    })
-
-    stream.pipe(passThrough, {end: false})
-    stream.on('end', () => {
-      currentStreamIndex++
-      pipeNextStream()
-    })
-  }
-
-  pipeNextStream()
-
-  return passThrough
 }
 
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
@@ -125,7 +86,7 @@ export class S3Store extends DataStore {
   private preferredPartSize: number
   private expirationPeriodInMilliseconds = 0
   private useTags = true
-  private semaphore: Semaphore
+  private partUploadSemaphore: Semaphore
   public maxMultipartParts = 10_000 as const
   public minPartSize = 5_242_880 as const // 5MiB
   public maxUploadSize = 5_497_558_138_880 as const // 5TiB
@@ -147,7 +108,10 @@ export class S3Store extends DataStore {
     this.useTags = options.useTags ?? true
     this.cache = options.cache ?? new MemoryKvStore<MetadataValue>()
     this.client = new S3(restS3ClientConfig)
-    this.semaphore = new Semaphore(options.maxConcurrentPartUploads ?? 60)
+    this.partUploadSemaphore =
+      options.maxConcurrentPartUploads instanceof Semaphore
+        ? options.maxConcurrentPartUploads
+        : new Semaphore(options.maxConcurrentPartUploads ?? 60)
   }
 
   protected shouldUseExpirationTags() {
@@ -391,7 +355,7 @@ export class S3Store extends DataStore {
       directory: os.tmpdir(),
     })
       .on('beforeChunkStarted', async () => {
-        permit = await this.semaphore.acquire()
+        permit = await this.partUploadSemaphore.acquire()
       })
       .on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
@@ -603,7 +567,7 @@ export class S3Store extends DataStore {
       await this.deleteIncompletePart(id)
 
       offset = requestedOffset - incompletePart.size
-      src = concatenateStreams([incompletePart.createReader({cleanUpOnEnd: true}), src])
+      src = new MultiStream([incompletePart.createReader({cleanUpOnEnd: true}), src])
     }
 
     const bytesUploaded = await this.uploadParts(metadata, src, nextPartNumber, offset)
