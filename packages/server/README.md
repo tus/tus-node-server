@@ -91,16 +91,14 @@ If you change that you have to use `getFileIdFromRequest` as well.
 
 A common use case of this function and `getFileIdFromRequest` is to base65 encode a complex id into the URL.
 
-> [!TIP]
-> Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
+Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
 
 #### `options.getFileIdFromRequest`
 
 Control how the Upload-ID is extracted from the request (`(req) => string | void`)
 By default, it expects everything in the path after the last `/` to be the upload id.
 
-> [!TIP]
-> Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
+Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
 
 #### `options.namingFunction`
 
@@ -113,10 +111,16 @@ and result in a different file name in storage.
 It is important to make these unique to prevent data loss. Only use it if you need to.
 Default uses `crypto.randomBytes(16).toString('hex')`.
 
-> [!TIP]
-> Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
+Checkout the example how to [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
 
-#### `disableTerminationForFinishedUploads`
+#### `options.locker`
+
+The locker interface to manage locks for exclusive access control over resources ([`Locker`][]).
+
+By default it uses an in-memory locker ([`MemoryLocker`][]) for safe concurrent access to uploads using a single server.
+When running multiple instances of the server, you need to provide a locker implementation that is shared between all instances (such as a `RedisLocker`).
+
+#### `options.disableTerminationForFinishedUploads`
 
 Disallow the [termination extension](https://tus.io/protocols/resumable-upload#termination) for finished uploads. (`boolean`)
 
@@ -517,8 +521,10 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
 [`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
 [`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
-[`constants`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/constants.ts
+[`constants`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/constants.ts
 [`types`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/types.ts
-[`models`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/models/index.ts
-[`kvstores`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/kvstores/index.ts
+[`models`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/models/index.ts
+[`kvstores`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/index.ts
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
+[`Locker`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/models/Locker.ts
+[`MemoryLocker`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/lockers/MemoryLocker.ts

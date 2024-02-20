@@ -101,9 +101,7 @@ The ideal value for `maxConcurrentPartUploads` varies based on your `partSize` a
 
 - **Lowering the Value**: Reducing `maxConcurrentPartUploads` decreases the number of simultaneous upload requests to S3. This can be beneficial for conserving memory, CPU, and disk I/O resources, especially in environments with limited system resources or where the upload speed it low or the part size is large.
 
-
 - **Increasing the Value**: A higher value potentially enhances the data transfer rate to the server, but at the cost of increased resource usage (memory, CPU, and disk I/O). This can be advantageous when the goal is to maximize throughput, and sufficient system resources are available.
-
 
 - **Bandwidth Considerations**: It's important to note that if your upload bandwidth to S3 is a limiting factor, increasing `maxConcurrentPartUploads` won’t lead to higher throughput. Instead, it will result in additional resource consumption without proportional gains in transfer speed.
 
@@ -202,4 +200,4 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [cleanExpiredUploads]: https://github.com/tus/tus-node-server/tree/main/packages/server#servercleanupexpireduploads
 [lifecyle]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
-[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/kvstores/Types.ts
+[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts

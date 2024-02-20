@@ -142,4 +142,4 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
 [`cleanUpExpiredUploads`]: https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
-[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/kvstores/Types.ts
+[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
