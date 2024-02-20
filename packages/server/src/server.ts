@@ -288,7 +288,7 @@ export class Server extends EventEmitter {
       abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
       setTimeout(() => {
         requestAbortController.abort(err)
-      }, 3000)
+      }, this.options.lockDrainTimeout || 3000)
     }
     abortWithDelayController.signal.addEventListener('abort', onDelayedAbort)
 
