@@ -22,7 +22,7 @@
     "eslint": "^8.56.0",
     "eslint-config-custom": "^0.0.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.8",
+    "prettier": "^3.2.5",
     "turbo": "^1.11.3"
   }
 }
