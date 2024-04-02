@@ -2,23 +2,24 @@
 
 <img alt="Tus logo" src="https://github.com/tus/tus.io/blob/main/public/images/tus1.png?raw=true" width="30%" align="right" />
 
-> **tus** is a protocol based on HTTP for _resumable file uploads_. Resumable
-> means that an upload can be interrupted at any moment and can be resumed without
-> re-uploading the previous data again. An interruption may happen willingly, if
-> the user wants to pause, or bn accident in case of an network issue or server
-> outage.
+> **tus** is a protocol based on HTTP for _resumable file uploads_. Resumable means that
+> an upload can be interrupted at any moment and can be resumed without re-uploading the
+> previous data again. An interruption may happen willingly, if the user wants to pause,
+> or bn accident in case of an network issue or server outage.
 
-tus-node-server is an official implementation of the [tus resumable upload protocol](http://www.tus.io/protocols/resumable-upload.html).
-The protocol specifies a flexible method to upload files to remote servers using HTTP.
-The special feature is the ability to pause and resume uploads at any
-moment allowing to continue seamlessly after e.g. network interruptions.
+tus-node-server is an official implementation of the
+[tus resumable upload protocol](http://www.tus.io/protocols/resumable-upload.html). The
+protocol specifies a flexible method to upload files to remote servers using HTTP. The
+special feature is the ability to pause and resume uploads at any moment allowing to
+continue seamlessly after e.g. network interruptions.
 
-It is capable of accepting uploads with arbitrary sizes and storing them locally
-on disk, on Google Cloud Storage or on AWS S3 (or any other S3-compatible
-storage system). Due to its modularization and extensibility, support for
-nearly any other cloud provider could easily be added to tus-node-server
+It is capable of accepting uploads with arbitrary sizes and storing them locally on disk,
+on Google Cloud Storage or on AWS S3 (or any other S3-compatible storage system). Due to
+its modularization and extensibility, support for nearly any other cloud provider could
+easily be added to tus-node-server
 
-> 📣 [**Read the 1.0.0 announcement post: new packages, rewrite in TypeScript, and much more**](https://tus.io/blog/2023/09/04/tus-node-server-v100).
+> 📣
+> [**Read the 1.0.0 announcement post: new packages, rewrite in TypeScript, and much more**](https://tus.io/blog/2023/09/04/tus-node-server-v100).
 
 ## Contents
 
@@ -34,13 +35,15 @@ nearly any other cloud provider could easily be added to tus-node-server
 
 ## When should I use this?
 
-When you want reliable, resumable uploads.
-Together with a client like [tus-js-client](https://github.com/tus/tus-js-client) or [Uppy](https://uppy.io),
-you'll have a plug-and-play experience.
+When you want reliable, resumable uploads. Together with a client like
+[tus-js-client](https://github.com/tus/tus-js-client) or [Uppy](https://uppy.io), you'll
+have a plug-and-play experience.
 
-tus-node-server in particular makes sense if you want to host a Node.js server or integrate it into your existing one.
-There are also other mature servers, like [tusd](https://github.com/tus/tusd), [tusdotnet](https://github.com/tusdotnet/tusdotnet),
-[rustus](https://github.com/s3rius/rustus), and [many others](https://tus.io/implementations.html).
+tus-node-server in particular makes sense if you want to host a Node.js server or
+integrate it into your existing one. There are also other mature servers, like
+[tusd](https://github.com/tus/tusd), [tusdotnet](https://github.com/tusdotnet/tusdotnet),
+[rustus](https://github.com/s3rius/rustus), and
+[many others](https://tus.io/implementations.html).
 
 ## Quick start
 
@@ -60,9 +63,9 @@ const server = new Server({
 server.listen({host, port})
 ```
 
-A tus server integrated into your existing Node.js server.
-`@tus/server` has no dependencies so it can be integrated in any server-side framework.
-More examples can be found in [`@tus/server`][].
+A tus server integrated into your existing Node.js server. `@tus/server` has no
+dependencies so it can be integrated in any server-side framework. More examples can be
+found in [`@tus/server`][].
 
 ```js
 const fastify = require('fastify')({ logger: true });
@@ -100,7 +103,8 @@ fastify.listen(3000, (err) => {
 
 ## Extensions
 
-The tus protocol supports optional [extensions][]. Below is a table of the supported extensions.
+The tus protocol supports optional [extensions][]. Below is a table of the supported
+extensions.
 
 | Extension                | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] |
 | ------------------------ | --------------------------------- | ----------------------------- | ------------------------------- |
@@ -126,13 +130,15 @@ Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
 npm run build && npm run demo:s3
 ```
 
-Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present in the root of the repository.
+Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present
+in the root of the repository.
 
 ```bash
 npm run build && npm run demo:gcs
 ```
 
-Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses [`tus-js-client`](https://github.com/tus/tus-js-client).
+Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses
+[`tus-js-client`](https://github.com/tus/tus-js-client).
 
 ## Types
 
@@ -144,11 +150,13 @@ All packages require Node.js 16.0+.
 
 ## Contribute
 
-See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
+See
+[`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
 
 ## License
 
-[MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+[MIT](https://github.com/tus/tus-node-server/blob/master/license) ©
+[tus](https://github.com/tus)
 
 [corepack]: https://nodejs.org/api/corepack.html
 [`@tus/server`]: https://github.com/tus/tus-node-server/tree/main/packages/server
@@ -157,7 +165,8 @@ See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github
 [`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]:
+  https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination

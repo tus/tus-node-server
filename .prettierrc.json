@@ -6,5 +6,6 @@
   "useTabs": false,
   "tabWidth": 2,
   "bracketSpacing": false,
-  "trailingComma": "es5"
+  "trailingComma": "es5",
+  "proseWrap": "always"
 }

@@ -1,8 +1,8 @@
 # `@tus/gcs-store`
 
-> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
-> The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages.
+> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope. The
+> old package, `tus-node-server`, is considered unstable and will only receive security
+> fixes. Make sure to use the new packages.
 
 ## Contents
 
@@ -56,7 +56,8 @@ The bucket instance
 
 ## Extensions
 
-The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/gcs-store`.
+The tus protocol supports optional [extensions][]. Below is a table of the supported
+extensions in `@tus/gcs-store`.
 
 | Extension                | `@tus/gcs-store` |
 | ------------------------ | ---------------- |
@@ -77,15 +78,18 @@ This package requires Node.js 16.0+.
 
 ## Contribute
 
-See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
+See
+[`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
 
 ## License
 
-[MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+[MIT](https://github.com/tus/tus-node-server/blob/master/license) ©
+[tus](https://github.com/tus)
 
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]:
+  https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination

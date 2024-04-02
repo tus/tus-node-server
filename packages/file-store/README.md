@@ -1,8 +1,8 @@
 # `@tus/file-store`
 
-> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope.
-> The old package, `tus-node-server`, is considered unstable and will only receive security fixes.
-> Make sure to use the new packages.
+> 👉 **Note**: since 1.0.0 packages are split and published under the `@tus` scope. The
+> old package, `tus-node-server`, is considered unstable and will only receive security
+> fixes. Make sure to use the new packages.
 
 ## Contents
 
@@ -55,19 +55,20 @@ The directory to store the files on disk (`string`).
 
 Provide your own storage solution for the metadata of uploads ([`KvStore`][]).
 
-Default uses `FileKvStore` which puts the metadata file next to the uploaded file.
-See the exported [KV stores][kvstores] from `@tus/server` for more information.
+Default uses `FileKvStore` which puts the metadata file next to the uploaded file. See the
+exported [KV stores][kvstores] from `@tus/server` for more information.
 
 #### `options.expirationPeriodInMilliseconds`
 
 The time before an _ongoing_ upload is considered expired (`number`).
 
-This is since the time of creation, not modification. Once an upload is considered expired,
-uploads can be removed with [`cleanUpExpiredUploads`][].
+This is since the time of creation, not modification. Once an upload is considered
+expired, uploads can be removed with [`cleanUpExpiredUploads`][].
 
 ## Extensions
 
-The tus protocol supports optional [extensions][]. Below is a table of the supported extensions in `@tus/file-store`.
+The tus protocol supports optional [extensions][]. Below is a table of the supported
+extensions in `@tus/file-store`.
 
 | Extension                | `@tus/file-store` |
 | ------------------------ | ----------------- |
@@ -82,8 +83,8 @@ The tus protocol supports optional [extensions][]. Below is a table of the suppo
 
 ### Example: creating your own config store
 
-For demonstration purposes we will create a memory config store, but that's not a good idea.
-It's written in TypeScript.
+For demonstration purposes we will create a memory config store, but that's not a good
+idea. It's written in TypeScript.
 
 ```ts
 import type {Upload} from '@tus/server'
@@ -127,19 +128,24 @@ This package requires Node.js 16.0+.
 
 ## Contribute
 
-See [`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
+See
+[`contributing.md`](https://github.com/tus/tus-node-server/blob/main/.github/contributing.md).
 
 ## License
 
-[MIT](https://github.com/tus/tus-node-server/blob/master/license) © [tus](https://github.com/tus)
+[MIT](https://github.com/tus/tus-node-server/blob/master/license) ©
+[tus](https://github.com/tus)
 
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]:
+  https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
-[`cleanUpExpiredUploads`]: https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
+[`cleanUpExpiredUploads`]:
+  https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
-[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
+[`KvStore`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
