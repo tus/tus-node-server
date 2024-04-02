@@ -18,6 +18,7 @@
   - [Example: integrate tus into Next.js](#example-integrate-tus-into-nextjs)
   - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
   - [Example: store files in custom nested directories](#example-store-files-in-custom-nested-directories)
+  - [Example: use with Nginx](#example-use-with-nginx)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -501,6 +502,32 @@ const server = new Server({
 })
 
 ```
+
+### Example: use with Nginx
+
+In some cases, it is necessary to run behind a reverse proxy (Nginx, HAProxy etc), for example for TLS termination or serving multiple services on the same hostname. To properly do this, `@tus/server` and the proxy must be configured appropriately.
+
+Firstly, you must set `respectForwardedHeaders` indicating that a reverse proxy is in use and that it should respect the `X-Forwarded-*`/`Forwarded` headers:
+
+```js
+const {Server} = require('@tus/server')
+// ...
+
+const server = new Server({
+  // ..
+  respectForwardedHeaders: true,
+})
+```
+
+Secondly, some of the reverse proxy's settings should be adjusted. The exact steps depend on the used proxy, but the following points should be checked:
+
+- _Disable request buffering._ Nginx, for example, reads the entire incoming HTTP request, including its body, before sending it to the backend, by default. This behavior defeats the purpose of resumability where an upload is processed and saved while it's being transferred, allowing it be resumed. Therefore, such a feature must be disabled.
+
+- _Adjust maximum request size._ Some proxies have default values for how big a request may be in order to protect your services. Be sure to check these settings to match the requirements of your application.
+
+- _Forward hostname and scheme._ If the proxy rewrites the request URL, the tusd server does not know the original URL which was used to reach the proxy. This behavior can lead to situations, where tusd returns a redirect to a URL which can not be reached by the client. To avoid this issue, you can explicitly tell tusd which hostname and scheme to use by supplying the `X-Forwarded-Host` and `X-Forwarded-Proto` headers. Configure the proxy to set these headers to the original hostname and protocol when forwarding requests to tusd.
+
+You can also take a look at the [Nginx configuration from tusd](https://github.com/tus/tusd/blob/main/examples/nginx.conf) which is used to power the [tusd.tusdemo.net](https://tusd.tusdemo.net) instance.
 
 ## Types
 
