@@ -440,7 +440,7 @@ describe('Server', () => {
         .set('Upload-Length', '4')
         .expect(201)
         .then((res) => {
-          request(server.listen())
+          request(s)
             .head(removeProtocol(res.headers.location))
             .set('Tus-Resumable', TUS_RESUMABLE)
             .expect(200)

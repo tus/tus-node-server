@@ -102,12 +102,19 @@ export class PostHandler extends BaseHandler {
       try {
         const resOrObject = await this.options.onUploadCreate(req, res, upload)
         // Backwards compatibility, remove in next major
-        if (resOrObject instanceof http.ServerResponse) {
-          res = resOrObject
+        // Ugly check because we can't use `instanceof` because we mock the instance in tests
+        if (
+          typeof (resOrObject as http.ServerResponse).write === 'function' &&
+          typeof (resOrObject as http.ServerResponse).writeHead === 'function'
+        ) {
+          res = resOrObject as http.ServerResponse
         } else {
-          res = resOrObject.res
-          if (resOrObject.metadata) {
-            upload.metadata = resOrObject.metadata
+          // Ugly types because TS only understands instanceof
+          type ExcludeServerResponse<T> = T extends http.ServerResponse ? never : T
+          const obj = resOrObject as ExcludeServerResponse<typeof resOrObject>
+          res = obj.res
+          if (obj.metadata) {
+            upload.metadata = obj.metadata
           }
         }
       } catch (error) {
