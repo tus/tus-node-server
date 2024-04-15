@@ -12,7 +12,7 @@ import {
 } from '@tus/utils'
 import {validateHeader} from '../validators/HeaderValidator'
 
-import type http from 'node:http'
+import http from 'node:http'
 import type {ServerOptions, WithRequired} from '../types'
 
 const log = debug('tus-node-server:handlers:post')
@@ -100,7 +100,16 @@ export class PostHandler extends BaseHandler {
 
     if (this.options.onUploadCreate) {
       try {
-        res = await this.options.onUploadCreate(req, res, upload)
+        const resOrObject = await this.options.onUploadCreate(req, res, upload)
+        // Backwards compatibility, remove in next major
+        if (resOrObject instanceof http.ServerResponse) {
+          res = resOrObject
+        } else {
+          res = resOrObject.res
+          if (resOrObject.metadata) {
+            upload.metadata = resOrObject.metadata
+          }
+        }
       } catch (error) {
         log(`onUploadCreate error: ${error.body}`)
         throw error

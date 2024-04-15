@@ -90,7 +90,10 @@ export type ServerOptions = {
     req: http.IncomingMessage,
     res: http.ServerResponse,
     upload: Upload
-  ) => Promise<http.ServerResponse>
+  ) => Promise<
+    // TODO: change in the next major
+    http.ServerResponse | {res: http.ServerResponse; metadata?: Upload['metadata']}
+  >
 
   /**
    * `onUploadFinish` will be invoked after an upload is completed but before a response is returned to the client.
