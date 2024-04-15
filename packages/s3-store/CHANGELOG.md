@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 1.4.2
+
+### Patch Changes
+
+- 79985fc: Fix dead links in README
+
 ## 1.4.1
 
 ### Patch Changes
