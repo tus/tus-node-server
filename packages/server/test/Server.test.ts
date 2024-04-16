@@ -10,7 +10,7 @@ import request from 'supertest'
 
 import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
-import {TUS_RESUMABLE, EVENTS, DataStore} from '@tus/utils'
+import {TUS_RESUMABLE, EVENTS, DataStore, Metadata} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
@@ -421,6 +421,35 @@ describe('Server', () => {
         .set('Tus-Resumable', TUS_RESUMABLE)
         .set('Upload-Length', '4')
         .expect(500, 'no', done)
+    })
+
+    it('should allow metadata to be changed in onUploadCreate', (done) => {
+      const filename = 'foo.txt'
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory}),
+        async onUploadCreate(_, res, upload) {
+          const metadata = {...upload.metadata, filename}
+          return {res, metadata}
+        },
+      })
+      const s = server.listen()
+      request(s)
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .expect(201)
+        .then((res) => {
+          request(s)
+            .head(removeProtocol(res.headers.location))
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .expect(200)
+            .then((r) => {
+              const metadata = Metadata.parse(r.headers['upload-metadata'])
+              assert.equal(metadata.filename, filename)
+              done()
+            })
+        })
     })
 
     it('should call onUploadFinish and return its error to the client', (done) => {

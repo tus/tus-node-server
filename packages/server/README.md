@@ -140,11 +140,12 @@ finished uploads. (`boolean`)
 #### `options.onUploadCreate`
 
 `onUploadCreate` will be invoked before a new upload is created.
-(`(req, res, upload) => Promise<res>`).
+(`(req, res, upload) => Promise<{ res: http.ServerResponse, metadata?: Record<string, string>}>`).
 
-If the function returns the (modified) response, the upload will be created. You can
-`throw` an Object and the HTTP request will be aborted with the provided `body` and
-`status_code` (or their fallbacks).
+- If the function returns the (modified) response the upload will be created.
+- You can optionally return `metadata` which will override (not merge!) `upload.metadata`.
+- You can `throw` an Object and the HTTP request will be aborted with the provided `body`
+  and `status_code` (or their fallbacks).
 
 This can be used to implement validation of upload metadata or add headers.
 
@@ -445,13 +446,15 @@ const {Server} = require('@tus/server')
 const server = new Server({
   // ..
   async onUploadCreate(req, res, upload) {
-    const {ok, expected, received} = validateMetadata(upload)
+    const {ok, expected, received} = validateMetadata(upload) // your logic
     if (!ok) {
       const body = `Expected "${expected}" in "Upload-Metadata" but received "${received}"`
       throw {status_code: 500, body} // if undefined, falls back to 500 with "Internal server error".
     }
-    // We have to return the (modified) response.
-    return res
+    // You can optionally return metadata to override the upload metadata,
+    // such as `{ storagePath: "/upload/123abc..." }`
+    const extraMeta = getExtraMetadata(req) // your logic
+    return {res, metadata: {...upload.metadata, ...extraMeta}}
   },
 })
 ```
