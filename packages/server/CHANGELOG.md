@@ -1,5 +1,11 @@
 # @tus/server
 
+## 1.4.2
+
+### Patch Changes
+
+- 54b7321: Document `locker` option and fix dead links in README
+
 ## 1.4.1
 
 ### Patch Changes
