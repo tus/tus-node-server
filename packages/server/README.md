@@ -451,7 +451,8 @@ const server = new Server({
       const body = `Expected "${expected}" in "Upload-Metadata" but received "${received}"`
       throw {status_code: 500, body} // if undefined, falls back to 500 with "Internal server error".
     }
-    // You can optionally return metadata to override the upload metadata
+    // You can optionally return metadata to override the upload metadata,
+    // such as `{ storagePath: "/upload/123abc..." }`
     const extraMeta = getExtraMetadata(req) // your logic
     return {res, metadata: {...upload.metadata, ...extraMeta}}
   },
