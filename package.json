@@ -14,10 +14,12 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "test": "turbo run test",
+    "version": "changeset version",
     "release": "gh workflow run release",
-    "release:local": "turbo run build && npx changeset version && npx changeset publish"
+    "release:local": "turbo run build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.1",
     "eslint": "^8.57.0",
     "eslint-config-custom": "^0.0.0",
