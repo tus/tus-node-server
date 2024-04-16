@@ -1,5 +1,11 @@
 # @tus/file-store
 
+## 1.3.2
+
+### Patch Changes
+
+- 54b7321: Fix dead links in README
+
 ## 1.3.1
 
 ### Patch Changes
