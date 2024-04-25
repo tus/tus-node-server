@@ -92,6 +92,10 @@ export class Server extends EventEmitter {
       options.locker = new MemoryLocker()
     }
 
+    if (!options.lockDrainTimeout) {
+      options.lockDrainTimeout = 3000
+    }
+
     const {datastore, ...rest} = options
     this.options = rest as ServerOptions
     this.datastore = datastore
@@ -288,7 +292,7 @@ export class Server extends EventEmitter {
       abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
       setTimeout(() => {
         requestAbortController.abort(err)
-      }, 3000)
+      }, this.options.lockDrainTimeout)
     }
     abortWithDelayController.signal.addEventListener('abort', onDelayedAbort)
 
