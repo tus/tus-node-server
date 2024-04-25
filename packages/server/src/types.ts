@@ -72,6 +72,11 @@ export type ServerOptions = {
     | ((req: http.IncomingMessage) => Locker | Promise<Locker>)
 
   /**
+   * This timeout controls how long the server will wait a cancelled lock to do its cleanup.
+   */
+  lockDrainTimeout?: number
+
+  /**
    * Disallow termination for finished uploads.
    */
   disableTerminationForFinishedUploads?: boolean
