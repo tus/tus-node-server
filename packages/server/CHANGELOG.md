@@ -1,5 +1,12 @@
 # @tus/server
 
+## 1.5.0
+
+### Minor Changes
+
+- 9967900: Add `lockDrainTimeout` option
+- 9967900: Allow onUploadCreate hook to override metadata
+
 ## 1.4.2
 
 ### Patch Changes
