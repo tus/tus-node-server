@@ -1,11 +1,12 @@
 import EventEmitter from 'node:events'
+import stream from 'node:stream/promises'
+import {addAbortSignal, PassThrough} from 'node:stream'
+import type http from 'node:http'
 
 import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '@tus/utils'
-import type http from 'node:http'
-import {ERRORS, Upload, StreamLimiter} from '@tus/utils'
-import stream from 'node:stream/promises'
-import {addAbortSignal, PassThrough} from 'stream'
+import {ERRORS, Upload, StreamLimiter, EVENTS} from '@tus/utils'
+import throttle from 'lodash/throttle'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -127,8 +128,7 @@ export class BaseHandler extends EventEmitter {
 
   protected writeToStore(
     req: http.IncomingMessage,
-    id: string,
-    offset: number,
+    upload: Upload,
     maxFileSize: number,
     context: CancellationContext
   ) {
@@ -149,6 +149,16 @@ export class BaseHandler extends EventEmitter {
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
+      const postReceive = throttle((offset: number) => {
+        this.emit(EVENTS.POST_RECEIVE_V2, req, {...upload, offset})
+      }, this.options.postReceiveInterval)
+
+      let tempOffset = upload.offset
+      proxy.on('data', (chunk: Buffer) => {
+        tempOffset += chunk.byteLength
+        postReceive(tempOffset)
+      })
+
       req.on('error', () => {
         if (!proxy.closed) {
           // we end the stream gracefully here so that we can upload the remaining bytes to the store
@@ -162,7 +172,7 @@ export class BaseHandler extends EventEmitter {
       // which would result in a socket hangup error for the client.
       stream
         .pipeline(req.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
-          return this.store.write(stream as StreamLimiter, id, offset)
+          return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
         })
         .then(resolve)
         .catch(reject)

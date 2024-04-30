@@ -7,6 +7,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import request from 'supertest'
+import Throttle from 'throttle'
 
 import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
@@ -377,6 +378,40 @@ describe('Server', () => {
               if (err) {
                 done(err)
               }
+            })
+        })
+    })
+
+    it('should receive throttled POST_RECEIVE event', (done) => {
+      const size = 1024 * 1024
+      let received = 0
+      server.on(EVENTS.POST_RECEIVE_V2, () => {
+        received++
+      })
+
+      // Slow down writing
+      const originalWrite = server.datastore.write.bind(server.datastore)
+      sinon.stub(server.datastore, 'write').callsFake((stream, ...args) => {
+        const throttleStream = new Throttle({bps: size / 4})
+        return originalWrite(stream.pipe(throttleStream), ...args)
+      })
+
+      const data = Buffer.alloc(size, 'a')
+
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', data.byteLength.toString())
+        .then((res) => {
+          request(server.listen())
+            .patch(removeProtocol(res.headers.location))
+            .send(data)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .end((err) => {
+              assert.equal(received, 4)
+              done(err)
             })
         })
     })

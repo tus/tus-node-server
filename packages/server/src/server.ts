@@ -39,6 +39,7 @@ interface TusEvents {
     res: http.ServerResponse,
     upload: Upload
   ) => void
+  [EVENTS.POST_RECEIVE_V2]: (req: http.IncomingMessage, upload: Upload) => void
   [EVENTS.POST_FINISH]: (
     req: http.IncomingMessage,
     res: http.ServerResponse,
@@ -94,6 +95,10 @@ export class Server extends EventEmitter {
 
     if (!options.lockDrainTimeout) {
       options.lockDrainTimeout = 3000
+    }
+
+    if (!options.postReceiveInterval) {
+      options.postReceiveInterval = 1000
     }
 
     const {datastore, ...rest} = options

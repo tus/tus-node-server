@@ -69,6 +69,11 @@ Max file size (in bytes) allowed when uploading (`number` |
 (`(req, id: string | null) => Promise<number> | number`)). When providing a function
 during the OPTIONS request the id will be `null`.
 
+#### `options.postReceiveInterval`
+
+Interval in milliseconds for sending progress of an upload over
+[`POST_RECEIVE_V2`](#eventspost_receive_v2) (`number`).
+
 #### `options.relativeLocation`
 
 Return a relative URL as the `Location` header to the client (`boolean`).
@@ -228,12 +233,24 @@ server.on(EVENTS.POST_CREATE, (req, res, upload => {})
 
 #### `POST_RECEIVE`
 
-Called every time a `PATCH` request is handled.
+Called every time an upload has been finished writing to the store. See also
+`POST_RECEIVE_V2`.
 
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
 server.on(EVENTS.POST_RECEIVE, (req, res, upload => {})
+```
+
+#### `POST_RECEIVE_V2`
+
+Called every [`postReceiveInterval`](#optionspostreceiveinterval) milliseconds for every
+upload while it‘s being written to the store.
+
+```js
+const {EVENTS} = require('@tus/server')
+// ...
+server.on(EVENTS.POST_RECEIVE_V2, (req, upload => {})
 ```
 
 #### `POST_FINISH`

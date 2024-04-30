@@ -35,6 +35,11 @@ export type ServerOptions = {
   allowedHeaders?: string[]
 
   /**
+   * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE_V2`
+   */
+  postReceiveInterval?: number
+
+  /**
    * Control how the upload URL is generated.
    * @param req - The incoming HTTP request.
    * @param options - Options for generating the URL.
