@@ -383,16 +383,23 @@ describe('Server', () => {
     })
 
     it('should receive throttled POST_RECEIVE event', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory}),
+        // bytes per second in the stream is equal to size / 2
+        // so 500ms if we want to see four events
+        postReceiveInterval: 500,
+      })
       const size = 1024 * 1024
       let received = 0
       server.on(EVENTS.POST_RECEIVE_V2, () => {
         received++
       })
 
-      // Slow down writing
       const originalWrite = server.datastore.write.bind(server.datastore)
+      // Slow down writing
       sinon.stub(server.datastore, 'write').callsFake((stream, ...args) => {
-        const throttleStream = new Throttle({bps: size / 4})
+        const throttleStream = new Throttle({bps: size / 2})
         return originalWrite(stream.pipe(throttleStream), ...args)
       })
 
@@ -410,6 +417,7 @@ describe('Server', () => {
             .set('Upload-Offset', '0')
             .set('Content-Type', 'application/offset+octet-stream')
             .end((err) => {
+              console.log('>>> end')
               assert.equal(received, 4)
               done(err)
             })

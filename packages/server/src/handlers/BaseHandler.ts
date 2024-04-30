@@ -6,7 +6,7 @@ import type http from 'node:http'
 import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '@tus/utils'
 import {ERRORS, Upload, StreamLimiter, EVENTS} from '@tus/utils'
-import throttle from 'lodash/throttle'
+import throttle from 'lodash.throttle'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
