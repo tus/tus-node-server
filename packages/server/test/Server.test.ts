@@ -312,7 +312,6 @@ describe('Server', () => {
         .set('Tus-Resumable', TUS_RESUMABLE)
         .set('Upload-Length', length)
         .then((res) => {
-          console.log(res.headers.location)
           request(s)
             .patch(removeProtocol(res.headers.location))
             .send('test')
@@ -417,7 +416,6 @@ describe('Server', () => {
             .set('Upload-Offset', '0')
             .set('Content-Type', 'application/offset+octet-stream')
             .end((err) => {
-              console.log('>>> end')
               assert.equal(received, 4)
               done(err)
             })

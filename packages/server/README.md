@@ -247,6 +247,12 @@ server.on(EVENTS.POST_RECEIVE, (req, res, upload => {})
 Called every [`postReceiveInterval`](#optionspostreceiveinterval) milliseconds for every
 upload while it‘s being written to the store.
 
+This means you are not guaranteed to get (all) events for an upload. For instance if
+`postReceiveInterval` is set to 1000ms and an upload takes 500ms or when the upload takes
+2500ms, you would get the offset at 2000ms, not from 2500ms.
+
+Use `POST_FINISH` if you need to know when an upload is done.
+
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
