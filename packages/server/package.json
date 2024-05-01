@@ -36,7 +36,7 @@
     "node-mocks-http": "^1.14.1",
     "should": "^13.2.3",
     "sinon": "^17.0.1",
-    "supertest": "^6.3.4",
+    "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
