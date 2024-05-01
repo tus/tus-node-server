@@ -38,7 +38,7 @@
     "sinon": "^17.0.1",
     "supertest": "^6.3.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.5"
   },
   "optionalDependencies": {
     "@redis/client": "^1.5.13"
