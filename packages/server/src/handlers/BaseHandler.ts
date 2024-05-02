@@ -149,9 +149,13 @@ export class BaseHandler extends EventEmitter {
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
-      const postReceive = throttle((offset: number) => {
-        this.emit(EVENTS.POST_RECEIVE_V2, req, {...upload, offset})
-      }, this.options.postReceiveInterval)
+      const postReceive = throttle(
+        (offset: number) => {
+          this.emit(EVENTS.POST_RECEIVE_V2, req, {...upload, offset})
+        },
+        this.options.postReceiveInterval,
+        {leading: false}
+      )
 
       let tempOffset = upload.offset
       proxy.on('data', (chunk: Buffer) => {

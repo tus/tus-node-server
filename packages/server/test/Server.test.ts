@@ -385,8 +385,6 @@ describe('Server', () => {
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
-        // bytes per second in the stream is equal to size / 2
-        // so 500ms if we want to see four events
         postReceiveInterval: 500,
       })
       const size = 1024 * 1024
@@ -398,7 +396,8 @@ describe('Server', () => {
       const originalWrite = server.datastore.write.bind(server.datastore)
       // Slow down writing
       sinon.stub(server.datastore, 'write').callsFake((stream, ...args) => {
-        const throttleStream = new Throttle({bps: size / 2})
+        // bytes per second a bit slower than exactly 2s so we can test getting four events
+        const throttleStream = new Throttle({bps: size / 2 - size / 10})
         return originalWrite(stream.pipe(throttleStream), ...args)
       })
 
