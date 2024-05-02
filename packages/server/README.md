@@ -252,8 +252,8 @@ Called every [`postReceiveInterval`](#optionspostreceiveinterval) milliseconds f
 upload while it‘s being written to the store.
 
 This means you are not guaranteed to get (all) events for an upload. For instance if
-`postReceiveInterval` is set to 1000ms and an upload takes 500ms or when the upload takes
-2500ms, you would get the offset at 2000ms, not from 2500ms.
+`postReceiveInterval` is set to 1000ms and an PATCH request takes 500ms, no event is emitted.
+If the PATCH request takes 2500ms, you would get the offset at 2000ms, but not at 2500ms.
 
 Use `POST_FINISH` if you need to know when an upload is done.
 
