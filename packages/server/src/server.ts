@@ -34,6 +34,7 @@ interface TusEvents {
     upload: Upload,
     url: string
   ) => void
+  /** @deprecated this is almost the same as POST_FINISH, use POST_RECEIVE_V2 instead */
   [EVENTS.POST_RECEIVE]: (
     req: http.IncomingMessage,
     res: http.ServerResponse,
