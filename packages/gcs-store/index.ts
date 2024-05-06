@@ -75,7 +75,6 @@ export class GCSStore extends DataStore {
         const file = this.bucket.file(id)
         const destination = upload.offset === 0 ? file : this.bucket.file(`${id}_patch`)
         const options = {
-          offset,
           metadata: {
             metadata: {
               tus_version: TUS_RESUMABLE,
