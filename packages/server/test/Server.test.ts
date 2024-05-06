@@ -7,6 +7,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import request from 'supertest'
+import Throttle from 'throttle'
 
 import {Server} from '../src'
 import {FileStore} from '@tus/file-store'
@@ -311,7 +312,6 @@ describe('Server', () => {
         .set('Tus-Resumable', TUS_RESUMABLE)
         .set('Upload-Length', length)
         .then((res) => {
-          console.log(res.headers.location)
           request(s)
             .patch(removeProtocol(res.headers.location))
             .send('test')
@@ -377,6 +377,46 @@ describe('Server', () => {
               if (err) {
                 done(err)
               }
+            })
+        })
+    })
+
+    it('should receive throttled POST_RECEIVE event', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory}),
+        postReceiveInterval: 500,
+      })
+      const size = 1024 * 1024
+      let received = 0
+      server.on(EVENTS.POST_RECEIVE_V2, () => {
+        received++
+      })
+
+      const originalWrite = server.datastore.write.bind(server.datastore)
+      // Slow down writing
+      sinon.stub(server.datastore, 'write').callsFake((stream, ...args) => {
+        // bytes per second a bit slower than exactly 2s so we can test getting four events
+        const throttleStream = new Throttle({bps: size / 2 - size / 10})
+        return originalWrite(stream.pipe(throttleStream), ...args)
+      })
+
+      const data = Buffer.alloc(size, 'a')
+
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', data.byteLength.toString())
+        .then((res) => {
+          request(server.listen())
+            .patch(removeProtocol(res.headers.location))
+            .send(data)
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .end((err) => {
+              assert.equal(received, 4)
+              done(err)
             })
         })
     })

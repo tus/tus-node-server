@@ -34,11 +34,13 @@ interface TusEvents {
     upload: Upload,
     url: string
   ) => void
+  /** @deprecated this is almost the same as POST_FINISH, use POST_RECEIVE_V2 instead */
   [EVENTS.POST_RECEIVE]: (
     req: http.IncomingMessage,
     res: http.ServerResponse,
     upload: Upload
   ) => void
+  [EVENTS.POST_RECEIVE_V2]: (req: http.IncomingMessage, upload: Upload) => void
   [EVENTS.POST_FINISH]: (
     req: http.IncomingMessage,
     res: http.ServerResponse,
@@ -94,6 +96,10 @@ export class Server extends EventEmitter {
 
     if (!options.lockDrainTimeout) {
       options.lockDrainTimeout = 3000
+    }
+
+    if (!options.postReceiveInterval) {
+      options.postReceiveInterval = 1000
     }
 
     const {datastore, ...rest} = options

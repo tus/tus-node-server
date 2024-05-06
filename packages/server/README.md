@@ -69,6 +69,11 @@ Max file size (in bytes) allowed when uploading (`number` |
 (`(req, id: string | null) => Promise<number> | number`)). When providing a function
 during the OPTIONS request the id will be `null`.
 
+#### `options.postReceiveInterval`
+
+Interval in milliseconds for sending progress of an upload over
+[`POST_RECEIVE_V2`](#eventspost_receive_v2) (`number`).
+
 #### `options.relativeLocation`
 
 Return a relative URL as the `Location` header to the client (`boolean`).
@@ -228,12 +233,34 @@ server.on(EVENTS.POST_CREATE, (req, res, upload => {})
 
 #### `POST_RECEIVE`
 
-Called every time a `PATCH` request is handled.
+**Deprecated**.
+
+Called every time an upload finished writing to the store. This event is emitted whenever
+the request handling is completed (which is the same as `onUploadFinish`, almost the same
+as `POST_FINISH`), whereas the `POST_RECEIVE_V2` event is emitted _while_ the request is
+being handled.
 
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
 server.on(EVENTS.POST_RECEIVE, (req, res, upload => {})
+```
+
+#### `POST_RECEIVE_V2`
+
+Called every [`postReceiveInterval`](#optionspostreceiveinterval) milliseconds for every
+upload while it‘s being written to the store.
+
+This means you are not guaranteed to get (all) events for an upload. For instance if
+`postReceiveInterval` is set to 1000ms and an PATCH request takes 500ms, no event is emitted.
+If the PATCH request takes 2500ms, you would get the offset at 2000ms, but not at 2500ms.
+
+Use `POST_FINISH` if you need to know when an upload is done.
+
+```js
+const {EVENTS} = require('@tus/server')
+// ...
+server.on(EVENTS.POST_RECEIVE_V2, (req, upload => {})
 ```
 
 #### `POST_FINISH`
