@@ -121,11 +121,11 @@ export type ServerOptions = {
     upload: Upload
   ) => Promise<
     // TODO: change in the next major
-    http.ServerResponse
+    | http.ServerResponse
     | {
-        res: http.ServerResponse,
-        status_code?: number,
-        headers?: Record<string, string | number>,
+        res: http.ServerResponse
+        status_code?: number
+        headers?: Record<string, string | number>
         body?: string
       }
   >

@@ -114,7 +114,7 @@ export class PatchHandler extends BaseHandler {
         headers: {
           'Upload-Offset': newOffset,
         } as Record<string, string | number>,
-        body: ''
+        body: '',
       }
 
       if (newOffset === upload.size && this.options.onUploadFinish) {

@@ -539,7 +539,12 @@ describe('Server', () => {
         path: '/test/output',
         datastore: new FileStore({directory}),
         async onUploadFinish(_, res, upload) {
-          return {res, status_code: 200, body: '{ fileProcessResult: 12 }', headers: {'X-TestHeader': '1'}}
+          return {
+            res,
+            status_code: 200,
+            body: '{ fileProcessResult: 12 }',
+            headers: {'X-TestHeader': '1'},
+          }
         },
       })
 
@@ -555,11 +560,11 @@ describe('Server', () => {
             .set('Upload-Offset', '0')
             .set('Content-Type', 'application/offset+octet-stream')
             .expect(200, '{ fileProcessResult: 12 }')
-			.then((r) => {
-				assert.equal(r.headers['upload-offset'], '4')
-				assert.equal(r.headers['x-testheader'], '1')
-				done()
-			})
+            .then((r) => {
+              assert.equal(r.headers['upload-offset'], '4')
+              assert.equal(r.headers['x-testheader'], '1')
+              done()
+            })
         })
     })
 
