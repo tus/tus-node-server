@@ -235,10 +235,10 @@ class GCSLockFile {
     this.watcher = setInterval(async () => {
       if ((await this.lockFile.exists())[0]) {
         //Fetch lock metadata
-        const meta = await this.lockFile.getMetadata()
+        const meta = (await this.lockFile.getMetadata())[0]
 
         //Unlock if release was requested or unlock timed out
-        if ('unlockRequest' in meta || (await this.hasExpired(meta[0]))) {
+        if ('unlockRequest' in meta || (await this.hasExpired(meta))) {
           cancelHandler()
           clearInterval(this.watcher)
         }
