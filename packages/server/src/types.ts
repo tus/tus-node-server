@@ -107,7 +107,8 @@ export type ServerOptions = {
 
   /**
    * `onUploadFinish` will be invoked after an upload is completed but before a response is returned to the client.
-   * If the function returns the (modified) response, the upload will finish.
+   * If the function returns the (modified) response, the upload will finish. You can optionally return `status_code`, `headers` and `body` to modify the response.
+   * Note that the tus specification does not allow sending response body nor status code other than 204, but most clients support it.
    * If an error is thrown, the HTTP request will be aborted, and the provided `body` and `status_code`
    * (or their fallbacks) will be sent to the client. This can be used to implement post-processing validation.
    * @param req - The incoming HTTP request.
@@ -118,7 +119,16 @@ export type ServerOptions = {
     req: http.IncomingMessage,
     res: http.ServerResponse,
     upload: Upload
-  ) => Promise<http.ServerResponse>
+  ) => Promise<
+    // TODO: change in the next major
+    http.ServerResponse
+    | {
+        res: http.ServerResponse,
+        status_code?: number,
+        headers?: Record<string, string | number>,
+        body?: string
+      }
+  >
 
   /**
    * `onIncomingRequest` will be invoked when an incoming request is received.

@@ -533,6 +533,36 @@ describe('Server', () => {
         .expect(500, 'no', done)
     })
 
+    it('should allow response to be changed in onUploadFinish', (done) => {
+      const filename = 'foo.txt'
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory}),
+        async onUploadFinish(_, res, upload) {
+          return {res, status_code: 200, body: '{ fileProcessResult: 12 }', headers: {'X-TestHeader': '1'}}
+        },
+      })
+
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .then((res) => {
+          request(server.listen())
+            .patch(removeProtocol(res.headers.location))
+            .send('test')
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .expect(200, '{ fileProcessResult: 12 }')
+			.then((r) => {
+				assert.equal(r.headers['upload-offset'], '4')
+				assert.equal(r.headers['x-testheader'], '1')
+				done()
+			})
+        })
+    })
+
     it('should fire when an upload is finished with upload-defer-length', (done) => {
       const length = Buffer.byteLength('test', 'utf8').toString()
       server.on(EVENTS.POST_FINISH, (req, res, upload) => {
