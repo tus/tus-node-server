@@ -534,11 +534,10 @@ describe('Server', () => {
     })
 
     it('should allow response to be changed in onUploadFinish', (done) => {
-      const filename = 'foo.txt'
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
-        async onUploadFinish(_, res, upload) {
+        async onUploadFinish(_, res) {
           return {
             res,
             status_code: 200,
