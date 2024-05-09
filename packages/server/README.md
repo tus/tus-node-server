@@ -159,7 +159,6 @@ This can be used to implement validation of upload metadata or add headers.
 `onUploadFinish` will be invoked after an upload is completed but before a response is
 returned to the client (`(req, res, upload) => Promise<{ res: http.ServerResponse, status_code?: number, headers?: Record<string, string | number>, body?: string }>`).
 
-- If the function returns the (modified) response, the upload will finish.
 - You can optionally return `status_code`, `headers` and `body` to modify the response.
   Note that the tus specification does not allow sending response body nor status code
   other than 204, but most clients support it. Use at your own risk.
