@@ -347,6 +347,24 @@ describe('PostHandler', () => {
         assert.equal(upload.offset, 0)
         assert.equal(upload.size, 0)
       })
+
+      it('does not set Location header if onUploadFinish hook returned a not eligible status code', async function () {
+        const store = sinon.createStubInstance(DataStore)
+        const handler = new PostHandler(store, {
+          path: '/test/output',
+          locker: new MemoryLocker(),
+          onUploadFinish: async (req, res) => ({res, status_code: 200}),
+        })
+
+        req.headers = {
+          'upload-length': '0',
+          host: 'localhost:3000',
+        }
+        store.create.resolvesArg(0)
+
+        await handler.send(req, res, context)
+        assert.equal('location' in res._getHeaders(), false)
+      })
     })
   })
 })

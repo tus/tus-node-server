@@ -203,10 +203,15 @@ export class PostHandler extends BaseHandler {
       }
     }
 
+    //Only append Location header if its valid for the final http status (201 or 3xx)
+    if (responseData.status === 201 || responseData.status.toString().at(0) === '3') {
+      responseData.headers['Location'] = url
+    }
+
     const writtenRes = this.write(
       res,
       responseData.status,
-      Object.assign({Location: url}, responseData.headers),
+      responseData.headers,
       responseData.body
     )
 
