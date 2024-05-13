@@ -26,5 +26,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
     "turbo": "^1.13.0"
-  }
+  },
+  "version": "0.0.0"
 }
