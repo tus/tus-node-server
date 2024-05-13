@@ -204,7 +204,10 @@ export class PostHandler extends BaseHandler {
     }
 
     //Only append Location header if its valid for the final http status (201 or 3xx)
-    if (responseData.status === 201 || responseData.status >= 300 && responseData.status < 400) {
+    if (
+      responseData.status === 201 ||
+      (responseData.status >= 300 && responseData.status < 400)
+    ) {
       responseData.headers['Location'] = url
     }
 
