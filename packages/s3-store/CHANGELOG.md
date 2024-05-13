@@ -1,5 +1,12 @@
 # @tus/s3-store
 
+## 1.4.3
+
+### Patch Changes
+
+- Updated dependencies [60698da]
+  - @tus/utils@0.2.0
+
 ## 1.4.2
 
 ### Patch Changes

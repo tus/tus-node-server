@@ -1,5 +1,18 @@
 # @tus/server
 
+## 1.6.0
+
+### Minor Changes
+
+- 60698da: Introduce POST_RECEIVE_V2 event, which correctly fires during the stream write
+  rather than after it is finished
+- 0f90980: Allow onUploadFinish hook to override response data
+
+### Patch Changes
+
+- Updated dependencies [60698da]
+  - @tus/utils@0.2.0
+
 ## 1.5.0
 
 ### Minor Changes

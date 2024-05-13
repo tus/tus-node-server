@@ -1,5 +1,13 @@
 # @tus/gcs-store
 
+## 1.2.2
+
+### Patch Changes
+
+- 86b8b9f: Fix CRC32 error when writing offsetted data to store
+- Updated dependencies [60698da]
+  - @tus/utils@0.2.0
+
 ## 1.2.1
 
 ### Patch Changes
