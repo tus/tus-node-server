@@ -66,7 +66,7 @@ export class GCSLocker implements Locker {
     this.lockTTL = options.lockTTL ?? 1000 * 12
     this.watchInterval = options.watchInterval ?? 1000 * 10
 
-    if (this.watchInterval < this.lockTimeout) {
+    if (this.watchInterval > this.lockTimeout) {
       throw new Error('watchInterval must be less than acquireLockTimeout')
     }
   }
