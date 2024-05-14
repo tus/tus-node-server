@@ -1,36 +1,36 @@
 import {ERRORS, Lock, Locker, RequestRelease} from '@tus/utils'
-import {Bucket, File} from '@google-cloud/storage'
+import {Bucket} from '@google-cloud/storage'
 import EventEmitter from 'node:events'
+import GCSLock from './GCSLock'
 
 /**
  * Google Cloud Storage implementation of the Locker mechanism with support for distribution.
  * For general information regarding Locker, see MemoryLocker.
  *
- * Locking is based on separate .lock files created in a GCS bucket (presumably the same as the upload destination, but not necessarily). Locker distribution is accomplished through metadata of the lockfile. After a lock file is created, we regularly check if its metadata was modified by another process (i.e. to request releasing the resource). To avoid resources being locked forever, each lock is created with an expiration time (also stored as metadata).
+ * Locking is based on separate .lock files created in a GCS bucket (presumably the same as the upload destination, but not necessarily). Concurrency control is ensured by metageneration preconditions. Release mechanism is based on separate .release files. After a lock file is created, we regularly check if another process requested releasing the lock (by creating the release file). To avoid resources being locked forever, each lock's metadata is regularly updated, this way we can make sure the locker process haven't crashed.
  *
  * Lock file health - possible states of a lock file:
  * - non-existing (not locked)
- * - active (locked)
+ * - healthy (locked)
  * - requested to be released (locked, but should be released soon)
  * - expired (not locked)
  *
  * Acquiring a lock:
  * - If the lock file does not exist yet, create one with an expiration time and start watching it (see below)
  * - If the lock file already exists
- * -- If it has expired, treat it as non existing and overwrite it
- * -- If it is active, request releasing the resource by updating the lockfile's metadata, then retry locking with an exponential backoff
+ * -- If it has expired, delete it and restart the process
+ * -- If it is active, request releasing the resource by creatin the .release file, then retry locking with an exponential backoff
  *
  * Releasing a lock:
- * Stop the watcher and delete the lock file.
+ * Stop the watcher and delete the lock/release files.
  *
  * Watching a lock (performed in every `watchInterval` ms):
- * - If the lock file does not exist anymore, stop the watcher
- * - If the lock file still exists, fetch its metadata
- * -- If there is a release request in the metadata, call the cancel handler and stop the watcher
- * -- If the lock has expired, call the cancel handler and stop the watcher
+ * - If the lock file does not exist anymore, or its created by a different process, stop the watcher
+ * - If the lock file still exists
+ * -- Update its expiration time
+ * -- If a release file exists, call the cancel handler
  *
- * (The process might be improved by introducing a secondary expiration time which gets updated by each watcher interval. This way we'll immediately know if the process which locked the resource has unexpectedly terminated and the resource should be released. Currently, only the `unlockTimeout` catches this scenario. However, this would introduce way more requests to GCS only for better handling of an extraordinary situation.)
- *
+ * The implementation is based on 'A robust distributed locking algorithm based on Google Cloud Storage' by Hongli Lai (https://www.joyfulbikeshedding.com/blog/2021-05-19-robust-distributed-locking-algorithm-based-on-google-cloud-storage.html).
  */
 
 export interface GCSLockerOptions {
@@ -43,11 +43,11 @@ export interface GCSLockerOptions {
    */
   acquireLockTimeout?: number
   /**
-   * Maximum lifetime (in milliseconds) of a lock. Processes may unexpectedly quit, we need to make sure resources won't stay locked forever. Make sure this is a safe maximum, else the lock may be released while the resource is still being used.
+   * Maximum amount of time (in milliseconds) a lock is considered healthy without being refreshed. When refreshed, expiration will be current time + TTL. If a process unexpectedly ends, lock expiration won't be updated every `watchInterval`, and it will become unhealthy. Must be set according to `watchInterval`, and must be more than it (else would expire before being refreshed). Larger value results more waiting time before releasing an unhealthy lock.
    */
-  unlockTimeout?: number
+  lockTTL?: number
   /**
-   * The amount of time (in milliseconds) to wait between lock file health checks. Larger interval results less requests to GCS, but generally more time to release a locked resource. Must be less than `acquireLockTimeout`.
+   * The amount of time (in milliseconds) to wait between lock file health checks. Must be set according to `lockTTL`, and must be less than `acquireLockTimeout`. Larger value results less queries to GCS.
    */
   watchInterval?: number
 }
@@ -56,14 +56,14 @@ export class GCSLocker implements Locker {
   events: EventEmitter
   bucket: Bucket
   lockTimeout: number
-  unlockTimeout: number
+  lockTTL: number
   watchInterval: number
 
   constructor(options: GCSLockerOptions) {
     this.events = new EventEmitter()
     this.bucket = options.bucket
     this.lockTimeout = options.acquireLockTimeout ?? 1000 * 30
-    this.unlockTimeout = options.unlockTimeout ?? 1000 * 600
+    this.lockTTL = options.lockTTL ?? 1000 * 12
     this.watchInterval = options.watchInterval ?? 1000 * 10
 
     if (this.watchInterval < this.lockTimeout) {
@@ -72,12 +72,21 @@ export class GCSLocker implements Locker {
   }
 
   newLock(id: string) {
-    return new GCSLock(id, this)
+    return new GCSLockHandler(id, this)
   }
 }
 
-class GCSLock implements Lock {
-  constructor(private id: string, private locker: GCSLocker) {}
+class GCSLockHandler implements Lock {
+  private gcsLock: GCSLock
+
+  constructor(private id: string, private locker: GCSLocker) {
+    this.gcsLock = new GCSLock(
+      this.id,
+      this.locker.bucket,
+      this.locker.lockTTL,
+      this.locker.watchInterval
+    )
+  }
 
   async lock(requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
@@ -95,13 +104,7 @@ class GCSLock implements Lock {
   }
 
   async unlock(): Promise<void> {
-    const lockFile = new GCSLockFile(this.locker, this.id)
-
-    if (!(await lockFile.isLocked())) {
-      throw new Error('Releasing an unlocked lock!')
-    }
-
-    await lockFile.delete()
+    await this.gcsLock.release()
   }
 
   protected async acquireLock(
@@ -113,17 +116,9 @@ class GCSLock implements Lock {
       return false
     }
 
-    const lockFile = new GCSLockFile(this.locker, this.id)
+    const acquired = await this.gcsLock.take(cancelHandler)
 
-    if (!(await lockFile.isLocked())) {
-      //The id is not locked yet - create a new lock file on GCS, start watching it
-      await lockFile.write(cancelHandler)
-
-      return true
-    } else {
-      //The id is already locked, we need to request releasing the resource
-      await lockFile.requestRelease()
-
+    if (!acquired) {
       //Try to acquire the lock again
       return await new Promise((resolve, reject) => {
         //On the first attempt, retry after current I/O operations are done, else use an exponential backoff
@@ -139,6 +134,8 @@ class GCSLock implements Lock {
         })
       })
     }
+
+    return true
   }
 
   protected waitForLockTimeoutOrAbort(signal: AbortSignal) {
@@ -154,98 +151,5 @@ class GCSLock implements Lock {
       }
       signal.addEventListener('abort', abortListener)
     })
-  }
-}
-
-class GCSLockFile {
-  protected fileId: string
-  protected lockFile: File
-  protected unlockTimeout: number
-  protected watchInterval: number
-  protected watcher: NodeJS.Timeout | undefined
-
-  constructor(locker: GCSLocker, fileId: string) {
-    this.fileId = fileId
-    this.lockFile = locker.bucket.file(`${fileId}.lock`)
-    this.unlockTimeout = locker.unlockTimeout
-    this.watchInterval = locker.watchInterval
-  }
-
-  /**
-   * Check whether the resource is currently locked or not
-   */
-  public async isLocked() {
-    //Check if file exists
-    const exists = (await this.lockFile.exists())[0]
-    if (!exists) {
-      return false
-    }
-
-    //Check if file is not expired
-    if (await this.hasExpired()) {
-      return false
-    }
-
-    return true
-  }
-
-  /**
-   * Write (create or update) the lockfile and start the watcher
-   */
-  public async write(cancelHandler: RequestRelease) {
-    await this.lockFile.save('', {metadata: {exp: Date.now() + this.unlockTimeout}})
-
-    this.startWatcher(cancelHandler)
-  }
-
-  /**
-   * Delete the lockfile and stop the watcher
-   */
-  public async delete() {
-    clearInterval(this.watcher)
-    await this.lockFile.delete()
-  }
-
-  /**
-   * Request the release of the related resource
-   */
-  public async requestRelease() {
-    await this.lockFile.setMetadata({unlockRequest: 1})
-  }
-
-  /**
-   * Check if the lockfile has already expired
-   */
-  protected async hasExpired(meta?: File['metadata']) {
-    if (!meta) {
-      try {
-        meta = (await this.lockFile.getMetadata())[0]
-      } catch (err) {
-        return true
-      }
-    }
-    const expDate = Date.parse(meta.timeCreated || '')
-    return !expDate || expDate < Date.now()
-  }
-
-  /**
-   * Start watching a lock file's health
-   */
-  protected startWatcher(cancelHandler: RequestRelease) {
-    this.watcher = setInterval(async () => {
-      if ((await this.lockFile.exists())[0]) {
-        //Fetch lock metadata
-        const meta = (await this.lockFile.getMetadata())[0]
-
-        //Unlock if release was requested or unlock timed out
-        if ('unlockRequest' in meta || (await this.hasExpired(meta))) {
-          cancelHandler()
-          clearInterval(this.watcher)
-        }
-      } else {
-        //Lock is freed, terminate watcher
-        clearInterval(this.watcher)
-      }
-    }, this.watchInterval)
   }
 }
