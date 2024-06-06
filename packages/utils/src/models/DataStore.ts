@@ -50,7 +50,7 @@ export class DataStore extends EventEmitter {
    * the upload.
    */
   async getUpload(id: string): Promise<Upload> {
-    return new Upload({id, size: 0, offset: 0})
+    return new Upload({id, size: 0, offset: 0, storage: {type: 'datastore', path: ''}})
   }
 
   /**

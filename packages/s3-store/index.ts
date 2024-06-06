@@ -188,6 +188,7 @@ export class S3Store extends DataStore {
         offset: Number.parseInt(file.offset, 10),
         metadata: file.metadata,
         creation_date: file.creation_date,
+        storage: file.storage,
       }),
     }
     await this.cache.set(id, metadata)
@@ -530,6 +531,7 @@ export class S3Store extends DataStore {
     upload.creation_date = new Date().toISOString()
 
     const res = await this.client.createMultipartUpload(request)
+    upload.storage = {type: 's3', path: res.Key as string, bucket: this.bucket}
     await this.saveMetadata(upload, res.UploadId as string)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
 
@@ -614,6 +616,7 @@ export class S3Store extends DataStore {
           offset: metadata.file.size as number,
           size: metadata.file.size,
           metadata: metadata.file.metadata,
+          storage: metadata.file.storage,
         })
       }
 
@@ -627,6 +630,7 @@ export class S3Store extends DataStore {
       ...metadata.file,
       offset: offset + (incompletePartSize ?? 0),
       size: metadata.file.size,
+      storage: metadata.file.storage,
     })
   }
 

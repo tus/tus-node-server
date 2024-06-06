@@ -164,6 +164,7 @@ export class FileStore extends DataStore {
             offset: stats.size,
             metadata: file.metadata,
             creation_date: file.creation_date,
+            storage: {type: 'file', path: file_path},
           })
         )
       })
