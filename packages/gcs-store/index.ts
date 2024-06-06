@@ -33,6 +33,8 @@ export class GCSStore extends DataStore {
 
       const gcs_file = this.bucket.file(file.id)
 
+      file.storage = {type: 'gcs', path: file.id, bucket: this.bucket.name}
+
       const options = {
         metadata: {
           metadata: {
@@ -41,6 +43,7 @@ export class GCSStore extends DataStore {
             sizeIsDeferred: `${file.sizeIsDeferred}`,
             offset: file.offset,
             metadata: JSON.stringify(file.metadata),
+            storage: JSON.stringify(file.storage),
           },
         },
       }
@@ -82,6 +85,7 @@ export class GCSStore extends DataStore {
               sizeIsDeferred: `${upload.sizeIsDeferred}`,
               offset,
               metadata: JSON.stringify(upload.metadata),
+              storage: JSON.stringify(upload.storage),
             },
           },
         }
@@ -150,6 +154,7 @@ export class GCSStore extends DataStore {
             size: size ? Number.parseInt(size, 10) : size,
             offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS
             metadata: meta ? JSON.parse(meta) : undefined,
+            storage: {type: 'gcs', path: id, bucket: this.bucket.name},
           })
         )
       })
