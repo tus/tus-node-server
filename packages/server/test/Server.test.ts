@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-throw-literal */
 import 'should'
 
@@ -496,7 +497,9 @@ describe('Server', () => {
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
-        onUploadFinish() {
+        onUploadFinish(_, __, upload) {
+          assert.ok(upload.storage!.path, 'should have storage.path')
+          assert.ok(upload.storage!.type, 'should have storage.type')
           throw {body: 'no', status_code: 500}
         },
       })

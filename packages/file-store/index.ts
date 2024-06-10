@@ -60,10 +60,13 @@ export class FileStore extends DataStore {
    */
   async create(file: Upload): Promise<Upload> {
     const dirs = file.id.split('/').slice(0, -1)
+    const filePath = path.join(this.directory, file.id)
 
     await fsProm.mkdir(path.join(this.directory, ...dirs), {recursive: true})
-    await fsProm.writeFile(path.join(this.directory, file.id), '')
+    await fsProm.writeFile(filePath, '')
     await this.configstore.set(file.id, file)
+
+    file.storage = {type: 'file', path: filePath}
 
     return file
   }
@@ -164,6 +167,7 @@ export class FileStore extends DataStore {
             offset: stats.size,
             metadata: file.metadata,
             creation_date: file.creation_date,
+            storage: {type: 'file', path: file_path},
           })
         )
       })
