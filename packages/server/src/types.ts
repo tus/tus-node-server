@@ -53,7 +53,7 @@ export type ServerOptions = {
    * Control how the Upload-ID is extracted from the request.
    * @param req - The incoming HTTP request.
    */
-  getFileIdFromRequest?: (req: http.IncomingMessage) => string | void
+  getFileIdFromRequest?: (req: http.IncomingMessage, lastPath?: string) => string | void
 
   /**
    * Control how you want to name files.

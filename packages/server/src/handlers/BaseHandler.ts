@@ -63,10 +63,12 @@ export class BaseHandler extends EventEmitter {
   }
 
   getFileIdFromRequest(req: http.IncomingMessage) {
-    if (this.options.getFileIdFromRequest) {
-      return this.options.getFileIdFromRequest(req)
-    }
     const match = reExtractFileID.exec(req.url as string)
+
+    if (this.options.getFileIdFromRequest) {
+      const lastPath = match ? decodeURIComponent(match[1]) : undefined
+      return this.options.getFileIdFromRequest(req, lastPath)
+    }
 
     if (!match || this.options.path.includes(match[1])) {
       return

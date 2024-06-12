@@ -295,15 +295,12 @@ describe('Server', () => {
           id = Buffer.from(id, 'utf-8').toString('base64url')
           return `${proto}://${host}${path}/${id}`
         },
-        getFileIdFromRequest(req) {
-          const reExtractFileID = /([^/]+)\/?$/
-          const match = reExtractFileID.exec(req.url as string)
-
-          if (!match || route.includes(match[1])) {
+        getFileIdFromRequest(req, lastPath) {
+          if (!lastPath) {
             return
           }
 
-          return Buffer.from(match[1], 'base64url').toString('utf-8')
+          return Buffer.from(lastPath, 'base64url').toString('utf-8')
         },
       })
       const length = Buffer.byteLength('test', 'utf8').toString()
