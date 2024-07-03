@@ -1,5 +1,17 @@
 # @tus/server
 
+## 1.7.0
+
+### Minor Changes
+
+- ea2bf07: Add `lastPath` argument to `getFileIdFromRequest` to simplify a common use
+  case.
+
+### Patch Changes
+
+- Updated dependencies [117e1b2]
+  - @tus/utils@0.3.0
+
 ## 1.6.0
 
 ### Minor Changes
