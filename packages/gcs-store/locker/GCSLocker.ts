@@ -1,6 +1,8 @@
+import EventEmitter from 'node:events'
+import {setTimeout, setImmediate} from 'node:timers/promises'
+
 import {ERRORS, Lock, Locker, RequestRelease} from '@tus/utils'
 import {Bucket} from '@google-cloud/storage'
-import EventEmitter from 'node:events'
 import GCSLock from './GCSLock'
 
 /**
@@ -119,37 +121,26 @@ class GCSLockHandler implements Lock {
     const acquired = await this.gcsLock.take(cancelHandler)
 
     if (!acquired) {
-      //Try to acquire the lock again
-      return await new Promise((resolve, reject) => {
-        //On the first attempt, retry after current I/O operations are done, else use an exponential backoff
-        const waitFn = (then: () => void) =>
-          attempt > 0
-            ? setTimeout(then, (attempt * this.locker.watchInterval) / 3)
-            : setImmediate(then)
-
-        waitFn(() => {
-          this.acquireLock(cancelHandler, signal, attempt + 1)
-            .then(resolve)
-            .catch(reject)
-        })
-      })
+      if (attempt > 0) {
+        await setTimeout((attempt * this.locker.watchInterval) / 3)
+      } else {
+        await setImmediate()
+      }
+      return await this.acquireLock(cancelHandler, signal, attempt + 1)
     }
 
     return true
   }
 
-  protected waitForLockTimeoutOrAbort(signal: AbortSignal) {
-    return new Promise<boolean>((resolve) => {
-      const timeout = setTimeout(() => {
-        resolve(false)
-      }, this.locker.lockTimeout)
-
-      const abortListener = () => {
-        clearTimeout(timeout)
-        signal.removeEventListener('abort', abortListener)
-        resolve(false)
+  protected async waitForLockTimeoutOrAbort(signal: AbortSignal) {
+    try {
+      await setTimeout(this.locker.lockTimeout, undefined, {signal})
+      return false
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        return false
       }
-      signal.addEventListener('abort', abortListener)
-    })
+      throw err
+    }
   }
 }
