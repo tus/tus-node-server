@@ -79,6 +79,7 @@ describe('DeleteHandler', () => {
       creation_date: undefined,
       offset: 1000,
       size: 1000,
+      storage: {type: 'test', path: `${path}/abc`},
     })
     await assert.rejects(() => handler.send(req, res, context), {status_code: 400})
   })

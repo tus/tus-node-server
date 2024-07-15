@@ -1,0 +1,41 @@
+name: 🐛 Bug report
+labels: [bug]
+description: Describe a bug with a project
+body:
+  - type: checkboxes
+    id: initial-checklist
+    attributes:
+      label: Initial checklist
+      options:
+        - label:
+            I understand this is a bug report and questions should be posted in the
+            [Community Forum](https://community.transloadit.com/c/tus/6)
+          required: true
+        - label:
+            I searched
+            [issues](https://github.com/tus/tus-node-server/issues?q=is%3Aissue) and
+            couldn’t find anything (or linked relevant results below)
+          required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description:
+        How did this happen? Please provide a [minimal, reproducible
+        example](https://stackoverflow.com/help/minimal-reproducible-example).
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: What happens instead?
+    validations:
+      required: true

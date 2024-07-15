@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-throw-literal */
 import 'should'
 
@@ -294,15 +295,12 @@ describe('Server', () => {
           id = Buffer.from(id, 'utf-8').toString('base64url')
           return `${proto}://${host}${path}/${id}`
         },
-        getFileIdFromRequest(req) {
-          const reExtractFileID = /([^/]+)\/?$/
-          const match = reExtractFileID.exec(req.url as string)
-
-          if (!match || route.includes(match[1])) {
+        getFileIdFromRequest(req, lastPath) {
+          if (!lastPath) {
             return
           }
 
-          return Buffer.from(match[1], 'base64url').toString('utf-8')
+          return Buffer.from(lastPath, 'base64url').toString('utf-8')
         },
       })
       const length = Buffer.byteLength('test', 'utf8').toString()
@@ -496,7 +494,9 @@ describe('Server', () => {
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
-        onUploadFinish() {
+        onUploadFinish(_, __, upload) {
+          assert.ok(upload.storage!.path, 'should have storage.path')
+          assert.ok(upload.storage!.type, 'should have storage.type')
           throw {body: 'no', status_code: 500}
         },
       })
@@ -531,6 +531,40 @@ describe('Server', () => {
         .set('Content-Type', 'application/offset+octet-stream')
         .send('test')
         .expect(500, 'no', done)
+    })
+
+    it('should allow response to be changed in onUploadFinish', (done) => {
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory}),
+        async onUploadFinish(_, res) {
+          return {
+            res,
+            status_code: 200,
+            body: '{ fileProcessResult: 12 }',
+            headers: {'X-TestHeader': '1'},
+          }
+        },
+      })
+
+      request(server.listen())
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '4')
+        .then((res) => {
+          request(server.listen())
+            .patch(removeProtocol(res.headers.location))
+            .send('test')
+            .set('Tus-Resumable', TUS_RESUMABLE)
+            .set('Upload-Offset', '0')
+            .set('Content-Type', 'application/offset+octet-stream')
+            .expect(200, '{ fileProcessResult: 12 }')
+            .then((r) => {
+              assert.equal(r.headers['upload-offset'], '4')
+              assert.equal(r.headers['x-testheader'], '1')
+              done()
+            })
+        })
     })
 
     it('should fire when an upload is finished with upload-defer-length', (done) => {

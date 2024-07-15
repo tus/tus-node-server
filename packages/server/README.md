@@ -106,8 +106,11 @@ Checkout the example how to
 
 #### `options.getFileIdFromRequest`
 
-Control how the Upload-ID is extracted from the request (`(req) => string | void`) By
-default, it expects everything in the path after the last `/` to be the upload id.
+Control how the Upload-ID is extracted from the request
+(`(req, lastPath) => string | void`)
+
+By default, it expects everything in the path after the last `/` to be the upload id.
+`lastPath` is everything after the last `/`.
 
 Checkout the example how to
 [store files in custom nested directories](#example-store-files-in-custom-nested-directories).
@@ -157,11 +160,14 @@ This can be used to implement validation of upload metadata or add headers.
 #### `options.onUploadFinish`
 
 `onUploadFinish` will be invoked after an upload is completed but before a response is
-returned to the client (`(req, res, upload) => Promise<res>`).
+returned to the client
+(`(req, res, upload) => Promise<{ res: http.ServerResponse, status_code?: number, headers?: Record<string, string | number>, body?: string }>`).
 
-If the function returns the (modified) response, the upload will finish. You can `throw`
-an Object and the HTTP request will be aborted with the provided `body` and `status_code`
-(or their fallbacks).
+- You can optionally return `status_code`, `headers` and `body` to modify the response.
+  Note that the tus specification does not allow sending response body nor status code
+  other than 204, but most clients support it. Use at your own risk.
+- You can `throw` an Object and the HTTP request will be aborted with the provided `body`
+  and `status_code` (or their fallbacks).
 
 This can be used to implement post-processing validation.
 
@@ -252,8 +258,9 @@ Called every [`postReceiveInterval`](#optionspostreceiveinterval) milliseconds f
 upload while it‘s being written to the store.
 
 This means you are not guaranteed to get (all) events for an upload. For instance if
-`postReceiveInterval` is set to 1000ms and an PATCH request takes 500ms, no event is emitted.
-If the PATCH request takes 2500ms, you would get the offset at 2000ms, but not at 2500ms.
+`postReceiveInterval` is set to 1000ms and an PATCH request takes 500ms, no event is
+emitted. If the PATCH request takes 2500ms, you would get the offset at 2000ms, but not at
+2500ms.
 
 Use `POST_FINISH` if you need to know when an upload is done.
 
@@ -541,18 +548,13 @@ const server = new Server({
     id = Buffer.from(id, 'utf-8').toString('base64url')
     return `${proto}://${host}${path}/${id}`
   },
-  getFileIdFromRequest(req) {
-    const reExtractFileID = /([^/]+)\/?$/
-    const match = reExtractFileID.exec(req.url as string)
-
-    if (!match || path.includes(match[1])) {
-      return
-    }
-
-    return Buffer.from(match[1], 'base64url').toString('utf-8')
+  getFileIdFromRequest(req, lastPath) {
+    // lastPath is everything after the last `/`
+    // If your custom URL is different, this might be undefined
+    // and you need to extract the ID yourself
+    return Buffer.from(lastPath, 'base64url').toString('utf-8')
   },
 })
-
 ```
 
 ### Example: use with Nginx

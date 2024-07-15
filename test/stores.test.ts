@@ -42,6 +42,8 @@ export const shouldCreateUploads = function () {
 
     it('should resolve to file', async function () {
       const newFile = await this.datastore.create(file)
+      assert.ok(newFile.storage.path)
+      assert.ok(newFile.storage.type)
       assert.equal(newFile instanceof Upload, true)
     })
 

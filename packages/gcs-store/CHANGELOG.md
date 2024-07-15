@@ -1,5 +1,26 @@
 # @tus/gcs-store
 
+## 1.3.0
+
+### Minor Changes
+
+- 117e1b2: Add basic storage information to the Upload model. You can now access
+  `upload.storage` which has `type` (`file`, `s3`, `gcs`), `path`, and when applicable
+  `bucket`.
+
+### Patch Changes
+
+- Updated dependencies [117e1b2]
+  - @tus/utils@0.3.0
+
+## 1.2.2
+
+### Patch Changes
+
+- 86b8b9f: Fix CRC32 error when writing offsetted data to store
+- Updated dependencies [60698da]
+  - @tus/utils@0.2.0
+
 ## 1.2.1
 
 ### Patch Changes
