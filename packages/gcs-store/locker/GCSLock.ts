@@ -5,7 +5,7 @@ import GCSLockFile, {GCSLockFileMetadata} from './GCSLockFile'
 /**
  * Handles interaction with a lock.
  */
-class GCSLock {
+export default class GCSLock {
   protected resourceId: string
   protected file: GCSLockFile
   protected ttl: number
@@ -116,5 +116,3 @@ class GCSLock {
     return !expDate || expDate < Date.now()
   }
 }
-
-export default GCSLock

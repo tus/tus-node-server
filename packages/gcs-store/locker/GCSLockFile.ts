@@ -1,6 +1,10 @@
-import {Bucket, File, FileMetadata} from '@google-cloud/storage'
+import {Bucket, File} from '@google-cloud/storage'
 
 type MetaGeneration = string | number | undefined
+
+// A new major version of @google-cloud/storage exports the FileMetadata type
+// but to prevent breaking changes we are avoiding that upgrade for now.
+type FileMetadata = Parameters<File['save']>[1]['metadata']
 
 export type GCSLockFileMetadata = FileMetadata & {
   /**
@@ -12,7 +16,7 @@ export type GCSLockFileMetadata = FileMetadata & {
 /**
  * Handles communication with GCS.
  */
-class GCSLockFile {
+export default class GCSLockFile {
   /**
    * Name of the file in the bucket.
    */
@@ -125,5 +129,3 @@ class GCSLockFile {
     } catch (err) {}
   }
 }
-
-export default GCSLockFile

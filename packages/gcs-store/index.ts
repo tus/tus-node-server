@@ -9,6 +9,8 @@ const log = debug('tus-node-server:stores:gcsstore')
 
 type Options = {bucket: Bucket}
 
+export {GCSLocker} from './locker/GCSLocker'
+
 export class GCSStore extends DataStore {
   bucket: Bucket
 
