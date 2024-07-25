@@ -35,6 +35,11 @@ export type ServerOptions = {
   allowedHeaders?: string[]
 
   /**
+   * set `Access-Control-Allow-Credentials` to true.
+   */
+  allowedCredentials?: boolean;
+
+  /**
    * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE_V2`
    */
   postReceiveInterval?: number
