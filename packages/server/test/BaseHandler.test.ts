@@ -51,8 +51,7 @@ describe('BaseHandler', () => {
   it('write() should set Access-Control-Allow-Credentials', (done) => {
     handler.options.allowedCredentials = true
     const header = 'Access-Control-Allow-Credentials'
-    const headers = {[header]: 'GET, OPTIONS'}
-    handler.write(res, 200, headers)
+    handler.write(res, 200)
     assert.equal(res.getHeader(header), 'true')
     handler.options.allowedCredentials = false
     done()
