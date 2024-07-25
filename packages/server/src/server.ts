@@ -219,9 +219,11 @@ export class Server extends EventEmitter {
     }
 
     // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', this.getCorsOrigin(req))
     res.setHeader('Access-Control-Expose-Headers', EXPOSED_HEADERS)
-    if (req.headers.origin) {
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin)
+
+    if (this.options.allowedCredentials === true) {
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
     }
 
     // Invoke the handler for the method requested
@@ -231,6 +233,38 @@ export class Server extends EventEmitter {
     }
 
     return this.write(context, req, res, 404, 'Not found\n')
+  }
+
+  private isOriginAllowed(origin?: string): boolean {
+    if (!origin) {
+      //If no origin header all allowed - backward compatibility
+      return true
+    }
+
+    if (this.options.allowedOrigins) {
+      //If there is a list the origin header should match the list
+      return this.options.allowedOrigins?.some((allowedOrigin) => {
+        return allowedOrigin === origin
+      })
+    } else {
+      //If there is no list of allowedOrigins all are allowed
+      return true
+    }
+  }
+
+  // Method to get the appropriate CORS origin
+  private getCorsOrigin(req: http.IncomingMessage): string {
+    const origin = req.headers.origin
+
+    if (origin && this.isOriginAllowed(origin)) {
+      return origin
+    }
+
+    if (this.options.allowedOrigins && this.options.allowedOrigins.length > 0) {
+      return this.options.allowedOrigins[0]
+    }
+
+    return '*'
   }
 
   write(

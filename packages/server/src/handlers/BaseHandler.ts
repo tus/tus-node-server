@@ -27,9 +27,6 @@ export class BaseHandler extends EventEmitter {
   }
 
   write(res: http.ServerResponse, status: number, headers = {}, body = '') {
-    if (this.options.allowedCredentials === true) {
-      res.setHeader('Access-Control-Allow-Credentials', 'true')
-    }
     if (status !== 204) {
       // @ts-expect-error not explicitly typed but possible
       headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
