@@ -4,7 +4,6 @@
   "version": "1.7.0",
   "description": "Tus resumable upload protocol in Node.js",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
@@ -15,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "lint": "eslint .",
     "format": "eslint --fix .",
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
@@ -39,8 +38,7 @@
     "should": "^13.2.3",
     "sinon": "^17.0.1",
     "supertest": "^6.3.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "ts-node": "^10.9.2"
   },
   "optionalDependencies": {
     "@redis/client": "^1.5.13"
