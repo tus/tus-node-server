@@ -4,7 +4,6 @@
   "version": "1.5.0",
   "description": "AWS S3 store for @tus/server",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
@@ -15,10 +14,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "lint": "eslint .",
     "format": "eslint --fix .",
-    "test": "mocha test.ts --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
@@ -35,8 +34,7 @@
     "eslint": "^8.57.0",
     "eslint-config-custom": "^0.0.0",
     "mocha": "^10.4.0",
-    "should": "^13.2.3",
-    "typescript": "^5.3.3"
+    "should": "^13.2.3"
   },
   "engines": {
     "node": ">=16"
