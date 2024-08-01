@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
-    "@shopify/semaphore": "^3.0.2",
+    "@shopify/semaphore": "^3.1.0",
     "@tus/utils": "^0.3.0",
     "debug": "^4.3.4",
     "multistream": "^4.1.0"
