@@ -9,6 +9,8 @@ const log = debug('tus-node-server:stores:gcsstore')
 
 type Options = {bucket: Bucket}
 
+export {GCSLocker} from './locker/GCSLocker'
+
 export class GCSStore extends DataStore {
   bucket: Bucket
 
@@ -39,11 +41,7 @@ export class GCSStore extends DataStore {
         metadata: {
           metadata: {
             tus_version: TUS_RESUMABLE,
-            size: file.size,
-            sizeIsDeferred: `${file.sizeIsDeferred}`,
-            offset: file.offset,
-            metadata: JSON.stringify(file.metadata),
-            storage: JSON.stringify(file.storage),
+            ...this.#stringifyUploadKeys(file),
           },
         },
       }
@@ -77,15 +75,14 @@ export class GCSStore extends DataStore {
       return new Promise((resolve, reject) => {
         const file = this.bucket.file(id)
         const destination = upload.offset === 0 ? file : this.bucket.file(`${id}_patch`)
+
+        upload.offset = offset
+
         const options = {
           metadata: {
             metadata: {
               tus_version: TUS_RESUMABLE,
-              size: upload.size,
-              sizeIsDeferred: `${upload.sizeIsDeferred}`,
-              offset,
-              metadata: JSON.stringify(upload.metadata),
-              storage: JSON.stringify(upload.storage),
+              ...this.#stringifyUploadKeys(upload),
             },
           },
         }
@@ -151,7 +148,7 @@ export class GCSStore extends DataStore {
         return resolve(
           new Upload({
             id,
-            size: size ? Number.parseInt(size, 10) : size,
+            size: size ? Number.parseInt(size, 10) : undefined,
             offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS
             metadata: meta ? JSON.parse(meta) : undefined,
             storage: {type: 'gcs', path: id, bucket: this.bucket.name},
@@ -166,6 +163,19 @@ export class GCSStore extends DataStore {
 
     upload.size = upload_length
 
-    await this.bucket.file(id).setMetadata({metadata: upload})
+    await this.bucket.file(id).setMetadata({metadata: this.#stringifyUploadKeys(upload)})
+  }
+
+  /**
+   * Convert the Upload object to a format that can be stored in GCS metadata.
+   */
+  #stringifyUploadKeys(upload: Upload) {
+    return {
+      size: upload.size ?? null,
+      sizeIsDeferred: `${upload.sizeIsDeferred}`,
+      offset: upload.offset,
+      metadata: JSON.stringify(upload.metadata),
+      storage: JSON.stringify(upload.storage),
+    }
   }
 }
