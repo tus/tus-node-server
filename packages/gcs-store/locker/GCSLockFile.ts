@@ -1,10 +1,5 @@
 import {Bucket, File} from '@google-cloud/storage'
-
-type MetaGeneration = string | number | undefined
-
-// A new major version of @google-cloud/storage exports the FileMetadata type
-// but to prevent breaking changes we are avoiding that upgrade for now.
-type FileMetadata = Parameters<File['save']>[1]['metadata']
+import type {FileMetadata} from '@google-cloud/storage'
 
 export type GCSLockFileMetadata = FileMetadata & {
   /**
@@ -12,6 +7,8 @@ export type GCSLockFileMetadata = FileMetadata & {
    */
   exp: number
 }
+
+type MetaGeneration = string | number | undefined
 
 /**
  * Handles communication with GCS.
@@ -115,7 +112,7 @@ export default class GCSLockFile {
   /**
    * Delete the unhealthy file of a previous lock.
    */
-  public async deleteUnhealthy(metaGeneration: MetaGeneration) {
+  public async deleteUnhealthy(metaGeneration: number) {
     await this.deleteReleaseRequest()
     await this.lockFile.delete({ifMetagenerationMatch: metaGeneration})
   }

@@ -74,7 +74,7 @@ export default class GCSLock {
 
       if (this.hasExpired(meta)) {
         //TTL expired, delete unhealthy lock
-        await this.file.deleteUnhealthy(meta.metageneration)
+        await this.file.deleteUnhealthy(meta.metageneration as number)
 
         return false
       }
