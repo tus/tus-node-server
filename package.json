@@ -7,12 +7,13 @@
     "test"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "tsc --build",
     "demo": "npm run --workspace demo start",
     "demo:gcs": "npm run --workspace demo start:gcs",
     "demo:s3": "npm run --workspace demo start:s3",
-    "lint": "turbo run lint",
-    "format": "turbo run format",
+    "lint": "eslint .",
+    "format": "eslint --fix .",
+    "pretest": "tsc --build",
     "test": "turbo run test",
     "version": "changeset version",
     "release": "gh workflow run release",
@@ -25,7 +26,8 @@
     "eslint-config-custom": "^0.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
-    "turbo": "^1.13.0"
+    "turbo": "^1.13.0",
+    "typescript": "^5.5.4"
   },
   "version": "0.0.0"
 }

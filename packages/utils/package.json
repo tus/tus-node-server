@@ -4,7 +4,6 @@
   "version": "0.3.0",
   "description": "Internal utils for tus Node.js server and stores",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
@@ -15,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "lint": "eslint .",
     "format": "eslint --fix .",
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
@@ -28,8 +27,7 @@
     "eslint-config-custom": "^0.0.0",
     "mocha": "^10.4.0",
     "should": "^13.2.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "ts-node": "^10.9.2"
   },
   "engines": {
     "node": ">=16"
