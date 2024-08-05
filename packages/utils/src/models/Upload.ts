@@ -34,6 +34,6 @@ export class Upload {
   }
 
   get sizeIsDeferred(): boolean {
-    return this.size === undefined
+    return this.size === undefined || this.size === null
   }
 }

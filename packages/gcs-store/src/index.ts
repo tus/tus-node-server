@@ -148,7 +148,7 @@ export class GCSStore extends DataStore {
         return resolve(
           new Upload({
             id,
-            size: size ? Number.parseInt(size, 10) : size,
+            size: size ? Number.parseInt(size, 10) : undefined,
             offset: Number.parseInt(metadata.size, 10), // `size` is set by GCS
             metadata: meta ? JSON.parse(meta) : undefined,
             storage: {type: 'gcs', path: id, bucket: this.bucket.name},
