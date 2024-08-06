@@ -10,7 +10,8 @@
   "files": [
     "README.md",
     "LICENSE",
-    "dist"
+    "dist",
+    "src"
   ],
   "license": "MIT",
   "scripts": {
