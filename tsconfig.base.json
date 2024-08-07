@@ -7,6 +7,8 @@
     "target": "es2020",
     "strict": true,
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "useUnknownInCatchVariables": false
   }
 }
