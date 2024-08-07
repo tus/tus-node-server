@@ -1,5 +1,11 @@
 # @tus/utils
 
+## 0.4.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+
 ## 0.3.0
 
 ### Minor Changes
