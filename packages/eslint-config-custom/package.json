@@ -9,7 +9,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\""
+    "test": "echo \"No tests specified\""
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^5.62.0",
