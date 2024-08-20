@@ -1,9 +1,5 @@
 # Contributing
 
-`tus-node-server` is a mono-repository managed by [Turborepo](https://turbo.build/repo).
-This means running `npm run build` in the root will build all packages in parallel. The
-same goes for `lint` and `format`.
-
 ## Changesets
 
 We use [changesets](https://github.com/changesets/changesets) to manage versioning,
