@@ -6,10 +6,8 @@ import {setTimeout as promSetTimeout} from 'node:timers/promises'
 
 import {Upload, Uid} from '@tus/server'
 
-// In CI we run multiple jobs in parallel,
-// so we need to make sure that the IDs are unique.
 export function testId(id: string) {
-  return `${id}-${process.env.GITHUB_JOB ?? Uid.rand()}`
+  return `${id}-${Uid.rand()}`
 }
 
 export const shouldHaveStoreMethods = function () {
