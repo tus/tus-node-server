@@ -7,17 +7,10 @@
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
-  "files": [
-    "README.md",
-    "LICENSE",
-    "dist",
-    "src"
-  ],
+  "files": ["README.md", "LICENSE", "dist", "src"],
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "lint": "eslint .",
-    "format": "eslint --fix .",
     "test": "mocha --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
@@ -28,8 +21,6 @@
     "@types/debug": "^4.1.12",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.5",
-    "eslint": "^8.57.0",
-    "eslint-config-custom": "^0.0.0",
     "mocha": "^10.4.0",
     "should": "^13.2.3"
   },

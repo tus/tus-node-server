@@ -1,6 +1,6 @@
-import {Bucket} from '@google-cloud/storage'
+import type {Bucket} from '@google-cloud/storage'
 import stream from 'node:stream'
-import http from 'node:http'
+import type http from 'node:http'
 import debug from 'debug'
 
 import {ERRORS, TUS_RESUMABLE, Upload, DataStore} from '@tus/utils'
@@ -131,7 +131,7 @@ export class GCSStore extends DataStore {
         return
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: todo
       this.bucket.file(id).getMetadata((error: any, metadata: any) => {
         if (error && error.code === 404) {
           return reject(ERRORS.FILE_NOT_FOUND)

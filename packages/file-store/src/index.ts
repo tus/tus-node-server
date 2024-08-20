@@ -3,11 +3,11 @@ import fs from 'node:fs'
 import fsProm from 'node:fs/promises'
 import path from 'node:path'
 import stream from 'node:stream'
-import http from 'node:http'
+import type http from 'node:http'
 
 import debug from 'debug'
 
-import {Configstore, FileConfigstore} from './configstores'
+import {type Configstore, FileConfigstore} from './configstores'
 import {DataStore, Upload, ERRORS} from '@tus/utils'
 
 export * from './configstores'

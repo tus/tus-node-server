@@ -1,18 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "demo",
-    "test"
-  ],
+  "workspaces": ["packages/*", "demo", "test"],
   "scripts": {
     "build": "tsc --build",
     "demo": "npm run --workspace demo start",
     "demo:gcs": "npm run --workspace demo start:gcs",
     "demo:s3": "npm run --workspace demo start:s3",
-    "lint": "eslint .",
-    "format": "eslint --fix .",
+    "lint": "biome lint --write .",
+    "format": "biome format --write .",
     "pretest": "tsc --build",
     "test": "npm test -w ./packages",
     "version": "changeset version",
@@ -20,13 +16,9 @@
     "release:local": "npm run build && changeset publish"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.8.3",
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.1",
-    "eslint": "^8.57.0",
-    "eslint-config-custom": "^0.0.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.8",
     "typescript": "^5.5.4"
-  },
-  "version": "0.0.0"
+  }
 }

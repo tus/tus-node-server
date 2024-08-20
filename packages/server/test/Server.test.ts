@@ -289,7 +289,7 @@ describe('Server', () => {
         path: route,
         datastore: new FileStore({directory}),
         namingFunction() {
-          return `foo/bar/id`
+          return 'foo/bar/id'
         },
         generateUrl(_, {proto, host, path, id}) {
           id = Buffer.from(id, 'utf-8').toString('base64url')
@@ -495,8 +495,8 @@ describe('Server', () => {
         path: '/test/output',
         datastore: new FileStore({directory}),
         onUploadFinish(_, __, upload) {
-          assert.ok(upload.storage!.path, 'should have storage.path')
-          assert.ok(upload.storage!.type, 'should have storage.type')
+          assert.ok(upload.storage?.path, 'should have storage.path')
+          assert.ok(upload.storage?.type, 'should have storage.type')
           throw {body: 'no', status_code: 500}
         },
       })

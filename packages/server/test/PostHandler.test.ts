@@ -2,12 +2,12 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
+import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
-import {EVENTS, Upload, DataStore, CancellationContext} from '@tus/utils'
+import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {PostHandler} from '../src/handlers/PostHandler'
 import {addPipableStreamBody} from './utils'
 import {MemoryLocker} from '../src'
@@ -284,7 +284,7 @@ describe('PostHandler', () => {
         handler.send(req, res, context)
       })
 
-      it('should call onUploadCreate hook', async function () {
+      it('should call onUploadCreate hook', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
@@ -306,7 +306,7 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 1024)
       })
 
-      it('should call onUploadFinish hook when creation-with-upload is used', async function () {
+      it('should call onUploadFinish hook when creation-with-upload is used', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
@@ -330,7 +330,7 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 1024)
       })
 
-      it('should call onUploadFinish hook for empty file without content-type', async function () {
+      it('should call onUploadFinish hook for empty file without content-type', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
@@ -348,7 +348,7 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 0)
       })
 
-      it('does not set Location header if onUploadFinish hook returned a not eligible status code', async function () {
+      it('does not set Location header if onUploadFinish hook returned a not eligible status code', async () => {
         const store = sinon.createStubInstance(DataStore)
         const handler = new PostHandler(store, {
           path: '/test/output',

@@ -6,7 +6,7 @@ import type http from 'node:http'
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {ERRORS, EVENTS, DataStore, CancellationContext} from '@tus/utils'
+import {ERRORS, EVENTS, DataStore, type CancellationContext} from '@tus/utils'
 import {DeleteHandler} from '../src/handlers/DeleteHandler'
 import {MemoryLocker} from '../src'
 

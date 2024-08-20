@@ -3,7 +3,7 @@ import 'should'
 import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
-import http from 'node:http'
+import type http from 'node:http'
 
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
@@ -39,7 +39,7 @@ describe('GetHandler', () => {
       const store = sinon.createStubInstance(FileStore)
       const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
-      req.url = `/not_a_valid_file_path`
+      req.url = '/not_a_valid_file_path'
       await assert.rejects(() => handler.send(req, res), {status_code: 404})
       assert.equal(spy_getFileIdFromRequest.callCount, 1)
     })
@@ -117,10 +117,10 @@ describe('GetHandler', () => {
     it('should call registered path handler', async () => {
       const fakeStore = sinon.stub(new DataStore())
       const handler = new GetHandler(fakeStore, serverOptions)
-      const customPath1 = `/path1`
+      const customPath1 = '/path1'
       const pathHandler1 = sinon.spy()
       handler.registerPath(customPath1, pathHandler1)
-      const customPath2 = `/path2`
+      const customPath2 = '/path2'
       const pathHandler2 = sinon.spy()
       handler.registerPath(customPath2, pathHandler2)
       req.url = `${customPath1}`
@@ -137,7 +137,7 @@ describe('GetHandler', () => {
       const fakeStore = sinon.stub(new DataStore())
       const handler = new GetHandler(fakeStore, serverOptions)
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
-      const customPath = `/path`
+      const customPath = '/path'
       handler.registerPath(customPath, () => {})
       req.url = `${customPath}`
       await handler.send(req, res)

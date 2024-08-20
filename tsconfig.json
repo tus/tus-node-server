@@ -2,11 +2,11 @@
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "files": [],
   "references": [
-    {"path": "packages/file-store/tsconfig.json"},
-    {"path": "packages/gcs-store/tsconfig.json"},
-    {"path": "packages/s3-store/tsconfig.json"},
-    {"path": "packages/server/tsconfig.json"},
-    {"path": "packages/utils/tsconfig.json"},
-    {"path": "test/tsconfig.json"}
+    { "path": "packages/file-store/tsconfig.json" },
+    { "path": "packages/gcs-store/tsconfig.json" },
+    { "path": "packages/s3-store/tsconfig.json" },
+    { "path": "packages/server/tsconfig.json" },
+    { "path": "packages/utils/tsconfig.json" },
+    { "path": "test/tsconfig.json" }
   ]
 }

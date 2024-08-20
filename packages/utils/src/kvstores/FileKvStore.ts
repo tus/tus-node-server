@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import {KvStore} from './Types'
-import {Upload} from '../models'
+import type {KvStore} from './Types'
+import type {Upload} from '../models'
 
 /**
  * FileConfigstore writes the `Upload` JSON metadata to disk next the uploaded file itself.
