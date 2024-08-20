@@ -1,4 +1,4 @@
-name: main
+name: CI
 on:
   push:
     branches: [main]
@@ -15,7 +15,7 @@ concurrency: ${{ github.workflow }}--${{ github.ref }}
 
 jobs:
   main:
-    name: ${{matrix.node}}
+    name: Node.js LTS
     runs-on: ubuntu-latest
 
     steps:
