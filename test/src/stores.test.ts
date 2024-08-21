@@ -125,7 +125,9 @@ export const shouldRemoveUploads = () => {
       })
       await this.datastore.create(file)
 
-      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 100 * 1024})
+      const readable = fs.createReadStream(this.testFilePath, {
+        highWaterMark: 100 * 1024,
+      })
       // Pause between chunks read to make sure that file is still uploading when terminate function is invoked
       readable.on('data', () => {
         readable.pause()

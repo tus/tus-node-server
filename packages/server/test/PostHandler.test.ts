@@ -55,19 +55,25 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 400,
+        })
       })
 
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both present', async () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-length': '512', 'upload-defer-length': '1'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 400,
+        })
       })
 
       it("must 501 if the 'concatenation' extension is not supported", async () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-concat': 'partial'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 501})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 501,
+        })
       })
 
       it('should send error when naming function throws', async () => {
@@ -81,7 +87,9 @@ describe('PostHandler', () => {
         })
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 400,
+        })
       })
 
       it('should call custom namingFunction', async () => {
@@ -119,7 +127,9 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 500})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 500,
+        })
       })
     })
 
