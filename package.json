@@ -9,6 +9,7 @@
     "demo:s3": "npm run --workspace demo start:s3",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
+    "format:check": "biome format --error-on-warnings .",
     "pretest": "tsc --build",
     "test": "npm test -w ./packages",
     "version": "changeset version",
