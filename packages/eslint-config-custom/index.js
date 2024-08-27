@@ -1,11 +1,7 @@
 module.exports = {
   env: {es6: true, node: true, mocha: true},
   parser: '@typescript-eslint/parser',
-  extends: [
-    'turbo',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
-  ],
+  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
   plugins: ['@typescript-eslint', 'prettier'],
   rules: {
     'no-new': 'off',
