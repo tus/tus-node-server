@@ -69,7 +69,7 @@ export declare interface Server {
 
 const log = debug('tus-node-server')
 
-// eslint-disable-next-line no-redeclare
+// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: it's fine
 export class Server extends EventEmitter {
   datastore: DataStore
   handlers: Handlers
@@ -147,7 +147,7 @@ export class Server extends EventEmitter {
   async handle(
     req: http.IncomingMessage,
     res: http.ServerResponse
-    // TODO: this return type does not make sense
+    // biome-ignore lint/suspicious/noConfusingVoidType: it's fine
   ): Promise<http.ServerResponse | stream.Writable | void> {
     const context = this.createContext(req)
 
@@ -256,7 +256,7 @@ export class Server extends EventEmitter {
       // that is no longer needed, thereby saving resources.
 
       // @ts-expect-error not explicitly typed but possible
-      headers['Connection'] = 'close'
+      headers.Connection = 'close'
 
       // An event listener is added to the response ('res') for the 'finish' event.
       // The 'finish' event is triggered when the response has been sent to the client.
@@ -273,7 +273,7 @@ export class Server extends EventEmitter {
     return res.end()
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: todo
   listen(...args: any[]): http.Server {
     return http.createServer(this.handle.bind(this)).listen(...args)
   }

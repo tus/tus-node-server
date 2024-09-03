@@ -1,5 +1,5 @@
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
+import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
@@ -87,7 +87,7 @@ describe('BaseHandler', () => {
     })
     const id = '123'
     const url = handler.generateUrl(req, id)
-    assert.equal(url, `http://localhost/path/123?customParam=1`)
+    assert.equal(url, 'http://localhost/path/123?customParam=1')
   })
 
   it('should allow extracting the request id with a custom function', () => {
@@ -95,7 +95,7 @@ describe('BaseHandler', () => {
       path: '/path',
       locker: new MemoryLocker(),
       getFileIdFromRequest: (req: http.IncomingMessage) => {
-        return req.url?.split('/').pop() + '-custom'
+        return `${req.url?.split('/').pop()}-custom`
       },
     })
 
@@ -103,6 +103,6 @@ describe('BaseHandler', () => {
       url: '/upload/1234',
     })
     const url = handler.getFileIdFromRequest(req)
-    assert.equal(url, `1234-custom`)
+    assert.equal(url, '1234-custom')
   })
 })

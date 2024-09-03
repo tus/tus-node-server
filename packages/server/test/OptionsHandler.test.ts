@@ -1,7 +1,7 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
+import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 

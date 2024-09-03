@@ -3,7 +3,7 @@ import debug from 'debug'
 import {BaseHandler} from './BaseHandler'
 
 import type http from 'node:http'
-import {ERRORS, EVENTS, CancellationContext, Upload} from '@tus/utils'
+import {ERRORS, EVENTS, type CancellationContext, type Upload} from '@tus/utils'
 
 const log = debug('tus-node-server:handlers:patch')
 

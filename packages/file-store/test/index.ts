@@ -92,7 +92,7 @@ describe('FileStore', function () {
   })
 
   describe('FileConfigstore', () => {
-    it('should ignore random files in directory when calling list()', async function () {
+    it('should ignore random files in directory when calling list()', async () => {
       const store = new FileConfigstore(storePath)
       const files = ['tus', 'tus.json', 'tu', 'tuss.json', 'random']
       for (const file of files) {
