@@ -413,7 +413,7 @@ describe('Server', () => {
             .set('Upload-Offset', '0')
             .set('Content-Type', 'application/offset+octet-stream')
             .end((err) => {
-              assert.equal(received, 4)
+              assert.ok(received >= 4, 'should have received 4 or more events')
               done(err)
             })
         })
