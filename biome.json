@@ -3,6 +3,9 @@
   "organizeImports": {
     "enabled": true
   },
+  "files": {
+    "ignore": ["./demo", "./**/dist/**/*"]
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -10,8 +13,7 @@
       "style": {
         "noParameterAssign": "off"
       }
-    },
-    "ignore": ["./demo", "**/dist/**"]
+    }
   },
   "formatter": {
     "enabled": true,
