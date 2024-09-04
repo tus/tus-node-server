@@ -63,7 +63,10 @@ export type ServerOptions = {
    * Control how the Upload-ID is extracted from the request.
    * @param req - The incoming HTTP request.
    */
-  getFileIdFromRequest?: (req: http.IncomingMessage, lastPath?: string) => string | void
+  getFileIdFromRequest?: (
+    req: http.IncomingMessage,
+    lastPath?: string
+  ) => string | undefined
 
   /**
    * Control how you want to name files.
@@ -164,9 +167,9 @@ export type ServerOptions = {
     res: http.ServerResponse,
     err: Error | {status_code: number; body: string}
   ) =>
-    | Promise<{status_code: number; body: string} | void>
+    | Promise<{status_code: number; body: string} | undefined>
     | {status_code: number; body: string}
-    | void
+    | undefined
 }
 
 export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void

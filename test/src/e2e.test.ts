@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import path from 'node:path'
 import fs from 'node:fs'
 import {strict as assert} from 'node:assert'
@@ -8,16 +7,16 @@ import request from 'supertest'
 import {Storage} from '@google-cloud/storage'
 
 import {MemoryLocker, Server, TUS_RESUMABLE} from '@tus/server'
-import {Configstore, MemoryConfigstore} from '@tus/file-store'
+import {type Configstore, MemoryConfigstore} from '@tus/file-store'
 import {FileStore} from '@tus/file-store'
 import {GCSStore} from '@tus/gcs-store'
 
 import http from 'node:http'
 import sinon from 'sinon'
 import Throttle from 'throttle'
-import {Agent} from 'http'
-import {Buffer} from 'buffer'
-import {AddressInfo} from 'net'
+import {Agent} from 'node:http'
+import {Buffer} from 'node:buffer'
+import type {AddressInfo} from 'node:net'
 
 const STORE_PATH = '/test'
 const PROJECT_ID = 'tus-node-server'
@@ -53,7 +52,7 @@ describe('EndToEnd', () => {
     let file_id: string
     let deferred_file_id: string
 
-    before(async function () {
+    before(async () => {
       await fs.promises.mkdir(FILES_DIRECTORY, {recursive: true})
       server = new Server({
         path: STORE_PATH,
@@ -65,19 +64,20 @@ describe('EndToEnd', () => {
 
     after((done) => {
       // Remove the files directory
-      rimraf(FILES_DIRECTORY, (err) => {
+      rimraf(FILES_DIRECTORY, async (err) => {
         if (err) {
           return done(err)
         }
 
         // Clear the config
-        // @ts-expect-error we can consider a generic to pass to
         // datastore to narrow down the store type
-        const uploads = (server.datastore.configstore as Configstore).list?.() ?? []
+        const uploads =
+          // @ts-expect-error we can consider a generic to pass to
+          (server.datastore.configstore as Configstore).list?.() ?? []
         for (const upload in uploads) {
           // @ts-expect-error we can consider a generic to pass to
           // datastore to narrow down the store type
-          await(server.datastore.configstore as Configstore).delete(upload)
+          await (server.datastore.configstore as Configstore).delete(upload)
         }
         listener.close()
         return done()
@@ -289,19 +289,20 @@ describe('EndToEnd', () => {
 
       after((done) => {
         // Remove the files directory
-        rimraf(FILES_DIRECTORY, (err) => {
+        rimraf(FILES_DIRECTORY, async (err) => {
           if (err) {
             return done(err)
           }
 
           // Clear the config
-          // @ts-expect-error we can consider a generic to pass to
           // datastore to narrow down the store type
-          const uploads = (server.datastore.configstore as Configstore).list?.() ?? []
+          const uploads =
+            // @ts-expect-error we can consider a generic to pass to
+            (server.datastore.configstore as Configstore).list?.() ?? []
           for (const upload in uploads) {
             // @ts-expect-error we can consider a generic to pass to
             // datastore to narrow down the store type
-            await(server.datastore.configstore as Configstore).delete(upload)
+            await (server.datastore.configstore as Configstore).delete(upload)
           }
           listener.close()
           return done()
@@ -309,7 +310,7 @@ describe('EndToEnd', () => {
       })
 
       it('will allow terminating finished uploads', async () => {
-        const body = Buffer.alloc(parseInt(TEST_FILE_SIZE, 10))
+        const body = Buffer.alloc(Number.parseInt(TEST_FILE_SIZE, 10))
         const res = await agent
           .post(STORE_PATH)
           .set('Tus-Resumable', TUS_RESUMABLE)
@@ -346,7 +347,7 @@ describe('EndToEnd', () => {
         const listener = server.listen()
         const agent = request.agent(listener)
 
-        const body = Buffer.alloc(parseInt(TEST_FILE_SIZE, 10))
+        const body = Buffer.alloc(Number.parseInt(TEST_FILE_SIZE, 10))
         const res = await agent
           .post(STORE_PATH)
           .set('Tus-Resumable', TUS_RESUMABLE)
@@ -601,7 +602,7 @@ describe('EndToEnd', () => {
           .expect(204)
           .expect('Tus-Resumable', TUS_RESUMABLE)
 
-        return parseInt(res.headers['upload-offset'] || '0', 0)
+        return Number.parseInt(res.headers['upload-offset'] || '0', 0)
       }
 
       let offset = 0
@@ -716,7 +717,7 @@ describe('EndToEnd', () => {
           .send(body)
           .expect(204)
           .expect('Tus-Resumable', TUS_RESUMABLE)
-        return parseInt(res.headers['upload-offset'] || '0', 0)
+        return Number.parseInt(res.headers['upload-offset'] || '0', 0)
       }
 
       let offset = 0
@@ -1055,19 +1056,20 @@ describe('EndToEnd', () => {
 
     after((done) => {
       // Remove the files directory
-      rimraf(FILES_DIRECTORY, (err) => {
+      rimraf(FILES_DIRECTORY, async (err) => {
         if (err) {
           return done(err)
         }
 
         // Clear the config
-        // @ts-expect-error we can consider a generic to pass to
         // datastore to narrow down the store type
-        const uploads = (server.datastore.configstore as Configstore).list?.() ?? []
+        const uploads =
+          // @ts-expect-error we can consider a generic to pass to
+          (server.datastore.configstore as Configstore).list?.() ?? []
         for (const upload in uploads) {
           // @ts-expect-error we can consider a generic to pass to
           // datastore to narrow down the store type
-          await(server.datastore.configstore as Configstore).delete(upload)
+          await (server.datastore.configstore as Configstore).delete(upload)
         }
         listener.close()
         return done()
@@ -1087,7 +1089,7 @@ describe('EndToEnd', () => {
       assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
       // Save the id for subsequent tests
       const file_id = res.headers.location.split('/').pop()
-      const file_size = parseInt(TEST_FILE_SIZE, 10)
+      const file_size = Number.parseInt(TEST_FILE_SIZE, 10)
 
       // Slow down writing
       const originalWrite = server.datastore.write.bind(server.datastore)
@@ -1096,7 +1098,7 @@ describe('EndToEnd', () => {
         return originalWrite(stream.pipe(throttleStream), ...args)
       })
 
-      const data = Buffer.alloc(parseInt(TEST_FILE_SIZE, 10), 'a')
+      const data = Buffer.alloc(Number.parseInt(TEST_FILE_SIZE, 10), 'a')
       const httpAgent = new Agent({
         maxSockets: 2,
         maxFreeSockets: 10,
@@ -1134,7 +1136,7 @@ describe('EndToEnd', () => {
 
       // Verify that we are able to resume even if the first request
       // was cancelled by the second request trying to acquire the lock
-      const offset = parseInt(res2.value.headers['upload-offset'], 10)
+      const offset = Number.parseInt(res2.value.headers['upload-offset'], 10)
 
       const finishedUpload = await createPatchReq(offset)
 

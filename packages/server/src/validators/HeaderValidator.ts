@@ -7,7 +7,7 @@ export const validators = new Map<string, validator>([
     // The Upload-Offset request and response header indicates a byte offset within a resource.
     // The value MUST be a non-negative integer.
     'upload-offset',
-    function (value) {
+    (value) => {
       const n = Number(value)
       return Number.isInteger(n) && String(n) === value && n >= 0
     },
@@ -16,7 +16,7 @@ export const validators = new Map<string, validator>([
     // The Upload-Length request and response header indicates the size of the entire upload in bytes.
     // The value MUST be a non-negative integer.
     'upload-length',
-    function (value) {
+    (value) => {
       const n = Number(value)
       return Number.isInteger(n) && String(n) === value && n >= 0
     },
@@ -26,9 +26,7 @@ export const validators = new Map<string, validator>([
     // is not known currently and will be transferred later.
     // Its value MUST be 1. If the length of an upload is not deferred, this header MUST be omitted.
     'upload-defer-length',
-    function (value) {
-      return value === '1'
-    },
+    (value) => value === '1',
   ],
   [
     'upload-metadata',
@@ -37,7 +35,7 @@ export const validators = new Map<string, validator>([
     // separated by a space. The key MUST NOT contain spaces and commas and
     // MUST NOT be empty. The key SHOULD be ASCII encoded and the value MUST
     // be Base64 encoded. All keys MUST be unique.
-    function (value) {
+    (value) => {
       try {
         Metadata.parse(value)
         return true
@@ -48,7 +46,7 @@ export const validators = new Map<string, validator>([
   ],
   [
     'x-forwarded-proto',
-    function (value) {
+    (value) => {
       if (value === 'http' || value === 'https') {
         return true
       }
@@ -59,7 +57,7 @@ export const validators = new Map<string, validator>([
     // The Tus-Version response header MUST be a comma-separated list of protocol versions supported by the Server.
     // The list MUST be sorted by Server's preference where the first one is the most preferred one.
     'tus-version',
-    function (value) {
+    (value) => {
       // @ts-expect-error we can compare a literal
       return TUS_VERSION.includes(value)
     },
@@ -71,16 +69,9 @@ export const validators = new Map<string, validator>([
     // it MUST respond with the 412 Precondition Failed status and MUST include the Tus-Version header into the response.
     // In addition, the Server MUST NOT process the request.
     'tus-resumable',
-    function (value) {
-      return value === TUS_RESUMABLE
-    },
+    (value) => value === TUS_RESUMABLE,
   ],
-  [
-    'content-type',
-    function (value) {
-      return value === 'application/offset+octet-stream'
-    },
-  ],
+  ['content-type', (value) => value === 'application/offset+octet-stream'],
   [
     // The Upload-Concat request and response header MUST be set in both partial and final upload creation requests.
     // It indicates whether the upload is either a partial or final upload.
@@ -89,7 +80,7 @@ export const validators = new Map<string, validator>([
     // of partial upload URLs that will be concatenated.
     // The partial uploads URLs MAY be absolute or relative and MUST NOT contain spaces as defined in RFC 3986.
     'upload-concat',
-    function (value) {
+    (value) => {
       if (!value) return false
       const valid_partial = value === 'partial'
       const valid_final = value.startsWith('final;')

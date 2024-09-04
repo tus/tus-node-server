@@ -5,7 +5,7 @@ import type http from 'node:http'
 
 import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '@tus/utils'
-import {ERRORS, Upload, StreamLimiter, EVENTS} from '@tus/utils'
+import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'
 
 const reExtractFileID = /([^/]+)\/?$/
@@ -78,8 +78,8 @@ export class BaseHandler extends EventEmitter {
   }
 
   protected extractHostAndProto(req: http.IncomingMessage) {
-    let proto
-    let host
+    let proto: string | undefined
+    let host: string | undefined
 
     if (this.options.respectForwardedHeaders) {
       const forwarded = req.headers.forwarded as string | undefined
@@ -96,7 +96,7 @@ export class BaseHandler extends EventEmitter {
         proto ??= forwardProto as string
       }
 
-      host ??= forwardHost
+      host ??= forwardHost as string
     }
 
     host ??= req.headers.host
@@ -134,6 +134,7 @@ export class BaseHandler extends EventEmitter {
     maxFileSize: number,
     context: CancellationContext
   ) {
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
     return new Promise<number>(async (resolve, reject) => {
       // Abort early if the operation has been cancelled.
       if (context.signal.aborted) {
@@ -206,7 +207,7 @@ export class BaseHandler extends EventEmitter {
     configuredMaxSize ??= await this.getConfiguredMaxSize(req, file.id)
 
     // Parse the Content-Length header from the request (default to 0 if not set).
-    const length = parseInt(req.headers['content-length'] || '0', 10)
+    const length = Number.parseInt(req.headers['content-length'] || '0', 10)
     const offset = file.offset
 
     const hasContentLengthSet = req.headers['content-length'] !== undefined
@@ -224,9 +225,8 @@ export class BaseHandler extends EventEmitter {
 
       if (hasConfiguredMaxSizeSet) {
         return configuredMaxSize - offset
-      } else {
-        return Number.MAX_SAFE_INTEGER
       }
+      return Number.MAX_SAFE_INTEGER
     }
 
     // Check if the upload fits into the file's size when the size is not deferred.

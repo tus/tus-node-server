@@ -1,13 +1,13 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
+import type http from 'node:http'
 
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
 import {PatchHandler} from '../src/handlers/PatchHandler'
-import {EVENTS, Upload, DataStore, CancellationContext} from '@tus/utils'
+import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {EventEmitter} from 'node:events'
 import {addPipableStreamBody} from './utils'
 import {MemoryLocker} from '../src'
@@ -51,7 +51,7 @@ describe('PatchHandler', () => {
     return assert.rejects(() => handler.send(req, res, context), {status_code: 403})
   })
 
-  it('should call onUploadFinished hook', async function () {
+  it('should call onUploadFinished hook', async () => {
     const spy = sinon.stub().resolvesArg(1)
     const handler = new PatchHandler(store, {
       path: '/test/output',

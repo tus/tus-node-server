@@ -1,6 +1,6 @@
 import {BaseHandler} from './BaseHandler'
 
-import {ERRORS, Metadata, Upload, CancellationContext} from '@tus/utils'
+import {ERRORS, Metadata, type Upload, type CancellationContext} from '@tus/utils'
 
 import type http from 'node:http'
 

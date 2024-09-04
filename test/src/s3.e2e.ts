@@ -1,8 +1,8 @@
 import {S3Store} from '@tus/s3-store'
 import {Server, TUS_RESUMABLE} from '@tus/server'
-import {SuperAgentTest} from 'supertest'
+import type {SuperAgentTest} from 'supertest'
 import request from 'supertest'
-import http from 'node:http'
+import type http from 'node:http'
 import {describe} from 'node:test'
 import {strict as assert} from 'node:assert'
 import {S3, S3ServiceException} from '@aws-sdk/client-s3'
@@ -71,7 +71,7 @@ const patchUpload = async (
 
   const res = await req.send(data).expect(204)
 
-  return {offset: parseInt(res.headers['upload-offset'], 10)}
+  return {offset: Number.parseInt(res.headers['upload-offset'], 10)}
 }
 
 describe('S3 Store E2E', () => {
@@ -122,7 +122,7 @@ describe('S3 Store E2E', () => {
 
       const {TagSet} = await s3Client.getObjectTagging({
         Bucket: s3Credentials.bucket,
-        Key: uploadId + '.info',
+        Key: `${uploadId}.info`,
       })
 
       assert(
@@ -144,7 +144,7 @@ describe('S3 Store E2E', () => {
 
       const {TagSet} = await s3Client.getObjectTagging({
         Bucket: s3Credentials.bucket,
-        Key: uploadId + '.info',
+        Key: `${uploadId}.info`,
       })
 
       assert(
@@ -172,7 +172,7 @@ describe('S3 Store E2E', () => {
 
       const {TagSet} = await s3Client.getObjectTagging({
         Bucket: s3Credentials.bucket,
-        Key: uploadId + '.info',
+        Key: `${uploadId}.info`,
       })
 
       assert.equal(TagSet?.length, 0)
@@ -205,7 +205,7 @@ describe('S3 Store E2E', () => {
 
       const {TagSet} = await s3Client.getObjectTagging({
         Bucket: s3Credentials.bucket,
-        Key: uploadId + '.info',
+        Key: `${uploadId}.info`,
       })
 
       assert.equal(TagSet?.length, 0)
@@ -222,11 +222,11 @@ describe('S3 Store E2E', () => {
       const [infoFile, partFile] = await Promise.all([
         s3Client.getObject({
           Bucket: s3Credentials.bucket,
-          Key: uploadId + '.info',
+          Key: `${uploadId}.info`,
         }),
         s3Client.getObject({
           Bucket: s3Credentials.bucket,
-          Key: uploadId + '.part',
+          Key: `${uploadId}.part`,
         }),
       ])
 
@@ -245,11 +245,11 @@ describe('S3 Store E2E', () => {
       const files = await Promise.allSettled([
         s3Client.getObject({
           Bucket: s3Credentials.bucket,
-          Key: uploadId + '.info',
+          Key: `${uploadId}.info`,
         }),
         s3Client.getObject({
           Bucket: s3Credentials.bucket,
-          Key: uploadId + '.part',
+          Key: `${uploadId}.part`,
         }),
       ])
 
