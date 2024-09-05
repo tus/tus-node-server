@@ -7,6 +7,7 @@
     "demo": "npm run --workspace demo start",
     "demo:gcs": "npm run --workspace demo start:gcs",
     "demo:s3": "npm run --workspace demo start:s3",
+    "demo:azure": "npm run --workspace demo start:azure",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "format:check": "biome format --error-on-warnings .",

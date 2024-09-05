@@ -2,10 +2,11 @@ const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
 
-const {Server, EVENTS} = require('@tus/server')
-const {GCSDataStore} = require('@tus/gcs-store')
-const {S3Store} = require('@tus/s3-store')
-const {FileStore} = require('@tus/file-store')
+const { Server, EVENTS } = require('@tus/server')
+const { GCSDataStore } = require('@tus/gcs-store')
+const { S3Store } = require('@tus/s3-store')
+const { FileStore } = require('@tus/file-store')
+const { AzureStore } = require('@tus/azure-store')
 
 const stores = {
   GCSDataStore: () =>
@@ -36,11 +37,34 @@ const stores = {
       },
     })
   },
-  FileStore: () => new FileStore({directory: './files'}),
+  FileStore: () => new FileStore({ directory: './files' }),
+
+  AzureBlobStore: () => {
+    assert.ok(
+      process.env.AZURE_ACCOUNT_ID,
+      'environment variable `AZURE_ACCOUNT_ID` must be set'
+    )
+
+    assert.ok(
+      process.env.AZURE_ACCOUNT_KEY,
+      'environment variable `AZURE_ACCOUNT_KEY` must be set'
+    )
+
+    assert.ok(
+      process.env.AZURE_CONTAINER_NAME,
+      'environment variable `AZURE_CONTAINER_NAME` must be set'
+    )
+
+    return new AzureStore({
+      account: process.env.AZURE_ACCOUNT_ID,
+      accountKey: process.env.AZURE_ACCOUNT_KEY,
+      containerName: process.env.AZURE_CONTAINER_NAME,
+    })
+  }
 }
 const storeName = process.env.DATA_STORE || 'FileStore'
 const store = stores[storeName]
-const server = new Server({path: '/files', datastore: store()})
+const server = new Server({ path: '/files', datastore: store() })
 
 /**
  * Basic GET handler to serve the demo html/js
@@ -60,7 +84,8 @@ const writeFile = (req, res) => {
   filename = path.join(process.cwd(), '../node_modules/tus-js-client', filename)
   fs.readFile(filename, 'binary', (err, file) => {
     if (err) {
-      res.writeHead(500, {'Content-Type': 'text/plain'})
+      res.writeHead(500, { 'Content-Type': 'text/plain' })
+      console.log(err);
       res.write(err)
       res.end()
       return
@@ -92,8 +117,7 @@ server.get('/dist/tus.min.js.map', writeFile)
 
 server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
   console.log(
-    `[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${
-      event.file.id
+    `[${new Date().toLocaleTimeString()}] [EVENT HOOK] Upload complete for file ${event.file.id
     }`
   )
 })
@@ -108,7 +132,7 @@ server.on(EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
 
 const host = '127.0.0.1'
 const port = 1080
-server.listen({host, port}, () => {
+server.listen({ host, port }, () => {
   console.log(
     `[${new Date().toLocaleTimeString()}] tus server listening at http://${host}:${port} using ${storeName}`
   )
