@@ -1,5 +1,18 @@
 # @tus/server
 
+## 1.8.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+- ca03351: - Add `allowedCredentials` option for the Access-Control-Allow-Credentials header
+  - Add `allowedOrigins` option for setting domains in Access-Control-Allow-Origin
+
+### Patch Changes
+
+- Updated dependencies [de28c6e]
+  - @tus/utils@0.4.0
+
 ## 1.7.0
 
 ### Minor Changes

@@ -1,14 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/s3-store",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "AWS S3 store for @tus/server",
   "main": "dist/index.js",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
   "license": "MIT",
-  "files": ["README.md", "LICENSE", "dist", "src"],
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc --build",
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
@@ -16,7 +21,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
     "@shopify/semaphore": "^3.1.0",
-    "@tus/utils": "^0.3.0",
+    "@tus/utils": "^0.4.0",
     "debug": "^4.3.4",
     "multistream": "^4.1.0"
   },
