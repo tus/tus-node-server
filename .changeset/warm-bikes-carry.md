@@ -2,5 +2,5 @@
 '@tus/server': minor
 ---
 
-- Add support in CORS Access-Control-Allow-Credentials header
-- Add support in whitelist domains for Access-Control-Allow-Origin
+- Add `allowedCredentials` option for the Access-Control-Allow-Credentials header
+- Add `allowedOrigins` option for setting domains in Access-Control-Allow-Origin

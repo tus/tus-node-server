@@ -235,28 +235,13 @@ export class Server extends EventEmitter {
     return this.write(context, req, res, 404, 'Not found\n')
   }
 
-  private isOriginAllowed(origin?: string): boolean {
-    if (!origin) {
-      //If no origin header all allowed - backward compatibility
-      return true
-    }
-
-    if (this.options.allowedOrigins) {
-      //If there is a list the origin header should match the list
-      return this.options.allowedOrigins?.some((allowedOrigin) => {
-        return allowedOrigin === origin
-      })
-    } else {
-      //If there is no list of allowedOrigins all are allowed
-      return true
-    }
-  }
-
-  // Method to get the appropriate CORS origin
   private getCorsOrigin(req: http.IncomingMessage): string {
     const origin = req.headers.origin
+    const isOriginAllowed =
+      this.options.allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ??
+      true
 
-    if (origin && this.isOriginAllowed(origin)) {
+    if (origin && isOriginAllowed) {
       return origin
     }
 
