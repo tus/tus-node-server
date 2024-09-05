@@ -35,6 +35,16 @@ export type ServerOptions = {
   allowedHeaders?: string[]
 
   /**
+   * Set `Access-Control-Allow-Credentials` to true or false (the default)
+   */
+  allowedCredentials?: boolean
+
+  /**
+   * Add trusted origins to `Access-Control-Allow-Origin`.
+   */
+  allowedOrigins?: string[]
+
+  /**
    * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE_V2`
    */
   postReceiveInterval?: number
