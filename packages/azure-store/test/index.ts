@@ -31,11 +31,10 @@ describe('AzureStore', function () {
     })
   })
 
-
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
- // shared.shouldRemoveUploads() // Not implemented yet
- // shared.shouldExpireUploads() // Not implemented yet
+  // shared.shouldRemoveUploads() // Not implemented yet
+  // shared.shouldExpireUploads() // Not implemented yet
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
   shared.shouldDeclareUploadLength() // Creation-defer-length extension
