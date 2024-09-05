@@ -1,17 +1,14 @@
 # `@tus/azure-store`
 
-> 👉 **Note**: Azure Store upload is implemented using the TUS protocol. It uses Append Blob Client [Azure Blob AppendBlobClient](https://learn.microsoft.com/en-us/rest/api/storageservices/append-block) to upload the files in multiple blocks. Currently there is no support for stream in Azure Node SDK, so this implementation concatenates all the chunks in a single
-PATCH request into a block and append that block to the blob storage using the appendBlock method.
+Azure Store based on the Append Blob Client [Azure Blob AppendBlobClient](https://learn.microsoft.com/en-us/rest/api/storageservices/append-block).
 
 ## Contents
 
 - [Install](#install)
 - [Use](#use)
 - [API](#api)
-  - [`new FileStore(options)`](#new-filestoreoptions)
+  - [`new AzureStore(options)`](#new-azurestoreoptions)
 - [Extensions](#extensions)
-- [Examples](#examples)
-  - [Example: creating your own config store](#example-creating-your-own-config-store)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -29,14 +26,14 @@ npm install @tus/azure-store
 
 ```js
 const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/azure-store')
+const {AzureStore} = require('@tus/azure-store')
 
 const server = new Server({
   path: '/files',
   datastore: new AzureStore({
-    account: 'your azure storage account',
-    accountKey: 'your azure storage account key',
-    containerName: 'your azure storage container name',
+      account: process.env.AZURE_ACCOUNT_ID,
+      accountKey: process.env.AZURE_ACCOUNT_KEY,
+      containerName: process.env.AZURE_CONTAINER_NAME,
   }),
 })
 // ...
@@ -51,18 +48,21 @@ This package exports `AzureStore`. There is no default export.
 Creates a new azure store with options.
 
 #### `options.account`
-Your Azure storage account should go here (`string`).
+
+Azure account ID (`string`).
 
 #### `options.accountKey`
-Your Azure storage account key should go here (`string`).
+
+Azure account key (`string`).
 
 #### `options.containerName`
-Your Azure storage container name to store the files should go here. (`string`).
+
+Azure storage container name (`string`).
 
 #### `options.cache`
-Provide your own cache solution for the metadata of uploads ([`KvStore`][]) to reduce the calls to storage server. 
-Default is ([`MemoryKvStore`][]) which stores the data in memory.
 
+Provide your own cache solution for the metadata of uploads ([`KvStore`][]) to reduce the calls to storage server.
+Default is ([`MemoryKvStore`][]) which stores the data in memory.
 
 ## Extensions
 
@@ -72,57 +72,11 @@ extensions in `@tus/Azure-store`. More will be added in the future releases.
 | Extension                | `@tus/file-store` |
 | ------------------------ | ----------------- |
 | [Creation][]             | ✅                |
-| [Creation With Upload][] | ❌                |
+| [Creation With Upload][] | ✅                |
 | [Expiration][]           | ❌                |
 | [Checksum][]             | ❌                |
 | [Termination][]          | ❌                |
-| [Concatenation][]        | ✅                |
-
-## Examples
-
-### Example: creating your own config store
-
-For demonstration purposes we will create a memory config store, It's written in TypeScript.
-
-```ts
-import type {Upload} from '@tus/server'
-
-export class MemoryConfigstore {
-  data: Map<string, Upload> = new Map()
-
-  get(key: string): Upload | undefined {
-    return this.data.get(key)
-  }
-
-  set(key: string, value: Upload) {
-    this.data.set(key, value)
-  }
-
-  delete(key: string) {
-    return this.data.delete(key)
-  }
-
-  get list(): Record<string, Upload> {
-    return Object.fromEntries(this.data.entries())
-  }
-}
-```
-
-Then use it:
-
-```js
-import {MemoryConfigstore} from './MemoryConfigstore'
-
-const store = new AzureStore({
-    account: 'your azure storage account',
-    accountKey: 'your azure storage account key',
-    containerName: 'your azure storage container name',
-    cache: new MemoryConfigstore(),
-  
-  }),
-
-
-```
+| [Concatenation][]        | ❌                |
 
 ## Types
 
@@ -157,4 +111,4 @@ See
   https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
 
 [`MemoryKvStore`]:
-  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/MemoryKvStore.ts
+ https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/MemoryKvStore.ts
