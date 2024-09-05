@@ -52,4 +52,7 @@ jobs:
           AWS_BUCKET: ${{secrets.AWS_BUCKET}}
           AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          AZURE_ACCOUNT_ID: ${{secrets.AZURE_ACCOUNT_ID}}
+          AZURE_ACCOUNT_KEY: ${{secrets.AZURE_ACCOUNT_KEY}}
+          AZURE_CONTAINER_NAME: ${{secrets.AZURE_CONTAINER_NAME}}
           AWS_REGION: ${{secrets.AWS_REGION}}
