@@ -1,19 +1,10 @@
 import 'should'
-import fs from 'node:fs'
-import fsProm from 'node:fs/promises'
 import path from 'node:path'
 import {AzureStore} from '../src'
 import * as shared from 'test/stores.test'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 'azure-store')
-
-async function cleanup() {
-  if (fs.existsSync(storePath)) {
-    await fsProm.rm(storePath, {recursive: true})
-    await fsProm.mkdir(storePath)
-  }
-}
 
 describe('AzureStore', () => {
   before(function () {
