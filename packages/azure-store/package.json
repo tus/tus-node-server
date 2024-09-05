@@ -7,12 +7,7 @@
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
-  "files": [
-    "README.md",
-    "LICENSE",
-    "dist",
-    "src"
-  ],
+  "files": ["README.md", "LICENSE", "dist", "src"],
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
