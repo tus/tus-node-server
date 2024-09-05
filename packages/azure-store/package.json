@@ -14,7 +14,7 @@
     "test": "mocha --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "@tus/utils": "^0.3.0",
+    "@tus/utils": "^0.4.0",
     "@azure/storage-blob": "^12.24.0",
     "debug": "^4.3.4"
   },
