@@ -67,7 +67,7 @@ Default is ([`MemoryKvStore`][]) which stores the data in memory.
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported
-extensions in `@tus/Azure-store`. More will be added in the future releases.
+extensions in `@tus/azure-store`. More will be added in the future releases.
 
 | Extension                | `@tus/file-store` |
 | ------------------------ | ----------------- |
