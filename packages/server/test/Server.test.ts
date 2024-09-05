@@ -323,7 +323,7 @@ describe('Server', () => {
       assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'google.com')
     })
 
-    it(`should return Access-Control-Allow-Origin if no origin header`, async () => {
+    it('should return Access-Control-Allow-Origin if no origin header', async () => {
       server.options.allowedOrigins = ['google.com']
       const req = httpMocks.createRequest({
         method: 'OPTIONS',
