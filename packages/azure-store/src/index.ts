@@ -1,18 +1,19 @@
-import stream from 'node:stream'
-import http from 'node:http'
+import type stream from 'node:stream'
+import type http from 'node:http'
 import debug from 'debug'
 import {
   DataStore,
   Upload,
   ERRORS,
-  KvStore,
+  type KvStore,
   MemoryKvStore,
   TUS_RESUMABLE,
 } from '@tus/utils'
 import {
-  AppendBlobClient,
+  type AppendBlobClient,
+  type BlobGetPropertiesResponse,
   BlobServiceClient,
-  ContainerClient,
+  type ContainerClient,
   StorageSharedKeyCredential,
 } from '@azure/storage-blob'
 
@@ -98,8 +99,9 @@ export class AzureStore extends DataStore {
       return cached
     }
 
+    let propertyData: BlobGetPropertiesResponse
     try {
-      var propertyData = await appendBlobClient.getProperties()
+      propertyData = await appendBlobClient.getProperties()
     } catch (error) {
       log('Error while fetching the metadata.', error)
       throw ERRORS.UNKNOWN_ERROR
@@ -108,7 +110,7 @@ export class AzureStore extends DataStore {
     if (!propertyData.metadata) {
       throw ERRORS.FILE_NOT_FOUND
     }
-    var upload = JSON.parse(propertyData.metadata.upload)
+    const upload = JSON.parse(propertyData.metadata.upload)
 
     if (upload) {
       await this.cache.set(appendBlobClient.url, upload)
@@ -165,7 +167,7 @@ export class AzureStore extends DataStore {
    */
   public async getUpload(id: string): Promise<Upload> {
     const appendBlobClient = this.containerClient.getAppendBlobClient(id)
-    var upload = await this.getMetadata(appendBlobClient)
+    const upload = await this.getMetadata(appendBlobClient)
 
     return new Promise((resolve, reject) => {
       if (!upload) {
@@ -191,15 +193,16 @@ export class AzureStore extends DataStore {
    * to azure storage using the appendBlock. This can be upgraded to streamUpload when node sdk start supporting it.
    */
   public async write(
-    readableStream: http.IncomingMessage | stream.Readable,
+    readableStream: stream.Readable,
     file_id: string,
     offset: number
   ): Promise<number> {
     log(`started writing the file offset [${offset}]`)
 
     const appendBlobClient = this.containerClient.getAppendBlobClient(file_id)
-    var upload = await this.getMetadata(appendBlobClient)
+    const upload = await this.getMetadata(appendBlobClient)
 
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
     return new Promise(async (resolve, reject) => {
       if (offset < upload.offset) {
         //duplicate request scenario, dont want to write the same data
@@ -207,9 +210,10 @@ export class AzureStore extends DataStore {
       }
 
       try {
-        var bufs: any[] = []
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        const bufs: any[] = []
 
-        readableStream.on('data', async (chunk: any) => {
+        readableStream.on('data', async (chunk) => {
           if (readableStream.destroyed) {
             return reject(ERRORS.ABORTED)
           }
@@ -218,7 +222,7 @@ export class AzureStore extends DataStore {
         })
 
         readableStream.on('end', async () => {
-          var buf = Buffer.concat(bufs)
+          const buf = Buffer.concat(bufs)
 
           if (buf.length > 0) {
             await appendBlobClient.appendBlock(buf, buf.length)
@@ -236,7 +240,7 @@ export class AzureStore extends DataStore {
 
           return resolve(upload.offset)
         })
-        readableStream.on('error', async (error: any) => {
+        readableStream.on('error', async () => {
           return reject(ERRORS.UNKNOWN_ERROR)
         })
       } catch (err) {
@@ -247,7 +251,7 @@ export class AzureStore extends DataStore {
 
   public async declareUploadLength(id: string, upload_length: number) {
     const appendBlobClient = this.containerClient.getAppendBlobClient(id)
-    var upload = await this.getMetadata(appendBlobClient)
+    const upload = await this.getMetadata(appendBlobClient)
 
     if (!upload) {
       throw ERRORS.FILE_NOT_FOUND

@@ -15,7 +15,7 @@ async function cleanup() {
   }
 }
 
-describe('AzureStore', function () {
+describe('AzureStore', () => {
   before(function () {
     this.testFileSize = 960_244
     this.testFileName = 'test.mp4'
