@@ -109,22 +109,13 @@ export class AzureStore extends DataStore {
     if (!propertyData.metadata) {
       throw ERRORS.FILE_NOT_FOUND
     }
-    const upload = JSON.parse(propertyData.metadata.upload)
+    const upload = JSON.parse(propertyData.metadata.upload) as Upload
 
-    if (upload) {
-      await this.cache.set(appendBlobClient.url, upload)
-    }
+    await this.cache.set(appendBlobClient.url, upload)
 
     log('metadata returned from blob get properties')
 
     return upload
-  }
-
-  /**
-   * Invalidates the local cache
-   */
-  private async invalidateMetadataCache(key: string) {
-    await this.cache.delete(key)
   }
 
   /**
@@ -168,21 +159,17 @@ export class AzureStore extends DataStore {
     const appendBlobClient = this.containerClient.getAppendBlobClient(id)
     const upload = await this.getMetadata(appendBlobClient)
 
-    return new Promise((resolve, reject) => {
-      if (!upload) {
-        return reject(ERRORS.FILE_NOT_FOUND)
-      }
+    if (!upload) {
+      throw ERRORS.FILE_NOT_FOUND
+    }
 
-      return resolve(
-        new Upload({
-          id: id,
-          size: upload.size,
-          metadata: upload.metadata,
-          offset: upload.offset,
-          storage: upload.storage,
-          creation_date: upload.creation_date,
-        })
-      )
+    return new Upload({
+      id: id,
+      size: upload.size,
+      metadata: upload.metadata,
+      offset: upload.offset,
+      storage: upload.storage,
+      creation_date: upload.creation_date,
     })
   }
 
@@ -192,13 +179,13 @@ export class AzureStore extends DataStore {
    * to azure storage using the appendBlock. This can be upgraded to streamUpload when node sdk start supporting it.
    */
   public async write(
-    readableStream: stream.Readable,
-    file_id: string,
+    stream: stream.Readable,
+    id: string,
     offset: number
   ): Promise<number> {
     log(`started writing the file offset [${offset}]`)
 
-    const appendBlobClient = this.containerClient.getAppendBlobClient(file_id)
+    const appendBlobClient = this.containerClient.getAppendBlobClient(id)
     const upload = await this.getMetadata(appendBlobClient)
 
     // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
@@ -209,18 +196,17 @@ export class AzureStore extends DataStore {
       }
 
       try {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        const bufs: any[] = []
+        const bufs: Buffer[] = []
 
-        readableStream.on('data', async (chunk) => {
-          if (readableStream.destroyed) {
+        stream.on('data', async (chunk: Buffer) => {
+          if (stream.destroyed) {
             return reject(ERRORS.ABORTED)
           }
 
           bufs.push(chunk)
         })
 
-        readableStream.on('end', async () => {
+        stream.on('end', async () => {
           const buf = Buffer.concat(bufs)
 
           if (buf.length > 0) {
@@ -232,14 +218,15 @@ export class AzureStore extends DataStore {
 
           await this.saveMetadata(appendBlobClient, upload)
 
-          if (upload.size && upload.offset >= upload.size) {
-            await this.invalidateMetadataCache(appendBlobClient.url)
-            log(`file upload completed successfully [${file_id}]`)
+          if (upload.offset === upload.size) {
+            await this.cache.delete(appendBlobClient.url)
+            log(`file upload completed successfully [${id}]`)
           }
 
           return resolve(upload.offset)
         })
-        readableStream.on('error', async () => {
+
+        stream.on('error', async () => {
           return reject(ERRORS.UNKNOWN_ERROR)
         })
       } catch (err) {
