@@ -35,12 +35,12 @@ export type ServerOptions = {
   allowedHeaders?: string[]
 
   /**
-   * set `Access-Control-Allow-Credentials` to true.
+   * Set `Access-Control-Allow-Credentials` to true or false (the default)
    */
   allowedCredentials?: boolean
 
   /**
-   * set `Access-Control-Allow-Origin`.
+   * Add trusted origins to `Access-Control-Allow-Origin`.
    */
   allowedOrigins?: string[]
 
