@@ -1,4 +1,4 @@
-import {Transform, TransformCallback} from 'stream'
+import {Transform, type TransformCallback} from 'node:stream'
 import {ERRORS} from '../constants'
 
 // TODO: create HttpError and use it everywhere instead of throwing objects

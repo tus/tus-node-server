@@ -1,11 +1,11 @@
-name: main
+name: CI
 on:
   push:
     branches: [main]
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - '**.md'
+      - "**.md"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
@@ -15,7 +15,7 @@ concurrency: ${{ github.workflow }}--${{ github.ref }}
 
 jobs:
   main:
-    name: ${{matrix.node}}
+    name: Node.js LTS
     runs-on: ubuntu-latest
 
     steps:
@@ -39,6 +39,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Check formatting
+        run: npm run format:check
 
       - name: Run linters
         run: npm run lint

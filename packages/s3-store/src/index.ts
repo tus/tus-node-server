@@ -3,7 +3,8 @@ import fs, {promises as fsProm} from 'node:fs'
 import stream, {promises as streamProm} from 'node:stream'
 import type {Readable} from 'node:stream'
 
-import AWS, {NoSuchKey, NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
+import type AWS from '@aws-sdk/client-s3'
+import {NoSuchKey, NotFound, S3, type S3ClientConfig} from '@aws-sdk/client-s3'
 import debug from 'debug'
 
 import {
@@ -12,11 +13,11 @@ import {
   Upload,
   ERRORS,
   TUS_RESUMABLE,
-  KvStore,
+  type KvStore,
   MemoryKvStore,
 } from '@tus/utils'
 
-import {Semaphore, Permit} from '@shopify/semaphore'
+import {Semaphore, type Permit} from '@shopify/semaphore'
 import MultiStream from 'multistream'
 import crypto from 'node:crypto'
 import path from 'node:path'
@@ -287,7 +288,11 @@ export class S3Store extends DataStore {
         return fileReader
       }
 
-      return {size: incompletePartSize, path: filePath, createReader: createReadStream}
+      return {
+        size: incompletePartSize,
+        path: filePath,
+        createReader: createReadStream,
+      }
     } catch (err) {
       fsProm.rm(filePath).catch(() => {
         /* ignore */
@@ -362,14 +367,14 @@ export class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
-        const partNumber = currentPartNumber++
+        const partNumber = currentPartNumber + 1
         const acquiredPermit = permit
 
         offset += partSize
 
         const isFinalPart = size === offset
 
-        // eslint-disable-next-line no-async-promise-executor
+        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: it's fine
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             // Only the first chunk of each PATCH request can prepend
@@ -468,7 +473,7 @@ export class S3Store extends DataStore {
     }
 
     if (!partNumberMarker) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      // biome-ignore lint/style/noNonNullAssertion: it's fine
       parts.sort((a, b) => a.PartNumber! - b.PartNumber!)
     }
 
@@ -531,7 +536,11 @@ export class S3Store extends DataStore {
     upload.creation_date = new Date().toISOString()
 
     const res = await this.client.createMultipartUpload(request)
-    upload.storage = {type: 's3', path: res.Key as string, bucket: this.bucket}
+    upload.storage = {
+      type: 's3',
+      path: res.Key as string,
+      bucket: this.bucket,
+    }
     await this.saveMetadata(upload, res.UploadId as string)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
 
@@ -553,7 +562,7 @@ export class S3Store extends DataStore {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
     const parts = await this.retrieveParts(id)
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // biome-ignore lint/style/noNonNullAssertion: it's fine
     const partNumber: number = parts.length > 0 ? parts[parts.length - 1].PartNumber! : 0
     const nextPartNumber = partNumber + 1
 
@@ -711,17 +720,20 @@ export class S3Store extends DataStore {
           )
         }) || []
 
-      const objectsToDelete = expiredUploads.reduce((all, expiredUpload) => {
-        all.push(
-          {
-            key: this.infoKey(expiredUpload.Key as string),
-          },
-          {
-            key: this.partKey(expiredUpload.Key as string, true),
-          }
-        )
-        return all
-      }, [] as {key: string}[])
+      const objectsToDelete = expiredUploads.reduce(
+        (all, expiredUpload) => {
+          all.push(
+            {
+              key: this.infoKey(expiredUpload.Key as string),
+            },
+            {
+              key: this.partKey(expiredUpload.Key as string, true),
+            }
+          )
+          return all
+        },
+        [] as {key: string}[]
+      )
 
       const deletions: Promise<AWS.DeleteObjectsCommandOutput>[] = []
 

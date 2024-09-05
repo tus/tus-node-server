@@ -2,12 +2,12 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
+import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
-import {EVENTS, Upload, DataStore, CancellationContext} from '@tus/utils'
+import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {PostHandler} from '../src/handlers/PostHandler'
 import {addPipableStreamBody} from './utils'
 import {MemoryLocker} from '../src'
@@ -55,19 +55,25 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 400,
+        })
       })
 
       it('must 400 if the Upload-Length and Upload-Defer-Length headers are both present', async () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-length': '512', 'upload-defer-length': '1'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 400,
+        })
       })
 
       it("must 501 if the 'concatenation' extension is not supported", async () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
         req.headers = {'upload-concat': 'partial'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 501})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 501,
+        })
       })
 
       it('should send error when naming function throws', async () => {
@@ -81,7 +87,9 @@ describe('PostHandler', () => {
         })
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 400,
+        })
       })
 
       it('should call custom namingFunction', async () => {
@@ -119,7 +127,9 @@ describe('PostHandler', () => {
         const handler = new PostHandler(fake_store, SERVER_OPTIONS)
 
         req.headers = {'upload-length': '1000'}
-        return assert.rejects(() => handler.send(req, res, context), {status_code: 500})
+        return assert.rejects(() => handler.send(req, res, context), {
+          status_code: 500,
+        })
       })
     })
 
@@ -284,7 +294,7 @@ describe('PostHandler', () => {
         handler.send(req, res, context)
       })
 
-      it('should call onUploadCreate hook', async function () {
+      it('should call onUploadCreate hook', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
@@ -306,7 +316,7 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 1024)
       })
 
-      it('should call onUploadFinish hook when creation-with-upload is used', async function () {
+      it('should call onUploadFinish hook when creation-with-upload is used', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
@@ -330,7 +340,7 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 1024)
       })
 
-      it('should call onUploadFinish hook for empty file without content-type', async function () {
+      it('should call onUploadFinish hook for empty file without content-type', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
         const handler = new PostHandler(store, {
@@ -348,7 +358,7 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 0)
       })
 
-      it('does not set Location header if onUploadFinish hook returned a not eligible status code', async function () {
+      it('does not set Location header if onUploadFinish hook returned a not eligible status code', async () => {
         const store = sinon.createStubInstance(DataStore)
         const handler = new PostHandler(store, {
           path: '/test/output',

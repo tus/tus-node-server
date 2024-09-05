@@ -11,7 +11,7 @@ import {Upload} from '@tus/utils'
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
 
-describe('S3DataStore', function () {
+describe('S3DataStore', () => {
   before(function () {
     this.testFileSize = 960_244
     this.testFileName = 'test.mp4'

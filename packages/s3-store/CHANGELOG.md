@@ -1,5 +1,16 @@
 # @tus/s3-store
 
+## 1.6.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+
+### Patch Changes
+
+- Updated dependencies [de28c6e]
+  - @tus/utils@0.4.0
+
 ## 1.5.0
 
 ### Minor Changes

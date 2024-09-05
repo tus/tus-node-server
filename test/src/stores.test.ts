@@ -6,14 +6,11 @@ import {setTimeout as promSetTimeout} from 'node:timers/promises'
 
 import {Upload, Uid} from '@tus/server'
 
-// In CI we run multiple jobs in parallel,
-// so we need to make sure that the IDs are unique.
 export function testId(id: string) {
-  // eslint-disable-next-line turbo/no-undeclared-env-vars
-  return `${id}-${process.env.GITHUB_JOB ?? Uid.rand()}`
+  return `${id}-${Uid.rand()}`
 }
 
-export const shouldHaveStoreMethods = function () {
+export const shouldHaveStoreMethods = () => {
   describe('the class', () => {
     it('must have a write method', function (done) {
       this.datastore.should.have.property('write')
@@ -27,7 +24,7 @@ export const shouldHaveStoreMethods = function () {
   })
 }
 
-export const shouldCreateUploads = function () {
+export const shouldCreateUploads = () => {
   describe('create', () => {
     const file = new Upload({
       id: testId('create-test'),
@@ -77,7 +74,7 @@ export const shouldCreateUploads = function () {
   })
 }
 
-export const shouldExpireUploads = function () {
+export const shouldExpireUploads = () => {
   describe('expiration extension', () => {
     it("should report 'expiration' extension", function () {
       assert.equal(this.datastore.hasExtension('expiration'), true)
@@ -102,7 +99,7 @@ export const shouldExpireUploads = function () {
   })
 }
 
-export const shouldRemoveUploads = function () {
+export const shouldRemoveUploads = () => {
   const file = new Upload({id: testId('remove-test'), size: 1000, offset: 0})
 
   describe('remove (termination extension)', () => {
@@ -128,7 +125,9 @@ export const shouldRemoveUploads = function () {
       })
       await this.datastore.create(file)
 
-      const readable = fs.createReadStream(this.testFilePath, {highWaterMark: 100 * 1024})
+      const readable = fs.createReadStream(this.testFilePath, {
+        highWaterMark: 100 * 1024,
+      })
       // Pause between chunks read to make sure that file is still uploading when terminate function is invoked
       readable.on('data', () => {
         readable.pause()
@@ -152,7 +151,7 @@ export const shouldRemoveUploads = function () {
   })
 }
 
-export const shouldWriteUploads = function () {
+export const shouldWriteUploads = () => {
   describe('write', () => {
     it('should reject write streams that can not be open', async function () {
       const stream = fs.createReadStream(this.testFilePath)
@@ -197,8 +196,8 @@ export const shouldWriteUploads = function () {
   })
 }
 
-export const shouldHandleOffset = function () {
-  describe('getUpload', function () {
+export const shouldHandleOffset = () => {
+  describe('getUpload', () => {
     it('should reject non-existant files', function () {
       return this.datastore.getUpload('doesnt_exist').should.be.rejected()
     })
@@ -223,7 +222,7 @@ export const shouldHandleOffset = function () {
   })
 }
 
-export const shouldDeclareUploadLength = function () {
+export const shouldDeclareUploadLength = () => {
   describe('declareUploadLength', () => {
     it('should reject non-existant files', function () {
       return this.datastore.declareUploadLength('doesnt_exist', '10').should.be.rejected()

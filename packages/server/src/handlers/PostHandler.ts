@@ -7,12 +7,12 @@ import {
   Metadata,
   EVENTS,
   ERRORS,
-  DataStore,
-  CancellationContext,
+  type DataStore,
+  type CancellationContext,
 } from '@tus/utils'
 import {validateHeader} from '../validators/HeaderValidator'
 
-import http from 'node:http'
+import type http from 'node:http'
 import type {ServerOptions, WithRequired} from '../types'
 
 const log = debug('tus-node-server:handlers:post')
@@ -60,7 +60,7 @@ export class PostHandler extends BaseHandler {
       throw ERRORS.INVALID_LENGTH
     }
 
-    let metadata
+    let metadata: ReturnType<(typeof Metadata)['parse']> | undefined
     if ('upload-metadata' in req.headers) {
       try {
         metadata = Metadata.parse(upload_metadata)
@@ -69,7 +69,7 @@ export class PostHandler extends BaseHandler {
       }
     }
 
-    let id
+    let id: string
     try {
       id = await this.options.namingFunction(req, metadata)
     } catch (error) {
@@ -208,7 +208,7 @@ export class PostHandler extends BaseHandler {
       responseData.status === 201 ||
       (responseData.status >= 300 && responseData.status < 400)
     ) {
-      responseData.headers['Location'] = url
+      responseData.headers.Location = url
     }
 
     const writtenRes = this.write(

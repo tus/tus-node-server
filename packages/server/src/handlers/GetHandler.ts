@@ -19,7 +19,7 @@ export class GetHandler extends BaseHandler {
   async send(
     req: http.IncomingMessage,
     res: http.ServerResponse
-    // TODO: always return void or a stream?
+    // biome-ignore lint/suspicious/noConfusingVoidType: it's fine
   ): Promise<stream.Writable | void> {
     if (this.paths.has(req.url as string)) {
       const handler = this.paths.get(req.url as string) as RouteHandler

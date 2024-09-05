@@ -1,5 +1,5 @@
-import {Upload} from '../models'
-import {KvStore} from './Types'
+import type {Upload} from '../models'
+import type {KvStore} from './Types'
 
 /**
  * Memory based configstore.

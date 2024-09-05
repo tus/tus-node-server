@@ -69,6 +69,16 @@ Max file size (in bytes) allowed when uploading (`number` |
 (`(req, id: string | null) => Promise<number> | number`)). When providing a function
 during the OPTIONS request the id will be `null`.
 
+#### `options.allowedCredentials`
+
+Sets `Access-Control-Allow-Credentials` (`boolean`, default: `false`).
+
+#### `options.allowedOrigins`
+
+Trusted origins (`string[]`).
+
+Sends the client's origin back in `Access-Control-Allow-Origin` if it matches.
+
 #### `options.postReceiveInterval`
 
 Interval in milliseconds for sending progress of an upload over
