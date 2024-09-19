@@ -100,20 +100,21 @@ fastify.listen(3000, (err) => {
 - [`@tus/file-store`][]. Store files on disk.
 - [`@tus/s3-store`][]. Store files on AWS S3.
 - [`@tus/gcs-store`][]. Store files on Google Cloud Storage.
+- [`@tus/azure-store`][]. Store files on Azure.
 
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported
 extensions.
 
-| Extension                | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] |
-| ------------------------ | --------------------------------- | ----------------------------- | ------------------------------- |
-| [Creation][]             | ✅                                | ✅                            | ✅                              |
-| [Creation With Upload][] | ✅                                | ✅                            | ✅                              |
-| [Expiration][]           | ✅                                | ✅                            | ❌                              |
-| [Checksum][]             | ❌                                | ❌                            | ❌                              |
-| [Termination][]          | ✅                                | ✅                            | ❌                              |
-| [Concatenation][]        | ❌                                | ❌                            | ❌                              |
+| Extension                | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] | [`azure-store`][`@tus/azure-store`] |
+| ------------------------ | --------------------------------- | ----------------------------- | ------------------------------- | ----------------------------------- |
+| [Creation][]             | ✅                                | ✅                            | ✅                              | ✅                                  |
+| [Creation With Upload][] | ✅                                | ✅                            | ✅                              | ✅                                  |
+| [Expiration][]           | ✅                                | ✅                            | ❌                              | ❌                                  |
+| [Checksum][]             | ❌                                | ❌                            | ❌                              | ❌                                  |
+| [Termination][]          | ✅                                | ✅                            | ❌                              | ❌                                  |
+| [Concatenation][]        | ❌                                | ❌                            | ❌                              | ❌                                  |
 
 ## Demos
 
@@ -163,6 +164,7 @@ See
 [`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
 [`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
 [`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
+[`@tus/azure-store`]: https://github.com/tus/tus-node-server/tree/main/packages/azure-store
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
 [creation with upload]:
