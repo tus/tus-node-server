@@ -34,6 +34,7 @@ export class GetHandler extends BaseHandler {
     'audio/webm',
     'audio/ogg',
 
+    'video/mp4',
     'video/webm',
     'video/ogg',
 
