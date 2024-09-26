@@ -9,7 +9,18 @@ import type {RouteHandler} from '../types'
 export class GetHandler extends BaseHandler {
   paths: Map<string, RouteHandler> = new Map()
 
-  reMimeType = /^[a-z]+\/[a-z0-9\-\+\.]+$/
+  /**
+   * reMimeType is a RegExp for check mime-type form compliance with RFC1341
+   * for support mime-type and extra parameters, for example:
+   *
+   * ```
+   * text/plain; charset=utf-8
+   * ```
+   *
+   * See: https://datatracker.ietf.org/doc/html/rfc1341 (Page 6)
+   */
+  reMimeType =
+    /^(?:application|audio|example|font|haptics|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)((?:[ 	]*;[ 	]*[0-9A-Za-z!#$%&'*+.^_`|~-]+=(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+|"(?:[^"\\]|\.)*"))*)$/
 
   /**
    * mimeInlineBrowserWhitelist is a set containing MIME types which should be
