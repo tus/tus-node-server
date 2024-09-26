@@ -11,6 +11,13 @@ export class GetHandler extends BaseHandler {
 
   reMimeType = /^[a-z]+\/[a-z0-9\-\+\.]+$/
 
+  /**
+   * mimeInlineBrowserWhitelist is a set containing MIME types which should be
+   * allowed to be rendered by browser inline, instead of being forced to be
+   * downloaded. For example, HTML or SVG files are not allowed, since they may
+   * contain malicious JavaScript. In a similar fashion PDF is not on this list
+   * as their parsers commonly contain vulnerabilities which can be exploited.
+   */
   mimeInlineBrowserWhitelist = new Set([
     'text/plain',
 
