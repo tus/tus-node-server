@@ -1,5 +1,11 @@
 # @tus/server
 
+## 1.9.0
+
+### Minor Changes
+
+- a3c3a99: add Content-Type and Content-Disposition headers on GetHandler.send response
+
 ## 1.8.0
 
 ### Minor Changes
