@@ -1,7 +1,7 @@
 import stream from 'node:stream'
 
 import {BaseHandler} from './BaseHandler'
-import {ERRORS, Upload} from '@tus/utils'
+import {ERRORS, type Upload} from '@tus/utils'
 
 import type http from 'node:http'
 import type {RouteHandler} from '../types'
@@ -20,6 +20,7 @@ export class GetHandler extends BaseHandler {
    * See: https://datatracker.ietf.org/doc/html/rfc1341 (Page 6)
    */
   reMimeType =
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: it's fine
     /^(?:application|audio|example|font|haptics|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)((?:[ 	]*;[ 	]*[0-9A-Za-z!#$%&'*+.^_`|~-]+=(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+|"(?:[^"\\]|\.)*"))*)$/
 
   /**
