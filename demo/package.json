@@ -14,7 +14,7 @@
     "@tus/s3-store": "^1.6.0",
     "@tus/azure-store": "^0.1.0",
     "@tus/server": "^1.8.0",
-    "tus-js-client": "^2.3.2"
+    "tus-js-client": "^4.2.3"
   },
   "devDependencies": {
     "cross-env": "^7.0.3"
