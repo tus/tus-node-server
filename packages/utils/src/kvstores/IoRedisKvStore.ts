@@ -1,5 +1,4 @@
-
-import type {Redis as IoRedis} from "ioredis"
+import type {Redis as IoRedis} from 'ioredis'
 import type {KvStore} from './Types'
 import type {Upload} from '../models'
 
@@ -30,12 +29,18 @@ export class IoRedisKvStore<T = Upload> implements KvStore<T> {
 
   async list(): Promise<Array<string>> {
     const keys = new Set<string>()
-    let cursor = "0"
+    let cursor = '0'
     do {
-      const [next, batch] = await this.redis.scan(cursor, "MATCH", this.prefixed("*"), "COUNT", "20")
+      const [next, batch] = await this.redis.scan(
+        cursor,
+        'MATCH',
+        this.prefixed('*'),
+        'COUNT',
+        '20'
+      )
       cursor = next
       for (const key of batch) keys.add(key)
-    } while (cursor !== "0")
+    } while (cursor !== '0')
     return Array.from(keys)
   }
 
@@ -47,5 +52,3 @@ export class IoRedisKvStore<T = Upload> implements KvStore<T> {
     return buffer ? JSON.parse(buffer) : undefined
   }
 }
-
-
