@@ -146,7 +146,7 @@ to abort incomplete multipart uploads.
 
 Unlike other stores, the expiration extension on the S3 store does not need to call
 [`server.cleanUpExpiredUploads()`][cleanExpiredUploads]. The store creates a
-`Tus-Complete` tag for all objects, including `.part` and `.info` files, to indicate
+`Tus-Completed` tag for all objects, including `.part` and `.info` files, to indicate
 whether an upload is finished. This means you could setup a [lifecyle][] policy to
 automatically clean them up without a CRON job.
 
@@ -156,7 +156,7 @@ automatically clean them up without a CRON job.
     {
       "Filter": {
         "Tag": {
-          "Key": "Tus-Complete",
+          "Key": "Tus-Completed",
           "Value": "false"
         }
       },
