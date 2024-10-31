@@ -1,5 +1,12 @@
 # @tus/azure-store
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [8f19a53]
+  - @tus/utils@0.5.0
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @tus/file-store
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [8f19a53]
+  - @tus/utils@0.5.0
+
 ## 1.5.0
 
 ### Minor Changes
