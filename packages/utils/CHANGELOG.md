@@ -1,5 +1,11 @@
 # @tus/utils
 
+## 0.5.0
+
+### Minor Changes
+
+- 8f19a53: Add IoRedisKvStore & use redis.scan instead of discouraged redis.keys
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @tus/gcs-store
 
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [8f19a53]
+  - @tus/utils@0.5.0
+
 ## 1.4.0
 
 ### Minor Changes
