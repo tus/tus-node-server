@@ -29,7 +29,14 @@ export class RedisKvStore<T = Upload> implements KvStore<T> {
   }
 
   async list(): Promise<Array<string>> {
-    return this.redis.keys(`${this.prefix}*`)
+    const keys = new Set<string>()
+    let cursor = 0
+    do {
+      const result = await this.redis.scan(cursor, {MATCH: `${this.prefix}*`, COUNT: 20})
+      cursor = result.cursor
+      for (const key of result.keys) keys.add(key)
+    } while (cursor !== 0)
+    return Array.from(keys)
   }
 
   private serializeValue(value: T): string {
