@@ -33,7 +33,7 @@
     "ts-node": "^10.9.2"
   },
   "optionalDependencies": {
-    "@redis/client": "^1.5.13",
+    "@redis/client": "^1.6.0",
     "ioredis": "^5.4.1"
   },
   "engines": {
