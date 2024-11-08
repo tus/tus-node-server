@@ -1068,7 +1068,7 @@ describe('EndToEnd', () => {
           (server.datastore.configstore as Configstore).list?.() ?? []
         for (const upload in uploads) {
           // @ts-expect-error we can consider a generic to pass to
-          // datastore to narrow down the store type
+          // datastore to narrow down the store type 
           await (server.datastore.configstore as Configstore).delete(upload)
         }
         listener.close()
