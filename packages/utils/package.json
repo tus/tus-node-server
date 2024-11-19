@@ -8,12 +8,7 @@
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
   "license": "MIT",
-  "files": [
-    "README.md",
-    "LICENSE",
-    "dist",
-    "src"
-  ],
+  "files": ["README.md", "LICENSE", "dist", "src"],
   "scripts": {
     "build": "tsc --build",
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
