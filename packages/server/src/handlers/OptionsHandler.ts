@@ -9,18 +9,18 @@ export class OptionsHandler extends BaseHandler {
   async send(req: http.IncomingMessage, res: http.ServerResponse) {
     const maxSize = await this.getConfiguredMaxSize(req, null)
 
+    res.setHeader('Tus-Version', '1.0.0')
+    if (this.store.extensions.length > 0) {
+      res.setHeader('Tus-Extension', this.store.extensions.join(','))
+    }
     if (maxSize) {
       res.setHeader('Tus-Max-Size', maxSize)
     }
 
     const allowedHeaders = [...HEADERS, ...(this.options.allowedHeaders ?? [])]
-
     res.setHeader('Access-Control-Allow-Methods', ALLOWED_METHODS)
     res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '))
     res.setHeader('Access-Control-Max-Age', MAX_AGE)
-    if (this.store.extensions.length > 0) {
-      res.setHeader('Tus-Extension', this.store.extensions.join(','))
-    }
 
     return this.write(res, 204)
   }
