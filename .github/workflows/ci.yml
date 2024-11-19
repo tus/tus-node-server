@@ -6,6 +6,7 @@ on:
     types: [opened, synchronize, reopened]
     paths-ignore:
       - "**.md"
+      - ".changeset/**"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
