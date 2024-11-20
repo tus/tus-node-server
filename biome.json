@@ -23,6 +23,14 @@
     "lineEnding": "lf",
     "lineWidth": 90
   },
+  "json": {
+    "linter": {
+      "enabled": false
+    },
+    "formatter": {
+      "enabled": false
+    }
+  },
   "javascript": {
     "formatter": {
       "trailingCommas": "es5",

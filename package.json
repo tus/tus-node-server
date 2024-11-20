@@ -15,7 +15,7 @@
     "test": "npm test -w ./packages",
     "version": "changeset version",
     "release": "gh workflow run release",
-    "release:local": "npm run build && changeset publish && npm run format"
+    "release:local": "npm run build && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.2",
