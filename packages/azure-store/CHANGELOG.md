@@ -1,5 +1,11 @@
 # @tus/azure-store
 
+## 0.1.2
+
+### Patch Changes
+
+- 37dcd55: Correctly publish dist folder
+
 ## 0.1.1
 
 ### Patch Changes
