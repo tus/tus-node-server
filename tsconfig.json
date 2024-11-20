@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "files": [],
   "references": [
+    { "path": "packages/azure-store/tsconfig.json" },
     { "path": "packages/file-store/tsconfig.json" },
     { "path": "packages/gcs-store/tsconfig.json" },
     { "path": "packages/s3-store/tsconfig.json" },
