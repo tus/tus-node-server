@@ -23,7 +23,7 @@
     "@types/supertest": "^2.0.16",
     "@types/throttle": "^1.0.4",
     "mocha": "^10.4.0",
-    "rimraf": "^3.0.2",
+    "rimraf": "^6.0.1",
     "should": "^13.2.3",
     "sinon": "^18.0.0",
     "supertest": "^6.3.4",
