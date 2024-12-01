@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@tus/utils": "^0.5.0",
-    "@azure/storage-blob": "^12.24.0",
+    "@azure/storage-blob": "^12.26.0",
     "debug": "^4.3.4"
   },
   "devDependencies": {
