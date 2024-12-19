@@ -367,7 +367,7 @@ export class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
-        const partNumber = currentPartNumber + 1
+        const partNumber = currentPartNumber++
         const acquiredPermit = permit
 
         offset += partSize
