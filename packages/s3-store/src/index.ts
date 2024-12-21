@@ -367,7 +367,6 @@ export class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
-        const partNumber = currentPartNumber++
         const acquiredPermit = permit
 
         offset += partSize
@@ -383,7 +382,7 @@ export class S3Store extends DataStore {
             readable.on('error', reject)
 
             if (partSize >= this.minPartSize || isFinalPart) {
-              await this.uploadPart(metadata, readable, partNumber)
+              await this.uploadPart(metadata, readable, currentPartNumber)
             } else {
               await this.uploadIncompletePart(metadata.file.id, readable)
             }
