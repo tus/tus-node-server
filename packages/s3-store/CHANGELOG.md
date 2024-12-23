@@ -1,5 +1,12 @@
 # @tus/s3-store
 
+## 1.6.2
+
+### Patch Changes
+
+- 32d847d: Fix increment for part numbers
+- fdad8ff: Bump @aws-sdk/client-s3 from 3.701.0 to 3.703.0
+
 ## 1.6.1
 
 ### Patch Changes
