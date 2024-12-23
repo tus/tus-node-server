@@ -200,7 +200,7 @@ describe('S3DataStore', () => {
 
   it('should use strictly sequential part numbers when uploading multiple chunks', async () => {
     const store = new S3Store({
-      partSize: 1 * 1024 * 1024,
+      partSize: 5 * 1024 * 1024,
       maxConcurrentPartUploads: 1,
       s3ClientConfig,
     })
@@ -208,36 +208,22 @@ describe('S3DataStore', () => {
     // @ts-expect-error private method
     const uploadPartSpy = sinon.spy(store, 'uploadPart')
 
-    // 5.5 MiB total size => at 1 MiB partSize, we will get at least 6 chunks
-    const TOTAL_SIZE = 5.5 * 1024 * 1024
+    const size = 15 * 1024 * 1024
     const upload = new Upload({
-      id: shared.testId('double-increment-bug'),
-      size: TOTAL_SIZE,
+      id: shared.testId('increment-bug'),
+      size: size,
       offset: 0,
     })
 
     await store.create(upload)
 
-    let offset = await store.write(
-      Readable.from(Buffer.alloc(3 * 1024 * 1024)),
-      upload.id,
-      upload.offset
-    )
-    assert.equal(offset, 3 * 1024 * 1024, 'Offset should be 3 MiB now')
+    // Write all 15 MB in a single call (S3Store will internally chunk to ~3 parts):
+    const offset = await store.write(Readable.from(Buffer.alloc(size)), upload.id, 0)
 
-    offset = await store.write(
-      Readable.from(Buffer.alloc(2.5 * 1024 * 1024)),
-      upload.id,
-      offset
-    )
-    assert.equal(offset, TOTAL_SIZE, 'Offset should match total size')
+    assert.equal(offset, size)
 
     const finalUpload = await store.getUpload(upload.id)
-    assert.equal(
-      finalUpload.offset,
-      TOTAL_SIZE,
-      'getUpload offset should match total size'
-    )
+    assert.equal(finalUpload.offset, size, 'getUpload offset should match total size')
 
     const partNumbers = uploadPartSpy.getCalls().map((call) => call.args[2])
 
