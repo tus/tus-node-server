@@ -11,6 +11,15 @@ import {Upload} from '@tus/utils'
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
 
+const s3ClientConfig = {
+  bucket: process.env.AWS_BUCKET as string,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+  },
+  region: process.env.AWS_REGION,
+}
+
 describe('S3DataStore', () => {
   before(function () {
     this.testFileSize = 960_244
@@ -21,14 +30,7 @@ describe('S3DataStore', () => {
   beforeEach(function () {
     this.datastore = new S3Store({
       partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
-      s3ClientConfig: {
-        bucket: process.env.AWS_BUCKET as string,
-        credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-        },
-        region: process.env.AWS_REGION,
-      },
+      s3ClientConfig,
     })
   })
 
@@ -194,6 +196,50 @@ describe('S3DataStore', () => {
     assert.equal(getIncompletePart.called, false)
     assert.equal(getIncompletePartSize.called, true)
     assert.equal(offset, incompleteSize)
+  })
+
+  it('should use strictly sequential part numbers when uploading multiple chunks', async () => {
+    const store = new S3Store({
+      partSize: 5 * 1024 * 1024,
+      maxConcurrentPartUploads: 1,
+      s3ClientConfig,
+    })
+
+    // @ts-expect-error private method
+    const uploadPartSpy = sinon.spy(store, 'uploadPart')
+
+    const size = 15 * 1024 * 1024
+    const upload = new Upload({
+      id: shared.testId('increment-bug'),
+      size: size,
+      offset: 0,
+    })
+
+    await store.create(upload)
+
+    // Write all 15 MB in a single call (S3Store will internally chunk to ~3 parts):
+    const offset = await store.write(Readable.from(Buffer.alloc(size)), upload.id, 0)
+
+    assert.equal(offset, size)
+
+    const finalUpload = await store.getUpload(upload.id)
+    assert.equal(finalUpload.offset, size, 'getUpload offset should match total size')
+
+    const partNumbers = uploadPartSpy.getCalls().map((call) => call.args[2])
+
+    for (let i = 0; i < partNumbers.length; i++) {
+      if (i === 0) {
+        assert.equal(partNumbers[i], 1, 'First part number must be 1')
+      } else {
+        const prev = partNumbers[i - 1]
+        const curr = partNumbers[i]
+        assert.equal(
+          curr,
+          prev + 1,
+          `Part numbers should increment by 1. Found jump from ${prev} to ${curr}`
+        )
+      }
+    }
   })
 
   shared.shouldHaveStoreMethods()
