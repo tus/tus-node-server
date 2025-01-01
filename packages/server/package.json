@@ -34,7 +34,7 @@
   },
   "optionalDependencies": {
     "@redis/client": "^1.6.0",
-    "ioredis": "^5.4.1"
+    "ioredis": "^5.4.2"
   },
   "engines": {
     "node": ">=16"
