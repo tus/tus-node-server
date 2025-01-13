@@ -25,7 +25,7 @@
     "@types/node": "^22.10.1",
     "@types/sinon": "^17.0.3",
     "@types/supertest": "^2.0.16",
-    "mocha": "^10.4.0",
+    "mocha": "^11.0.1",
     "node-mocks-http": "^1.16.1",
     "should": "^13.2.3",
     "sinon": "^18.0.0",
