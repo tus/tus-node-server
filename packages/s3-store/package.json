@@ -19,7 +19,7 @@
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.703.0",
+    "@aws-sdk/client-s3": "^3.717.0",
     "@shopify/semaphore": "^3.1.0",
     "@tus/utils": "^0.5.0",
     "debug": "^4.3.4",
