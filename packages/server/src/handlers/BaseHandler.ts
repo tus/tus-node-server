@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events'
 import stream from 'node:stream/promises'
-import {addAbortSignal, PassThrough} from 'node:stream'
+import {PassThrough, Readable} from 'node:stream'
 import type http from 'node:http'
 
 import type {ServerOptions} from '../types'
@@ -121,7 +121,7 @@ export class BaseHandler extends EventEmitter {
 
     const lock = locker.newLock(id)
 
-    await lock.lock(() => {
+    await lock.lock(context.signal, () => {
       context.cancel()
     })
 
@@ -129,7 +129,7 @@ export class BaseHandler extends EventEmitter {
   }
 
   protected writeToStore(
-    req: http.IncomingMessage,
+    data: Readable,
     upload: Upload,
     maxFileSize: number,
     context: CancellationContext
@@ -145,16 +145,25 @@ export class BaseHandler extends EventEmitter {
       // Create a PassThrough stream as a proxy to manage the request stream.
       // This allows for aborting the write process without affecting the incoming request stream.
       const proxy = new PassThrough()
-      addAbortSignal(context.signal, proxy)
+
+      // gracefully terminate the proxy stream when the request is aborted
+      const onAbort = () => {
+        data.unpipe(proxy)
+
+        if (!proxy.closed) {
+          proxy.end()
+        }
+      }
+      context.signal.addEventListener('abort', onAbort, {once: true})
 
       proxy.on('error', (err) => {
-        req.unpipe(proxy)
+        data.unpipe(proxy)
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
       const postReceive = throttle(
         (offset: number) => {
-          this.emit(EVENTS.POST_RECEIVE_V2, req, {...upload, offset})
+          this.emit(EVENTS.POST_RECEIVE_V2, data, {...upload, offset})
         },
         this.options.postReceiveInterval,
         {leading: false}
@@ -166,23 +175,18 @@ export class BaseHandler extends EventEmitter {
         postReceive(tempOffset)
       })
 
-      req.on('error', () => {
-        if (!proxy.closed) {
-          // we end the stream gracefully here so that we can upload the remaining bytes to the store
-          // as an incompletePart
-          proxy.end()
-        }
-      })
-
       // Pipe the request stream through the proxy. We use the proxy instead of the request stream directly
       // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
       // which would result in a socket hangup error for the client.
       stream
-        .pipeline(req.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
+        .pipeline(data.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
           return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
         })
         .then(resolve)
         .catch(reject)
+        .finally(() => {
+          context.signal.removeEventListener('abort', onAbort)
+        })
     })
   }
 

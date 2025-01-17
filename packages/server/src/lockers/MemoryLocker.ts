@@ -49,11 +49,14 @@ class MemoryLock implements Lock {
     private timeout: number = 1000 * 30
   ) {}
 
-  async lock(requestRelease: RequestRelease): Promise<void> {
+  async lock(stopSignal: AbortSignal, requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
+
+    const abortSignal = AbortSignal.any([stopSignal, abortController.signal])
+
     const lock = await Promise.race([
-      this.waitTimeout(abortController.signal),
-      this.acquireLock(this.id, requestRelease, abortController.signal),
+      this.waitTimeout(abortSignal),
+      this.acquireLock(this.id, requestRelease, abortSignal),
     ])
 
     abortController.abort()
@@ -68,11 +71,11 @@ class MemoryLock implements Lock {
     requestRelease: RequestRelease,
     signal: AbortSignal
   ): Promise<boolean> {
-    if (signal.aborted) {
-      return false
-    }
-
     const lock = this.locker.locks.get(id)
+
+    if (signal.aborted) {
+      return typeof lock !== 'undefined'
+    }
 
     if (!lock) {
       const lock = {

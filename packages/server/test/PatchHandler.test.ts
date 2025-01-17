@@ -12,7 +12,7 @@ import {EventEmitter} from 'node:events'
 import {addPipableStreamBody} from './utils'
 import {MemoryLocker} from '../src'
 import streamP from 'node:stream/promises'
-import stream from 'node:stream'
+import stream, {PassThrough} from 'node:stream'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -244,5 +244,70 @@ describe('PatchHandler', () => {
       assert.equal(e.status_code, 413)
       assert.equal(context.signal.aborted, true)
     }
+  })
+
+  it('should gracefully terminate request stream when context is cancelled', async () => {
+    handler = new PatchHandler(store, {path, locker: new MemoryLocker()})
+
+    const bodyStream = new PassThrough() // 20kb buffer
+    const req = addPipableStreamBody(
+      httpMocks.createRequest({
+        method: 'PATCH',
+        url: `${path}/1234`,
+        body: bodyStream,
+      })
+    )
+
+    const abortController = new AbortController()
+    context = {
+      cancel: () => abortController.abort(),
+      abort: () => abortController.abort(),
+      signal: abortController.signal,
+    }
+
+    const res = httpMocks.createResponse({req})
+    req.headers = {
+      'upload-offset': '0',
+      'content-type': 'application/offset+octet-stream',
+    }
+    req.url = `${path}/file`
+
+    let accumulatedBuffer: Buffer = Buffer.alloc(0)
+
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
+    store.write.callsFake(async (readable: http.IncomingMessage | stream.Readable) => {
+      const writeStream = new stream.PassThrough()
+      const chunks: Buffer[] = []
+
+      writeStream.on('data', (chunk) => {
+        chunks.push(chunk) // Accumulate chunks in the outer buffer
+      })
+
+      await streamP.pipeline(readable, writeStream)
+
+      accumulatedBuffer = Buffer.concat([accumulatedBuffer, ...chunks])
+
+      return writeStream.readableLength
+    })
+    store.declareUploadLength.resolves()
+
+    await new Promise((resolve, reject) => {
+      handler.send(req, res, context).then(resolve).catch(reject)
+
+      // sends the first 20kb
+      bodyStream.write(Buffer.alloc(1024 * 20))
+
+      // write 15kb
+      bodyStream.write(Buffer.alloc(1024 * 15))
+
+      // simulate that the request was cancelled
+      setTimeout(() => {
+        context.abort()
+      }, 200)
+    })
+
+    // We expect that all the data was written to the store, 35kb
+    assert.equal(accumulatedBuffer.byteLength, 35 * 1024)
+    bodyStream.end()
   })
 })
