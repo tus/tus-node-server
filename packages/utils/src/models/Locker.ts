@@ -26,6 +26,6 @@ export interface Locker {
  *
  */
 export interface Lock {
-  lock(cancelReq: RequestRelease): Promise<void>
+  lock(signal: AbortSignal, cancelReq: RequestRelease): Promise<void>
   unlock(): Promise<void>
 }

@@ -151,6 +151,11 @@ export class Server extends EventEmitter {
   ): Promise<http.ServerResponse | stream.Writable | void> {
     const context = this.createContext(req)
 
+    // Once the request is closed we abort the context to clean up underline resources
+    req.on('close', () => {
+      context.abort()
+    })
+
     log(`[TusServer] handle: ${req.method} ${req.url}`)
     // Allow overriding the HTTP method. The reason for this is
     // that some libraries/environments to not support PATCH and
@@ -289,6 +294,17 @@ export class Server extends EventEmitter {
 
     res.writeHead(status, headers)
     res.write(body)
+
+    // Abort the context once the response is sent.
+    // Useful for clean-up when the server uses keep-alive
+    if (!isAborted) {
+      res.on('finish', () => {
+        if (!req.closed) {
+          context.abort()
+        }
+      })
+    }
+
     return res.end()
   }
 
