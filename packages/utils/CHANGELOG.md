@@ -1,5 +1,11 @@
 # @tus/utils
 
+## 0.5.1
+
+### Patch Changes
+
+- 42c6267: Consistent cancellation across streams and locks, fixing lock on file never being unlocked when the request ends prematurely.
+
 ## 0.5.0
 
 ### Minor Changes
