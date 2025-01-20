@@ -1,4 +1,4 @@
-import type {Bucket} from '@google-cloud/storage'
+import type {Bucket, CreateWriteStreamOptions} from '@google-cloud/storage'
 import stream from 'node:stream'
 import type http from 'node:http'
 import debug from 'debug'
@@ -35,13 +35,16 @@ export class GCSStore extends DataStore {
 
       file.storage = {type: 'gcs', path: file.id, bucket: this.bucket.name}
 
-      const options = {
+      const options: CreateWriteStreamOptions = {
         metadata: {
           metadata: {
             tus_version: TUS_RESUMABLE,
             ...this.#stringifyUploadKeys(file),
           },
         },
+      }
+      if (file.metadata?.contentType) {
+        options.contentType = file.metadata.contentType
       }
       const fake_stream = new stream.PassThrough()
       fake_stream.end()
