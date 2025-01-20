@@ -242,6 +242,42 @@ describe('S3DataStore', () => {
     }
   })
 
+  it('should successfully upload a zero byte file', async function () {
+    const store = this.datastore as S3Store
+    const size = 0
+    const upload = new Upload({
+      id: shared.testId('zero-byte-file'),
+      size,
+      offset: 0,
+    })
+
+    await store.create(upload)
+
+    const offset = await store.write(
+      Readable.from(Buffer.alloc(size)),
+      upload.id,
+      upload.offset
+    )
+    assert.equal(offset, size, 'Write should return 0 offset')
+
+    // Check .info file via getUpload
+    const finalUpload = await store.getUpload(upload.id)
+    assert.equal(finalUpload.offset, size, '.info file should show 0 offset')
+
+    // @ts-expect-error private
+    const s3Client = store.client
+    try {
+      const headResult = await s3Client.getObject({
+        Bucket: s3ClientConfig.bucket,
+        Key: upload.id,
+      })
+
+      assert.equal(headResult.ContentLength, size, 'File should exist in S3 with 0 bytes')
+    } catch (error) {
+      assert.fail(`Zero byte file was not uploaded to S3: ${error.message}`)
+    }
+  })
+
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension
