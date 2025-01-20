@@ -1,13 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
-  "workspaces": ["packages/*", "demo", "test"],
+  "workspaces": ["packages/*", "test"],
   "scripts": {
     "build": "tsc --build",
-    "demo": "npm run --workspace demo start",
-    "demo:gcs": "npm run --workspace demo start:gcs",
-    "demo:s3": "npm run --workspace demo start:s3",
-    "demo:azure": "npm run --workspace demo start:azure",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "format:check": "biome format --error-on-warnings .",
