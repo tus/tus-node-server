@@ -1,8 +1,8 @@
 import EventEmitter from 'node:events'
 import {setTimeout, setImmediate} from 'node:timers/promises'
 
-import {ERRORS, Lock, Locker, RequestRelease} from '@tus/utils'
-import {Bucket} from '@google-cloud/storage'
+import {ERRORS, type Lock, type Locker, type RequestRelease} from '@tus/utils'
+import type {Bucket} from '@google-cloud/storage'
 import GCSLock from './GCSLock'
 
 /**
@@ -81,7 +81,10 @@ export class GCSLocker implements Locker {
 class GCSLockHandler implements Lock {
   private gcsLock: GCSLock
 
-  constructor(private id: string, private locker: GCSLocker) {
+  constructor(
+    private id: string,
+    private locker: GCSLocker
+  ) {
     this.gcsLock = new GCSLock(
       this.id,
       this.locker.bucket,
@@ -90,12 +93,13 @@ class GCSLockHandler implements Lock {
     )
   }
 
-  async lock(requestRelease: RequestRelease): Promise<void> {
+  async lock(stopSignal: AbortSignal, requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
+    const abortSignal = AbortSignal.any([stopSignal, abortController.signal])
 
     const lock = await Promise.race([
-      this.waitForLockTimeoutOrAbort(abortController.signal),
-      this.acquireLock(requestRelease, abortController.signal),
+      this.waitForLockTimeoutOrAbort(abortSignal),
+      this.acquireLock(requestRelease, abortSignal),
     ])
 
     abortController.abort()
