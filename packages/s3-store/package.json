@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/s3-store",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "AWS S3 store for @tus/server",
   "main": "dist/index.js",
   "homepage": "https://github.com/tus/tus-node-server#readme",

@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 1.7.1
+
+### Patch Changes
+
+- c970858: Fix zero byte files only storing a .info file. Now correctly stores an empty file.
+
 ## 1.7.0
 
 ### Minor Changes
