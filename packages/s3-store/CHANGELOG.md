@@ -1,5 +1,42 @@
 # @tus/s3-store
 
+## 1.7.0
+
+### Minor Changes
+
+- b1c07bc: Change private modifier to protected
+
+### Patch Changes
+
+- 8236c05: Bump @aws-sdk/client-s3 from 3.703.0 to 3.717.0
+- Updated dependencies [42c6267]
+  - @tus/utils@0.5.1
+
+## 1.6.2
+
+### Patch Changes
+
+- 32d847d: Fix increment for part numbers
+- fdad8ff: Bump @aws-sdk/client-s3 from 3.701.0 to 3.703.0
+
+## 1.6.1
+
+### Patch Changes
+
+- Updated dependencies [8f19a53]
+  - @tus/utils@0.5.0
+
+## 1.6.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+
+### Patch Changes
+
+- Updated dependencies [de28c6e]
+  - @tus/utils@0.4.0
+
 ## 1.5.0
 
 ### Minor Changes

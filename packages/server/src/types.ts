@@ -35,6 +35,16 @@ export type ServerOptions = {
   allowedHeaders?: string[]
 
   /**
+   * Set `Access-Control-Allow-Credentials` to true or false (the default)
+   */
+  allowedCredentials?: boolean
+
+  /**
+   * Add trusted origins to `Access-Control-Allow-Origin`.
+   */
+  allowedOrigins?: string[]
+
+  /**
    * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE_V2`
    */
   postReceiveInterval?: number
@@ -53,7 +63,10 @@ export type ServerOptions = {
    * Control how the Upload-ID is extracted from the request.
    * @param req - The incoming HTTP request.
    */
-  getFileIdFromRequest?: (req: http.IncomingMessage, lastPath?: string) => string | void
+  getFileIdFromRequest?: (
+    req: http.IncomingMessage,
+    lastPath?: string
+  ) => string | undefined
 
   /**
    * Control how you want to name files.
@@ -154,9 +167,9 @@ export type ServerOptions = {
     res: http.ServerResponse,
     err: Error | {status_code: number; body: string}
   ) =>
-    | Promise<{status_code: number; body: string} | void>
+    | Promise<{status_code: number; body: string} | undefined>
     | {status_code: number; body: string}
-    | void
+    | undefined
 }
 
 export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void

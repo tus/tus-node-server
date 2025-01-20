@@ -1,16 +1,20 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
+import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
 import {OptionsHandler} from '../src/handlers/OptionsHandler'
 import {DataStore, ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '@tus/utils'
-import {MemoryLocker} from '../src'
+import {MemoryLocker, type ServerOptions} from '../src'
 
 describe('OptionsHandler', () => {
-  const options = {path: '/test/output', locker: new MemoryLocker()}
+  const options: ServerOptions = {
+    path: '/test/output',
+    locker: new MemoryLocker(),
+    maxSize: 1024,
+  }
   const store = new DataStore()
   const handler = new OptionsHandler(store, options)
 
@@ -27,6 +31,8 @@ describe('OptionsHandler', () => {
       'Access-Control-Allow-Methods': ALLOWED_METHODS,
       'Access-Control-Allow-Headers': ALLOWED_HEADERS,
       'Access-Control-Max-Age': MAX_AGE,
+      'Tus-Version': '1.0.0',
+      'Tus-Max-Size': 1024,
     }
     await handler.send(req, res)
     // eslint-disable-next-line guard-for-in

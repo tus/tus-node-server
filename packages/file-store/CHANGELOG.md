@@ -1,5 +1,23 @@
 # @tus/file-store
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [8f19a53]
+  - @tus/utils@0.5.0
+
+## 1.5.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+
+### Patch Changes
+
+- Updated dependencies [de28c6e]
+  - @tus/utils@0.4.0
+
 ## 1.4.0
 
 ### Minor Changes

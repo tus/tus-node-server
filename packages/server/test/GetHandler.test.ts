@@ -3,7 +3,7 @@ import 'should'
 import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import stream from 'node:stream'
-import http from 'node:http'
+import type http from 'node:http'
 
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
@@ -39,7 +39,7 @@ describe('GetHandler', () => {
       const store = sinon.createStubInstance(FileStore)
       const handler = new GetHandler(store, {path, locker: new MemoryLocker()})
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
-      req.url = `/not_a_valid_file_path`
+      req.url = '/not_a_valid_file_path'
       await assert.rejects(() => handler.send(req, res), {status_code: 404})
       assert.equal(spy_getFileIdFromRequest.callCount, 1)
     })
@@ -108,8 +108,105 @@ describe('GetHandler', () => {
       assert.equal(res.statusCode, 200)
       // TODO: this is the get handler but Content-Length is only send in 204 OPTIONS requests?
       // assert.equal(res.getHeader('Content-Length'), size)
+
+      assert.equal(res.getHeader('Content-Type'), 'application/octet-stream')
+      assert.equal(res.getHeader('Content-Disposition'), 'attachment')
+
       assert.equal(store.getUpload.calledOnceWith(fileId), true)
       assert.equal(store.read.calledOnceWith(fileId), true)
+    })
+  })
+
+  describe('filterContentType', () => {
+    it('should return default headers value without metadata', () => {
+      const fakeStore = sinon.stub(new DataStore())
+      const handler = new GetHandler(fakeStore, serverOptions)
+      const size = 512
+      const upload = new Upload({id: '1234', offset: size, size})
+
+      const res = handler.filterContentType(upload)
+
+      assert.deepEqual(res, {
+        contentType: 'application/octet-stream',
+        contentDisposition: 'attachment',
+      })
+    })
+
+    it('should return headers allow render in browser when filetype is in whitelist', () => {
+      const fakeStore = sinon.stub(new DataStore())
+      const handler = new GetHandler(fakeStore, serverOptions)
+      const size = 512
+      const upload = new Upload({
+        id: '1234',
+        offset: size,
+        size,
+        metadata: {filetype: 'image/png', filename: 'pet.png'},
+      })
+
+      const res = handler.filterContentType(upload)
+
+      assert.deepEqual(res, {
+        contentType: 'image/png',
+        contentDisposition: 'inline; filename="pet.png"',
+      })
+    })
+
+    it('should return headers force download when filetype is not in whitelist', () => {
+      const fakeStore = sinon.stub(new DataStore())
+      const handler = new GetHandler(fakeStore, serverOptions)
+      const size = 512
+      const upload = new Upload({
+        id: '1234',
+        offset: size,
+        size,
+        metadata: {filetype: 'application/zip', filename: 'pets.zip'},
+      })
+
+      const res = handler.filterContentType(upload)
+
+      assert.deepEqual(res, {
+        contentType: 'application/zip',
+        contentDisposition: 'attachment; filename="pets.zip"',
+      })
+    })
+
+    it('should return headers when filetype is not a valid form', () => {
+      const fakeStore = sinon.stub(new DataStore())
+      const handler = new GetHandler(fakeStore, serverOptions)
+      const size = 512
+      const upload = new Upload({
+        id: '1234',
+        offset: size,
+        size,
+        metadata: {filetype: 'image_png', filename: 'pet.png'},
+      })
+
+      const res = handler.filterContentType(upload)
+
+      assert.deepEqual(res, {
+        contentType: 'application/octet-stream',
+        contentDisposition: 'attachment; filename="pet.png"',
+      })
+    })
+  })
+
+  describe('quote', () => {
+    it('should return simple quoted string', () => {
+      const fakeStore = sinon.stub(new DataStore())
+      const handler = new GetHandler(fakeStore, serverOptions)
+
+      const res = handler.quote('pet.png')
+
+      assert.equal(res, '"pet.png"')
+    })
+
+    it('should return quoted string when include quotes', () => {
+      const fakeStore = sinon.stub(new DataStore())
+      const handler = new GetHandler(fakeStore, serverOptions)
+
+      const res = handler.quote('"pet.png"')
+
+      assert.equal(res, '"\\"pet.png\\""')
     })
   })
 
@@ -117,10 +214,10 @@ describe('GetHandler', () => {
     it('should call registered path handler', async () => {
       const fakeStore = sinon.stub(new DataStore())
       const handler = new GetHandler(fakeStore, serverOptions)
-      const customPath1 = `/path1`
+      const customPath1 = '/path1'
       const pathHandler1 = sinon.spy()
       handler.registerPath(customPath1, pathHandler1)
-      const customPath2 = `/path2`
+      const customPath2 = '/path2'
       const pathHandler2 = sinon.spy()
       handler.registerPath(customPath2, pathHandler2)
       req.url = `${customPath1}`
@@ -137,7 +234,7 @@ describe('GetHandler', () => {
       const fakeStore = sinon.stub(new DataStore())
       const handler = new GetHandler(fakeStore, serverOptions)
       const spy_getFileIdFromRequest = sinon.spy(handler, 'getFileIdFromRequest')
-      const customPath = `/path`
+      const customPath = '/path'
       handler.registerPath(customPath, () => {})
       req.url = `${customPath}`
       await handler.send(req, res)

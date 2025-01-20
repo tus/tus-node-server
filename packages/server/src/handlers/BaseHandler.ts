@@ -1,11 +1,11 @@
 import EventEmitter from 'node:events'
 import stream from 'node:stream/promises'
-import {addAbortSignal, PassThrough} from 'node:stream'
+import {PassThrough, Readable} from 'node:stream'
 import type http from 'node:http'
 
 import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '@tus/utils'
-import {ERRORS, Upload, StreamLimiter, EVENTS} from '@tus/utils'
+import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'
 
 const reExtractFileID = /([^/]+)\/?$/
@@ -78,8 +78,8 @@ export class BaseHandler extends EventEmitter {
   }
 
   protected extractHostAndProto(req: http.IncomingMessage) {
-    let proto
-    let host
+    let proto: string | undefined
+    let host: string | undefined
 
     if (this.options.respectForwardedHeaders) {
       const forwarded = req.headers.forwarded as string | undefined
@@ -96,7 +96,7 @@ export class BaseHandler extends EventEmitter {
         proto ??= forwardProto as string
       }
 
-      host ??= forwardHost
+      host ??= forwardHost as string
     }
 
     host ??= req.headers.host
@@ -121,7 +121,7 @@ export class BaseHandler extends EventEmitter {
 
     const lock = locker.newLock(id)
 
-    await lock.lock(() => {
+    await lock.lock(context.signal, () => {
       context.cancel()
     })
 
@@ -129,11 +129,12 @@ export class BaseHandler extends EventEmitter {
   }
 
   protected writeToStore(
-    req: http.IncomingMessage,
+    data: Readable,
     upload: Upload,
     maxFileSize: number,
     context: CancellationContext
   ) {
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
     return new Promise<number>(async (resolve, reject) => {
       // Abort early if the operation has been cancelled.
       if (context.signal.aborted) {
@@ -144,16 +145,25 @@ export class BaseHandler extends EventEmitter {
       // Create a PassThrough stream as a proxy to manage the request stream.
       // This allows for aborting the write process without affecting the incoming request stream.
       const proxy = new PassThrough()
-      addAbortSignal(context.signal, proxy)
+
+      // gracefully terminate the proxy stream when the request is aborted
+      const onAbort = () => {
+        data.unpipe(proxy)
+
+        if (!proxy.closed) {
+          proxy.end()
+        }
+      }
+      context.signal.addEventListener('abort', onAbort, {once: true})
 
       proxy.on('error', (err) => {
-        req.unpipe(proxy)
+        data.unpipe(proxy)
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
       const postReceive = throttle(
         (offset: number) => {
-          this.emit(EVENTS.POST_RECEIVE_V2, req, {...upload, offset})
+          this.emit(EVENTS.POST_RECEIVE_V2, data, {...upload, offset})
         },
         this.options.postReceiveInterval,
         {leading: false}
@@ -165,23 +175,18 @@ export class BaseHandler extends EventEmitter {
         postReceive(tempOffset)
       })
 
-      req.on('error', () => {
-        if (!proxy.closed) {
-          // we end the stream gracefully here so that we can upload the remaining bytes to the store
-          // as an incompletePart
-          proxy.end()
-        }
-      })
-
       // Pipe the request stream through the proxy. We use the proxy instead of the request stream directly
       // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
       // which would result in a socket hangup error for the client.
       stream
-        .pipeline(req.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
+        .pipeline(data.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
           return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
         })
         .then(resolve)
         .catch(reject)
+        .finally(() => {
+          context.signal.removeEventListener('abort', onAbort)
+        })
     })
   }
 
@@ -206,7 +211,7 @@ export class BaseHandler extends EventEmitter {
     configuredMaxSize ??= await this.getConfiguredMaxSize(req, file.id)
 
     // Parse the Content-Length header from the request (default to 0 if not set).
-    const length = parseInt(req.headers['content-length'] || '0', 10)
+    const length = Number.parseInt(req.headers['content-length'] || '0', 10)
     const offset = file.offset
 
     const hasContentLengthSet = req.headers['content-length'] !== undefined
@@ -224,9 +229,8 @@ export class BaseHandler extends EventEmitter {
 
       if (hasConfiguredMaxSizeSet) {
         return configuredMaxSize - offset
-      } else {
-        return Number.MAX_SAFE_INTEGER
       }
+      return Number.MAX_SAFE_INTEGER
     }
 
     // Check if the upload fits into the file's size when the size is not deferred.

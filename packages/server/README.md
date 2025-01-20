@@ -69,6 +69,16 @@ Max file size (in bytes) allowed when uploading (`number` |
 (`(req, id: string | null) => Promise<number> | number`)). When providing a function
 during the OPTIONS request the id will be `null`.
 
+#### `options.allowedCredentials`
+
+Sets `Access-Control-Allow-Credentials` (`boolean`, default: `false`).
+
+#### `options.allowedOrigins`
+
+Trusted origins (`string[]`).
+
+Sends the client's origin back in `Access-Control-Allow-Origin` if it matches.
+
 #### `options.postReceiveInterval`
 
 Interval in milliseconds for sending progress of an upload over
@@ -332,13 +342,28 @@ import S3Store, {type MetadataValue} from '@tus/s3-store'
 import {createClient} from '@redis/client'
 
 const client = await createClient().connect()
-const path = './uploads'
 const prefix = 'foo' // prefix for the key (foo${id})
 
 new S3Store({
   // ...
   cache: new RedisKvStore<MetadataValue>(client, prefix),
 })
+```
+
+#### `IoRedisKvStore`
+
+```ts
+import { IoRedisKvStore } from '@tus/server';
+import S3Store, { type MetadataValue } from '@tus/s3-store';
+import Redis from 'ioredis';
+
+const client = new Redis();
+const prefix = 'foo'; // prefix for the key (foo${id})
+
+new S3Store({
+  // ...
+  cache: new IoRedisKvStore<MetadataValue>(client, prefix),
+});
 ```
 
 ## Examples

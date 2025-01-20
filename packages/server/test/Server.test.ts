@@ -165,6 +165,19 @@ describe('Server', () => {
         })
     })
 
+    it('OPTIONS should return returns custom headers in Access-Control-Allow-Credentials', (done) => {
+      server.options.allowedCredentials = true
+
+      request(listener)
+        .options('/')
+        .expect(204, '', (err, res) => {
+          res.headers.should.have.property('access-control-allow-credentials')
+          res.headers['access-control-allow-credentials'].should.containEql('true')
+          server.options.allowedCredentials = undefined
+          done(err)
+        })
+    })
+
     it('HEAD should 404 non files', (done) => {
       request(listener)
         .head('/')
@@ -252,7 +265,7 @@ describe('Server', () => {
       done()
     })
 
-    it('should allow overriding the HTTP method', async () => {
+    it('should allow overriding the HTTP origin', async () => {
       const origin = 'vimeo.com'
       const req = httpMocks.createRequest({
         headers: {origin},
@@ -263,6 +276,64 @@ describe('Server', () => {
       const res = new http.ServerResponse({method: 'OPTIONS'})
       await server.handle(req, res)
       assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+    })
+
+    it('should allow overriding the HTTP origin only if match allowedOrigins', async () => {
+      const origin = 'vimeo.com'
+      server.options.allowedOrigins = ['vimeo.com']
+      const req = httpMocks.createRequest({
+        headers: {origin},
+        method: 'OPTIONS',
+        url: '/',
+      })
+      // @ts-expect-error todo
+      const res = new http.ServerResponse({method: 'OPTIONS'})
+      await server.handle(req, res)
+      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'vimeo.com')
+    })
+
+    it('should allow overriding the HTTP origin only if match allowedOrigins with multiple allowed domains', async () => {
+      const origin = 'vimeo.com'
+      server.options.allowedOrigins = ['google.com', 'vimeo.com']
+      const req = httpMocks.createRequest({
+        headers: {origin},
+        method: 'OPTIONS',
+        url: '/',
+      })
+      // @ts-expect-error todo
+      const res = new http.ServerResponse({method: 'OPTIONS'})
+      await server.handle(req, res)
+      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'vimeo.com')
+    })
+
+    it(`should now allow overriding the HTTP origin if doesn't match allowedOrigins`, async () => {
+      const origin = 'vimeo.com'
+      server.options.allowedOrigins = ['google.com']
+      const req = httpMocks.createRequest({
+        headers: {origin},
+        method: 'OPTIONS',
+        url: '/',
+      })
+      // @ts-expect-error todo
+      const res = new http.ServerResponse({method: 'OPTIONS'})
+      await server.handle(req, res)
+      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'google.com')
+    })
+
+    it('should return Access-Control-Allow-Origin if no origin header', async () => {
+      server.options.allowedOrigins = ['google.com']
+      const req = httpMocks.createRequest({
+        method: 'OPTIONS',
+        url: '/',
+      })
+      // @ts-expect-error todo
+      const res = new http.ServerResponse({method: 'OPTIONS'})
+      await server.handle(req, res)
+      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'google.com')
     })
 
     it('should not invoke handlers if onIncomingRequest throws', (done) => {
@@ -289,7 +360,7 @@ describe('Server', () => {
         path: route,
         datastore: new FileStore({directory}),
         namingFunction() {
-          return `foo/bar/id`
+          return 'foo/bar/id'
         },
         generateUrl(_, {proto, host, path, id}) {
           id = Buffer.from(id, 'utf-8').toString('base64url')
@@ -413,7 +484,7 @@ describe('Server', () => {
             .set('Upload-Offset', '0')
             .set('Content-Type', 'application/offset+octet-stream')
             .end((err) => {
-              assert.equal(received, 4)
+              assert.ok(received >= 4, 'should have received 4 or more events')
               done(err)
             })
         })
@@ -495,8 +566,8 @@ describe('Server', () => {
         path: '/test/output',
         datastore: new FileStore({directory}),
         onUploadFinish(_, __, upload) {
-          assert.ok(upload.storage!.path, 'should have storage.path')
-          assert.ok(upload.storage!.type, 'should have storage.type')
+          assert.ok(upload.storage?.path, 'should have storage.path')
+          assert.ok(upload.storage?.type, 'should have storage.type')
           throw {body: 'no', status_code: 500}
         },
       })

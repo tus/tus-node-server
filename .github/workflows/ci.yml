@@ -1,11 +1,12 @@
-name: main
+name: CI
 on:
   push:
     branches: [main]
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - '**.md'
+      - "**.md"
+      - ".changeset/**"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
@@ -15,15 +16,8 @@ concurrency: ${{ github.workflow }}--${{ github.ref }}
 
 jobs:
   main:
-    name: ${{matrix.node}}
+    name: Node.js LTS
     runs-on: ubuntu-latest
-    strategy:
-      # We do not want to run CRUD tests in parallel
-      max-parallel: 1
-      matrix:
-        node:
-          - lts/hydrogen
-          - node
 
     steps:
       - name: Checkout sources
@@ -39,13 +33,16 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{matrix.node-version}}
+          node-version: lts/*
 
       - name: Install dependencies
         run: npm ci --no-fund --no-audit
 
       - name: Build
         run: npm run build
+
+      - name: Check formatting
+        run: npm run format:check
 
       - name: Run linters
         run: npm run lint
@@ -56,4 +53,7 @@ jobs:
           AWS_BUCKET: ${{secrets.AWS_BUCKET}}
           AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          AZURE_ACCOUNT_ID: ${{secrets.AZURE_ACCOUNT_ID}}
+          AZURE_ACCOUNT_KEY: ${{secrets.AZURE_ACCOUNT_KEY}}
+          AZURE_CONTAINER_NAME: ${{secrets.AZURE_CONTAINER_NAME}}
           AWS_REGION: ${{secrets.AWS_REGION}}

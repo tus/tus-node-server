@@ -3,7 +3,8 @@ import fs, {promises as fsProm} from 'node:fs'
 import stream, {promises as streamProm} from 'node:stream'
 import type {Readable} from 'node:stream'
 
-import AWS, {NoSuchKey, NotFound, S3, S3ClientConfig} from '@aws-sdk/client-s3'
+import type AWS from '@aws-sdk/client-s3'
+import {NoSuchKey, NotFound, S3, type S3ClientConfig} from '@aws-sdk/client-s3'
 import debug from 'debug'
 
 import {
@@ -12,18 +13,18 @@ import {
   Upload,
   ERRORS,
   TUS_RESUMABLE,
-  KvStore,
+  type KvStore,
   MemoryKvStore,
 } from '@tus/utils'
 
-import {Semaphore, Permit} from '@shopify/semaphore'
+import {Semaphore, type Permit} from '@shopify/semaphore'
 import MultiStream from 'multistream'
 import crypto from 'node:crypto'
 import path from 'node:path'
 
 const log = debug('tus-node-server:stores:s3store')
 
-type Options = {
+export type Options = {
   // The preferred part size for parts send to S3. Can not be lower than 5MiB or more than 5GiB.
   // The server calculates the optimal part size, which takes this size into account,
   // but may increase it to not exceed the S3 10K parts limit.
@@ -81,13 +82,13 @@ function calcOffsetFromParts(parts?: Array<AWS.Part>) {
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
 export class S3Store extends DataStore {
-  private bucket: string
-  private cache: KvStore<MetadataValue>
-  private client: S3
-  private preferredPartSize: number
-  private expirationPeriodInMilliseconds = 0
-  private useTags = true
-  private partUploadSemaphore: Semaphore
+  protected bucket: string
+  protected cache: KvStore<MetadataValue>
+  protected client: S3
+  protected preferredPartSize: number
+  protected expirationPeriodInMilliseconds = 0
+  protected useTags = true
+  protected partUploadSemaphore: Semaphore
   public maxMultipartParts = 10_000 as const
   public minPartSize = 5_242_880 as const // 5MiB
   public maxUploadSize = 5_497_558_138_880 as const // 5TiB
@@ -130,7 +131,7 @@ export class S3Store extends DataStore {
    * on the S3 object's `Metadata` field, so that only a `headObject`
    * is necessary to retrieve the data.
    */
-  private async saveMetadata(upload: Upload, uploadId: string) {
+  protected async saveMetadata(upload: Upload, uploadId: string) {
     log(`[${upload.id}] saving metadata`)
     await this.client.putObject({
       Bucket: this.bucket,
@@ -145,7 +146,7 @@ export class S3Store extends DataStore {
     log(`[${upload.id}] metadata file saved`)
   }
 
-  private async completeMetadata(upload: Upload) {
+  protected async completeMetadata(upload: Upload) {
     if (!this.shouldUseExpirationTags()) {
       return
     }
@@ -168,7 +169,7 @@ export class S3Store extends DataStore {
    * There's a small and simple caching mechanism to avoid multiple
    * HTTP calls to S3.
    */
-  private async getMetadata(id: string): Promise<MetadataValue> {
+  protected async getMetadata(id: string): Promise<MetadataValue> {
     const cached = await this.cache.get(id)
     if (cached) {
       return cached
@@ -184,7 +185,7 @@ export class S3Store extends DataStore {
       'upload-id': Metadata?.['upload-id'] as string,
       file: new Upload({
         id,
-        size: file.size ? Number.parseInt(file.size, 10) : undefined,
+        size: Number.isFinite(file.size) ? Number.parseInt(file.size, 10) : undefined,
         offset: Number.parseInt(file.offset, 10),
         metadata: file.metadata,
         creation_date: file.creation_date,
@@ -195,11 +196,11 @@ export class S3Store extends DataStore {
     return metadata
   }
 
-  private infoKey(id: string) {
+  protected infoKey(id: string) {
     return `${id}.info`
   }
 
-  private partKey(id: string, isIncomplete = false) {
+  protected partKey(id: string, isIncomplete = false) {
     if (isIncomplete) {
       id += '.part'
     }
@@ -211,7 +212,7 @@ export class S3Store extends DataStore {
     return id
   }
 
-  private async uploadPart(
+  protected async uploadPart(
     metadata: MetadataValue,
     readStream: fs.ReadStream | Readable,
     partNumber: number
@@ -227,7 +228,7 @@ export class S3Store extends DataStore {
     return data.ETag as string
   }
 
-  private async uploadIncompletePart(
+  protected async uploadIncompletePart(
     id: string,
     readStream: fs.ReadStream | Readable
   ): Promise<string> {
@@ -241,7 +242,7 @@ export class S3Store extends DataStore {
     return data.ETag as string
   }
 
-  private async downloadIncompletePart(id: string) {
+  protected async downloadIncompletePart(id: string) {
     const incompletePart = await this.getIncompletePart(id)
 
     if (!incompletePart) {
@@ -287,7 +288,11 @@ export class S3Store extends DataStore {
         return fileReader
       }
 
-      return {size: incompletePartSize, path: filePath, createReader: createReadStream}
+      return {
+        size: incompletePartSize,
+        path: filePath,
+        createReader: createReadStream,
+      }
     } catch (err) {
       fsProm.rm(filePath).catch(() => {
         /* ignore */
@@ -296,7 +301,7 @@ export class S3Store extends DataStore {
     }
   }
 
-  private async getIncompletePart(id: string): Promise<Readable | undefined> {
+  protected async getIncompletePart(id: string): Promise<Readable | undefined> {
     try {
       const data = await this.client.getObject({
         Bucket: this.bucket,
@@ -312,7 +317,7 @@ export class S3Store extends DataStore {
     }
   }
 
-  private async getIncompletePartSize(id: string): Promise<number | undefined> {
+  protected async getIncompletePartSize(id: string): Promise<number | undefined> {
     try {
       const data = await this.client.headObject({
         Bucket: this.bucket,
@@ -327,7 +332,7 @@ export class S3Store extends DataStore {
     }
   }
 
-  private async deleteIncompletePart(id: string): Promise<void> {
+  protected async deleteIncompletePart(id: string): Promise<void> {
     await this.client.deleteObject({
       Bucket: this.bucket,
       Key: this.partKey(id, true),
@@ -337,7 +342,7 @@ export class S3Store extends DataStore {
   /**
    * Uploads a stream to s3 using multiple parts
    */
-  private async uploadParts(
+  protected async uploadParts(
     metadata: MetadataValue,
     readStream: stream.Readable,
     currentPartNumber: number,
@@ -362,14 +367,14 @@ export class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
-        const partNumber = currentPartNumber++
         const acquiredPermit = permit
+        const partNumber = currentPartNumber++
 
         offset += partSize
 
         const isFinalPart = size === offset
 
-        // eslint-disable-next-line no-async-promise-executor
+        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: it's fine
         const deferred = new Promise<void>(async (resolve, reject) => {
           try {
             // Only the first chunk of each PATCH request can prepend
@@ -424,7 +429,7 @@ export class S3Store extends DataStore {
    * Completes a multipart upload on S3.
    * This is where S3 concatenates all the uploaded parts.
    */
-  private async finishMultipartUpload(metadata: MetadataValue, parts: Array<AWS.Part>) {
+  protected async finishMultipartUpload(metadata: MetadataValue, parts: Array<AWS.Part>) {
     const response = await this.client.completeMultipartUpload({
       Bucket: this.bucket,
       Key: metadata.file.id,
@@ -445,7 +450,7 @@ export class S3Store extends DataStore {
    * Gets the number of complete parts/chunks already uploaded to S3.
    * Retrieves only consecutive parts.
    */
-  private async retrieveParts(
+  protected async retrieveParts(
     id: string,
     partNumberMarker?: string
   ): Promise<Array<AWS.Part>> {
@@ -468,7 +473,7 @@ export class S3Store extends DataStore {
     }
 
     if (!partNumberMarker) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      // biome-ignore lint/style/noNonNullAssertion: it's fine
       parts.sort((a, b) => a.PartNumber! - b.PartNumber!)
     }
 
@@ -478,12 +483,12 @@ export class S3Store extends DataStore {
   /**
    * Removes cached data for a given file.
    */
-  private async clearCache(id: string) {
+  protected async clearCache(id: string) {
     log(`[${id}] removing cached data`)
     await this.cache.delete(id)
   }
 
-  private calcOptimalPartSize(size?: number): number {
+  protected calcOptimalPartSize(size?: number): number {
     // When upload size is not know we assume largest possible value (`maxUploadSize`)
     if (size === undefined) {
       size = this.maxUploadSize
@@ -531,7 +536,11 @@ export class S3Store extends DataStore {
     upload.creation_date = new Date().toISOString()
 
     const res = await this.client.createMultipartUpload(request)
-    upload.storage = {type: 's3', path: res.Key as string, bucket: this.bucket}
+    upload.storage = {
+      type: 's3',
+      path: res.Key as string,
+      bucket: this.bucket,
+    }
     await this.saveMetadata(upload, res.UploadId as string)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
 
@@ -553,7 +562,7 @@ export class S3Store extends DataStore {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
     const parts = await this.retrieveParts(id)
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // biome-ignore lint/style/noNonNullAssertion: it's fine
     const partNumber: number = parts.length > 0 ? parts[parts.length - 1].PartNumber! : 0
     const nextPartNumber = partNumber + 1
 
@@ -711,17 +720,20 @@ export class S3Store extends DataStore {
           )
         }) || []
 
-      const objectsToDelete = expiredUploads.reduce((all, expiredUpload) => {
-        all.push(
-          {
-            key: this.infoKey(expiredUpload.Key as string),
-          },
-          {
-            key: this.partKey(expiredUpload.Key as string, true),
-          }
-        )
-        return all
-      }, [] as {key: string}[])
+      const objectsToDelete = expiredUploads.reduce(
+        (all, expiredUpload) => {
+          all.push(
+            {
+              key: this.infoKey(expiredUpload.Key as string),
+            },
+            {
+              key: this.partKey(expiredUpload.Key as string, true),
+            }
+          )
+          return all
+        },
+        [] as {key: string}[]
+      )
 
       const deletions: Promise<AWS.DeleteObjectsCommandOutput>[] = []
 
@@ -764,7 +776,7 @@ export class S3Store extends DataStore {
     return deleted
   }
 
-  private async uniqueTmpFileName(template: string): Promise<string> {
+  protected async uniqueTmpFileName(template: string): Promise<string> {
     let tries = 0
     const maxTries = 10
 

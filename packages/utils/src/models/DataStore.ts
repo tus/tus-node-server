@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import EventEmitter from 'node:events'
 
 import {Upload} from './Upload'
@@ -10,7 +9,7 @@ export class DataStore extends EventEmitter {
   extensions: string[] = []
 
   hasExtension(extension: string) {
-    return this.extensions && this.extensions.includes(extension)
+    return this.extensions?.includes(extension)
   }
 
   /**
@@ -50,7 +49,12 @@ export class DataStore extends EventEmitter {
    * the upload.
    */
   async getUpload(id: string): Promise<Upload> {
-    return new Upload({id, size: 0, offset: 0, storage: {type: 'datastore', path: ''}})
+    return new Upload({
+      id,
+      size: 0,
+      offset: 0,
+      storage: {type: 'datastore', path: ''},
+    })
   }
 
   /**

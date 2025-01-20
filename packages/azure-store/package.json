@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@tus/azure-store",
+  "version": "0.1.2",
+  "description": "Azure blob storage for @tus/server",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/tus/tus-node-server#readme",
+  "bugs": "https://github.com/tus/tus-node-server/issues",
+  "repository": "tus/tus-node-server",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist",
+    "src"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --build",
+    "test": "mocha --exit --extension ts --require ts-node/register"
+  },
+  "dependencies": {
+    "@tus/utils": "^0.5.0",
+    "@azure/storage-blob": "^12.24.0",
+    "debug": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^22.10.1",
+    "mocha": "^11.0.1",
+    "should": "^13.2.3"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

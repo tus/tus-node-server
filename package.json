@@ -1,33 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "demo",
-    "test"
-  ],
+  "workspaces": ["packages/*", "test"],
   "scripts": {
     "build": "tsc --build",
-    "demo": "npm run --workspace demo start",
-    "demo:gcs": "npm run --workspace demo start:gcs",
-    "demo:s3": "npm run --workspace demo start:s3",
-    "lint": "eslint .",
-    "format": "eslint --fix .",
+    "lint": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format --error-on-warnings .",
     "pretest": "tsc --build",
-    "test": "turbo run test",
+    "test": "npm test -w ./packages",
     "version": "changeset version",
     "release": "gh workflow run release",
-    "release:local": "turbo run build && changeset publish"
+    "release:local": "npm run build && changeset publish"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.1",
-    "eslint": "^8.57.0",
-    "eslint-config-custom": "^0.0.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.8",
-    "turbo": "^1.13.0",
-    "typescript": "^5.5.4"
-  },
-  "version": "0.0.0"
+    "@changesets/cli": "^2.27.10",
+    "typescript": "^5.6.2"
+  }
 }

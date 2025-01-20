@@ -69,7 +69,7 @@ export declare interface Server {
 
 const log = debug('tus-node-server')
 
-// eslint-disable-next-line no-redeclare
+// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: it's fine
 export class Server extends EventEmitter {
   datastore: DataStore
   handlers: Handlers
@@ -147,9 +147,14 @@ export class Server extends EventEmitter {
   async handle(
     req: http.IncomingMessage,
     res: http.ServerResponse
-    // TODO: this return type does not make sense
+    // biome-ignore lint/suspicious/noConfusingVoidType: it's fine
   ): Promise<http.ServerResponse | stream.Writable | void> {
     const context = this.createContext(req)
+
+    // Once the request is closed we abort the context to clean up underline resources
+    req.on('close', () => {
+      context.abort()
+    })
 
     log(`[TusServer] handle: ${req.method} ${req.url}`)
     // Allow overriding the HTTP method. The reason for this is
@@ -219,9 +224,11 @@ export class Server extends EventEmitter {
     }
 
     // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', this.getCorsOrigin(req))
     res.setHeader('Access-Control-Expose-Headers', EXPOSED_HEADERS)
-    if (req.headers.origin) {
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin)
+
+    if (this.options.allowedCredentials === true) {
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
     }
 
     // Invoke the handler for the method requested
@@ -231,6 +238,23 @@ export class Server extends EventEmitter {
     }
 
     return this.write(context, req, res, 404, 'Not found\n')
+  }
+
+  private getCorsOrigin(req: http.IncomingMessage): string {
+    const origin = req.headers.origin
+    const isOriginAllowed =
+      this.options.allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ??
+      true
+
+    if (origin && isOriginAllowed) {
+      return origin
+    }
+
+    if (this.options.allowedOrigins && this.options.allowedOrigins.length > 0) {
+      return this.options.allowedOrigins[0]
+    }
+
+    return '*'
   }
 
   write(
@@ -256,7 +280,7 @@ export class Server extends EventEmitter {
       // that is no longer needed, thereby saving resources.
 
       // @ts-expect-error not explicitly typed but possible
-      headers['Connection'] = 'close'
+      headers.Connection = 'close'
 
       // An event listener is added to the response ('res') for the 'finish' event.
       // The 'finish' event is triggered when the response has been sent to the client.
@@ -270,10 +294,21 @@ export class Server extends EventEmitter {
 
     res.writeHead(status, headers)
     res.write(body)
+
+    // Abort the context once the response is sent.
+    // Useful for clean-up when the server uses keep-alive
+    if (!isAborted) {
+      res.on('finish', () => {
+        if (!req.closed) {
+          context.abort()
+        }
+      })
+    }
+
     return res.end()
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: todo
   listen(...args: any[]): http.Server {
     return http.createServer(this.handle.bind(this)).listen(...args)
   }

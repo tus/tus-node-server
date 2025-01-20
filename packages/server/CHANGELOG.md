@@ -1,5 +1,44 @@
 # @tus/server
 
+## 1.10.1
+
+### Patch Changes
+
+- 42c6267: Consistent cancellation across streams and locks, fixing lock on file never being unlocked when the request ends prematurely.
+- Updated dependencies [42c6267]
+  - @tus/utils@0.5.1
+
+## 1.10.0
+
+### Minor Changes
+
+- 8f19a53: Add ioredis as optional dependency
+
+### Patch Changes
+
+- f465a0f: Send Tus-Version header in OPTIONS
+- Updated dependencies [8f19a53]
+  - @tus/utils@0.5.0
+
+## 1.9.0
+
+### Minor Changes
+
+- a3c3a99: add Content-Type and Content-Disposition headers on GetHandler.send response
+
+## 1.8.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+- ca03351: - Add `allowedCredentials` option for the Access-Control-Allow-Credentials header
+  - Add `allowedOrigins` option for setting domains in Access-Control-Allow-Origin
+
+### Patch Changes
+
+- Updated dependencies [de28c6e]
+  - @tus/utils@0.4.0
+
 ## 1.7.0
 
 ### Minor Changes

@@ -1,4 +1,4 @@
-import {Upload} from '../models'
+import type {Upload} from '../models'
 
 export interface KvStore<T = Upload> {
   get(key: string): Promise<T | undefined>

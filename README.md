@@ -27,7 +27,6 @@ easily be added to tus-node-server
 - [Quick start](#quick-start)
 - [Packages](#packages)
 - [Extensions](#extensions)
-- [Demos](#demos)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -48,6 +47,9 @@ integrate it into your existing one. There are also other mature servers, like
 ## Quick start
 
 A standalone server which stores files on disk.
+
+> [!TIP]
+> Try it yourself in [StackBlitz](https://stackblitz.com/edit/stackblitz-starters-zg6mgnuf?file=index.js)
 
 ```js
 const {Server} = require('@tus/server')
@@ -100,45 +102,21 @@ fastify.listen(3000, (err) => {
 - [`@tus/file-store`][]. Store files on disk.
 - [`@tus/s3-store`][]. Store files on AWS S3.
 - [`@tus/gcs-store`][]. Store files on Google Cloud Storage.
+- [`@tus/azure-store`][]. Store files on Azure.
 
 ## Extensions
 
 The tus protocol supports optional [extensions][]. Below is a table of the supported
 extensions.
 
-| Extension                | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] |
-| ------------------------ | --------------------------------- | ----------------------------- | ------------------------------- |
-| [Creation][]             | ✅                                | ✅                            | ✅                              |
-| [Creation With Upload][] | ✅                                | ✅                            | ✅                              |
-| [Expiration][]           | ✅                                | ✅                            | ❌                              |
-| [Checksum][]             | ❌                                | ❌                            | ❌                              |
-| [Termination][]          | ✅                                | ✅                            | ❌                              |
-| [Concatenation][]        | ❌                                | ❌                            | ❌                              |
-
-## Demos
-
-Start the demo server using Local File Storage
-
-```bash
-npm run build && npm run demo
-```
-
-Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` need to be present.
-
-```bash
-npm run build && npm run demo:s3
-```
-
-Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present
-in the root of the repository.
-
-```bash
-npm run build && npm run demo:gcs
-```
-
-Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses
-[`tus-js-client`](https://github.com/tus/tus-js-client).
+| Extension                | [`file-store`][`@tus/file-store`] | [`s3-store`][`@tus/s3-store`] | [`gcs-store`][`@tus/gcs-store`] | [`azure-store`][`@tus/azure-store`] |
+| ------------------------ | --------------------------------- | ----------------------------- | ------------------------------- | ----------------------------------- |
+| [Creation][]             | ✅                                | ✅                            | ✅                              | ✅                                  |
+| [Creation With Upload][] | ✅                                | ✅                            | ✅                              | ✅                                  |
+| [Expiration][]           | ✅                                | ✅                            | ❌                              | ❌                                  |
+| [Checksum][]             | ❌                                | ❌                            | ❌                              | ❌                                  |
+| [Termination][]          | ✅                                | ✅                            | ❌                              | ❌                                  |
+| [Concatenation][]        | ❌                                | ❌                            | ❌                              | ❌                                  |
 
 ## Types
 
@@ -163,6 +141,7 @@ See
 [`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
 [`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
 [`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
+[`@tus/azure-store`]: https://github.com/tus/tus-node-server/tree/main/packages/azure-store
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
 [creation with upload]:

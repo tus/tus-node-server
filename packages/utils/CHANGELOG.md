@@ -1,5 +1,23 @@
 # @tus/utils
 
+## 0.5.1
+
+### Patch Changes
+
+- 42c6267: Consistent cancellation across streams and locks, fixing lock on file never being unlocked when the request ends prematurely.
+
+## 0.5.0
+
+### Minor Changes
+
+- 8f19a53: Add IoRedisKvStore & use redis.scan instead of discouraged redis.keys
+
+## 0.4.0
+
+### Minor Changes
+
+- de28c6e: Publish source maps and declaration maps
+
 ## 0.3.0
 
 ### Minor Changes
