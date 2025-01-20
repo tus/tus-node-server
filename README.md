@@ -27,7 +27,6 @@ easily be added to tus-node-server
 - [Quick start](#quick-start)
 - [Packages](#packages)
 - [Extensions](#extensions)
-- [Demo](#demo)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
