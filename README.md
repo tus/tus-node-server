@@ -27,7 +27,7 @@ easily be added to tus-node-server
 - [Quick start](#quick-start)
 - [Packages](#packages)
 - [Extensions](#extensions)
-- [Demos](#demos)
+- [Demo](#demo)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -48,6 +48,9 @@ integrate it into your existing one. There are also other mature servers, like
 ## Quick start
 
 A standalone server which stores files on disk.
+
+> [!TIP]
+> Try it yourself in [StackBlitz](https://stackblitz.com/edit/stackblitz-starters-zg6mgnuf?file=index.js)
 
 ```js
 const {Server} = require('@tus/server')
@@ -115,31 +118,6 @@ extensions.
 | [Checksum][]             | ❌                                | ❌                            | ❌                              | ❌                                  |
 | [Termination][]          | ✅                                | ✅                            | ❌                              | ❌                                  |
 | [Concatenation][]        | ❌                                | ❌                            | ❌                              | ❌                                  |
-
-## Demos
-
-Start the demo server using Local File Storage
-
-```bash
-npm run build && npm run demo
-```
-
-Start up the demo server using AWS S3. The environment variables `AWS_BUCKET`,
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` need to be present.
-
-```bash
-npm run build && npm run demo:s3
-```
-
-Start up the demo server using Google Cloud Storage. A `keyfile.json` needs to be present
-in the root of the repository.
-
-```bash
-npm run build && npm run demo:gcs
-```
-
-Then navigate to the demo ([localhost:1080](http://localhost:1080)) which uses
-[`tus-js-client`](https://github.com/tus/tus-js-client).
 
 ## Types
 
