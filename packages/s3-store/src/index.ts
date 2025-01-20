@@ -185,7 +185,7 @@ export class S3Store extends DataStore {
       'upload-id': Metadata?.['upload-id'] as string,
       file: new Upload({
         id,
-        size: file.size ? Number.parseInt(file.size, 10) : undefined,
+        size: Number.isFinite(file.size) ? Number.parseInt(file.size, 10) : undefined,
         offset: Number.parseInt(file.offset, 10),
         metadata: file.metadata,
         creation_date: file.creation_date,
