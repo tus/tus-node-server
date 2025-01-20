@@ -1,5 +1,4 @@
-import {Bucket, File} from '@google-cloud/storage'
-import type {FileMetadata} from '@google-cloud/storage'
+import type {Bucket, File, FileMetadata} from '@google-cloud/storage'
 
 export type GCSLockFileMetadata = FileMetadata & {
   /**
@@ -34,7 +33,7 @@ export default class GCSLockFile {
   constructor(bucket: Bucket, name: string) {
     this.name = name
     this.lockFile = bucket.file(name)
-    this.releaseFile = bucket.file(name + '.release')
+    this.releaseFile = bucket.file(`${name}.release`)
   }
   /**
    * Create the lockfile with the specified exp time. Throws if the file already exists

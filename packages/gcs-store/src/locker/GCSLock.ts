@@ -1,6 +1,6 @@
-import {RequestRelease} from '@tus/utils'
-import {Bucket} from '@google-cloud/storage'
-import GCSLockFile, {GCSLockFileMetadata} from './GCSLockFile'
+import type {RequestRelease} from '@tus/utils'
+import type {Bucket} from '@google-cloud/storage'
+import GCSLockFile, {type GCSLockFileMetadata} from './GCSLockFile'
 
 /**
  * Handles interaction with a lock.
