@@ -44,12 +44,11 @@ export default class GCSLock {
       if (!isHealthy) {
         //Lock is not healthy, restart the process
         return await this.take(cancelHandler)
-      } else {
-        //Lock is still healthy, request release
-        await this.file.requestRelease()
-
-        return false
       }
+      //Lock is still healthy, request release
+      await this.file.requestRelease()
+
+      return false
     }
   }
 
@@ -112,7 +111,7 @@ export default class GCSLock {
    * Compare lock expiration timestamp with the current time.
    */
   protected hasExpired(meta: GCSLockFileMetadata) {
-    const expDate = Date.parse(meta.exp + '')
+    const expDate = Date.parse(meta.exp.toString())
     return !expDate || expDate < Date.now()
   }
 }

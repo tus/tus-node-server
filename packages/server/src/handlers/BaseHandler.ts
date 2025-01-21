@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events'
 import stream from 'node:stream/promises'
-import {PassThrough, Readable} from 'node:stream'
+import {PassThrough, type Readable} from 'node:stream'
 import type http from 'node:http'
 
 import type {ServerOptions} from '../types'
