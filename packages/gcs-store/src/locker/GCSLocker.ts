@@ -1,9 +1,12 @@
 import EventEmitter from 'node:events'
 import {setTimeout, setImmediate} from 'node:timers/promises'
+import debug from 'debug'
 
 import {ERRORS, type Lock, type Locker, type RequestRelease} from '@tus/utils'
 import type {Bucket} from '@google-cloud/storage'
 import GCSLock from './GCSLock'
+
+const log = debug('tus-node-server:lockers:gcs')
 
 /**
  * Google Cloud Storage implementation of the Locker mechanism with support for distribution.
@@ -32,12 +35,14 @@ import GCSLock from './GCSLock'
  * -- Update its expiration time
  * -- If a release file exists, call the cancel handler
  *
- * The implementation is based on 'A robust distributed locking algorithm based on Google Cloud Storage' by Hongli Lai (https://www.joyfulbikeshedding.com/blog/2021-05-19-robust-distributed-locking-algorithm-based-on-google-cloud-storage.html).
+ * The implementation is based on 'A robust distributed locking algorithm based on Google Cloud Storage'
+ * by Hongli Lai (https://www.joyfulbikeshedding.com/blog/2021-05-19-robust-distributed-locking-algorithm-based-on-google-cloud-storage.html).
  */
 
 export interface GCSLockerOptions {
   /**
-   * The bucket where the lock file will be created. No need to match the upload destination bucket.
+   * The bucket where the lock file will be created.
+   * No need to match the upload destination bucket.
    */
   bucket: Bucket
   /**
@@ -45,11 +50,18 @@ export interface GCSLockerOptions {
    */
   acquireLockTimeout?: number
   /**
-   * Maximum amount of time (in milliseconds) a lock is considered healthy without being refreshed. When refreshed, expiration will be current time + TTL. If a process unexpectedly ends, lock expiration won't be updated every `watchInterval`, and it will become unhealthy. Must be set according to `watchInterval`, and must be more than it (else would expire before being refreshed). Larger value results more waiting time before releasing an unhealthy lock.
+   * Maximum amount of time (in milliseconds) a lock is considered healthy without being refreshed.
+   * When refreshed, expiration will be current time + TTL.
+   * If a process unexpectedly ends, lock expiration won't be updated every `watchInterval`,
+   * and it will become unhealthy. Must be set according to `watchInterval`,
+   * and must be more than it (else would expire before being refreshed).
+   * Larger value results more waiting time before releasing an unhealthy lock.
    */
   lockTTL?: number
   /**
-   * The amount of time (in milliseconds) to wait between lock file health checks. Must be set according to `lockTTL`, and must be less than `acquireLockTimeout`. Larger value results less queries to GCS.
+   * The amount of time (in milliseconds) to wait between lock file health checks.
+   * Must be set according to `lockTTL`, and must be less than `acquireLockTimeout`.
+   * Larger value results less queries to GCS.
    */
   watchInterval?: number
 }
@@ -111,6 +123,7 @@ class GCSLockHandler implements Lock {
 
   async unlock(): Promise<void> {
     await this.gcsLock.release()
+    log('unlocked')
   }
 
   protected async acquireLock(
@@ -119,10 +132,13 @@ class GCSLockHandler implements Lock {
     attempt = 0
   ): Promise<boolean> {
     if (signal.aborted) {
+      log('aborted')
       return false
     }
 
     const acquired = await this.gcsLock.take(cancelHandler)
+
+    log('successfully acquired:', acquired)
 
     if (!acquired) {
       if (attempt > 0) {
@@ -130,6 +146,7 @@ class GCSLockHandler implements Lock {
       } else {
         await setImmediate()
       }
+      log('retrying acquireLock attempt:', attempt)
       return await this.acquireLock(cancelHandler, signal, attempt + 1)
     }
 

@@ -1,13 +1,10 @@
-import type {Bucket, File, FileMetadata} from '@google-cloud/storage'
-
-export type GCSLockFileMetadata = FileMetadata & {
-  /**
-   * The lock file expires at this time (in ms) if its not refreshed.
-   */
-  exp: number
-}
+import type {Bucket, File, SaveOptions} from '@google-cloud/storage'
+import debug from 'debug'
 
 type MetaGeneration = string | number | undefined
+export type FileMetadata = NonNullable<SaveOptions['metadata']>
+
+const log = debug('tus-node-server:lockers:gcs')
 
 /**
  * Handles communication with GCS.
@@ -39,8 +36,9 @@ export default class GCSLockFile {
    * Create the lockfile with the specified exp time. Throws if the file already exists
    */
   public async create(exp: number) {
-    const metadata: GCSLockFileMetadata = {
-      exp,
+    const metadata = {
+      metadata: {exp},
+      // TODO: this does nothing?
       cacheControl: 'no-store',
     }
 
@@ -48,27 +46,29 @@ export default class GCSLockFile {
       preconditionOpts: {ifGenerationMatch: 0},
       metadata,
     })
-    this.currentMetaGeneration = 0
+
+    this.currentMetaGeneration = (await this.getMeta()).metageneration
   }
 
   /**
    * Fetch metadata of the lock file.
    */
   public async getMeta() {
-    return (await this.lockFile.getMetadata())[0] as GCSLockFileMetadata
+    return (await this.lockFile.getMetadata())[0]
   }
 
   /**
    * Refresh our own lockfile. Throws if it does not exist or the file is modified by another instance.
    */
   public async refreshOwn(exp: number) {
-    const metadata: GCSLockFileMetadata = {
+    const metadata: FileMetadata = {
       exp,
     }
     const res = await this.lockFile.setMetadata(metadata, {
       ifMetaGenerationMatch: this.currentMetaGeneration,
     })
     this.currentMetaGeneration = res[0].metageneration
+    log('updated currentMetaGeneration', this.currentMetaGeneration)
   }
   /**
    * Check if a release request has been submitted to our own lockfile. Throws if it does not exist or the file is modified by another instance.
@@ -96,15 +96,24 @@ export default class GCSLockFile {
   }
 
   /**
-   * Request releasing the lock from another instance. As metadata edits are only prohibited for the owner (so it can keep track of metageneration), we write to a separate file.
+   * Request releasing the lock from another instance.
+   * As metadata edits are only prohibited for the owner
+   * (so it can keep track of metageneration),
+   * we write to a separate file.
    */
   public async requestRelease() {
     try {
       await this.releaseFile.save('', {
         preconditionOpts: {ifGenerationMatch: 0},
       })
+      log('requestRelease success')
     } catch (err) {
-      //Release file already created, no need to report
+      if (err.code === 412) {
+        //Release file already created, no need to report
+        return
+      }
+      log('requestRelease error', err)
+      throw err
     }
   }
 
@@ -114,6 +123,7 @@ export default class GCSLockFile {
   public async deleteUnhealthy(metaGeneration: number) {
     await this.deleteReleaseRequest()
     await this.lockFile.delete({ifMetagenerationMatch: metaGeneration})
+    log('deleted NOT healthy lock')
   }
 
   /**

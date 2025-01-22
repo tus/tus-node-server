@@ -1,6 +1,9 @@
 import type {RequestRelease} from '@tus/utils'
 import type {Bucket} from '@google-cloud/storage'
-import GCSLockFile, {type GCSLockFileMetadata} from './GCSLockFile'
+import GCSLockFile, {type FileMetadata} from './GCSLockFile'
+import debug from 'debug'
+
+const log = debug('tus-node-server:lockers:gcs')
 
 /**
  * Handles interaction with a lock.
@@ -36,14 +39,17 @@ export default class GCSLock {
       //Lock acquired, start watcher
       this.startWatcher(cancelHandler)
 
+      log('lock acquired and started watcher')
+
       return true
     } catch (err) {
+      log('failed creating lock file', err.code, err.message)
       //Probably lock is already taken
       const isHealthy = await this.insureHealth()
 
       if (!isHealthy) {
-        //Lock is not healthy, restart the process
-        return await this.take(cancelHandler)
+        log('lock not healthy, returning')
+        return false
       }
       //Lock is still healthy, request release
       await this.file.requestRelease()
@@ -60,7 +66,7 @@ export default class GCSLock {
     clearInterval(this.watcher)
 
     //Delete the lock file
-    this.file.deleteOwn()
+    await this.file.deleteOwn()
   }
 
   /**
@@ -74,10 +80,12 @@ export default class GCSLock {
       if (this.hasExpired(meta)) {
         //TTL expired, delete unhealthy lock
         await this.file.deleteUnhealthy(meta.metageneration as number)
+        log('insureHealth deleted unhealthy')
 
         return false
       }
     } catch (err) {
+      log('insureHealth err', err)
       //Probably lock does not exist (anymore)
       return false
     }
@@ -90,12 +98,14 @@ export default class GCSLock {
    */
   protected startWatcher(cancelHandler: RequestRelease) {
     this.watcher = setInterval(() => {
+      log('watcher interval')
       const handleError = () => {
         //Probably the watched lock is freed, terminate watcher
         clearInterval(this.watcher)
       }
 
       this.file.checkOwnReleaseRequest().then((shouldRelease) => {
+        log('watcher shouldRelease', shouldRelease)
         if (shouldRelease) {
           cancelHandler()
         }
@@ -110,8 +120,8 @@ export default class GCSLock {
   /**
    * Compare lock expiration timestamp with the current time.
    */
-  protected hasExpired(meta: GCSLockFileMetadata) {
-    const expDate = Date.parse(meta.exp.toString())
-    return !expDate || expDate < Date.now()
+  protected hasExpired(meta: FileMetadata) {
+    const date = Number.parseInt(meta.metadata.exp, 10)
+    return !date || date < Date.now()
   }
 }
