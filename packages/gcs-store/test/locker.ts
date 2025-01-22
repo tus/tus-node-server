@@ -10,7 +10,7 @@ const bucket = storage.bucket('tus-node-server-ci')
 
 describe('GCSLocker', () => {
   it('will acquire a lock by notifying another to release it', async () => {
-    const locker = new GCSLocker({bucket, lockTTL: 1000 * 4, watchInterval: 1000 * 2})
+    const locker = new GCSLocker({bucket, lockTTL: 1000 * 3, watchInterval: 1000 * 2})
     const lockId = shared.testId('notify-lock')
     const abortController = new AbortController()
 
@@ -21,12 +21,10 @@ describe('GCSLocker', () => {
     const lock2 = locker.newLock(lockId)
 
     await lock1.lock(abortController.signal, async () => {
-      console.log('lock1 requestRelease callback')
       cancel()
     })
 
     await lock2.lock(abortController.signal, async () => {
-      console.log('lock2 requestRelease callback')
       cancel2()
     })
 
@@ -86,7 +84,6 @@ describe('GCSLocker', () => {
     const lock2 = locker.newLock(lockId)
 
     await lock1.lock(abortController.signal, async () => {
-      console.log('requestRelease callback')
       // do not unlock when requested
       cancel()
     })
@@ -105,7 +102,6 @@ describe('GCSLocker', () => {
       assert(e === ERRORS.ERR_LOCK_TIMEOUT, `error returned is not correct ${e}`)
     }
 
-    console.log(cancel.callCount)
     assert.ok(cancel.calledOnce, `calls count dont match ${cancel.callCount}`)
     assert.ok(cancel2.notCalled, `calls count dont match ${cancel.callCount}`)
   })
