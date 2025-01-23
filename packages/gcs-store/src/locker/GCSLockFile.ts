@@ -123,7 +123,6 @@ export default class GCSLockFile {
   public async deleteUnhealthy(metaGeneration: number) {
     await this.deleteReleaseRequest()
     await this.lockFile.delete({ifMetagenerationMatch: metaGeneration})
-    log('deleted NOT healthy lock')
   }
 
   /**

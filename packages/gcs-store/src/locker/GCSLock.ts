@@ -48,8 +48,8 @@ export default class GCSLock {
       const isHealthy = await this.insureHealth()
 
       if (!isHealthy) {
-        log('lock not healthy, returning')
-        return false
+        log('lock not healthy. calling GCSLock.take() again')
+        return await this.take(cancelHandler)
       }
       //Lock is still healthy, request release
       await this.file.requestRelease()
@@ -85,7 +85,6 @@ export default class GCSLock {
         return false
       }
     } catch (err) {
-      log('insureHealth err', err)
       //Probably lock does not exist (anymore)
       return false
     }
