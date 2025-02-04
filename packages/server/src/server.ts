@@ -13,10 +13,24 @@ import {validateHeader} from './validators/HeaderValidator'
 
 import {EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
 
-import type stream from 'node:stream'
 import type {ServerOptions, RouteHandler, WithOptional} from './types'
 import type {DataStore, Upload, CancellationContext} from '@tus/utils'
 import {MemoryLocker} from './lockers'
+import {
+  createApp,
+  createRouter,
+  defineEventHandler,
+  type Router,
+  type App as H3,
+  type H3Event,
+  toNodeListener,
+  toWebRequest,
+  getResponseHeaders,
+  setHeader,
+  getHeaders,
+  getHeader,
+  getRequestWebStream,
+} from 'h3'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -28,29 +42,12 @@ type Handlers = {
 }
 
 interface TusEvents {
-  [EVENTS.POST_CREATE]: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    upload: Upload,
-    url: string
-  ) => void
+  [EVENTS.POST_CREATE]: (req: Request, upload: Upload, url: string) => void
   /** @deprecated this is almost the same as POST_FINISH, use POST_RECEIVE_V2 instead */
-  [EVENTS.POST_RECEIVE]: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    upload: Upload
-  ) => void
+  [EVENTS.POST_RECEIVE]: (req: Request, upload: Upload) => void
   [EVENTS.POST_RECEIVE_V2]: (req: http.IncomingMessage, upload: Upload) => void
-  [EVENTS.POST_FINISH]: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    upload: Upload
-  ) => void
-  [EVENTS.POST_TERMINATE]: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    id: string
-  ) => void
+  [EVENTS.POST_FINISH]: (req: Request, res: Response, upload: Upload) => void
+  [EVENTS.POST_TERMINATE]: (req: Request, id: string) => void
 }
 
 type on = EventEmitter['on']
@@ -74,6 +71,9 @@ export class Server extends EventEmitter {
   datastore: DataStore
   handlers: Handlers
   options: ServerOptions
+  app: H3
+  router: Router
+  handle: (req: http.IncomingMessage, res: http.ServerResponse) => void
 
   constructor(options: WithOptional<ServerOptions, 'locker'> & {datastore: DataStore}) {
     super()
@@ -115,6 +115,13 @@ export class Server extends EventEmitter {
       POST: new PostHandler(this.datastore, this.options),
       DELETE: new DeleteHandler(this.datastore, this.options),
     }
+
+    this.app = createApp()
+    this.router = createRouter()
+    this.app.use(this.router)
+    this.router.use('/**', this.handler())
+    this.handle = toNodeListener(this.app)
+
     // Any handlers assigned to this object with the method as the key
     // will be used to respond to those requests. They get set/re-set
     // when a datastore is assigned to the server.
@@ -141,107 +148,101 @@ export class Server extends EventEmitter {
     this.handlers.GET.registerPath(path, handler)
   }
 
-  /**
-   * Main server requestListener, invoked on every 'request' event.
-   */
-  async handle(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-    // biome-ignore lint/suspicious/noConfusingVoidType: it's fine
-  ): Promise<http.ServerResponse | stream.Writable | void> {
-    const context = this.createContext(req)
+  handler() {
+    return defineEventHandler(async (event) => {
+      log(event.toString())
+      const context = this.createContext()
 
-    // Once the request is closed we abort the context to clean up underline resources
-    req.on('close', () => {
-      context.abort()
-    })
+      // Once the request is closed we abort the context to clean up underline resources
+      // req.on('close', () => {
+      //   context.abort()
+      // })
 
-    log(`[TusServer] handle: ${req.method} ${req.url}`)
-    // Allow overriding the HTTP method. The reason for this is
-    // that some libraries/environments to not support PATCH and
-    // DELETE requests, e.g. Flash in a browser and parts of Java
-    if (req.headers['x-http-method-override']) {
-      req.method = (req.headers['x-http-method-override'] as string).toUpperCase()
-    }
+      const onError = async (error: {
+        status_code?: number
+        body?: string
+        message: string
+      }) => {
+        let status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
+        let body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
 
-    const onError = async (error: {
-      status_code?: number
-      body?: string
-      message: string
-    }) => {
-      let status_code = error.status_code || ERRORS.UNKNOWN_ERROR.status_code
-      let body = error.body || `${ERRORS.UNKNOWN_ERROR.body}${error.message || ''}\n`
+        if (this.options.onResponseError) {
+          const errorMapping = await this.options.onResponseError(
+            toWebRequest(event),
+            error as Error
+          )
+          if (errorMapping) {
+            status_code = errorMapping.status_code
+            body = errorMapping.body
+          }
+        }
 
-      if (this.options.onResponseError) {
-        const errorMapping = await this.options.onResponseError(req, res, error as Error)
-        if (errorMapping) {
-          status_code = errorMapping.status_code
-          body = errorMapping.body
+        return this.write(context, event, status_code, body)
+      }
+
+      if (event.method === 'GET') {
+        const handler = this.handlers.GET
+        return handler.send(toWebRequest(event), context).catch(onError)
+      }
+
+      // The Tus-Resumable header MUST be included in every request and
+      // response except for OPTIONS requests. The value MUST be the version
+      // of the protocol used by the Client or the Server.
+      setHeader(event, 'Tus-Resumable', TUS_RESUMABLE)
+
+      if (event.method !== 'OPTIONS' && !getHeader(event, 'tus-resumable')) {
+        return this.write(context, event, 412, 'Tus-Resumable Required\n')
+      }
+
+      // Validate all required headers to adhere to the tus protocol
+      const invalid_headers = []
+      for (const header_name in getHeaders(event)) {
+        if (event.method === 'OPTIONS') {
+          continue
+        }
+
+        // Content type is only checked for PATCH requests. For all other
+        // request methods it will be ignored and treated as no content type
+        // was set because some HTTP clients may enforce a default value for
+        // this header.
+        // See https://github.com/tus/tus-node-server/pull/116
+        if (header_name.toLowerCase() === 'content-type' && event.method !== 'PATCH') {
+          continue
+        }
+
+        if (!validateHeader(header_name, getHeader(event, header_name))) {
+          log(`Invalid ${header_name} header: ${getHeader(event, header_name)}`)
+          invalid_headers.push(header_name)
         }
       }
 
-      return this.write(context, req, res, status_code, body)
-    }
-
-    if (req.method === 'GET') {
-      const handler = this.handlers.GET
-      return handler.send(req, res).catch(onError)
-    }
-
-    // The Tus-Resumable header MUST be included in every request and
-    // response except for OPTIONS requests. The value MUST be the version
-    // of the protocol used by the Client or the Server.
-    res.setHeader('Tus-Resumable', TUS_RESUMABLE)
-
-    if (req.method !== 'OPTIONS' && req.headers['tus-resumable'] === undefined) {
-      return this.write(context, req, res, 412, 'Tus-Resumable Required\n')
-    }
-
-    // Validate all required headers to adhere to the tus protocol
-    const invalid_headers = []
-    for (const header_name in req.headers) {
-      if (req.method === 'OPTIONS') {
-        continue
+      if (invalid_headers.length > 0) {
+        return this.write(context, event, 400, `Invalid ${invalid_headers.join(' ')}\n`)
       }
 
-      // Content type is only checked for PATCH requests. For all other
-      // request methods it will be ignored and treated as no content type
-      // was set because some HTTP clients may enforce a default value for
-      // this header.
-      // See https://github.com/tus/tus-node-server/pull/116
-      if (header_name.toLowerCase() === 'content-type' && req.method !== 'PATCH') {
-        continue
+      // Enable CORS
+      setHeader(
+        event,
+        'Access-Control-Allow-Origin',
+        this.getCorsOrigin(getHeader(event, 'origin'))
+      )
+      setHeader(event, 'Access-Control-Expose-Headers', EXPOSED_HEADERS)
+
+      if (this.options.allowedCredentials === true) {
+        setHeader(event, 'Access-Control-Allow-Credentials', 'true')
       }
 
-      if (!validateHeader(header_name, req.headers[header_name] as string | undefined)) {
-        log(`Invalid ${header_name} header: ${req.headers[header_name]}`)
-        invalid_headers.push(header_name)
+      // Invoke the handler for the method requested
+      const handler = this.handlers[event.method as keyof Handlers]
+      if (handler) {
+        return handler.send(toWebRequest(event), context).catch(onError)
       }
-    }
 
-    if (invalid_headers.length > 0) {
-      return this.write(context, req, res, 400, `Invalid ${invalid_headers.join(' ')}\n`)
-    }
-
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Origin', this.getCorsOrigin(req))
-    res.setHeader('Access-Control-Expose-Headers', EXPOSED_HEADERS)
-
-    if (this.options.allowedCredentials === true) {
-      res.setHeader('Access-Control-Allow-Credentials', 'true')
-    }
-
-    // Invoke the handler for the method requested
-    const handler = this.handlers[req.method as keyof Handlers]
-    if (handler) {
-      return handler.send(req, res, context).catch(onError)
-    }
-
-    return this.write(context, req, res, 404, 'Not found\n')
+      return this.write(context, event, 404, 'Not found\n')
+    })
   }
 
-  private getCorsOrigin(req: http.IncomingMessage): string {
-    const origin = req.headers.origin
+  private getCorsOrigin(origin?: string): string {
     const isOriginAllowed =
       this.options.allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ??
       true
@@ -257,19 +258,11 @@ export class Server extends EventEmitter {
     return '*'
   }
 
-  write(
-    context: CancellationContext,
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    status: number,
-    body = '',
-    headers = {}
-  ) {
+  async write(context: CancellationContext, event: H3Event, status: number, body = '') {
     const isAborted = context.signal.aborted
 
     if (status !== 204) {
-      // @ts-expect-error not explicitly typed but possible
-      headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
+      setHeader(event, 'Content-Length', Buffer.byteLength(body, 'utf8'))
     }
 
     if (isAborted) {
@@ -278,37 +271,20 @@ export class Server extends EventEmitter {
       // This is communicated by setting the 'Connection' header to 'close' in the response.
       // This step is essential to prevent the server from continuing to process a request
       // that is no longer needed, thereby saving resources.
-
-      // @ts-expect-error not explicitly typed but possible
-      headers.Connection = 'close'
-
-      // An event listener is added to the response ('res') for the 'finish' event.
-      // The 'finish' event is triggered when the response has been sent to the client.
-      // Once the response is complete, the request ('req') object is destroyed.
-      // Destroying the request object is a crucial step to release any resources
-      // tied to this request, as it has already been aborted.
-      res.on('finish', () => {
-        req.destroy()
-      })
+      setHeader(event, 'Connection', 'close')
     }
 
-    res.writeHead(status, headers)
-    res.write(body)
+    const headers = getResponseHeaders(event) as Record<string, string>
+    await event.respondWith(new Response(body, {status, headers}))
 
     // Abort the context once the response is sent.
     // Useful for clean-up when the server uses keep-alive
     if (!isAborted) {
-      res.on('finish', () => {
-        if (!req.closed) {
-          context.abort()
-        }
-      })
+      context.abort()
     }
-
-    return res.end()
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: todo
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   listen(...args: any[]): http.Server {
     return http.createServer(this.handle.bind(this)).listen(...args)
   }
@@ -321,7 +297,7 @@ export class Server extends EventEmitter {
     return this.datastore.deleteExpired()
   }
 
-  protected createContext(req: http.IncomingMessage) {
+  protected createContext() {
     // Initialize two AbortControllers:
     // 1. `requestAbortController` for instant request termination, particularly useful for stopping clients to upload when errors occur.
     // 2. `abortWithDelayController` to introduce a delay before aborting, allowing the server time to complete ongoing operations.
@@ -337,9 +313,9 @@ export class Server extends EventEmitter {
     }
     abortWithDelayController.signal.addEventListener('abort', onDelayedAbort)
 
-    req.on('close', () => {
-      abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
-    })
+    // req.on('close', () => {
+    //   abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
+    // })
 
     return {
       signal: requestAbortController.signal,

@@ -1,5 +1,5 @@
 import type httpMocks from 'node-mocks-http'
-import stream, {Readable, Transform, TransformCallback} from 'node:stream'
+import stream, {Readable} from 'node:stream'
 import type http from 'node:http'
 
 export function addPipableStreamBody<
