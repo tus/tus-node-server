@@ -37,7 +37,7 @@ export class PostHandler extends BaseHandler {
    * Create a file in the DataStore.
    */
   async send(req: Request, context: CancellationContext) {
-    if ('upload-concat' in req.headers && !this.store.hasExtension('concatentation')) {
+    if (req.headers.get('upload-concat') && !this.store.hasExtension('concatentation')) {
       throw ERRORS.UNSUPPORTED_CONCATENATION_EXTENSION
     }
 

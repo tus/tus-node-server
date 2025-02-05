@@ -7,7 +7,6 @@ import sinon from 'sinon'
 
 import {PatchHandler} from '../src/handlers/PatchHandler'
 import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
-import {addPipableStreamBody} from './utils'
 import {MemoryLocker} from '../src'
 import streamP from 'node:stream/promises'
 import stream, {PassThrough} from 'node:stream'
@@ -238,108 +237,96 @@ describe('PatchHandler', () => {
     }
   })
 
-  //   it('should throw max size exceeded error when the request body is bigger then the maxSize', async () => {
-  //     handler = new PatchHandler(store, {path, maxSize: 5, locker: new MemoryLocker()})
-  //     const req = addPipableStreamBody(
-  //       new Request(`${path}/1234`, {
-  //         method: 'PATCH',
-  //         headers: new Headers(),
-  //         duplex: 'half',
-  //         body: Buffer.alloc(30),
-  //       })
-  //     )
+  it('should throw max size exceeded error when the request body is bigger then the maxSize', async () => {
+    const handler = new PatchHandler(store, {
+      path,
+      maxSize: 5,
+      locker: new MemoryLocker(),
+    })
+    const req = new Request(`https://example.com${path}/1234`, {
+      method: 'PATCH',
+      headers: new Headers({
+        'Content-Type': 'application/offset+octet-stream',
+        'Upload-Offset': '0',
+        'Upload-Length': '30',
+      }),
+      duplex: 'half',
+      body: Buffer.alloc(30),
+    })
 
-  //     req.headers.set('upload-offset', '0')
-  //     req.headers.set('content-type', 'application/offset+octet-stream')
-  //     req = new Request(`${path}/file`, {
-  //       method: 'PATCH',
-  //       headers: new Headers(),
-  //       duplex: 'half',
-  //     })
+    store.hasExtension.withArgs('creation-defer-length').returns(true)
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
+    store.declareUploadLength.resolves()
 
-  //     store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
-  //     store.write.callsFake(async (readable: http.IncomingMessage | stream.Readable) => {
-  //       const writeStream = new stream.PassThrough()
-  //       await streamP.pipeline(readable, writeStream)
-  //       return writeStream.readableLength
-  //     })
-  //     store.declareUploadLength.resolves()
+    try {
+      await handler.send(req, context)
+      throw new Error('failed test')
+    } catch (e) {
+      assert.equal(e.message !== 'failed test', true, 'failed test')
+      assert.equal('body' in e, true)
+      assert.equal('status_code' in e, true)
+      assert.equal(e.body, 'Maximum size exceeded\n')
+      assert.equal(e.status_code, 413)
+      assert.equal(context.signal.aborted, true)
+    }
+  })
 
-  //     try {
-  //       await handler.send(req, context)
-  //       throw new Error('failed test')
-  //     } catch (e) {
-  //       assert.equal(e.message !== 'failed test', true, 'failed test')
-  //       assert.equal('body' in e, true)
-  //       assert.equal('status_code' in e, true)
-  //       assert.equal(e.body, 'Maximum size exceeded\n')
-  //       assert.equal(e.status_code, 413)
-  //       assert.equal(context.signal.aborted, true)
-  //     }
-  //   })
+  it('should gracefully terminate request stream when context is cancelled', async () => {
+    const handler = new PatchHandler(store, {path, locker: new MemoryLocker()})
+    const bodyStream = new PassThrough() // 20kb buffer
+    const req = new Request(`https://example.com${path}/1234`, {
+      method: 'PATCH',
+      headers: new Headers({
+        'Content-Type': 'application/offset+octet-stream',
+        'Upload-Offset': '0',
+      }),
+      duplex: 'half',
+      body: bodyStream,
+    })
 
-  //   it('should gracefully terminate request stream when context is cancelled', async () => {
-  //     handler = new PatchHandler(store, {path, locker: new MemoryLocker()})
+    const abortController = new AbortController()
+    context = {
+      cancel: () => abortController.abort(),
+      abort: () => abortController.abort(),
+      signal: abortController.signal,
+    }
 
-  //     const bodyStream = new PassThrough() // 20kb buffer
-  //     const req = addPipableStreamBody(
-  //       new Request(`${path}/1234`, {
-  //         method: 'PATCH',
-  //         headers: new Headers(),
-  //         duplex: 'half',
-  //         body: bodyStream,
-  //       })
-  //     )
+    let accumulatedBuffer: Buffer = Buffer.alloc(0)
 
-  //     const abortController = new AbortController()
-  //     context = {
-  //       cancel: () => abortController.abort(),
-  //       abort: () => abortController.abort(),
-  //       signal: abortController.signal,
-  //     }
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
+    store.write.callsFake(async (readable: http.IncomingMessage | stream.Readable) => {
+      const writeStream = new stream.PassThrough()
+      const chunks: Buffer[] = []
 
-  //     req = new Request(`${path}/file`, {
-  //       method: 'PATCH',
-  //       headers: new Headers(),
-  //       duplex: 'half',
-  //     })
+      writeStream.on('data', (chunk) => {
+        chunks.push(chunk) // Accumulate chunks in the outer buffer
+      })
 
-  //     let accumulatedBuffer: Buffer = Buffer.alloc(0)
+      await streamP.pipeline(readable, writeStream)
 
-  //     store.getUpload.resolves(new Upload({id: '1234', offset: 0}))
-  //     store.write.callsFake(async (readable: http.IncomingMessage | stream.Readable) => {
-  //       const writeStream = new stream.PassThrough()
-  //       const chunks: Buffer[] = []
+      accumulatedBuffer = Buffer.concat([accumulatedBuffer, ...chunks])
 
-  //       writeStream.on('data', (chunk) => {
-  //         chunks.push(chunk) // Accumulate chunks in the outer buffer
-  //       })
+      return writeStream.readableLength
+    })
+    store.declareUploadLength.resolves()
 
-  //       await streamP.pipeline(readable, writeStream)
+    await new Promise((resolve, reject) => {
+      handler.send(req, context).then(resolve).catch(reject)
 
-  //       accumulatedBuffer = Buffer.concat([accumulatedBuffer, ...chunks])
+      // sends the first 20kb
+      bodyStream.write(Buffer.alloc(1024 * 20))
 
-  //       return writeStream.readableLength
-  //     })
-  //     store.declareUploadLength.resolves()
+      // write 15kb
+      bodyStream.write(Buffer.alloc(1024 * 15))
 
-  //     await new Promise((resolve, reject) => {
-  //       handler.send(req, context).then(resolve).catch(reject)
+      // simulate that the request was cancelled
+      setTimeout(() => {
+        context.abort()
+      }, 200)
+    })
 
-  //       // sends the first 20kb
-  //       bodyStream.write(Buffer.alloc(1024 * 20))
-
-  //       // write 15kb
-  //       bodyStream.write(Buffer.alloc(1024 * 15))
-
-  //       // simulate that the request was cancelled
-  //       setTimeout(() => {
-  //         context.abort()
-  //       }, 200)
-  //     })
-
-  //     // We expect that all the data was written to the store, 35kb
-  //     assert.equal(accumulatedBuffer.byteLength, 35 * 1024)
-  //     bodyStream.end()
-  //   })
+    // We expect that all the data was written to the store, 35kb
+    assert.equal(accumulatedBuffer.byteLength, 35 * 1024)
+    bodyStream.end()
+  })
 })
