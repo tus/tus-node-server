@@ -45,9 +45,9 @@ interface TusEvents {
   [EVENTS.POST_CREATE]: (req: Request, upload: Upload, url: string) => void
   /** @deprecated this is almost the same as POST_FINISH, use POST_RECEIVE_V2 instead */
   [EVENTS.POST_RECEIVE]: (req: Request, upload: Upload) => void
-  [EVENTS.POST_RECEIVE_V2]: (req: http.IncomingMessage, upload: Upload) => void
+  [EVENTS.POST_RECEIVE_V2]: (req: Request, upload: Upload) => void
   [EVENTS.POST_FINISH]: (req: Request, res: Response, upload: Upload) => void
-  [EVENTS.POST_TERMINATE]: (req: Request, id: string) => void
+  [EVENTS.POST_TERMINATE]: (req: Request, res: Response, id: string) => void
 }
 
 type on = EventEmitter['on']
