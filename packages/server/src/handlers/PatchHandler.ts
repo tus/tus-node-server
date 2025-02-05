@@ -161,7 +161,10 @@ export class PatchHandler extends BaseHandler {
 
       return writtenRes
     } catch (e) {
-      context.abort()
+      // Only abort the context if it wasn't already aborted
+      if (!context.signal.aborted) {
+        context.abort()
+      }
       throw e
     }
   }

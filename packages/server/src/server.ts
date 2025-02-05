@@ -29,7 +29,7 @@ import {
   setHeader,
   getHeaders,
   getHeader,
-  getRequestWebStream,
+  toWebHandler,
 } from 'h3'
 
 type Handlers = {
@@ -74,6 +74,7 @@ export class Server extends EventEmitter {
   app: H3
   router: Router
   handle: (req: http.IncomingMessage, res: http.ServerResponse) => void
+  handleWeb: (req: Request) => Promise<Response>
 
   constructor(options: WithOptional<ServerOptions, 'locker'> & {datastore: DataStore}) {
     super()
@@ -121,6 +122,7 @@ export class Server extends EventEmitter {
     this.app.use(this.router)
     this.router.use('/**', this.handler())
     this.handle = toNodeListener(this.app)
+    this.handleWeb = toWebHandler(this.app)
 
     // Any handlers assigned to this object with the method as the key
     // will be used to respond to those requests. They get set/re-set
