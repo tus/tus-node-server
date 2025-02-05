@@ -278,14 +278,14 @@ describe('S3DataStore', () => {
     }
   })
 
-  it.only('should use default maxMultipartParts when not specified', function () {
+  it('should use default maxMultipartParts when not specified', function () {
     const store = new S3Store({
       s3ClientConfig,
     })
     assert.equal(store.maxMultipartParts, 10000)
   })
 
-  it.only('should use custom maxMultipartParts when specified', function () {
+  it('should use custom maxMultipartParts when specified', function () {
     const customMaxParts = 5000
     const store = new S3Store({
       s3ClientConfig,
