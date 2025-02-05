@@ -107,7 +107,7 @@ export class S3Store extends DataStore {
 
   constructor(options: Options) {
     super()
-    const { maxMultipartParts, partSize, minPartSize, s3ClientConfig } = options
+    const {maxMultipartParts, partSize, minPartSize, s3ClientConfig} = options
     const {bucket, ...restS3ClientConfig} = s3ClientConfig
     this.extensions = [
       'creation',
