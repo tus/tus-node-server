@@ -11,7 +11,7 @@ export class PatchHandler extends BaseHandler {
   /**
    * Write data to the DataStore and return the new offset.
    */
-  async send(req: Request, context: CancellationContext) {
+  async send(req: Request, context: CancellationContext, headers = new Headers()) {
     try {
       const id = this.getFileIdFromRequest(req)
       if (!id) {
@@ -113,6 +113,7 @@ export class PatchHandler extends BaseHandler {
       const responseData = {
         status: 204,
         headers: {
+          ...Object.fromEntries(headers.entries()),
           'Upload-Offset': newOffset,
         } as Record<string, string | number>,
         body: '',

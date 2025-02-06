@@ -36,7 +36,7 @@ export class PostHandler extends BaseHandler {
   /**
    * Create a file in the DataStore.
    */
-  async send(req: Request, context: CancellationContext) {
+  async send(req: Request, context: CancellationContext, headers = new Headers()) {
     if (req.headers.get('upload-concat') && !this.store.hasExtension('concatentation')) {
       throw ERRORS.UNSUPPORTED_CONCATENATION_EXTENSION
     }
@@ -114,7 +114,7 @@ export class PostHandler extends BaseHandler {
     //Recommended response defaults
     const responseData = {
       status: 201,
-      headers: {} as Record<string, string | number>,
+      headers: Object.fromEntries(headers.entries()),
       body: '',
     }
 

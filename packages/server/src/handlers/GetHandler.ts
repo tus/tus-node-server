@@ -57,7 +57,11 @@ export class GetHandler extends BaseHandler {
   /**
    * Read data from the DataStore and send the stream.
    */
-  async send(req: Request, context: CancellationContext): Promise<Response> {
+  async send(
+    req: Request,
+    context: CancellationContext,
+    headers = new Headers()
+  ): Promise<Response> {
     const path = new URL(req.url).pathname
     const handler = this.paths.get(path)
 
@@ -90,11 +94,9 @@ export class GetHandler extends BaseHandler {
     // @ts-expect-error exists if supported
     const file_stream = await this.store.read(id)
     await lock.unlock()
-    const headers = {
-      'Content-Length': stats.offset.toString(),
-      'Content-Type': contentType,
-      'Content-Disposition': contentDisposition,
-    }
+    headers.set('Content-Length', stats.offset.toString())
+    headers.set('Content-Type', contentType)
+    headers.set('Content-Disposition', contentDisposition)
     return new Response(file_stream, {headers, status: 200})
   }
 

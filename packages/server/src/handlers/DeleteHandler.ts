@@ -2,7 +2,7 @@ import {BaseHandler} from './BaseHandler'
 import {ERRORS, EVENTS, type CancellationContext} from '@tus/utils'
 
 export class DeleteHandler extends BaseHandler {
-  async send(req: Request, context: CancellationContext) {
+  async send(req: Request, context: CancellationContext, headers = new Headers()) {
     const id = this.getFileIdFromRequest(req)
     if (!id) {
       throw ERRORS.FILE_NOT_FOUND
@@ -25,7 +25,7 @@ export class DeleteHandler extends BaseHandler {
     } finally {
       await lock.unlock()
     }
-    const writtenRes = this.write(204)
+    const writtenRes = this.write(204, headers)
     this.emit(EVENTS.POST_TERMINATE, req, writtenRes, id)
     return writtenRes
   }

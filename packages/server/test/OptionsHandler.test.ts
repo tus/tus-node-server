@@ -3,7 +3,13 @@ import 'should'
 import {strict as assert} from 'node:assert'
 
 import {OptionsHandler} from '../src/handlers/OptionsHandler'
-import {DataStore, ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '@tus/utils'
+import {
+  DataStore,
+  ALLOWED_METHODS,
+  ALLOWED_HEADERS,
+  MAX_AGE,
+  type CancellationContext,
+} from '@tus/utils'
 import {MemoryLocker, type ServerOptions} from '../src'
 
 describe('OptionsHandler', () => {
@@ -15,9 +21,16 @@ describe('OptionsHandler', () => {
   const store = new DataStore()
   const handler = new OptionsHandler(store, options)
 
+  let context: CancellationContext
   let req: Request
 
   beforeEach(() => {
+    const abortController = new AbortController()
+    context = {
+      cancel: () => abortController.abort(),
+      abort: () => abortController.abort(),
+      signal: abortController.signal,
+    }
     req = new Request(`https://example.com${options.path}/1234`, {method: 'OPTIONS'})
   })
 
@@ -29,7 +42,7 @@ describe('OptionsHandler', () => {
       'Tus-Version': '1.0.0',
       'Tus-Max-Size': '1024',
     }
-    const res = await handler.send(req)
+    const res = await handler.send(req, context)
     for (const header in headers) {
       assert.equal(
         res.headers.get(header),
@@ -45,7 +58,7 @@ describe('OptionsHandler', () => {
     const headers = {'Tus-Extension': 'creation,expiration'}
     store.extensions = ['creation', 'expiration']
     const handler = new OptionsHandler(store, options)
-    const res = await handler.send(req)
+    const res = await handler.send(req, context)
     // eslint-disable-next-line guard-for-in
     for (const header in headers) {
       assert.equal(res.headers.get(header), headers[header as keyof typeof headers])

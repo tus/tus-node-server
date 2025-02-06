@@ -3,7 +3,7 @@ import {BaseHandler} from './BaseHandler'
 import {ERRORS, Metadata, type Upload, type CancellationContext} from '@tus/utils'
 
 export class HeadHandler extends BaseHandler {
-  async send(req: Request, context: CancellationContext) {
+  async send(req: Request, context: CancellationContext, headers = new Headers()) {
     const id = this.getFileIdFromRequest(req)
     if (!id) {
       throw ERRORS.FILE_NOT_FOUND
@@ -36,7 +36,7 @@ export class HeadHandler extends BaseHandler {
       throw ERRORS.FILE_NO_LONGER_EXISTS
     }
 
-    const res = new Response('', {status: 200})
+    const res = new Response('', {status: 200, headers})
 
     // The Server MUST prevent the client and/or proxies from
     // caching the response by adding the Cache-Control: no-store

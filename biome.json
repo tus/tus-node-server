@@ -12,6 +12,9 @@
       "recommended": true,
       "style": {
         "noParameterAssign": "off"
+      },
+      "performance": {
+        "noDelete": "off"
       }
     }
   },

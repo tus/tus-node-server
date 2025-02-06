@@ -61,7 +61,11 @@ describe('BaseHandler', () => {
       },
     })
 
-    const req = new Request('http://example.com/upload/123')
+    const req = new Request('http://example.com/upload/123', {
+      headers: {
+        host: 'example.com',
+      },
+    })
     const id = '123'
     const url = handler.generateUrl(req, id)
     assert.equal(url, 'http://example.com/path/123?customParam=1')

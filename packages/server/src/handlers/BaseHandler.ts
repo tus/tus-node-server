@@ -38,7 +38,10 @@ export class BaseHandler extends EventEmitter {
 
     if (this.options.generateUrl) {
       // user-defined generateUrl function
-      const {proto, host} = this.extractHostAndProto(req)
+      const {proto, host} = BaseHandler.extractHostAndProto(
+        req.headers,
+        this.options.respectForwardedHeaders
+      )
 
       return this.options.generateUrl(req, {
         proto,
@@ -53,7 +56,10 @@ export class BaseHandler extends EventEmitter {
       return `${path}/${id}`
     }
 
-    const {proto, host} = this.extractHostAndProto(req)
+    const {proto, host} = BaseHandler.extractHostAndProto(
+      req.headers,
+      this.options.respectForwardedHeaders
+    )
 
     return `${proto}://${host}${path}/${id}`
   }
@@ -73,19 +79,19 @@ export class BaseHandler extends EventEmitter {
     return decodeURIComponent(match[1])
   }
 
-  protected extractHostAndProto(req: Request) {
+  static extractHostAndProto(headers: Headers, respectForwardedHeaders?: boolean) {
     let proto: string | undefined
     let host: string | undefined
 
-    if (this.options.respectForwardedHeaders) {
-      const forwarded = req.headers.get('forwarded')
+    if (respectForwardedHeaders) {
+      const forwarded = headers.get('forwarded')
       if (forwarded) {
         host ??= reForwardedHost.exec(forwarded)?.[1]
         proto ??= reForwardedProto.exec(forwarded)?.[1]
       }
 
-      const forwardHost = req.headers.get('x-forwarded-host')
-      const forwardProto = req.headers.get('x-forwarded-proto')
+      const forwardHost = headers.get('x-forwarded-host')
+      const forwardProto = headers.get('x-forwarded-proto')
 
       // @ts-expect-error we can pass undefined
       if (['http', 'https'].includes(forwardProto)) {
@@ -95,10 +101,10 @@ export class BaseHandler extends EventEmitter {
       host ??= forwardHost as string
     }
 
-    host ??= req.headers.get('host') || new URL(req.url).host
+    host ??= headers.get('host') as string
     proto ??= 'http'
 
-    return {host: host as string, proto}
+    return {host, proto}
   }
 
   protected async getLocker(req: Request) {
