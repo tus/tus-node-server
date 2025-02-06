@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 1.9.0
+
+### Minor Changes
+
+- 7db2f17: Add `maxMultipartParts` option. This can be used when using S3-compatible storage provider with different part number limitations.
+
 ## 1.8.0
 
 ### Minor Changes
