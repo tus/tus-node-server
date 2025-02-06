@@ -37,6 +37,10 @@ export type Options = {
    * Can not be lower than 5MiB or more than 5GiB.
    */
   minPartSize?: number
+  /**
+   * The maximum number of parts allowed in a multipart upload. Defaults to 10,000.
+   */
+  maxMultipartParts?: number
   useTags?: boolean
   maxConcurrentPartUploads?: number
   cache?: KvStore<MetadataValue>
@@ -97,13 +101,13 @@ export class S3Store extends DataStore {
   protected expirationPeriodInMilliseconds = 0
   protected useTags = true
   protected partUploadSemaphore: Semaphore
-  public maxMultipartParts = 10_000 as const
+  public maxMultipartParts = 10_000
   public minPartSize = 5_242_880 // 5MiB
   public maxUploadSize = 5_497_558_138_880 as const // 5TiB
 
   constructor(options: Options) {
     super()
-    const {partSize, minPartSize, s3ClientConfig} = options
+    const {maxMultipartParts, partSize, minPartSize, s3ClientConfig} = options
     const {bucket, ...restS3ClientConfig} = s3ClientConfig
     this.extensions = [
       'creation',
@@ -116,6 +120,9 @@ export class S3Store extends DataStore {
     this.preferredPartSize = partSize || 8 * 1024 * 1024
     if (minPartSize) {
       this.minPartSize = minPartSize
+    }
+    if (maxMultipartParts) {
+      this.maxMultipartParts = maxMultipartParts
     }
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.useTags = options.useTags ?? true

@@ -278,6 +278,22 @@ describe('S3DataStore', () => {
     }
   })
 
+  it('should use default maxMultipartParts when not specified', function () {
+    const store = new S3Store({
+      s3ClientConfig,
+    })
+    assert.equal(store.maxMultipartParts, 10000)
+  })
+
+  it('should use custom maxMultipartParts when specified', function () {
+    const customMaxParts = 5000
+    const store = new S3Store({
+      s3ClientConfig,
+      maxMultipartParts: customMaxParts,
+    })
+    assert.equal(store.maxMultipartParts, customMaxParts)
+  })
+
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension
