@@ -1,9 +1,6 @@
-import stream from 'node:stream'
-
 import {BaseHandler} from './BaseHandler'
-import {ERRORS, type Upload} from '@tus/utils'
+import {type CancellationContext, ERRORS, type Upload} from '@tus/utils'
 
-import type http from 'node:http'
 import type {RouteHandler} from '../types'
 
 export class GetHandler extends BaseHandler {
@@ -61,13 +58,15 @@ export class GetHandler extends BaseHandler {
    * Read data from the DataStore and send the stream.
    */
   async send(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-    // biome-ignore lint/suspicious/noConfusingVoidType: it's fine
-  ): Promise<stream.Writable | void> {
-    if (this.paths.has(req.url as string)) {
-      const handler = this.paths.get(req.url as string) as RouteHandler
-      return handler(req, res)
+    req: Request,
+    context: CancellationContext,
+    headers = new Headers()
+  ): Promise<Response> {
+    const path = new URL(req.url).pathname
+    const handler = this.paths.get(path)
+
+    if (handler) {
+      return handler(req)
     }
 
     if (!('read' in this.store)) {
@@ -80,7 +79,7 @@ export class GetHandler extends BaseHandler {
     }
 
     if (this.options.onIncomingRequest) {
-      await this.options.onIncomingRequest(req, res, id)
+      await this.options.onIncomingRequest(req, id)
     }
 
     const stats = await this.store.getUpload(id)
@@ -91,17 +90,14 @@ export class GetHandler extends BaseHandler {
 
     const {contentType, contentDisposition} = this.filterContentType(stats)
 
+    const lock = await this.acquireLock(req, id, context)
     // @ts-expect-error exists if supported
     const file_stream = await this.store.read(id)
-    const headers = {
-      'Content-Length': stats.offset,
-      'Content-Type': contentType,
-      'Content-Disposition': contentDisposition,
-    }
-    res.writeHead(200, headers)
-    return stream.pipeline(file_stream, res, () => {
-      // We have no need to handle streaming errors
-    })
+    await lock.unlock()
+    headers.set('Content-Length', stats.offset.toString())
+    headers.set('Content-Type', contentType)
+    headers.set('Content-Disposition', contentDisposition)
+    return new Response(file_stream, {headers, status: 200})
   }
 
   /**

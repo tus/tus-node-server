@@ -1,10 +1,8 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import type http from 'node:http'
 
 import sinon from 'sinon'
-import httpMocks from 'node-mocks-http'
 
 import {ERRORS, EVENTS, DataStore, type CancellationContext} from '@tus/utils'
 import {DeleteHandler} from '../src/handlers/DeleteHandler'
@@ -14,8 +12,7 @@ describe('DeleteHandler', () => {
   const path = '/test/output'
   const fake_store = sinon.createStubInstance(DataStore)
   let handler: InstanceType<typeof DeleteHandler>
-  let req: http.IncomingMessage
-  let res: httpMocks.MockResponse<http.ServerResponse>
+  let req: Request
   let context: CancellationContext
 
   beforeEach(() => {
@@ -25,8 +22,7 @@ describe('DeleteHandler', () => {
       path,
       locker: new MemoryLocker(),
     })
-    req = {url: `${path}/1234`, method: 'DELETE'} as http.IncomingMessage
-    res = httpMocks.createResponse()
+    req = new Request(`http://example.com/${path}/1234`, {method: 'DELETE'})
     const abortController = new AbortController()
     context = {
       signal: abortController.signal,
@@ -37,19 +33,19 @@ describe('DeleteHandler', () => {
 
   it('should 404 if no file id match', () => {
     fake_store.remove.rejects(ERRORS.FILE_NOT_FOUND)
-    return assert.rejects(() => handler.send(req, res, context), {status_code: 404})
+    return assert.rejects(() => handler.send(req, context), {status_code: 404})
   })
 
   it('should 404 if no file ID', async () => {
     sinon.stub(handler, 'getFileIdFromRequest').returns(undefined)
-    await assert.rejects(() => handler.send(req, res, context), {status_code: 404})
+    await assert.rejects(() => handler.send(req, context), {status_code: 404})
     assert.equal(fake_store.remove.callCount, 0)
   })
 
   it('must acknowledge successful DELETE requests with the 204', async () => {
     fake_store.remove.resolves()
-    await handler.send(req, res, context)
-    assert.equal(res.statusCode, 204)
+    const res = await handler.send(req, context)
+    assert.equal(res.status, 204)
   })
 
   it(`must fire the ${EVENTS.POST_TERMINATE} event`, (done) => {
@@ -59,7 +55,7 @@ describe('DeleteHandler', () => {
       assert.equal(id, '1234')
       done()
     })
-    handler.send(req, res, context)
+    handler.send(req, context)
   })
 
   it('must not allow terminating an upload if already completed', async () => {
@@ -81,6 +77,6 @@ describe('DeleteHandler', () => {
       size: 1000,
       storage: {type: 'test', path: `${path}/abc`},
     })
-    await assert.rejects(() => handler.send(req, res, context), {status_code: 400})
+    await assert.rejects(() => handler.send(req, context), {status_code: 400})
   })
 })

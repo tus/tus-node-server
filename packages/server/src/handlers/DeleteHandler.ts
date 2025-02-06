@@ -1,21 +1,15 @@
 import {BaseHandler} from './BaseHandler'
 import {ERRORS, EVENTS, type CancellationContext} from '@tus/utils'
 
-import type http from 'node:http'
-
 export class DeleteHandler extends BaseHandler {
-  async send(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    context: CancellationContext
-  ) {
+  async send(req: Request, context: CancellationContext, headers = new Headers()) {
     const id = this.getFileIdFromRequest(req)
     if (!id) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
     if (this.options.onIncomingRequest) {
-      await this.options.onIncomingRequest(req, res, id)
+      await this.options.onIncomingRequest(req, id)
     }
 
     const lock = await this.acquireLock(req, id, context)
@@ -31,7 +25,7 @@ export class DeleteHandler extends BaseHandler {
     } finally {
       await lock.unlock()
     }
-    const writtenRes = this.write(res, 204, {})
+    const writtenRes = this.write(204, headers)
     this.emit(EVENTS.POST_TERMINATE, req, writtenRes, id)
     return writtenRes
   }

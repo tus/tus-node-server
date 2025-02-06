@@ -1,12 +1,11 @@
 import EventEmitter from 'node:events'
-import stream from 'node:stream/promises'
-import {PassThrough, Readable} from 'node:stream'
-import type http from 'node:http'
 
 import type {ServerOptions} from '../types'
 import type {DataStore, CancellationContext} from '@tus/utils'
 import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'
+import stream from 'node:stream/promises'
+import {PassThrough, type Readable} from 'node:stream'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -26,23 +25,23 @@ export class BaseHandler extends EventEmitter {
     this.options = options
   }
 
-  write(res: http.ServerResponse, status: number, headers = {}, body = '') {
-    if (status !== 204) {
-      // @ts-expect-error not explicitly typed but possible
-      headers['Content-Length'] = Buffer.byteLength(body, 'utf8')
+  write(status: number, headers = {}, body?: string) {
+    const res = new Response(status === 204 ? null : body, {headers, status})
+    if (status !== 204 && body) {
+      res.headers.set('Content-Length', Buffer.byteLength(body, 'utf8').toString())
     }
-
-    res.writeHead(status, headers)
-    res.write(body)
-    return res.end()
+    return res
   }
 
-  generateUrl(req: http.IncomingMessage, id: string) {
+  generateUrl(req: Request, id: string) {
     const path = this.options.path === '/' ? '' : this.options.path
 
     if (this.options.generateUrl) {
       // user-defined generateUrl function
-      const {proto, host} = this.extractHostAndProto(req)
+      const {proto, host} = BaseHandler.extractHostAndProto(
+        req.headers,
+        this.options.respectForwardedHeaders
+      )
 
       return this.options.generateUrl(req, {
         proto,
@@ -57,12 +56,15 @@ export class BaseHandler extends EventEmitter {
       return `${path}/${id}`
     }
 
-    const {proto, host} = this.extractHostAndProto(req)
+    const {proto, host} = BaseHandler.extractHostAndProto(
+      req.headers,
+      this.options.respectForwardedHeaders
+    )
 
     return `${proto}://${host}${path}/${id}`
   }
 
-  getFileIdFromRequest(req: http.IncomingMessage) {
+  getFileIdFromRequest(req: Request) {
     const match = reExtractFileID.exec(req.url as string)
 
     if (this.options.getFileIdFromRequest) {
@@ -77,19 +79,19 @@ export class BaseHandler extends EventEmitter {
     return decodeURIComponent(match[1])
   }
 
-  protected extractHostAndProto(req: http.IncomingMessage) {
+  static extractHostAndProto(headers: Headers, respectForwardedHeaders?: boolean) {
     let proto: string | undefined
     let host: string | undefined
 
-    if (this.options.respectForwardedHeaders) {
-      const forwarded = req.headers.forwarded as string | undefined
+    if (respectForwardedHeaders) {
+      const forwarded = headers.get('forwarded')
       if (forwarded) {
         host ??= reForwardedHost.exec(forwarded)?.[1]
         proto ??= reForwardedProto.exec(forwarded)?.[1]
       }
 
-      const forwardHost = req.headers['x-forwarded-host']
-      const forwardProto = req.headers['x-forwarded-proto']
+      const forwardHost = headers.get('x-forwarded-host')
+      const forwardProto = headers.get('x-forwarded-proto')
 
       // @ts-expect-error we can pass undefined
       if (['http', 'https'].includes(forwardProto)) {
@@ -99,24 +101,20 @@ export class BaseHandler extends EventEmitter {
       host ??= forwardHost as string
     }
 
-    host ??= req.headers.host
+    host ??= headers.get('host') as string
     proto ??= 'http'
 
-    return {host: host as string, proto}
+    return {host, proto}
   }
 
-  protected async getLocker(req: http.IncomingMessage) {
+  protected async getLocker(req: Request) {
     if (typeof this.options.locker === 'function') {
       return this.options.locker(req)
     }
     return this.options.locker
   }
 
-  protected async acquireLock(
-    req: http.IncomingMessage,
-    id: string,
-    context: CancellationContext
-  ) {
+  protected async acquireLock(req: Request, id: string, context: CancellationContext) {
     const locker = await this.getLocker(req)
 
     const lock = locker.newLock(id)
@@ -190,7 +188,7 @@ export class BaseHandler extends EventEmitter {
     })
   }
 
-  getConfiguredMaxSize(req: http.IncomingMessage, id: string | null) {
+  getConfiguredMaxSize(req: Request, id: string | null) {
     if (typeof this.options.maxSize === 'function') {
       return this.options.maxSize(req, id)
     }
@@ -202,19 +200,15 @@ export class BaseHandler extends EventEmitter {
    * This function considers both the server's configured maximum size and
    * the specifics of the upload, such as whether the size is deferred or fixed.
    */
-  async calculateMaxBodySize(
-    req: http.IncomingMessage,
-    file: Upload,
-    configuredMaxSize?: number
-  ) {
+  async calculateMaxBodySize(req: Request, file: Upload, configuredMaxSize?: number) {
     // Use the server-configured maximum size if it's not explicitly provided.
     configuredMaxSize ??= await this.getConfiguredMaxSize(req, file.id)
 
     // Parse the Content-Length header from the request (default to 0 if not set).
-    const length = Number.parseInt(req.headers['content-length'] || '0', 10)
+    const length = Number.parseInt(req.headers.get('content-length') || '0', 10)
     const offset = file.offset
 
-    const hasContentLengthSet = req.headers['content-length'] !== undefined
+    const hasContentLengthSet = req.headers.get('content-length') !== null
     const hasConfiguredMaxSizeSet = configuredMaxSize > 0
 
     if (file.sizeIsDeferred) {
