@@ -13,6 +13,7 @@
 - [Extensions](#extensions)
 - [Examples](#examples)
   - [Example: using `credentials` to fetch credentials inside a AWS container](#example-using-credentials-to-fetch-credentials-inside-a-aws-container)
+  - [Example: use with Cloudflare R2](#example-use-with-cloudflare-r2)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -61,8 +62,18 @@ The bucket name.
 
 #### `options.partSize`
 
-The preferred part size for parts send to S3. Can not be lower than 5MiB or more than
+The **preferred** part size for parts send to S3. Can not be lower than 5MiB or more than
 5GiB. The server calculates the optimal part size, which takes this size into account, but
+may increase it to not exceed the S3 10K parts limit.
+
+#### `options.minPartSize`
+
+The minimal part size for parts.
+Can be used to ensure that all non-trailing parts are exactly the same size
+by setting `partSize` and `minPartSize` to the same value.
+Can not be lower than 5MiB or more than 5GiB.
+
+The server calculates the optimal part size, which takes this size into account, but
 may increase it to not exceed the S3 10K parts limit.
 
 #### `options.s3ClientConfig`
@@ -182,7 +193,7 @@ docs for the supported values of
 ```js
 const aws = require('aws-sdk')
 const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/s3-store')
+const {S3Store} = require('@tus/s3-store')
 
 const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024,
@@ -197,6 +208,22 @@ const s3Store = new S3Store({
 })
 const server = new Server({path: '/files', datastore: s3Store})
 // ...
+```
+
+### Example: use with Cloudflare R2
+
+`@tus/s3-store` can be used with all S3-compatible storage solutions, including Cloudflare R2.
+However R2 requires that all non-trailing parts are _exactly_ the same size.
+This can be achieved by setting `partSize` and `minPartSize` to the same value.
+
+```ts
+// ...
+
+const s3Store = new S3Store({
+  partSize: 8 * 1024 * 1024,
+  minPartSize: 8 * 1024 * 1024,
+  // ...
+})
 ```
 
 ## Types

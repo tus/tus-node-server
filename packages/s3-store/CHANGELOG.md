@@ -1,5 +1,15 @@
 # @tus/s3-store
 
+## 1.8.0
+
+### Minor Changes
+
+- 6351485: Add `minPartSize` option. This can be used alongside `partSize` to guarantee that all non-trailing parts are _exactly_ the same size, which is required for Cloudflare R2.
+
+### Patch Changes
+
+- c970858: Fix zero byte files only storing a .info file. Now correctly stores an empty file.
+
 ## 1.7.0
 
 ### Minor Changes

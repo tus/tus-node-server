@@ -1,5 +1,11 @@
 # @tus/gcs-store
 
+## 1.4.2
+
+### Patch Changes
+
+- 8217f5e: Correctly pass the content type from upload.metadata to GCS.
+
 ## 1.4.1
 
 ### Patch Changes
