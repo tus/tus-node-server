@@ -1,5 +1,11 @@
 # @tus/server
 
+## 1.10.2
+
+### Patch Changes
+
+- 06954ac: Don't use AbortSignal.any to fix memory leak in older Node.js versions and to not break version support.
+
 ## 1.10.1
 
 ### Patch Changes
