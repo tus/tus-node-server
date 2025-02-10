@@ -140,7 +140,7 @@ export class Server extends EventEmitter {
     return this.handler(req)
   }
 
-  handler(req: Request) {
+  private async handler(req: Request) {
     const context = this.createContext()
     const headers = new Headers()
 
@@ -165,8 +165,9 @@ export class Server extends EventEmitter {
 
     if (req.method === 'GET') {
       const handler = this.handlers.GET
-      // TODO: abort context after wait send()?
-      return handler.send(req, context, headers).catch(onError)
+      const res = await handler.send(req, context, headers).catch(onError)
+      context.abort
+      return res
     }
 
     // The Tus-Resumable header MUST be included in every request and
@@ -257,12 +258,6 @@ export class Server extends EventEmitter {
     }
 
     return new Response(body, {status, headers})
-
-    // Abort the context once the response is sent.
-    // Useful for clean-up when the server uses keep-alive
-    // if (!isAborted) {
-    //   context.abort()
-    // }
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -287,16 +282,13 @@ export class Server extends EventEmitter {
     const abortWithDelayController = new AbortController()
 
     const onDelayedAbort = (err: unknown) => {
-      abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
       setTimeout(() => {
         requestAbortController.abort(err)
       }, this.options.lockDrainTimeout)
     }
-    abortWithDelayController.signal.addEventListener('abort', onDelayedAbort)
-
-    // req.on('close', () => {
-    //   abortWithDelayController.signal.removeEventListener('abort', onDelayedAbort)
-    // })
+    abortWithDelayController.signal.addEventListener('abort', onDelayedAbort, {
+      once: true,
+    })
 
     return {
       signal: requestAbortController.signal,

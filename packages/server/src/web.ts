@@ -3,7 +3,7 @@ import {createReadStream} from 'node:fs'
 import {Readable} from 'node:stream'
 import * as set_cookie_parser from 'set-cookie-parser'
 
-function get_raw_body(req: http.IncomingMessage) {
+function getRawBody(req: http.IncomingMessage) {
   const h = req.headers
 
   if (!h['content-type']) {
@@ -64,8 +64,6 @@ function get_raw_body(req: http.IncomingMessage) {
   })
 }
 
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({
   request,
   base,
@@ -92,12 +90,10 @@ export async function getRequest({
     body:
       request.method === 'GET' || request.method === 'HEAD'
         ? undefined
-        : get_raw_body(request),
+        : getRawBody(request),
   })
 }
 
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function setResponse(res: http.ServerResponse, response: Response) {
   for (const [key, value] of response.headers) {
     try {

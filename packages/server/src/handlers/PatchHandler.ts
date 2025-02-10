@@ -127,7 +127,7 @@ export class PatchHandler extends BaseHandler {
             if (status_code) responseData.status = status_code
             if (body) responseData.body = body
             if (headers)
-              responseData.headers = Object.assign(headers, responseData.headers)
+              responseData.headers = Object.assign(responseData.headers, headers)
           }
         } catch (error) {
           log(`onUploadFinish: ${error.body}`)
