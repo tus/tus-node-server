@@ -2,4 +2,4 @@
 "@tus/s3-store": patch
 ---
 
-Update documentation
+Add missing documentation for `maxMultipartParts` option added in #712
