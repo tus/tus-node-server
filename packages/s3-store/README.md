@@ -81,7 +81,7 @@ may increase it to not exceed the `options.maxMultipartParts` parts limit.
 The maximum number of parts allowed in a multipart upload. Defaults to 10,000.
 Some S3 providers have non-standard restrictions on the number of parts in a multipart
 upload. For example, AWS S3 has a limit of 10,000 parts, but some S3 compatible providers
-have a limit of 1000 parts.
+have a limit of 1,000 parts.
 
 #### `options.s3ClientConfig`
 
