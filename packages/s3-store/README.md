@@ -14,6 +14,7 @@
 - [Examples](#examples)
   - [Example: using `credentials` to fetch credentials inside a AWS container](#example-using-credentials-to-fetch-credentials-inside-a-aws-container)
   - [Example: use with Cloudflare R2](#example-use-with-cloudflare-r2)
+  - [Example: use with Scaleway Object Storage](#example-use-with-scaleway-object-storage)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
