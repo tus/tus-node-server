@@ -236,7 +236,7 @@ const s3Store = new S3Store({
 
 ### Example: use with Scaleway Object Storage
 
-`@tus/s3-store` can be used with Scaleway Object Storage but with some additional configuration. Scaleway Object Storage has a limit of 1000 parts in a multipart upload.
+`@tus/s3-store` can be used with Scaleway Object Storage but with some additional configuration. Scaleway Object Storage has a limit of 1,000 parts in a multipart upload.
 
 ```ts
 const s3Store = new S3Store({
