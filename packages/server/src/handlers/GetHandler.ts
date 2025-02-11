@@ -91,13 +91,16 @@ export class GetHandler extends BaseHandler {
     const {contentType, contentDisposition} = this.filterContentType(stats)
 
     const lock = await this.acquireLock(req, id, context)
-    // @ts-expect-error exists if supported
-    const file_stream = await this.store.read(id)
-    await lock.unlock()
-    headers.set('Content-Length', stats.offset.toString())
-    headers.set('Content-Type', contentType)
-    headers.set('Content-Disposition', contentDisposition)
-    return new Response(file_stream, {headers, status: 200})
+    try {
+      // @ts-expect-error exists if supported
+      const fileStream = await this.store.read(id)
+      headers.set('Content-Length', stats.offset.toString())
+      headers.set('Content-Type', contentType)
+      headers.set('Content-Disposition', contentDisposition)
+      return new Response(fileStream, {headers, status: 200})
+    } finally {
+      await lock.unlock()
+    }
   }
 
   /**
