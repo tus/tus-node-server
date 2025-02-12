@@ -190,19 +190,6 @@ describe('PatchHandler', () => {
     })
   })
 
-  it('should emit POST_RECEIVE event', async () => {
-    req.headers.set('upload-offset', '0')
-    req.headers.set('content-type', 'application/offset+octet-stream')
-
-    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
-    store.write.resolves(10)
-    handler.on(EVENTS.POST_RECEIVE, sinon.spy())
-
-    await handler.send(req, context)
-
-    assert.equal(true, true) // The event emitter is not directly testable in this context
-  })
-
   it('should throw max size exceeded error when upload-length is higher then the maxSize', async () => {
     const handler = new PatchHandler(store, {
       path,

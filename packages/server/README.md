@@ -255,21 +255,6 @@ server.on(EVENTS.POST_CREATE, (req, res, upload => {})
 
 #### `POST_RECEIVE`
 
-**Deprecated**.
-
-Called every time an upload finished writing to the store. This event is emitted whenever
-the request handling is completed (which is the same as `onUploadFinish`, almost the same
-as `POST_FINISH`), whereas the `POST_RECEIVE_V2` event is emitted _while_ the request is
-being handled.
-
-```js
-const {EVENTS} = require('@tus/server')
-// ...
-server.on(EVENTS.POST_RECEIVE, (req, res, upload => {})
-```
-
-#### `POST_RECEIVE_V2`
-
 Called every [`postReceiveInterval`](#optionspostreceiveinterval) milliseconds for every
 upload while it‘s being written to the store.
 
@@ -283,7 +268,7 @@ Use `POST_FINISH` if you need to know when an upload is done.
 ```js
 const {EVENTS} = require('@tus/server')
 // ...
-server.on(EVENTS.POST_RECEIVE_V2, (req, upload => {})
+server.on(EVENTS.POST_RECEIVE, (req, upload => {})
 ```
 
 #### `POST_FINISH`

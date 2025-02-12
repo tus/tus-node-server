@@ -41,7 +41,7 @@ export type ServerOptions = {
   allowedOrigins?: string[]
 
   /**
-   * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE_V2`
+   * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE`
    */
   postReceiveInterval?: number
 
