@@ -52,17 +52,17 @@ A standalone server which stores files on disk.
 > Try it yourself in [StackBlitz](https://stackblitz.com/edit/stackblitz-starters-zg6mgnuf?file=index.js)
 
 ```js
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
 
-const host = "127.0.0.1";
-const port = 1080;
+const host = '127.0.0.1'
+const port = 1080
 const server = new Server({
-  path: "/files",
-  datastore: new FileStore({ directory: "./files" }),
-});
+  path: '/files',
+  datastore: new FileStore({directory: './files'}),
+})
 
-server.listen({ host, port });
+server.listen({host, port})
 ```
 
 A tus server integrated into your existing Node.js server. `@tus/server` has no
@@ -144,7 +144,8 @@ See
 [`@tus/azure-store`]: https://github.com/tus/tus-node-server/tree/main/packages/azure-store
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]:
+  https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination

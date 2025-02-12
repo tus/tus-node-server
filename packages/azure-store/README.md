@@ -25,17 +25,17 @@ npm install @tus/azure-store
 ## Use
 
 ```js
-const { Server } = require("@tus/server");
-const { AzureStore } = require("@tus/azure-store");
+const {Server} = require('@tus/server')
+const {AzureStore} = require('@tus/azure-store')
 
 const server = new Server({
-  path: "/files",
+  path: '/files',
   datastore: new AzureStore({
-    account: process.env.AZURE_ACCOUNT_ID,
-    accountKey: process.env.AZURE_ACCOUNT_KEY,
-    containerName: process.env.AZURE_CONTAINER_NAME,
+      account: process.env.AZURE_ACCOUNT_ID,
+      accountKey: process.env.AZURE_ACCOUNT_KEY,
+      containerName: process.env.AZURE_CONTAINER_NAME,
   }),
-});
+})
 // ...
 ```
 
@@ -98,12 +98,17 @@ See
 
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]:
+  https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
-[`cleanUpExpiredUploads`]: https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
+[`cleanUpExpiredUploads`]:
+  https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
-[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
-[`MemoryKvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/MemoryKvStore.ts
+[`KvStore`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
+
+[`MemoryKvStore`]:
+ https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/MemoryKvStore.ts

@@ -29,13 +29,13 @@ npm install @tus/file-store
 ## Use
 
 ```js
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
 
 const server = new Server({
-  path: "/files",
-  datastore: new FileStore({ directory: "./some/path" }),
-});
+  path: '/files',
+  datastore: new FileStore({directory: './some/path'}),
+})
 // ...
 ```
 
@@ -87,25 +87,25 @@ For demonstration purposes we will create a memory config store, but that's not 
 idea. It's written in TypeScript.
 
 ```ts
-import type { Upload } from "@tus/server";
+import type {Upload} from '@tus/server'
 
 export class MemoryConfigstore {
-  data: Map<string, Upload> = new Map();
+  data: Map<string, Upload> = new Map()
 
   get(key: string): Upload | undefined {
-    return this.data.get(key);
+    return this.data.get(key)
   }
 
   set(key: string, value: Upload) {
-    this.data.set(key, value);
+    this.data.set(key, value)
   }
 
   delete(key: string) {
-    return this.data.delete(key);
+    return this.data.delete(key)
   }
 
   get list(): Record<string, Upload> {
-    return Object.fromEntries(this.data.entries());
+    return Object.fromEntries(this.data.entries())
   }
 }
 ```
@@ -138,11 +138,14 @@ See
 
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]:
+  https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
-[`cleanUpExpiredUploads`]: https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
+[`cleanUpExpiredUploads`]:
+  https://github.com/tus/tus-node-server/tree/main/packages/server#cleanupexpireduploads
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
-[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
+[`KvStore`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts

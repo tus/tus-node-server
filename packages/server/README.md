@@ -37,16 +37,16 @@ npm install @tus/server
 A standalone server which stores files on disk.
 
 ```js
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
-const host = "127.0.0.1";
-const port = 1080;
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
+const host = '127.0.0.1'
+const port = 1080
 
 const server = new Server({
-  path: "/files",
-  datastore: new FileStore({ directory: "./files" }),
-});
-server.listen({ host, port });
+  path: '/files',
+  datastore: new FileStore({directory: './files'}),
+})
+server.listen({host, port})
 ```
 
 ## API
@@ -311,54 +311,54 @@ can also be used as a cache in other stores, such as `@tus/s3-store`.
 #### `MemoryKvStore`
 
 ```ts
-import { MemoryKvStore } from "@tus/server";
-import S3Store, { type MetadataValue } from "@tus/s3-store";
+import {MemoryKvStore} from '@tus/server'
+import S3Store, {type MetadataValue} from '@tus/s3-store'
 
 new S3Store({
   // ...
   cache: new MemoryKvStore<MetadataValue>(),
-});
+})
 ```
 
 #### `FileKvStore`
 
 ```ts
-import { FileKvStore } from "@tus/server";
-import S3Store, { type MetadataValue } from "@tus/s3-store";
+import {FileKvStore} from '@tus/server'
+import S3Store, {type MetadataValue} from '@tus/s3-store'
 
-const path = "./uploads";
+const path = './uploads'
 
 new S3Store({
   // ...
   cache: new FileKvStore<MetadataValue>(path),
-});
+})
 ```
 
 #### `RedisKvStore`
 
 ```ts
-import { RedisKvStore } from "@tus/server";
-import S3Store, { type MetadataValue } from "@tus/s3-store";
-import { createClient } from "@redis/client";
+import {RedisKvStore} from '@tus/server'
+import S3Store, {type MetadataValue} from '@tus/s3-store'
+import {createClient} from '@redis/client'
 
-const client = await createClient().connect();
-const prefix = "foo"; // prefix for the key (foo${id})
+const client = await createClient().connect()
+const prefix = 'foo' // prefix for the key (foo${id})
 
 new S3Store({
   // ...
   cache: new RedisKvStore<MetadataValue>(client, prefix),
-});
+})
 ```
 
 #### `IoRedisKvStore`
 
 ```ts
-import { IoRedisKvStore } from "@tus/server";
-import S3Store, { type MetadataValue } from "@tus/s3-store";
-import Redis from "ioredis";
+import { IoRedisKvStore } from '@tus/server';
+import S3Store, { type MetadataValue } from '@tus/s3-store';
+import Redis from 'ioredis';
 
 const client = new Redis();
-const prefix = "foo"; // prefix for the key (foo${id})
+const prefix = 'foo'; // prefix for the key (foo${id})
 
 new S3Store({
   // ...
@@ -371,66 +371,66 @@ new S3Store({
 ### Example: integrate tus into Express
 
 ```js
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
-const express = require("express");
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
+const express = require('express')
 
-const host = "127.0.0.1";
-const port = 1080;
-const app = express();
-const uploadApp = express();
+const host = '127.0.0.1'
+const port = 1080
+const app = express()
+const uploadApp = express()
 const server = new Server({
-  path: "/uploads",
-  datastore: new FileStore({ directory: "/files" }),
-});
+  path: '/uploads',
+  datastore: new FileStore({directory: '/files'}),
+})
 
-uploadApp.all("*", server.handle.bind(server));
-app.use("/uploads", uploadApp);
-app.listen(port, host);
+uploadApp.all('*', server.handle.bind(server))
+app.use('/uploads', uploadApp)
+app.listen(port, host)
 ```
 
 ### Example: integrate tus into Koa
 
 ```js
-const http = require("node:http");
-const url = require("node:url");
-const Koa = require("koa");
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+const http = require('node:http')
+const url = require('node:url')
+const Koa = require('koa')
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
 
-const app = new Koa();
-const appCallback = app.callback();
-const port = 1080;
+const app = new Koa()
+const appCallback = app.callback()
+const port = 1080
 const tusServer = new Server({
-  path: "/files",
-  datastore: new FileStore({ directory: "/files" }),
-});
+  path: '/files',
+  datastore: new FileStore({directory: '/files'}),
+})
 
 const server = http.createServer((req, res) => {
-  const urlPath = url.parse(req.url).pathname;
+  const urlPath = url.parse(req.url).pathname
 
   // handle any requests with the `/files/*` pattern
   if (/^\/files\/.+/.test(urlPath.toLowerCase())) {
-    return tusServer.handle(req, res);
+    return tusServer.handle(req, res)
   }
 
-  appCallback(req, res);
-});
+  appCallback(req, res)
+})
 
-server.listen(port);
+server.listen(port)
 ```
 
 ### Example: integrate tus into Fastify
 
 ```js
-const fastify = require("fastify")({ logger: true });
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+const fastify = require('fastify')({logger: true})
+const {Server} = require('@tus/server')
+const {FileStore} = require('@tus/file-store')
 
 const tusServer = new Server({
-  path: "/files",
-  datastore: new FileStore({ directory: "./files" }),
-});
+  path: '/files',
+  datastore: new FileStore({directory: './files'}),
+})
 
 /**
  * add new content-type to fastify forewards request
@@ -438,9 +438,9 @@ const tusServer = new Server({
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
 fastify.addContentTypeParser(
-  "application/offset+octet-stream",
+  'application/offset+octet-stream',
   (request, payload, done) => done(null)
-);
+)
 
 /**
  * let tus handle preparation and filehandling requests
@@ -448,18 +448,18 @@ fastify.addContentTypeParser(
  * @see https://www.fastify.io/docs/latest/Reference/Request/
  * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
  */
-fastify.all("/files", (req, res) => {
-  tusServer.handle(req.raw, res.raw);
-});
-fastify.all("/files/*", (req, res) => {
-  tusServer.handle(req.raw, res.raw);
-});
+fastify.all('/files', (req, res) => {
+  tusServer.handle(req.raw, res.raw)
+})
+fastify.all('/files/*', (req, res) => {
+  tusServer.handle(req.raw, res.raw)
+})
 fastify.listen(3000, (err) => {
   if (err) {
-    fastify.log.error(err);
-    process.exit(1);
+    fastify.log.error(err)
+    process.exit(1)
   }
-});
+})
 ```
 
 ### Example: integrate tus into Next.js
@@ -470,9 +470,9 @@ Attach the tus server handler to a Next.js route handler in an
 `/pages/api/upload/[[...file]].ts`
 
 ```ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import { Server, Upload } from "@tus/server";
-import { FileStore } from "@tus/file-store";
+import type {NextApiRequest, NextApiResponse} from 'next'
+import {Server, Upload} from '@tus/server'
+import {FileStore} from '@tus/file-store'
 
 /**
  * !Important. This will tell Next.js NOT Parse the body as tus requires
@@ -482,40 +482,40 @@ export const config = {
   api: {
     bodyParser: false,
   },
-};
+}
 
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   // ie /api/upload
-  path: "/api/upload",
-  datastore: new FileStore({ directory: "./files" }),
-});
+  path: '/api/upload',
+  datastore: new FileStore({directory: './files'}),
+})
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  return tusServer.handle(req, res);
+  return tusServer.handle(req, res)
 }
 ```
 
 ### Example: validate metadata when an upload is created
 
 ```js
-const { Server } = require("@tus/server");
+const {Server} = require('@tus/server')
 // ...
 
 const server = new Server({
   // ..
   async onUploadCreate(req, res, upload) {
-    const { ok, expected, received } = validateMetadata(upload); // your logic
+    const {ok, expected, received} = validateMetadata(upload) // your logic
     if (!ok) {
-      const body = `Expected "${expected}" in "Upload-Metadata" but received "${received}"`;
-      throw { status_code: 500, body }; // if undefined, falls back to 500 with "Internal server error".
+      const body = `Expected "${expected}" in "Upload-Metadata" but received "${received}"`
+      throw {status_code: 500, body} // if undefined, falls back to 500 with "Internal server error".
     }
     // You can optionally return metadata to override the upload metadata,
     // such as `{ storagePath: "/upload/123abc..." }`
-    const extraMeta = getExtraMetadata(req); // your logic
-    return { res, metadata: { ...upload.metadata, ...extraMeta } };
+    const extraMeta = getExtraMetadata(req) // your logic
+    return {res, metadata: {...upload.metadata, ...extraMeta}}
   },
-});
+})
 ```
 
 ### Example: access control
@@ -524,30 +524,30 @@ Access control is opinionated and can be done in different ways. This example is
 psuedo-code for what it could look like with JSON Web Tokens.
 
 ```js
-const { Server } = require("@tus/server");
+const {Server} = require('@tus/server')
 // ...
 
 const server = new Server({
   // ..
   async onIncomingRequest(req, res) {
-    const token = req.headers.authorization;
+    const token = req.headers.authorization
 
     if (!token) {
-      throw { status_code: 401, body: "Unauthorized" };
+      throw {status_code: 401, body: 'Unauthorized'}
     }
 
     try {
-      const decodedToken = await jwt.verify(token, "your_secret_key");
-      req.user = decodedToken;
+      const decodedToken = await jwt.verify(token, 'your_secret_key')
+      req.user = decodedToken
     } catch (error) {
-      throw { status_code: 401, body: "Invalid token" };
+      throw {status_code: 401, body: 'Invalid token'}
     }
 
-    if (req.user.role !== "admin") {
-      throw { status_code: 403, body: "Access denied" };
+    if (req.user.role !== 'admin') {
+      throw {status_code: 403, body: 'Access denied'}
     }
   },
-});
+})
 ```
 
 ### Example: store files in custom nested directories
@@ -560,26 +560,26 @@ Adding a slash means you create a new directory, for which you need to implement
 functions as we need encode the id with base64 into the URL.
 
 ```js
-const path = "/files";
+const path = '/files'
 const server = new Server({
   path,
-  datastore: new FileStore({ directory: "./test/output" }),
+  datastore: new FileStore({directory: './test/output'}),
   namingFunction(req) {
-    const id = crypto.randomBytes(16).toString("hex");
-    const folder = getFolderForUser(req); // your custom logic
-    return `users/${folder}/${id}`;
+    const id = crypto.randomBytes(16).toString('hex')
+    const folder = getFolderForUser(req) // your custom logic
+    return `users/${folder}/${id}`
   },
-  generateUrl(req, { proto, host, path, id }) {
-    id = Buffer.from(id, "utf-8").toString("base64url");
-    return `${proto}://${host}${path}/${id}`;
+  generateUrl(req, {proto, host, path, id}) {
+    id = Buffer.from(id, 'utf-8').toString('base64url')
+    return `${proto}://${host}${path}/${id}`
   },
   getFileIdFromRequest(req, lastPath) {
     // lastPath is everything after the last `/`
     // If your custom URL is different, this might be undefined
     // and you need to extract the ID yourself
-    return Buffer.from(lastPath, "base64url").toString("utf-8");
+    return Buffer.from(lastPath, 'base64url').toString('utf-8')
   },
-});
+})
 ```
 
 ### Example: use with Nginx
@@ -592,13 +592,13 @@ Firstly, you must set `respectForwardedHeaders` indicating that a reverse proxy 
 and that it should respect the `X-Forwarded-*`/`Forwarded` headers:
 
 ```js
-const { Server } = require("@tus/server");
+const {Server} = require('@tus/server')
 // ...
 
 const server = new Server({
   // ..
   respectForwardedHeaders: true,
-});
+})
 ```
 
 Secondly, some of the reverse proxy's settings should be adjusted. The exact steps depend
@@ -646,10 +646,15 @@ See
 [`@tus/file-store`]: https://github.com/tus/tus-node-server/tree/main/packages/file-store
 [`@tus/s3-store`]: https://github.com/tus/tus-node-server/tree/main/packages/s3-store
 [`@tus/gcs-store`]: https://github.com/tus/tus-node-server/tree/main/packages/gcs-store
-[`constants`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/constants.ts
+[`constants`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/constants.ts
 [`types`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/types.ts
-[`models`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/models/index.ts
-[`kvstores`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/index.ts
+[`models`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/models/index.ts
+[`kvstores`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/index.ts
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
-[`Locker`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/models/Locker.ts
-[`MemoryLocker`]: https://github.com/tus/tus-node-server/blob/main/packages/server/src/lockers/MemoryLocker.ts
+[`Locker`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/models/Locker.ts
+[`MemoryLocker`]:
+  https://github.com/tus/tus-node-server/blob/main/packages/server/src/lockers/MemoryLocker.ts
