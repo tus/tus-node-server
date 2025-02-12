@@ -17,7 +17,7 @@
 
 ## Install
 
-In Node.js (16.0+), install with npm:
+In Node.js (20+), install with npm:
 
 ```bash
 npm install @tus/gcs-store
@@ -26,19 +26,19 @@ npm install @tus/gcs-store
 ## Use
 
 ```js
-const {Server} = require('@tus/server')
-const {GCSStore} = require('@tus/gcs-store')
+const { Server } = require("@tus/server");
+const { GCSStore } = require("@tus/gcs-store");
 
-const {Storage} = require('@google-cloud/storage')
+const { Storage } = require("@google-cloud/storage");
 
-const storage = new Storage({keyFilename: 'key.json'})
+const storage = new Storage({ keyFilename: "key.json" });
 
 const server = new Server({
-  path: '/files',
+  path: "/files",
   datastore: new GCSStore({
-    bucket: storage.bucket('tus-node-server-ci'),
+    bucket: storage.bucket("tus-node-server-ci"),
   }),
-})
+});
 // ...
 ```
 
@@ -74,7 +74,7 @@ This package is fully typed with TypeScript.
 
 ## Compatibility
 
-This package requires Node.js 16.0+.
+This package requires Node.js 20+.
 
 ## Contribute
 
@@ -88,8 +88,7 @@ See
 
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]:
-  https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
