@@ -71,6 +71,18 @@ export const shouldCreateUploads = () => {
       const upload = await this.datastore.getUpload(file.id)
       assert.deepStrictEqual(upload.metadata, file.metadata)
     })
+
+    it('should store `upload_metadata` with non-ASCII characters', async function () {
+      const file = new Upload({
+        id: testId('create-test-non-ascii'),
+        size: 1000,
+        offset: 0,
+        metadata: {filename: '世界_domination_plan.pdf', is_confidential: null},
+      })
+      await this.datastore.create(file)
+      const upload = await this.datastore.getUpload(file.id)
+      assert.deepStrictEqual(upload.metadata, file.metadata)
+    })
   })
 }
 
