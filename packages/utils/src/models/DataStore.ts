@@ -1,9 +1,7 @@
 import EventEmitter from 'node:events'
+import stream from 'node:stream'
 
 import {Upload} from './Upload'
-
-import type stream from 'node:stream'
-import type http from 'node:http'
 
 export class DataStore extends EventEmitter {
   extensions: string[] = []
@@ -35,11 +33,7 @@ export class DataStore extends EventEmitter {
    *
    * http://tus.io/protocols/resumable-upload.html#concatenation
    */
-  async write(
-    stream: http.IncomingMessage | stream.Readable,
-    id: string,
-    offset: number
-  ) {
+  async write(stream: stream.Readable, id: string, offset: number) {
     return 0
   }
 

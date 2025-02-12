@@ -89,7 +89,7 @@ export const validators = new Map<string, validator>([
   ],
 ])
 
-export function validateHeader(name: string, value?: string): boolean {
+export function validateHeader(name: string, value?: string | null): boolean {
   const lowercaseName = name.toLowerCase()
   if (!validators.has(lowercaseName)) {
     return true

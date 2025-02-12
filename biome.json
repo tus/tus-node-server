@@ -4,7 +4,7 @@
     "enabled": true
   },
   "files": {
-    "ignore": ["./**/dist/**/*"]
+    "ignore": [".git", "node_modules", "./**/dist/**/*"]
   },
   "linter": {
     "enabled": true,
@@ -12,6 +12,9 @@
       "recommended": true,
       "style": {
         "noParameterAssign": "off"
+      },
+      "performance": {
+        "noDelete": "off"
       }
     }
   },

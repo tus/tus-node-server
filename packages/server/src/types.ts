@@ -1,5 +1,3 @@
-import type http from 'node:http'
-
 import type {Locker, Upload} from '@tus/utils'
 
 /**
@@ -14,9 +12,7 @@ export type ServerOptions = {
   /**
    * Max file size allowed when uploading
    */
-  maxSize?:
-    | number
-    | ((req: http.IncomingMessage, uploadId: string | null) => Promise<number> | number)
+  maxSize?: number | ((req: Request, uploadId: string | null) => Promise<number> | number)
 
   /**
    * Return a relative URL as the `Location` header.
@@ -55,7 +51,7 @@ export type ServerOptions = {
    * @param options - Options for generating the URL.
    */
   generateUrl?: (
-    req: http.IncomingMessage,
+    req: Request,
     options: {proto: string; host: string; path: string; id: string}
   ) => string
 
@@ -63,10 +59,7 @@ export type ServerOptions = {
    * Control how the Upload-ID is extracted from the request.
    * @param req - The incoming HTTP request.
    */
-  getFileIdFromRequest?: (
-    req: http.IncomingMessage,
-    lastPath?: string
-  ) => string | undefined
+  getFileIdFromRequest?: (req: Request, lastPath?: string) => string | undefined
 
   /**
    * Control how you want to name files.
@@ -76,7 +69,7 @@ export type ServerOptions = {
    * @param req - The incoming HTTP request.
    */
   namingFunction?: (
-    req: http.IncomingMessage,
+    req: Request,
     metadata?: Record<string, string | null>
   ) => string | Promise<string>
 
@@ -84,10 +77,7 @@ export type ServerOptions = {
    * The Lock interface defines methods for implementing a locking mechanism.
    * It is primarily used to ensure exclusive access to resources, such as uploads and their metadata.
    */
-  locker:
-    | Locker
-    | Promise<Locker>
-    | ((req: http.IncomingMessage) => Locker | Promise<Locker>)
+  locker: Locker | Promise<Locker> | ((req: Request) => Locker | Promise<Locker>)
 
   /**
    * This timeout controls how long the server will wait a cancelled lock to do its cleanup.
@@ -110,13 +100,9 @@ export type ServerOptions = {
    * @param upload - The Upload object.
    */
   onUploadCreate?: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
+    req: Request,
     upload: Upload
-  ) => Promise<
-    // TODO: change in the next major
-    http.ServerResponse | {res: http.ServerResponse; metadata?: Upload['metadata']}
-  >
+  ) => Promise<{metadata?: Upload['metadata']}>
 
   /**
    * `onUploadFinish` will be invoked after an upload is completed but before a response is returned to the client.
@@ -129,19 +115,13 @@ export type ServerOptions = {
    * @param upload - The Upload object.
    */
   onUploadFinish?: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
+    req: Request,
     upload: Upload
-  ) => Promise<
-    // TODO: change in the next major
-    | http.ServerResponse
-    | {
-        res: http.ServerResponse
-        status_code?: number
-        headers?: Record<string, string | number>
-        body?: string
-      }
-  >
+  ) => Promise<{
+    status_code?: number
+    headers?: Record<string, string | number>
+    body?: string
+  }>
 
   /**
    * `onIncomingRequest` will be invoked when an incoming request is received.
@@ -149,11 +129,7 @@ export type ServerOptions = {
    * @param res - The HTTP response.
    * @param uploadId - The ID of the upload.
    */
-  onIncomingRequest?: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    uploadId: string
-  ) => Promise<void>
+  onIncomingRequest?: (req: Request, uploadId: string) => Promise<void>
 
   /**
    * `onResponseError` will be invoked when an error response is about to be sent by the server.
@@ -163,8 +139,7 @@ export type ServerOptions = {
    * @param err - The error object or response.
    */
   onResponseError?: (
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
+    req: Request,
     err: Error | {status_code: number; body: string}
   ) =>
     | Promise<{status_code: number; body: string} | undefined>
@@ -172,7 +147,7 @@ export type ServerOptions = {
     | undefined
 }
 
-export type RouteHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void
+export type RouteHandler = (req: Request) => Response | Promise<Response>
 
 export type WithOptional<T, K extends keyof T> = Omit<T, K> & {[P in K]+?: T[P]}
 
