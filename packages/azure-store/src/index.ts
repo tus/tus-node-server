@@ -7,6 +7,7 @@ import {
   type KvStore,
   MemoryKvStore,
   TUS_RESUMABLE,
+  Metadata,
 } from '@tus/utils'
 import {
   type AppendBlobClient,
@@ -78,7 +79,11 @@ export class AzureStore extends DataStore {
     await appendBlobClient.setMetadata(
       {
         tus_version: TUS_RESUMABLE,
-        upload: JSON.stringify(upload),
+        upload: JSON.stringify({
+          ...upload,
+          // Base64 encode the metadata to avoid errors for non-ASCII characters
+          metadata: Metadata.stringify(upload.metadata ?? {}),
+        }),
       },
       {}
     )
@@ -110,6 +115,9 @@ export class AzureStore extends DataStore {
       throw ERRORS.FILE_NOT_FOUND
     }
     const upload = JSON.parse(propertyData.metadata.upload) as Upload
+    // Metadata is base64 encoded to avoid errors for non-ASCII characters
+    // so we need to decode it separately
+    upload.metadata = Metadata.parse(JSON.stringify(upload.metadata ?? {}))
 
     await this.cache.set(appendBlobClient.url, upload)
 
