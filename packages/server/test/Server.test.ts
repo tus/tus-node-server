@@ -457,7 +457,7 @@ describe('Server', () => {
       })
       const size = 1024 * 1024
       let received = 0
-      server.on(EVENTS.POST_RECEIVE_V2, () => {
+      server.on(EVENTS.POST_RECEIVE, () => {
         received++
       })
 
