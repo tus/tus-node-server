@@ -46,11 +46,11 @@ describe('EndToEnd', () => {
   let server: InstanceType<typeof Server>
   let listener: http.Server
   let agent: request.SuperAgentTest
-  let file_to_delete: string
+  let file_to_delete: string | undefined
 
   describe('FileStore', () => {
-    let file_id: string
-    let deferred_file_id: string
+    let file_id: string | undefined
+    let deferred_file_id: string | undefined
 
     before(async () => {
       await fs.promises.mkdir(FILES_DIRECTORY, {recursive: true})
@@ -426,7 +426,7 @@ describe('EndToEnd', () => {
   })
 
   describe('FileStore with defined expirationPeriodInMilliseconds option', () => {
-    let file_id: string
+    let file_id: string | undefined
 
     before(() => {
       server = new Server({
@@ -797,8 +797,8 @@ describe('EndToEnd', () => {
   })
 
   describe('GCSStore', () => {
-    let file_id: string
-    let deferred_file_id: string
+    let file_id: string | undefined
+    let deferred_file_id: string | undefined
     const files_created: string[] = []
 
     before(() => {
@@ -869,7 +869,8 @@ describe('EndToEnd', () => {
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
             file_id = res.headers.location.split('/').pop()
-            files_created.push(file_id.split('&upload_id')[0])
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
+            files_created.push(file_id!.split('&upload_id')[0])
             done()
           })
       })
@@ -887,7 +888,8 @@ describe('EndToEnd', () => {
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
             deferred_file_id = res.headers.location.split('/').pop()
-            files_created.push(deferred_file_id.split('&upload_id')[0])
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
+            files_created.push(deferred_file_id!.split('&upload_id')[0])
             done()
           })
       })
@@ -989,7 +991,8 @@ describe('EndToEnd', () => {
           assert.equal(res.header['tus-resumable'], TUS_RESUMABLE)
           assert.equal(res.header['upload-offset'], `${TEST_FILE_SIZE}`)
           bucket
-            .file(file_id)
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
+            .file(file_id!)
             .getMetadata()
             .then((result) => {
               const metadata = result[0]

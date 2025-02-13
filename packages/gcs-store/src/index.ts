@@ -9,6 +9,8 @@ const log = debug('tus-node-server:stores:gcsstore')
 
 type Options = {bucket: Bucket}
 
+export {GCSLocker} from './locker/GCSLocker'
+
 export class GCSStore extends DataStore {
   bucket: Bucket
 
@@ -166,6 +168,7 @@ export class GCSStore extends DataStore {
 
     await this.bucket.file(id).setMetadata({metadata: this.#stringifyUploadKeys(upload)})
   }
+
   /**
    * Convert the Upload object to a format that can be stored in GCS metadata.
    */
