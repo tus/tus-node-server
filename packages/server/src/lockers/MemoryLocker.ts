@@ -51,18 +51,23 @@ class MemoryLock implements Lock {
 
   async lock(stopSignal: AbortSignal, requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
+    const onAbort = () => {
+      abortController.abort()
+    }
+    stopSignal.addEventListener('abort', onAbort)
 
-    const abortSignal = AbortSignal.any([stopSignal, abortController.signal])
+    try {
+      const lock = await Promise.race([
+        this.waitTimeout(abortController.signal),
+        this.acquireLock(this.id, requestRelease, abortController.signal),
+      ])
 
-    const lock = await Promise.race([
-      this.waitTimeout(abortSignal),
-      this.acquireLock(this.id, requestRelease, abortSignal),
-    ])
-
-    abortController.abort()
-
-    if (!lock) {
-      throw ERRORS.ERR_LOCK_TIMEOUT
+      if (!lock) {
+        throw ERRORS.ERR_LOCK_TIMEOUT
+      }
+    } finally {
+      stopSignal.removeEventListener('abort', onAbort)
+      abortController.abort()
     }
   }
 

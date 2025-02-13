@@ -25,10 +25,22 @@ import path from 'node:path'
 const log = debug('tus-node-server:stores:s3store')
 
 export type Options = {
-  // The preferred part size for parts send to S3. Can not be lower than 5MiB or more than 5GiB.
-  // The server calculates the optimal part size, which takes this size into account,
-  // but may increase it to not exceed the S3 10K parts limit.
+  /**
+   * The preferred part size for parts send to S3. Can not be lower than 5MiB or more than 5GiB.
+   * The server calculates the optimal part size, which takes this size into account,
+   * but may increase it to not exceed the S3 10K parts limit.
+   */
   partSize?: number
+  /**
+   * The minimal part size for parts.
+   * Can be used to ensure that all non-trailing parts are exactly the same size.
+   * Can not be lower than 5MiB or more than 5GiB.
+   */
+  minPartSize?: number
+  /**
+   * The maximum number of parts allowed in a multipart upload. Defaults to 10,000.
+   */
+  maxMultipartParts?: number
   useTags?: boolean
   maxConcurrentPartUploads?: number
   cache?: KvStore<MetadataValue>
@@ -89,13 +101,13 @@ export class S3Store extends DataStore {
   protected expirationPeriodInMilliseconds = 0
   protected useTags = true
   protected partUploadSemaphore: Semaphore
-  public maxMultipartParts = 10_000 as const
-  public minPartSize = 5_242_880 as const // 5MiB
+  public maxMultipartParts = 10_000
+  public minPartSize = 5_242_880 // 5MiB
   public maxUploadSize = 5_497_558_138_880 as const // 5TiB
 
   constructor(options: Options) {
     super()
-    const {partSize, s3ClientConfig} = options
+    const {maxMultipartParts, partSize, minPartSize, s3ClientConfig} = options
     const {bucket, ...restS3ClientConfig} = s3ClientConfig
     this.extensions = [
       'creation',
@@ -106,6 +118,12 @@ export class S3Store extends DataStore {
     ]
     this.bucket = bucket
     this.preferredPartSize = partSize || 8 * 1024 * 1024
+    if (minPartSize) {
+      this.minPartSize = minPartSize
+    }
+    if (maxMultipartParts) {
+      this.maxMultipartParts = maxMultipartParts
+    }
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.useTags = options.useTags ?? true
     this.cache = options.cache ?? new MemoryKvStore<MetadataValue>()
@@ -509,7 +527,8 @@ export class S3Store extends DataStore {
       optimalPartSize = Math.ceil(size / this.maxMultipartParts)
     }
 
-    return optimalPartSize
+    // Always ensure the part size is at least minPartSize
+    return Math.max(optimalPartSize, this.minPartSize)
   }
 
   /**
