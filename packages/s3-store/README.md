@@ -91,6 +91,10 @@ Options to pass to the AWS S3 SDK. Checkout the
 docs for the supported options. You need to at least set the `region`, `bucket` name, and
 your preferred method of authentication.
 
+### `options.s3Client`
+
+Option to pass existing instance of S3 client that should be used. This option has priority over `options.s3ClientConfig`, but you still need to use `options.s3ClientConfig` to set `bucket` name.
+
 #### `options.expirationPeriodInMilliseconds`
 
 Enables the expiration extension and sets the expiration period of an upload url in

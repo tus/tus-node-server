@@ -47,6 +47,7 @@ export type Options = {
   expirationPeriodInMilliseconds?: number
   // Options to pass to the AWS S3 SDK.
   s3ClientConfig: S3ClientConfig & {bucket: string}
+  s3Client?: AWS.S3
 }
 
 export type MetadataValue = {
@@ -127,7 +128,7 @@ export class S3Store extends DataStore {
     this.expirationPeriodInMilliseconds = options.expirationPeriodInMilliseconds ?? 0
     this.useTags = options.useTags ?? true
     this.cache = options.cache ?? new MemoryKvStore<MetadataValue>()
-    this.client = new S3(restS3ClientConfig)
+    this.client = options.s3Client ?? new S3(restS3ClientConfig)
     this.partUploadSemaphore = new Semaphore(options.maxConcurrentPartUploads ?? 60)
   }
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
 
 import sinon from 'sinon'
+import { S3 } from '@aws-sdk/client-s3'
 
 import {S3Store} from '../src'
 import * as shared from 'test/stores.test'
@@ -292,6 +293,25 @@ describe('S3DataStore', () => {
       maxMultipartParts: customMaxParts,
     })
     assert.equal(store.maxMultipartParts, customMaxParts)
+  })
+
+  it('should use custom S3 client when specified', async () => {
+    const client = new S3(s3ClientConfig);
+    const store = new S3Store({
+      s3Client: client,
+      s3ClientConfig,
+    });
+
+    const clientMock = sinon.mock(client);
+    clientMock.expects("putObject").once();
+
+    await store.create(new Upload({
+      id: shared.testId('test-upload'),
+      size: 10 * 1024 * 1024,
+      offset: 0,
+    }))
+
+    clientMock.verify();
   })
 
   shared.shouldHaveStoreMethods()
