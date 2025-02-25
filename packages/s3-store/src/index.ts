@@ -409,19 +409,25 @@ export class S3Store extends DataStore {
             bytesUploaded += partSize
             resolve()
           } catch (error) {
+            // If there's an error, destroy the splitter to stop processing more chunks
+            splitterStream.destroy(error)
             reject(error)
           } finally {
             fsProm.rm(path).catch(() => {
               /* ignore */
             })
-            acquiredPermit?.release()
+            acquiredPermit?.release().catch(() => {
+              /* ignore */
+            })
           }
         })
 
         promises.push(deferred)
       })
       .on('chunkError', () => {
-        permit?.release()
+        permit?.release().catch(() => {
+          /* ignore */
+        })
       })
 
     try {
@@ -437,7 +443,7 @@ export class S3Store extends DataStore {
 
       promises.push(Promise.reject(error))
     } finally {
-      await Promise.all(promises)
+      await Promise.allSettled(promises)
     }
 
     return bytesUploaded
