@@ -443,7 +443,11 @@ export class S3Store extends DataStore {
 
       promises.push(Promise.reject(error))
     } finally {
+      // Wait for all promises. We don't want to return
+      // early have have promises running in the background.
       await Promise.allSettled(promises)
+      // But we do want to reject the promise if any of the promises reject.
+      await Promise.all(promises)
     }
 
     return bytesUploaded
