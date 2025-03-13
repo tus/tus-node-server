@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
+    "pretest": "tsc --build",
     "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
   },
   "dependencies": {
