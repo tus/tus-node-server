@@ -124,7 +124,7 @@ All packages are fully typed with TypeScript.
 
 ## Compatibility
 
-All packages require Node.js 20+.
+All packages require Node.js >=20.19.0.
 
 ## Contribute
 

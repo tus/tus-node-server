@@ -7,4 +7,4 @@
 "@tus/utils": minor
 ---
 
-Change required Node.js version from 16 to 20
+Change required Node.js version from 16 to 20.19.0

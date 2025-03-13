@@ -20,7 +20,7 @@
 
 ## Install
 
-In Node.js (20+), install with npm:
+In Node.js >=20.19.0, install with npm:
 
 ```bash
 npm install @tus/file-store
@@ -124,7 +124,7 @@ This package is fully typed with TypeScript.
 
 ## Compatibility
 
-This package requires Node.js 20+.
+This package requires Node.js >=20.19.0.
 
 ## Contribute
 
