@@ -409,19 +409,25 @@ export class S3Store extends DataStore {
             bytesUploaded += partSize
             resolve()
           } catch (error) {
+            // If there's an error, destroy the splitter to stop processing more chunks
+            splitterStream.destroy(error)
             reject(error)
           } finally {
             fsProm.rm(path).catch(() => {
               /* ignore */
             })
-            acquiredPermit?.release()
+            acquiredPermit?.release().catch(() => {
+              /* ignore */
+            })
           }
         })
 
         promises.push(deferred)
       })
       .on('chunkError', () => {
-        permit?.release()
+        permit?.release().catch(() => {
+          /* ignore */
+        })
       })
 
     try {
@@ -437,6 +443,10 @@ export class S3Store extends DataStore {
 
       promises.push(Promise.reject(error))
     } finally {
+      // Wait for all promises. We don't want to return
+      // early have have promises running in the background.
+      await Promise.allSettled(promises)
+      // But we do want to reject the promise if any of the promises reject.
       await Promise.all(promises)
     }
 
