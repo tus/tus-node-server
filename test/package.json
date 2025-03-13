@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "test",
   "private": true,
+  "type":"module",
   "scripts": {
     "build": "tsc --build",
     "test": "mocha dist/e2e.test.js dist/s3.e2e.js --timeout 40000 --exit --extension ts --require ts-node/register"

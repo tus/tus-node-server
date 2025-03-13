@@ -4,6 +4,7 @@
   "version": "0.5.1",
   "description": "Internal utils for tus Node.js server and stores",
   "main": "dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",

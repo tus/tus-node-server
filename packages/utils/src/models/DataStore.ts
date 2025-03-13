@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events'
 
-import {Upload} from './Upload'
+import {Upload} from './Upload.js'
 
 import type stream from 'node:stream'
 import type http from 'node:http'

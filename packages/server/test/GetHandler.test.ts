@@ -8,10 +8,10 @@ import type http from 'node:http'
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {GetHandler} from '../src/handlers/GetHandler'
+import {GetHandler} from '../src/handlers/GetHandler.js'
 import {DataStore, Upload} from '@tus/utils'
 import {FileStore} from '@tus/file-store'
-import {MemoryLocker} from '../src'
+import {MemoryLocker} from '../src/index.js'
 
 describe('GetHandler', () => {
   const path = '/test/output'

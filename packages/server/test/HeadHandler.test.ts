@@ -5,8 +5,8 @@ import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
 import {ERRORS, DataStore, Upload, type CancellationContext} from '@tus/utils'
-import {HeadHandler} from '../src/handlers/HeadHandler'
-import {MemoryLocker} from '../src'
+import {HeadHandler} from '../src/handlers/HeadHandler.js'
+import {MemoryLocker} from '../src/index.js'
 
 describe('HeadHandler', () => {
   const path = '/test/output'

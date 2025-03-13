@@ -1,6 +1,6 @@
 import type {Redis as IoRedis} from 'ioredis'
-import type {KvStore} from './Types'
-import type {Upload} from '../models'
+import type {KvStore} from './Types.js'
+import type {Upload} from '../models/index.js'
 
 export class IoRedisKvStore<T = Upload> implements KvStore<T> {
   constructor(

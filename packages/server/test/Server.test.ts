@@ -10,7 +10,7 @@ import path from 'node:path'
 import request from 'supertest'
 import Throttle from 'throttle'
 
-import {Server} from '../src'
+import {Server} from '../src/index.js'
 import {FileStore} from '@tus/file-store'
 import {TUS_RESUMABLE, EVENTS, DataStore, Metadata} from '@tus/utils'
 import httpMocks from 'node-mocks-http'

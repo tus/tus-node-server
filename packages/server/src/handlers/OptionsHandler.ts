@@ -1,4 +1,4 @@
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 import {ALLOWED_METHODS, MAX_AGE, HEADERS} from '@tus/utils'
 
 import type http from 'node:http'

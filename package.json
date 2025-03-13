@@ -1,7 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
-  "workspaces": ["packages/*", "test"],
+  "workspaces": [
+    "packages/*",
+    "test"
+  ],
   "scripts": {
     "build": "tsc --build",
     "lint": "biome lint --write .",
@@ -18,5 +21,6 @@
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.10",
     "typescript": "^5.8.2"
-  }
+  },
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }

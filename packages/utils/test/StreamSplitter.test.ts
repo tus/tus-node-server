@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import stream from 'node:stream/promises'
 import {strict as assert} from 'node:assert'
 
-import {StreamSplitter} from '../src/models'
+import {StreamSplitter} from '../src/models/index.js'
 import {Readable} from 'node:stream'
 
 const fileSize = 20_971_520

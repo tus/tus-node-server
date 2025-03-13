@@ -1,6 +1,6 @@
 import type {RedisClientType} from '@redis/client'
-import type {KvStore} from './Types'
-import type {Upload} from '../models'
+import type {KvStore} from './Types.js'
+import type {Upload} from '../models/index.js'
 
 /**
  * Redis based configstore.
