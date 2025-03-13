@@ -16,7 +16,7 @@ concurrency: ${{ github.workflow }}--${{ github.ref }}
 
 jobs:
   main:
-    name: Node.js LTS
+    name: Node.js 20
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +33,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version: 20.19
 
       - name: Install dependencies
         run: npm ci --no-fund --no-audit
