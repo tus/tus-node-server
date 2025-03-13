@@ -3,7 +3,7 @@ import stream from 'node:stream/promises'
 import {PassThrough, Readable} from 'node:stream'
 import type http from 'node:http'
 
-import type {ServerOptions} from '../types'
+import type {ServerOptions} from '../types.js'
 import type {DataStore, CancellationContext} from '@tus/utils'
 import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'

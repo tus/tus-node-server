@@ -7,10 +7,10 @@ import type http from 'node:http'
 
 import debug from 'debug'
 
-import {type Configstore, FileConfigstore} from './configstores'
+import {type Configstore, FileConfigstore} from './configstores/index.js'
 import {DataStore, Upload, ERRORS} from '@tus/utils'
 
-export * from './configstores'
+export * from './configstores/index.js'
 
 type Options = {
   directory: string

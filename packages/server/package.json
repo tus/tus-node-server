@@ -4,6 +4,7 @@
   "version": "1.10.2",
   "description": "Tus resumable upload protocol in Node.js",
   "main": "dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",

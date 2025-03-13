@@ -7,7 +7,7 @@ import path from 'node:path'
 
 import sinon from 'sinon'
 
-import {FileStore, FileConfigstore} from '../src'
+import {FileStore, FileConfigstore} from '../src/index.js'
 import {Upload} from '@tus/utils'
 
 import * as shared from 'test/stores.test'

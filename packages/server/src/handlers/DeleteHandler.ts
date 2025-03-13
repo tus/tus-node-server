@@ -1,4 +1,4 @@
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 import {ERRORS, EVENTS, type CancellationContext} from '@tus/utils'
 
 import type http from 'node:http'

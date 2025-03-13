@@ -1,6 +1,6 @@
 import debug from 'debug'
 
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 
 import type http from 'node:http'
 import {ERRORS, EVENTS, type CancellationContext, type Upload} from '@tus/utils'

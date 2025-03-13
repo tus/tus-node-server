@@ -1,10 +1,10 @@
 import stream from 'node:stream'
 
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 import {ERRORS, type Upload} from '@tus/utils'
 
 import type http from 'node:http'
-import type {RouteHandler} from '../types'
+import type {RouteHandler} from '../types.js'
 
 export class GetHandler extends BaseHandler {
   paths: Map<string, RouteHandler> = new Map()

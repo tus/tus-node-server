@@ -4,6 +4,7 @@
   "version": "1.9.1",
   "description": "AWS S3 store for @tus/server",
   "main": "dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",

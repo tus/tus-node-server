@@ -1,4 +1,4 @@
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 
 import {ERRORS, Metadata, type Upload, type CancellationContext} from '@tus/utils'
 
