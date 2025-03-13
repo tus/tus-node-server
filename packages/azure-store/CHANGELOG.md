@@ -1,5 +1,11 @@
 # @tus/azure-store
 
+## 0.1.3
+
+### Patch Changes
+
+- f47f371: Fix error on saving metadata when it contains non-ASCII characters
+
 ## 0.1.2
 
 ### Patch Changes
