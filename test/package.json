@@ -5,7 +5,7 @@
   "type":"module",
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha dist/e2e.test.js dist/s3.e2e.js --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha dist/e2e.test.js dist/s3.e2e.js --timeout 40000 --exit --extension ts --require ts-node/esm"
   },
   "exports": {
     "./stores.test": "./dist/stores.test.js"

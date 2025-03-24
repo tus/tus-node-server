@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsc --build",
     "pretest": "tsc --build",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
+    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/esm"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
