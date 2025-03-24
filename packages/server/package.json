@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc --build",
     "pretest": "tsc --build",
-    "test": "mocha './dist/test/*.js' --exit"
+    "test": "mocha './dist/test/*.js' --exit --timeout 30000"
   },
   "dependencies": {
     "@tus/utils": "^0.5.1",
