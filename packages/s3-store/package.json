@@ -11,15 +11,14 @@
   "repository": "tus/tus-node-server",
   "license": "MIT",
   "files": [
-    "README.md",
-    "LICENSE",
     "dist",
-    "src"
+    "src",
+    "!test*"
   ],
   "scripts": {
     "build": "tsc --build",
     "pretest": "tsc --build",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/esm"
+    "test": "mocha './dist/test/*.js' --exit --timeout 40000"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",

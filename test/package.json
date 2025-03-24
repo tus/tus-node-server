@@ -5,7 +5,7 @@
   "type":"module",
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha dist/e2e.test.js dist/s3.e2e.js --timeout 40000 --exit --extension ts --require ts-node/esm"
+    "test": "mocha dist/e2e.test.js dist/s3.e2e.js --timeout 40000 --exit"
   },
   "exports": {
     "./stores.test": "./dist/stores.test.js"
@@ -28,7 +28,6 @@
     "should": "^13.2.3",
     "sinon": "^18.0.0",
     "supertest": "^6.3.4",
-    "throttle": "^1.0.3",
-    "ts-node": "^10.9.2"
+    "throttle": "^1.0.3"
   }
 }

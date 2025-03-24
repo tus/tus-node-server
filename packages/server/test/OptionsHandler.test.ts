@@ -5,7 +5,7 @@ import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
-import {OptionsHandler} from '../dist/handlers/OptionsHandler.js'
+import {OptionsHandler} from '../src/handlers/OptionsHandler.js'
 import {DataStore, ALLOWED_METHODS, ALLOWED_HEADERS, MAX_AGE} from '@tus/utils'
 import {MemoryLocker, type ServerOptions} from '@tus/server'
 

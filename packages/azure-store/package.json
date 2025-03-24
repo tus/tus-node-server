@@ -10,15 +10,15 @@
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
   "files": [
-    "README.md",
-    "LICENSE",
     "dist",
-    "src"
+    "src",
+    "!test*"
   ],
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --exit --extension ts --require ts-node/esm"
+    "pretest": "tsc --build",
+    "test": "mocha './dist/test/*.js' --exit"
   },
   "dependencies": {
     "@tus/utils": "^0.5.0",

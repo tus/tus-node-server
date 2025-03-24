@@ -8,8 +8,8 @@ import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 
 import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
-import {PostHandler} from '../dist/handlers/PostHandler.js'
-import {addPipableStreamBody} from './utils.ts'
+import {PostHandler} from '../src/handlers/PostHandler.js'
+import {addPipableStreamBody} from './utils.js'
 import {MemoryLocker} from '@tus/server'
 
 const SERVER_OPTIONS = {

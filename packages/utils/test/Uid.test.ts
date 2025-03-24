@@ -1,6 +1,6 @@
 import {strict as assert} from 'node:assert'
 
-import {Uid} from '../dist/models/index.js'
+import {Uid} from '../src/models/index.js'
 
 describe('Uid', () => {
   it('returns a 32 char string', (done) => {
