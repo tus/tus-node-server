@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/esm"
+    "test": "node --experimental-strip-types ../../node_modules/.bin/mocha --exit --extension ts"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
@@ -25,8 +25,7 @@
     "@types/node": "^22.13.7",
     "ioredis": "^5.4.1",
     "mocha": "^11.0.1",
-    "should": "^13.2.3",
-    "ts-node": "^10.9.2"
+    "should": "^13.2.3"
   },
   "engines": {
     "node": ">=20.19.0"

@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/esm"
+    "test": "node --experimental-strip-types ../../node_modules/.bin/mocha --exit --extension ts"
   },
   "dependencies": {
     "@tus/utils": "^0.5.1",
@@ -36,8 +36,7 @@
     "node-mocks-http": "^1.16.1",
     "should": "^13.2.3",
     "sinon": "^18.0.0",
-    "supertest": "^6.3.4",
-    "ts-node": "^10.9.2"
+    "supertest": "^6.3.4"
   },
   "optionalDependencies": {
     "@redis/client": "^1.6.0",
