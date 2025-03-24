@@ -8,7 +8,7 @@ import type http from 'node:http'
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {GetHandler} from '../src/handlers/GetHandler.js'
+import {GetHandler} from '../handlers/GetHandler.js'
 import {DataStore, Upload} from '@tus/utils'
 import {FileStore} from '@tus/file-store'
 import {MemoryLocker} from '@tus/server'

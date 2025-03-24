@@ -1,5 +1,5 @@
 import {strict as assert} from 'node:assert'
-import {parse, stringify} from '../src/models/Metadata.js'
+import {parse, stringify} from '../models/Metadata.js'
 
 describe('Metadata', () => {
   it('parse valid metadata string', () => {

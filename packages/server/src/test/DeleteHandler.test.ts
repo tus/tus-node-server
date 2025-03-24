@@ -7,7 +7,7 @@ import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
 import {ERRORS, EVENTS, DataStore, type CancellationContext} from '@tus/utils'
-import {DeleteHandler} from '../src/handlers/DeleteHandler.js'
+import {DeleteHandler} from '../handlers/DeleteHandler.js'
 import {MemoryLocker} from '@tus/server'
 
 describe('DeleteHandler', () => {

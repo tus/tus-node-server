@@ -3,7 +3,7 @@ import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
-import {BaseHandler} from '../src/handlers/BaseHandler.js'
+import {BaseHandler} from '../handlers/BaseHandler.js'
 import {DataStore} from '@tus/utils'
 import {MemoryLocker} from '@tus/server'
 

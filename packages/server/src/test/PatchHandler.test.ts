@@ -8,7 +8,7 @@ import stream, {PassThrough} from 'node:stream'
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {PatchHandler} from '../src/handlers/PatchHandler.js'
+import {PatchHandler} from '../handlers/PatchHandler.js'
 import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {EventEmitter} from 'node:events'
 import {addPipableStreamBody} from './utils.js'

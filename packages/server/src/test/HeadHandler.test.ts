@@ -5,7 +5,7 @@ import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
 import {ERRORS, DataStore, Upload, type CancellationContext} from '@tus/utils'
-import {HeadHandler} from '../src/handlers/HeadHandler.js'
+import {HeadHandler} from '../handlers/HeadHandler.js'
 import {MemoryLocker} from '@tus/server'
 
 describe('HeadHandler', () => {

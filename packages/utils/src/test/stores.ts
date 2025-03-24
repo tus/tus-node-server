@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import stream from 'node:stream'
 import {setTimeout as promSetTimeout} from 'node:timers/promises'
 
-import {Upload, Uid} from '@tus/server'
+import {Upload, Uid} from '@tus/utils'
 
 export function testId(id: string) {
   return `${id}-${Uid.rand()}`

@@ -1,7 +1,7 @@
 import 'should'
 import path from 'node:path'
 import {AzureStore} from '@tus/azure-store'
-import * as shared from 'test/stores.test'
+import * as shared from '../../../utils/dist/test/stores.js'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 'azure-store')
