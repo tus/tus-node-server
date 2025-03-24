@@ -3,9 +3,9 @@ import type http from 'node:http'
 
 import httpMocks from 'node-mocks-http'
 
-import {BaseHandler} from '../src/handlers/BaseHandler.js'
+import {BaseHandler} from '../dist/handlers/BaseHandler.js'
 import {DataStore} from '@tus/utils'
-import {MemoryLocker} from '../src/index.js'
+import {MemoryLocker} from '@tus/server'
 
 describe('BaseHandler', () => {
   const store = new DataStore()

@@ -4,6 +4,7 @@
   "extends": "../../tsconfig.base.json",
   "exclude": ["src"],
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   }
 }

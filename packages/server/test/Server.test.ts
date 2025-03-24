@@ -10,7 +10,7 @@ import path from 'node:path'
 import request from 'supertest'
 import Throttle from 'throttle'
 
-import {Server} from '../src/index.js'
+import {Server} from '@tus/server'
 import {FileStore} from '@tus/file-store'
 import {TUS_RESUMABLE, EVENTS, DataStore, Metadata} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
@@ -18,7 +18,7 @@ import sinon from 'sinon'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
-const directory = path.resolve(__dirname, 'output', 'server')
+const directory = path.resolve(import.meta.dirname, 'output', 'server')
 
 describe('Server', () => {
   before(async () => {

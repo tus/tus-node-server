@@ -4,7 +4,7 @@ import {Readable} from 'node:stream'
 
 import sinon from 'sinon'
 
-import {S3Store} from '../src/index.js'
+import {S3Store} from '@tus/s3-store'
 import * as shared from 'test/stores.test'
 import {Upload} from '@tus/utils'
 

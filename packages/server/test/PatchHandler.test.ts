@@ -2,17 +2,17 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import type http from 'node:http'
+import streamP from 'node:stream/promises'
+import stream, {PassThrough} from 'node:stream'
 
 import sinon from 'sinon'
 import httpMocks from 'node-mocks-http'
 
-import {PatchHandler} from '../src/handlers/PatchHandler.js'
+import {PatchHandler} from '../dist/handlers/PatchHandler.js'
 import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {EventEmitter} from 'node:events'
-import {addPipableStreamBody} from './utils.js'
-import {MemoryLocker} from '../src/index.js'
-import streamP from 'node:stream/promises'
-import stream, {PassThrough} from 'node:stream'
+import {addPipableStreamBody} from './utils.ts'
+import {MemoryLocker} from '@tus/server'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
