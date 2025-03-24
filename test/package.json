@@ -28,6 +28,7 @@
     "should": "^13.2.3",
     "sinon": "^18.0.0",
     "supertest": "^6.3.4",
-    "throttle": "^1.0.3"
+    "throttle": "^1.0.3",
+    "ts-node": "^10.9.2"
   }
 }

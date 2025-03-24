@@ -18,7 +18,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "test": "node --experimental-strip-types ../../node_modules/.bin/mocha --exit --extension ts"
+    "test": "mocha --exit --extension ts --require ts-node/esm"
   },
   "dependencies": {
     "@tus/utils": "^0.5.0",
