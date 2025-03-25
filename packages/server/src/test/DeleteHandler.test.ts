@@ -5,8 +5,8 @@ import {strict as assert} from 'node:assert'
 import sinon from 'sinon'
 
 import {ERRORS, EVENTS, DataStore, type CancellationContext} from '@tus/utils'
-import {DeleteHandler} from '../src/handlers/DeleteHandler'
-import {MemoryLocker} from '../src'
+import {DeleteHandler} from '../handlers/DeleteHandler.js'
+import {MemoryLocker} from '@tus/server'
 
 describe('DeleteHandler', () => {
   const path = '/test/output'

@@ -1,7 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
-  "workspaces": ["packages/*", "test"],
+  "workspaces": [
+    "packages/*",
+    "test"
+  ],
   "scripts": {
     "build": "tsc --build",
     "lint": "biome lint --write .",

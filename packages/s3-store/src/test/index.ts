@@ -4,8 +4,8 @@ import {Readable} from 'node:stream'
 
 import sinon from 'sinon'
 
-import {S3Store} from '../src'
-import * as shared from 'test/stores.test'
+import {S3Store} from '@tus/s3-store'
+import * as shared from '../../../utils/dist/test/stores.js'
 import {Upload} from '@tus/utils'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')

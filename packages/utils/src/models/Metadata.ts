@@ -1,4 +1,4 @@
-import type {Upload} from './Upload'
+import type {Upload} from './Upload.js'
 
 const ASCII_SPACE = ' '.codePointAt(0)
 const ASCII_COMMA = ','.codePointAt(0)

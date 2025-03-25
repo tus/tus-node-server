@@ -1,5 +1,5 @@
 import {Transform, type TransformCallback} from 'node:stream'
-import {ERRORS} from '../constants'
+import {ERRORS} from '../constants.js'
 
 // TODO: create HttpError and use it everywhere instead of throwing objects
 export class MaxFileExceededError extends Error {

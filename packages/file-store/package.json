@@ -3,15 +3,22 @@
   "name": "@tus/file-store",
   "version": "1.5.1",
   "description": "Local file storage for @tus/server",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
-  "files": ["README.md", "LICENSE", "dist", "src"],
+  "files": [
+    "dist",
+    "src",
+    "!test*"
+  ],
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --exit --extension ts --require ts-node/register"
+    "pretest": "tsc --build",
+    "test": "mocha './dist/test/*.js' --exit"
   },
   "dependencies": {
     "@tus/utils": "^0.5.0",

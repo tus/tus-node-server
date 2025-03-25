@@ -3,20 +3,22 @@
   "name": "@tus/server",
   "version": "1.10.2",
   "description": "Tus resumable upload protocol in Node.js",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
   "license": "MIT",
   "files": [
-    "README.md",
-    "LICENSE",
     "dist",
-    "src"
+    "src",
+    "!test*"
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
+    "pretest": "tsc --build",
+    "test": "mocha './dist/test/*.js' --exit --timeout 30000"
   },
   "dependencies": {
     "@tus/utils": "^0.5.1",
@@ -36,8 +38,7 @@
     "node-mocks-http": "^1.16.1",
     "should": "^13.2.3",
     "sinon": "^18.0.0",
-    "supertest": "^6.3.4",
-    "ts-node": "^10.9.2"
+    "supertest": "^6.3.4"
   },
   "optionalDependencies": {
     "@redis/client": "^1.6.0",

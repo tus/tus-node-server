@@ -1,12 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
-  "references": [
-    { "path": "./tsconfig.build.json" },
-    { "path": "../../test/tsconfig.json" }
-  ],
   "extends": "../../tsconfig.base.json",
-  "exclude": ["src"],
+  "references": [{ "path": "../utils/tsconfig.json" }],
+  "include": ["src"],
   "compilerOptions": {
-    "noEmit": true
+    "rootDir": "src",
+    "outDir": "dist",
   }
 }

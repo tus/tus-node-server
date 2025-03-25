@@ -2,14 +2,14 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 import type http from 'node:http'
+import streamP from 'node:stream/promises'
+import stream, {PassThrough} from 'node:stream'
 
 import sinon from 'sinon'
 
-import {PatchHandler} from '../src/handlers/PatchHandler'
+import {PatchHandler} from '../handlers/PatchHandler.js'
 import {Upload, DataStore, type CancellationContext} from '@tus/utils'
-import {MemoryLocker} from '../src'
-import streamP from 'node:stream/promises'
-import stream, {PassThrough} from 'node:stream'
+import {MemoryLocker} from '@tus/server'
 
 describe('PatchHandler', () => {
   const path = '/test/output'

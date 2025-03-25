@@ -3,20 +3,22 @@
   "name": "@tus/gcs-store",
   "version": "1.4.2",
   "description": "Google Cloud Storage for @tus/server",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
   "license": "MIT",
   "files": [
-    "README.md",
-    "LICENSE",
     "dist",
-    "src"
+    "src",
+    "!test*"
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --timeout 30000 --exit --extension ts --require ts-node/register"
+    "pretest": "tsc --build",
+    "test": "mocha './dist/test/*.js' --exit --timeout 30000"
   },
   "dependencies": {
     "@tus/utils": "^0.5.0",

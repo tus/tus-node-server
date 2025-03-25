@@ -3,8 +3,8 @@ import {strict as assert} from 'node:assert'
 import sinon from 'sinon'
 
 import {ERRORS, DataStore, Upload, type CancellationContext} from '@tus/utils'
-import {HeadHandler} from '../src/handlers/HeadHandler'
-import {MemoryLocker} from '../src'
+import {HeadHandler} from '../handlers/HeadHandler.js'
+import {MemoryLocker} from '@tus/server'
 
 describe('HeadHandler', () => {
   const path = '/test/output'

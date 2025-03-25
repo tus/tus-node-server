@@ -2,7 +2,7 @@ import 'should'
 
 import {strict as assert} from 'node:assert'
 
-import {OptionsHandler} from '../src/handlers/OptionsHandler'
+import {OptionsHandler} from '../handlers/OptionsHandler.js'
 import {
   DataStore,
   ALLOWED_METHODS,
@@ -10,7 +10,7 @@ import {
   MAX_AGE,
   type CancellationContext,
 } from '@tus/utils'
-import {MemoryLocker, type ServerOptions} from '../src'
+import {MemoryLocker, type ServerOptions} from '@tus/server'
 
 describe('OptionsHandler', () => {
   const options: ServerOptions = {

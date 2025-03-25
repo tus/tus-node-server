@@ -1,7 +1,7 @@
 import debug from 'debug'
 import {Readable} from 'node:stream'
 
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 import {
   Upload,
   Uid,
@@ -11,9 +11,9 @@ import {
   type DataStore,
   type CancellationContext,
 } from '@tus/utils'
-import {validateHeader} from '../validators/HeaderValidator'
+import {validateHeader} from '../validators/HeaderValidator.js'
 
-import type {ServerOptions, WithRequired} from '../types'
+import type {ServerOptions, WithRequired} from '../types.js'
 
 const log = debug('tus-node-server:handlers:post')
 

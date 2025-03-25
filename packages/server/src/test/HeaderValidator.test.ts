@@ -1,6 +1,6 @@
 import {strict as assert} from 'node:assert'
 
-import {validateHeader} from '../src/validators/HeaderValidator'
+import {validateHeader} from '../validators/HeaderValidator.js'
 import {TUS_RESUMABLE} from '@tus/utils'
 
 describe('HeaderValidator', () => {

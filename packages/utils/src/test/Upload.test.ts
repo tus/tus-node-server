@@ -1,8 +1,8 @@
 import 'should'
 import {strict as assert} from 'node:assert'
 
-import {Upload} from '../src/models/Upload'
-import {Uid} from '../src/models/Uid'
+import {Upload} from '../models/Upload.js'
+import {Uid} from '../models/Uid.js'
 
 describe('Upload', () => {
   describe('constructor', () => {

@@ -6,8 +6,8 @@ import {strict as assert} from 'node:assert'
 import sinon from 'sinon'
 
 import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
-import {PostHandler} from '../src/handlers/PostHandler'
-import {MemoryLocker} from '../src'
+import {PostHandler} from '../handlers/PostHandler.js'
+import {MemoryLocker} from '@tus/server'
 
 const options = {
   path: '/test',

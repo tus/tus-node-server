@@ -1,8 +1,8 @@
 import {strict as assert} from 'node:assert'
 
-import {BaseHandler} from '../src/handlers/BaseHandler'
+import {BaseHandler} from '../handlers/BaseHandler.js'
 import {DataStore} from '@tus/utils'
-import {MemoryLocker} from '../src'
+import {MemoryLocker} from '@tus/server'
 
 describe('BaseHandler', () => {
   const store = new DataStore()

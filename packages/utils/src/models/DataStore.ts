@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events'
 import stream from 'node:stream'
 
-import {Upload} from './Upload'
+import {Upload} from './Upload.js'
 
 export class DataStore extends EventEmitter {
   extensions: string[] = []

@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events'
 
-import type {ServerOptions} from '../types'
+import type {ServerOptions} from '../types.js'
 import type {DataStore, CancellationContext} from '@tus/utils'
 import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'

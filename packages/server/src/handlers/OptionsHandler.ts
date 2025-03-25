@@ -1,4 +1,4 @@
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 import {ALLOWED_METHODS, MAX_AGE, HEADERS, type CancellationContext} from '@tus/utils'
 
 // A successful response indicated by the 204 No Content status MUST contain

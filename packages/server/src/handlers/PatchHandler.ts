@@ -1,7 +1,7 @@
 import debug from 'debug'
 import {Readable} from 'node:stream'
 
-import {BaseHandler} from './BaseHandler'
+import {BaseHandler} from './BaseHandler.js'
 
 import {ERRORS, EVENTS, type CancellationContext, type Upload} from '@tus/utils'
 

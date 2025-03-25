@@ -5,17 +5,17 @@ import debug from 'debug'
 import {EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
 import type {DataStore, Upload, CancellationContext} from '@tus/utils'
 
-import {BaseHandler} from './handlers/BaseHandler'
-import {GetHandler} from './handlers/GetHandler'
-import {HeadHandler} from './handlers/HeadHandler'
-import {OptionsHandler} from './handlers/OptionsHandler'
-import {PatchHandler} from './handlers/PatchHandler'
-import {PostHandler} from './handlers/PostHandler'
-import {DeleteHandler} from './handlers/DeleteHandler'
-import {validateHeader} from './validators/HeaderValidator'
-import type {ServerOptions, RouteHandler, WithOptional} from './types'
-import {MemoryLocker} from './lockers'
-import {getRequest, setResponse} from './web'
+import {BaseHandler} from './handlers/BaseHandler.js'
+import {GetHandler} from './handlers/GetHandler.js'
+import {HeadHandler} from './handlers/HeadHandler.js'
+import {OptionsHandler} from './handlers/OptionsHandler.js'
+import {PatchHandler} from './handlers/PatchHandler.js'
+import {PostHandler} from './handlers/PostHandler.js'
+import {DeleteHandler} from './handlers/DeleteHandler.js'
+import {validateHeader} from './validators/HeaderValidator.js'
+import type {ServerOptions, RouteHandler, WithOptional} from './types.js'
+import {MemoryLocker} from './lockers/index.js'
+import {getRequest, setResponse} from './web.js'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -178,7 +178,7 @@ export class Server extends EventEmitter {
     }
 
     // Validate all required headers to adhere to the tus protocol
-    const invalid_headers = []
+    const invalid_headers: string[] = []
     for (const [name, value] of req.headers.entries()) {
       if (req.method === 'OPTIONS') {
         continue

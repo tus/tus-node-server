@@ -6,10 +6,10 @@ import stream from 'node:stream'
 
 import sinon from 'sinon'
 
-import {GetHandler} from '../src/handlers/GetHandler'
+import {GetHandler} from '../handlers/GetHandler.js'
 import {type CancellationContext, DataStore, Upload} from '@tus/utils'
 import {FileStore} from '@tus/file-store'
-import {MemoryLocker} from '../src'
+import {MemoryLocker} from '@tus/server'
 
 describe('GetHandler', () => {
   const path = '/test/output'

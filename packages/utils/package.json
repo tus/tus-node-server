@@ -3,20 +3,22 @@
   "name": "@tus/utils",
   "version": "0.5.1",
   "description": "Internal utils for tus Node.js server and stores",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "type": "module",
   "homepage": "https://github.com/tus/tus-node-server#readme",
   "bugs": "https://github.com/tus/tus-node-server/issues",
   "repository": "tus/tus-node-server",
   "license": "MIT",
   "files": [
-    "README.md",
-    "LICENSE",
     "dist",
-    "src"
+    "src",
+    "!test*"
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "mocha --timeout 40000 --exit --extension ts --require ts-node/register"
+    "pretest": "tsc --build",
+    "test": "mocha './dist/test/*.js' --exit"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
@@ -24,8 +26,7 @@
     "@types/node": "^22.13.7",
     "ioredis": "^5.4.1",
     "mocha": "^11.0.1",
-    "should": "^13.2.3",
-    "ts-node": "^10.9.2"
+    "should": "^13.2.3"
   },
   "engines": {
     "node": ">=20.19.0"

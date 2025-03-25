@@ -1,8 +1,8 @@
 import path from 'node:path'
 
-import {GCSStore} from '../src'
+import {GCSStore} from '@tus/gcs-store'
 
-import * as shared from 'test/stores.test'
+import * as shared from '../../../utils/dist/test/stores.js'
 
 import {Storage} from '@google-cloud/storage'
 
