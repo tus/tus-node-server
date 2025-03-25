@@ -161,7 +161,7 @@ export class BaseHandler extends EventEmitter {
 
       const postReceive = throttle(
         (offset: number) => {
-          this.emit(EVENTS.POST_RECEIVE_V2, data, {...upload, offset})
+          this.emit(EVENTS.POST_RECEIVE, data, {...upload, offset})
         },
         this.options.postReceiveInterval,
         {leading: false}

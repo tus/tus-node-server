@@ -6,7 +6,7 @@ import type http from 'node:http'
 import sinon from 'sinon'
 
 import {PatchHandler} from '../src/handlers/PatchHandler'
-import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
+import {Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {MemoryLocker} from '../src'
 import streamP from 'node:stream/promises'
 import stream, {PassThrough} from 'node:stream'
@@ -188,19 +188,6 @@ describe('PatchHandler', () => {
       assert.equal(res.headers.has('Content-Length'), false)
       assert.equal(res.status, 204)
     })
-  })
-
-  it('should emit POST_RECEIVE event', async () => {
-    req.headers.set('upload-offset', '0')
-    req.headers.set('content-type', 'application/offset+octet-stream')
-
-    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size: 1024}))
-    store.write.resolves(10)
-    handler.on(EVENTS.POST_RECEIVE, sinon.spy())
-
-    await handler.send(req, context)
-
-    assert.equal(true, true) // The event emitter is not directly testable in this context
   })
 
   it('should throw max size exceeded error when upload-length is higher then the maxSize', async () => {

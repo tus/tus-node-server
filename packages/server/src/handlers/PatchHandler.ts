@@ -107,7 +107,6 @@ export class PatchHandler extends BaseHandler {
       }
 
       upload.offset = newOffset
-      this.emit(EVENTS.POST_RECEIVE, req, upload)
 
       //Recommended response defaults
       const responseData = {
