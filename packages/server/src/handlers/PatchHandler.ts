@@ -1,8 +1,8 @@
 import debug from 'debug'
+import {Readable} from 'node:stream'
 
 import {BaseHandler} from './BaseHandler'
 
-import type http from 'node:http'
 import {ERRORS, EVENTS, type CancellationContext, type Upload} from '@tus/utils'
 
 const log = debug('tus-node-server:handlers:patch')
@@ -11,11 +11,7 @@ export class PatchHandler extends BaseHandler {
   /**
    * Write data to the DataStore and return the new offset.
    */
-  async send(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    context: CancellationContext
-  ) {
+  async send(req: Request, context: CancellationContext, headers = new Headers()) {
     try {
       const id = this.getFileIdFromRequest(req)
       if (!id) {
@@ -23,20 +19,20 @@ export class PatchHandler extends BaseHandler {
       }
 
       // The request MUST include a Upload-Offset header
-      if (req.headers['upload-offset'] === undefined) {
+      if (req.headers.get('upload-offset') === null) {
         throw ERRORS.MISSING_OFFSET
       }
 
-      const offset = Number.parseInt(req.headers['upload-offset'] as string, 10)
+      const offset = Number.parseInt(req.headers.get('upload-offset') as string, 10)
 
       // The request MUST include a Content-Type header
-      const content_type = req.headers['content-type']
-      if (content_type === undefined) {
+      const content_type = req.headers.get('content-type')
+      if (content_type === null) {
         throw ERRORS.INVALID_CONTENT_TYPE
       }
 
       if (this.options.onIncomingRequest) {
-        await this.options.onIncomingRequest(req, res, id)
+        await this.options.onIncomingRequest(req, id)
       }
 
       const maxFileSize = await this.getConfiguredMaxSize(req, id)
@@ -74,8 +70,8 @@ export class PatchHandler extends BaseHandler {
         }
 
         // The request MUST validate upload-length related headers
-        const upload_length = req.headers['upload-length'] as string | undefined
-        if (upload_length !== undefined) {
+        const upload_length = req.headers.get('upload-length')
+        if (upload_length !== null) {
           const size = Number.parseInt(upload_length, 10)
           // Throw error if extension is not supported
           if (!this.store.hasExtension('creation-defer-length')) {
@@ -100,18 +96,24 @@ export class PatchHandler extends BaseHandler {
         }
 
         const maxBodySize = await this.calculateMaxBodySize(req, upload, maxFileSize)
-        newOffset = await this.writeToStore(req, upload, maxBodySize, context)
+        newOffset = await this.writeToStore(
+          req.body ? Readable.fromWeb(req.body) : Readable.from([]),
+          upload,
+          maxBodySize,
+          context
+        )
       } finally {
         await lock.unlock()
       }
 
       upload.offset = newOffset
-      this.emit(EVENTS.POST_RECEIVE, req, res, upload)
+      this.emit(EVENTS.POST_RECEIVE, req, upload)
 
       //Recommended response defaults
       const responseData = {
         status: 204,
         headers: {
+          ...Object.fromEntries(headers.entries()),
           'Upload-Offset': newOffset,
         } as Record<string, string | number>,
         body: '',
@@ -119,23 +121,13 @@ export class PatchHandler extends BaseHandler {
 
       if (newOffset === upload.size && this.options.onUploadFinish) {
         try {
-          const resOrObject = await this.options.onUploadFinish(req, res, upload)
-          // Backwards compatibility, remove in next major
-          // Ugly check because we can't use `instanceof` because we mock the instance in tests
-          if (
-            typeof (resOrObject as http.ServerResponse).write === 'function' &&
-            typeof (resOrObject as http.ServerResponse).writeHead === 'function'
-          ) {
-            res = resOrObject as http.ServerResponse
-          } else {
-            // Ugly types because TS only understands instanceof
-            type ExcludeServerResponse<T> = T extends http.ServerResponse ? never : T
-            const obj = resOrObject as ExcludeServerResponse<typeof resOrObject>
-            res = obj.res
-            if (obj.status_code) responseData.status = obj.status_code
-            if (obj.body) responseData.body = obj.body
-            if (obj.headers)
-              responseData.headers = Object.assign(obj.headers, responseData.headers)
+          const hookResponse = await this.options.onUploadFinish(req, upload)
+          if (hookResponse) {
+            const {status_code, body, headers} = hookResponse
+            if (status_code) responseData.status = status_code
+            if (body) responseData.body = body
+            if (headers)
+              responseData.headers = Object.assign(responseData.headers, headers)
           }
         } catch (error) {
           log(`onUploadFinish: ${error.body}`)
@@ -159,7 +151,6 @@ export class PatchHandler extends BaseHandler {
 
       // The Server MUST acknowledge successful PATCH requests with the 204
       const writtenRes = this.write(
-        res,
         responseData.status,
         responseData.headers,
         responseData.body
@@ -171,7 +162,10 @@ export class PatchHandler extends BaseHandler {
 
       return writtenRes
     } catch (e) {
-      context.abort()
+      // Only abort the context if it wasn't already aborted
+      if (!context.signal.aborted) {
+        context.abort()
+      }
       throw e
     }
   }
