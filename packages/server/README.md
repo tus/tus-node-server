@@ -82,7 +82,7 @@ Sends the client's origin back in `Access-Control-Allow-Origin` if it matches.
 #### `options.postReceiveInterval`
 
 Interval in milliseconds for sending progress of an upload over
-[`POST_RECEIVE_V2`](#eventspost_receive_v2) (`number`).
+[`POST_RECEIVE`](#eventspost_receive) (`number`).
 
 #### `options.relativeLocation`
 
