@@ -1,7 +1,4 @@
 import {strict as assert} from 'node:assert'
-import type http from 'node:http'
-
-import httpMocks from 'node-mocks-http'
 
 import {BaseHandler} from '../src/handlers/BaseHandler'
 import {DataStore} from '@tus/utils'
@@ -13,11 +10,6 @@ describe('BaseHandler', () => {
     path: '/test/output',
     locker: new MemoryLocker(),
   })
-  let res: httpMocks.MockResponse<http.ServerResponse>
-
-  beforeEach(() => {
-    res = httpMocks.createResponse()
-  })
 
   it('constructor must require a DataStore', (done) => {
     assert.throws(() => {
@@ -27,46 +19,35 @@ describe('BaseHandler', () => {
     done()
   })
 
-  it('write() should end the response', (done) => {
-    handler.write(res, 200, {})
-    assert.equal(res.finished, true)
-    done()
-  })
-
-  it('write() should set a response code', (done) => {
-    handler.write(res, 201, {})
-    assert.equal(res.statusCode, 201)
+  it('write() should end the response and set status code', (done) => {
+    const res = handler.write(200, {})
+    assert.equal(res.status, 200)
     done()
   })
 
   it('write() should set headers', (done) => {
     const header = 'Access-Control-Allow-Methods'
     const headers = {[header]: 'GET, OPTIONS'}
-    handler.write(res, 200, headers)
-    assert.equal(res.getHeader(header), headers[header])
-
+    const res = handler.write(200, headers)
+    assert.equal(res.headers.get(header), headers[header])
     done()
   })
 
-  it('write() should write the body', (done) => {
+  it('write() should write the body', async () => {
     const body = 'Hello tus!'
-    handler.write(res, 200, {}, body)
-    const output = res._getData()
-    assert.equal(output.match(/Hello tus!$/).index, output.length - body.length)
-    done()
+    const res = handler.write(200, {}, body)
+    assert.equal(await res.text(), body)
   })
 
   it('should get ID correctly from nested URL', () => {
-    const req = {url: '/some/path/yeah/1234'} as http.IncomingMessage
+    const req = new Request('https://example.com/some/path/yeah/1234')
     const id = handler.getFileIdFromRequest(req)
-
     assert.equal(id, '1234')
   })
 
   it('should handle URL-encoded ID', () => {
-    const req = {url: '/some/path/yeah/1234%205%23'} as http.IncomingMessage
+    const req = new Request('https://example.com/some/path/yeah/1234%205%23')
     const id = handler.getFileIdFromRequest(req)
-
     assert.equal(id, '1234 5#')
   })
 
@@ -80,28 +61,26 @@ describe('BaseHandler', () => {
       },
     })
 
-    const req = httpMocks.createRequest({
+    const req = new Request('http://example.com/upload/123', {
       headers: {
-        host: 'localhost',
+        host: 'example.com',
       },
     })
     const id = '123'
     const url = handler.generateUrl(req, id)
-    assert.equal(url, 'http://localhost/path/123?customParam=1')
+    assert.equal(url, 'http://example.com/path/123?customParam=1')
   })
 
   it('should allow extracting the request id with a custom function', () => {
     const handler = new BaseHandler(store, {
       path: '/path',
       locker: new MemoryLocker(),
-      getFileIdFromRequest: (req: http.IncomingMessage) => {
-        return `${req.url?.split('/').pop()}-custom`
+      getFileIdFromRequest: (req: Request) => {
+        return `${new URL(req.url).pathname.split('/').pop()}-custom`
       },
     })
 
-    const req = httpMocks.createRequest({
-      url: '/upload/1234',
-    })
+    const req = new Request('http://example.com/upload/1234')
     const url = handler.getFileIdFromRequest(req)
     assert.equal(url, '1234-custom')
   })
