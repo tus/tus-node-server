@@ -1,5 +1,29 @@
 # @tus/server
 
+## 2.0.0
+
+### Major Changes
+
+- 0f063d9: Change required Node.js version from 16 to 20.19.0
+- 51419da: - Introduce `handleWeb(req: Request)` to integrate into meta frameworks
+  (such as Next.js, Nuxt, React Router, SvelteKit, etc) and other Node.js compatible runtime environments.
+  - All events and hooks now emit `Request`/`Response` instead of `http.IncomingMessage`/`http.ServerResponse`.
+  - The function version of the options `maxSize`, `generateUrl`, `getFileIdFromRequest`, `namingFunction`, `locker`
+    also now use `Request`/`Response`.
+  - Your `onUploadCreate` and `onUploadFinish` hooks no longer need to return the response object.
+    - If you want to change the metadata in `onUploadCreate` you can return `Promise<{ metadata: Record<string, string> }>`.
+      This will will internally merge the existing metadata with the new metadata.
+    - `onUploadFinish` can return `Promise<{ status_code?: number headers?: Record<string, string | number> body?: string }>`
+- f190875: - `POST_RECEIVE_V2` has been renamed to `POST_RECEIVE`. The deprecated version of `POST_RECEIVE` has been removed.
+- 7a5a60d: Make this package ESM-only instead of CommonJS. Since Node.js >= 20.19.0 you can `require(esm)` so you can consume this package even if you don't ESM yourself yet.
+
+### Patch Changes
+
+- Updated dependencies [0f063d9]
+- Updated dependencies [f190875]
+- Updated dependencies [7a5a60d]
+  - @tus/utils@0.6.0
+
 ## 1.10.2
 
 ### Patch Changes

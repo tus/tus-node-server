@@ -1,5 +1,13 @@
 # @tus/utils
 
+## 0.6.0
+
+### Minor Changes
+
+- 0f063d9: Change required Node.js version from 16 to 20.19.0
+- f190875: - `POST_RECEIVE_V2` has been renamed to `POST_RECEIVE`. The deprecated version of `POST_RECEIVE` has been removed.
+- 7a5a60d: Make this package ESM-only instead of CommonJS. Since Node.js >= 20.19.0 you can `require(esm)` so you can consume this package even if you don't ESM yourself yet.
+
 ## 0.5.1
 
 ### Patch Changes

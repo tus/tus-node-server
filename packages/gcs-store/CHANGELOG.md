@@ -1,5 +1,20 @@
 # @tus/gcs-store
 
+## 2.0.0
+
+### Major Changes
+
+- 4a0fe1c: @google-cloud/storage@7 is now required as peer dependency.
+- 0f063d9: Change required Node.js version from 16 to 20.19.0
+- 7a5a60d: Make this package ESM-only instead of CommonJS. Since Node.js >= 20.19.0 you can `require(esm)` so you can consume this package even if you don't ESM yourself yet.
+
+### Patch Changes
+
+- Updated dependencies [0f063d9]
+- Updated dependencies [f190875]
+- Updated dependencies [7a5a60d]
+  - @tus/utils@0.6.0
+
 ## 1.4.2
 
 ### Patch Changes
