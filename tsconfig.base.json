@@ -2,9 +2,9 @@
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "lib": ["es2020"],
+    "lib": ["es2022"],
     "module": "NodeNext",
-    "target": "es2020",
+    "target": "es2022",
     "strict": true,
     "declaration": true,
     "declarationMap": true,
