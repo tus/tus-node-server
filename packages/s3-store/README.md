@@ -31,8 +31,8 @@ npm install @tus/s3-store
 ## Use
 
 ```js
-const {Server} = require('@tus/server')
-const {S3Store} = require('@tus/s3-store')
+import { Server } from "@tus/server";
+import { S3Store } from "@tus/s3-store";
 
 const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
@@ -44,8 +44,8 @@ const s3Store = new S3Store({
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
   },
-})
-const server = new Server({path: '/files', datastore: s3Store})
+});
+const server = new Server({ path: "/files", datastore: s3Store });
 // ...
 ```
 
@@ -199,9 +199,9 @@ docs for the supported values of
 [credentials](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#constructor-property)
 
 ```js
-const aws = require('aws-sdk')
-const {Server} = require('@tus/server')
-const {S3Store} = require('@tus/s3-store')
+import aws from "aws-sdk";
+import { Server } from "@tus/server";
+import { S3Store } from "@tus/s3-store";
 
 const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024,
@@ -209,12 +209,12 @@ const s3Store = new S3Store({
     bucket: process.env.AWS_BUCKET,
     region: process.env.AWS_REGION,
     credentials: new aws.ECSCredentials({
-      httpOptions: {timeout: 5000},
+      httpOptions: { timeout: 5000 },
       maxRetries: 10,
     }),
   },
-})
-const server = new Server({path: '/files', datastore: s3Store})
+});
+const server = new Server({ path: "/files", datastore: s3Store });
 // ...
 ```
 
@@ -231,7 +231,7 @@ const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024,
   minPartSize: 8 * 1024 * 1024,
   // ...
-})
+});
 ```
 
 ### Example: use with Scaleway Object Storage
@@ -242,7 +242,7 @@ const s3Store = new S3Store({
 const s3Store = new S3Store({
   maxMultipartParts: 1000,
   // ...
-})
+});
 ```
 
 ## Types
@@ -265,16 +265,12 @@ See
 
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]:
-  https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination
 [concatenation]: https://tus.io/protocols/resumable-upload.html#concatenation
-[cleanExpiredUploads]:
-  https://github.com/tus/tus-node-server/tree/main/packages/server#servercleanupexpireduploads
-[lifecyle]:
-  https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
+[cleanExpiredUploads]: https://github.com/tus/tus-node-server/tree/main/packages/server#servercleanupexpireduploads
+[lifecyle]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
-[`KvStore`]:
-  https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
+[`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts

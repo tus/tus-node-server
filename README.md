@@ -52,17 +52,17 @@ A standalone server which stores files on disk.
 > Try it yourself in [StackBlitz](https://stackblitz.com/edit/stackblitz-starters-zg6mgnuf?file=index.js)
 
 ```js
-const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/file-store')
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
 
-const host = '127.0.0.1'
-const port = 1080
+const host = "127.0.0.1";
+const port = 1080;
 const server = new Server({
-  path: '/files',
-  datastore: new FileStore({directory: './files'}),
-})
+  path: "/files",
+  datastore: new FileStore({ directory: "./files" }),
+});
 
-server.listen({host, port})
+server.listen({ host, port });
 ```
 
 A tus server integrated into your existing Node.js server. `@tus/server` has no
@@ -70,29 +70,31 @@ dependencies so it can be integrated in any server-side framework. More examples
 found in [`@tus/server`][].
 
 ```js
-const fastify = require('fastify')({ logger: true });
-const {Server} = require('@tus/server');
-const {FileStore} = require('@tus/file-store');
+import fastify from "fastify";
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
 
+const app = fastify({ logger: true });
 const tusServer = new Server({
-  path: '/files',
-  datastore: new FileStore({ directory: './files' })
-})
+  path: "/files",
+  datastore: new FileStore({ directory: "./files" }),
+});
 
-fastify.addContentTypeParser(
-    'application/offset+octet-stream', (request, payload, done) => done(null);
+app.addContentTypeParser(
+  "application/offset+octet-stream",
+  (request, payload, done) => done(null)
 );
-fastify.all('/files', (req, res) => {
-    tusServer.handle(req.raw, res.raw);
+app.all("/files", (req, res) => {
+  tusServer.handle(req.raw, res.raw);
 });
-fastify.all('/files/*', (req, res) => {
-    tusServer.handle(req.raw, res.raw);
+app.all("/files/*", (req, res) => {
+  tusServer.handle(req.raw, res.raw);
 });
-fastify.listen(3000, (err) => {
-    if (err) {
-        fastify.log.error(err);
-        process.exit(1);
-    }
+app.listen(3000, (err) => {
+  if (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
 });
 ```
 
@@ -144,8 +146,7 @@ See
 [`@tus/azure-store`]: https://github.com/tus/tus-node-server/tree/main/packages/azure-store
 [extensions]: https://tus.io/protocols/resumable-upload.html#protocol-extensions
 [creation]: https://tus.io/protocols/resumable-upload.html#creation
-[creation with upload]:
-  https://tus.io/protocols/resumable-upload.html#creation-with-upload
+[creation with upload]: https://tus.io/protocols/resumable-upload.html#creation-with-upload
 [expiration]: https://tus.io/protocols/resumable-upload.html#expiration
 [checksum]: https://tus.io/protocols/resumable-upload.html#checksum
 [termination]: https://tus.io/protocols/resumable-upload.html#termination

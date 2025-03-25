@@ -37,8 +37,9 @@ npm install @tus/server
 A standalone server which stores files on disk.
 
 ```js
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
+
 const host = "127.0.0.1";
 const port = 1080;
 
@@ -212,19 +213,19 @@ or a Node.js compatible runtime based on the web `Request` and `Response` API.
 You can implement your own `GET` handlers. For instance, to return all files.
 
 ```js
-const fs = require('node:fs/promises')
-const {Server} require('@tus/server')
-const {FileStore} require('@tus/file-store')
+import fs from "node:fs/promises";
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
 
 const server = new Server({
-  path: '/files',
-  datastore: new FileStore({ directory: './files' }),
-})
+  path: "/files",
+  datastore: new FileStore({ directory: "./files" }),
+});
 
-server.get('/uploads', async (req) => {
-  const files = await fs.readdir(server.datastore.directory)
+server.get("/uploads", async (req) => {
+  const files = await fs.readdir(server.datastore.directory);
   // Format and return
-})
+});
 ```
 
 #### `server.listen()`
@@ -248,7 +249,7 @@ You can listen for events by using the `.on()` method on the `Server` instance.
 Called after an upload has been created but before it's written to a store.
 
 ```js
-const {EVENTS} = require('@tus/server')
+import {EVENTS} from '@tus/server'
 // ...
 server.on(EVENTS.POST_CREATE, (req, res, upload => {})
 ```
@@ -266,7 +267,7 @@ emitted. If the PATCH request takes 2500ms, you would get the offset at 2000ms, 
 Use `POST_FINISH` if you need to know when an upload is done.
 
 ```js
-const {EVENTS} = require('@tus/server')
+import {EVENTS} from '@tus/server'
 // ...
 server.on(EVENTS.POST_RECEIVE, (req, upload => {})
 ```
@@ -276,7 +277,7 @@ server.on(EVENTS.POST_RECEIVE, (req, upload => {})
 Called an upload has completed and after a response has been sent to the client.
 
 ```js
-const {EVENTS} = require('@tus/server')
+import {EVENTS} from '@tus/server'
 // ...
 server.on(EVENTS.POST_FINISH, (req, res, upload => {})
 ```
@@ -286,7 +287,7 @@ server.on(EVENTS.POST_FINISH, (req, res, upload => {})
 Called after an upload has been terminated and a response has been sent to the client.
 
 ```js
-const {EVENTS} = require('@tus/server')
+import {EVENTS} from '@tus/server'
 // ...
 server.on(EVENTS.POST_TERMINATE, (req, res, id => {})
 ```
@@ -362,9 +363,9 @@ new S3Store({
 ### Example: integrate tus into Express
 
 ```js
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
-const express = require("express");
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
+import express from "express";
 
 const host = "127.0.0.1";
 const port = 1080;
@@ -383,11 +384,11 @@ app.listen(port, host);
 ### Example: integrate tus into Koa
 
 ```js
-const http = require("node:http");
-const url = require("node:url");
-const Koa = require("koa");
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+import http from "node:http";
+import url from "node:url";
+import Koa from "koa";
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
 
 const app = new Koa();
 const appCallback = app.callback();
@@ -414,10 +415,11 @@ server.listen(port);
 ### Example: integrate tus into Fastify
 
 ```js
-const fastify = require("fastify")({ logger: true });
-const { Server } = require("@tus/server");
-const { FileStore } = require("@tus/file-store");
+import fastify from "fastify";
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
 
+const app = fastify({ logger: true });
 const tusServer = new Server({
   path: "/files",
   datastore: new FileStore({ directory: "./files" }),
@@ -428,7 +430,7 @@ const tusServer = new Server({
  * without any parser to leave body untouched
  * @see https://www.fastify.io/docs/latest/Reference/ContentTypeParser/
  */
-fastify.addContentTypeParser(
+app.addContentTypeParser(
   "application/offset+octet-stream",
   (request, payload, done) => done(null)
 );
@@ -439,15 +441,15 @@ fastify.addContentTypeParser(
  * @see https://www.fastify.io/docs/latest/Reference/Request/
  * @see https://www.fastify.io/docs/latest/Reference/Reply/#raw
  */
-fastify.all("/files", (req, res) => {
+app.all("/files", (req, res) => {
   tusServer.handle(req.raw, res.raw);
 });
-fastify.all("/files/*", (req, res) => {
+app.all("/files/*", (req, res) => {
   tusServer.handle(req.raw, res.raw);
 });
-fastify.listen(3000, (err) => {
+app.listen(3000, (err) => {
   if (err) {
-    fastify.log.error(err);
+    app.log.error(err);
     process.exit(1);
   }
 });
@@ -515,7 +517,7 @@ export const HEAD = server.handleWeb;
 ### Example: validate metadata when an upload is created
 
 ```js
-const { Server } = require("@tus/server");
+import { Server } from "@tus/server";
 // ...
 
 const server = new Server({
@@ -540,7 +542,7 @@ Access control is opinionated and can be done in different ways. This example is
 psuedo-code for what it could look like with JSON Web Tokens.
 
 ```js
-const { Server } = require("@tus/server");
+import { Server } from "@tus/server";
 // ...
 
 const server = new Server({
@@ -568,14 +570,18 @@ const server = new Server({
 
 ### Example: store files in custom nested directories
 
-You can use `namingFunction` to change the name of the stored file. If you’re only adding
-a prefix or suffix without a slash (`/`), you don’t need to implement `generateUrl` and
+You can use `namingFunction` to change the name of the stored file. If you're only adding
+a prefix or suffix without a slash (`/`), you don't need to implement `generateUrl` and
 `getFileIdFromRequest`.
 
 Adding a slash means you create a new directory, for which you need to implement all three
 functions as we need encode the id with base64 into the URL.
 
 ```js
+import crypto from "node:crypto";
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
+
 const path = "/files";
 const server = new Server({
   path,
@@ -608,7 +614,7 @@ Firstly, you must set `respectForwardedHeaders` indicating that a reverse proxy 
 and that it should respect the `X-Forwarded-*`/`Forwarded` headers:
 
 ```js
-const { Server } = require("@tus/server");
+import { Server } from "@tus/server";
 // ...
 
 const server = new Server({
