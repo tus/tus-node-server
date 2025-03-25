@@ -35,6 +35,6 @@
     "@google-cloud/storage": "^7.15.2"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=20.19.0"
   }
 }

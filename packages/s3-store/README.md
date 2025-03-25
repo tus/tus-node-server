@@ -22,7 +22,7 @@
 
 ## Install
 
-In Node.js (16.0+), install with npm:
+In Node.js >=20.19.0, install with npm:
 
 ```bash
 npm install @tus/s3-store
@@ -251,7 +251,7 @@ This package is fully typed with TypeScript.
 
 ## Compatibility
 
-This package requires Node.js 16.0+.
+This package requires Node.js >=20.19.0.
 
 ## Contribute
 
