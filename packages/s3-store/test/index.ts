@@ -278,6 +278,54 @@ describe('S3DataStore', () => {
     }
   })
 
+  it('should use default maxMultipartParts when not specified', () => {
+    const store = new S3Store({
+      s3ClientConfig,
+    })
+    assert.equal(store.maxMultipartParts, 10000)
+  })
+
+  it('should use custom maxMultipartParts when specified', () => {
+    const customMaxParts = 5000
+    const store = new S3Store({
+      s3ClientConfig,
+      maxMultipartParts: customMaxParts,
+    })
+    assert.equal(store.maxMultipartParts, customMaxParts)
+  })
+
+  it('should handle multiple concurrent part uploads with some failures', async () => {
+    const store = new S3Store({
+      partSize: 5 * 1024 * 1024,
+      maxConcurrentPartUploads: 3, // Allow 3 concurrent uploads
+      s3ClientConfig,
+    })
+
+    const size = 15 * 1024 * 1024 // 15MB will be split into 3 parts
+    const upload = new Upload({
+      id: shared.testId('concurrent-failures'),
+      size,
+      offset: 0,
+    })
+
+    // @ts-expect-error private method
+    const uploadPartStub = sinon.stub(store, 'uploadPart')
+
+    // Make the second part upload fail
+    uploadPartStub.onCall(0).resolves('etag1')
+    uploadPartStub.onCall(1).rejects(new Error('Part 2 upload failed'))
+    uploadPartStub.onCall(2).resolves('etag3')
+
+    await store.create(upload)
+
+    try {
+      await store.write(Readable.from(Buffer.alloc(size)), upload.id, upload.offset)
+      assert.fail('Expected write to fail but it succeeded')
+    } catch (error) {
+      assert.equal(uploadPartStub.callCount, 2, '2 parts should have been attempted')
+    }
+  })
+
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension

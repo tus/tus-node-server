@@ -1,5 +1,29 @@
 # @tus/s3-store
 
+## 1.9.1
+
+### Patch Changes
+
+- 274a0d1: Bump @aws-sdk/client-s3 from 3.717.0 to 3.758.0
+- 81eb03a: Add missing documentation for `maxMultipartParts` option added in #712
+- c8e78bd: Fix unhandled promise rejection when uploading a part fails, in which case we returned too early, leaving other parts running in the background.
+
+## 1.9.0
+
+### Minor Changes
+
+- 7db2f17: Add `maxMultipartParts` option. This can be used when using S3-compatible storage provider with different part number limitations.
+
+## 1.8.0
+
+### Minor Changes
+
+- 6351485: Add `minPartSize` option. This can be used alongside `partSize` to guarantee that all non-trailing parts are _exactly_ the same size, which is required for Cloudflare R2.
+
+### Patch Changes
+
+- c970858: Fix zero byte files only storing a .info file. Now correctly stores an empty file.
+
 ## 1.7.0
 
 ### Minor Changes

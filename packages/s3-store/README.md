@@ -13,6 +13,8 @@
 - [Extensions](#extensions)
 - [Examples](#examples)
   - [Example: using `credentials` to fetch credentials inside a AWS container](#example-using-credentials-to-fetch-credentials-inside-a-aws-container)
+  - [Example: use with Cloudflare R2](#example-use-with-cloudflare-r2)
+  - [Example: use with Scaleway Object Storage](#example-use-with-scaleway-object-storage)
 - [Types](#types)
 - [Compatibility](#compatibility)
 - [Contribute](#contribute)
@@ -61,9 +63,26 @@ The bucket name.
 
 #### `options.partSize`
 
-The preferred part size for parts send to S3. Can not be lower than 5MiB or more than
+The **preferred** part size for parts send to S3. Can not be lower than 5MiB or more than
 5GiB. The server calculates the optimal part size, which takes this size into account, but
 may increase it to not exceed the S3 10K parts limit.
+
+#### `options.minPartSize`
+
+The minimal part size for parts.
+Can be used to ensure that all non-trailing parts are exactly the same size
+by setting `partSize` and `minPartSize` to the same value.
+Can not be lower than 5MiB or more than 5GiB.
+
+The server calculates the optimal part size, which takes this size into account, but
+may increase it to not exceed the `options.maxMultipartParts` parts limit.
+
+#### `options.maxMultipartParts`
+
+The maximum number of parts allowed in a multipart upload. Defaults to 10,000.
+Some S3 providers have non-standard restrictions on the number of parts in a multipart
+upload. For example, AWS S3 has a limit of 10,000 parts, but some S3 compatible providers
+have a limit of 1,000 parts.
 
 #### `options.s3ClientConfig`
 
@@ -182,7 +201,7 @@ docs for the supported values of
 ```js
 const aws = require('aws-sdk')
 const {Server} = require('@tus/server')
-const {FileStore} = require('@tus/s3-store')
+const {S3Store} = require('@tus/s3-store')
 
 const s3Store = new S3Store({
   partSize: 8 * 1024 * 1024,
@@ -197,6 +216,33 @@ const s3Store = new S3Store({
 })
 const server = new Server({path: '/files', datastore: s3Store})
 // ...
+```
+
+### Example: use with Cloudflare R2
+
+`@tus/s3-store` can be used with all S3-compatible storage solutions, including Cloudflare R2.
+However R2 requires that all non-trailing parts are _exactly_ the same size.
+This can be achieved by setting `partSize` and `minPartSize` to the same value.
+
+```ts
+// ...
+
+const s3Store = new S3Store({
+  partSize: 8 * 1024 * 1024,
+  minPartSize: 8 * 1024 * 1024,
+  // ...
+})
+```
+
+### Example: use with Scaleway Object Storage
+
+`@tus/s3-store` can be used with Scaleway Object Storage but with some additional configuration. Scaleway Object Storage has a limit of 1,000 parts in a multipart upload.
+
+```ts
+const s3Store = new S3Store({
+  maxMultipartParts: 1000,
+  // ...
+})
 ```
 
 ## Types
