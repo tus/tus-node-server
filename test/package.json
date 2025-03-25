@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "test",
   "private": true,
-  "type":"module",
+  "type": "module",
   "scripts": {
     "build": "tsc --build",
     "test": "mocha dist/e2e.test.js dist/s3.e2e.js --timeout 40000 --exit"
@@ -11,10 +11,10 @@
     "./stores.test": "./dist/stores.test.js"
   },
   "dependencies": {
-    "@tus/file-store": "^1.5.1",
-    "@tus/gcs-store": "^1.4.2",
-    "@tus/s3-store": "^1.9.1",
-    "@tus/server": "^1.10.2"
+    "@tus/file-store": "^2.0.0",
+    "@tus/gcs-store": "^2.0.0",
+    "@tus/s3-store": "^2.0.0",
+    "@tus/server": "^2.0.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
