@@ -18,8 +18,8 @@ on Google Cloud Storage or on AWS S3 (or any other S3-compatible storage system)
 its modularization and extensibility, support for nearly any other cloud provider could
 easily be added to tus-node-server
 
-> 📣
-> [**Read the 1.0.0 announcement post: new packages, rewrite in TypeScript, and much more**](https://tus.io/blog/2023/09/04/tus-node-server-v100).
+> [!IMPORTANT]
+> Read the 2.0.0 announcement [post](https://tus.io/blog/2025/03/25/tus-node-server-v200): integrate in all meta-frameworks and JS runtimes.
 
 ## Contents
 
@@ -38,8 +38,12 @@ When you want reliable, resumable uploads. Together with a client like
 [tus-js-client](https://github.com/tus/tus-js-client) or [Uppy](https://uppy.io), you'll
 have a plug-and-play experience.
 
-tus-node-server in particular makes sense if you want to host a Node.js server or
-integrate it into your existing one. There are also other mature servers, like
+tus Node.js in particular makes sense if you want to host a Node.js server or
+integrate it into your existing one. You can also run tus Node.js in all meta frameworks
+(such as Next.js, Nuxt, React Router, SvelteKit, etc) and other Node.js compatible runtime environments
+(AWS Lambda, Cloudflare, Bun, Deno Deploy, etc).
+
+There are also other mature servers, like
 [tusd](https://github.com/tus/tusd), [tusdotnet](https://github.com/tusdotnet/tusdotnet),
 [rustus](https://github.com/s3rius/rustus), and
 [many others](https://tus.io/implementations.html).
