@@ -1,3 +1,4 @@
+import type {ServerRequest as Request} from 'srvx/types'
 import type {Locker, Upload} from '@tus/utils'
 
 /**

@@ -1,6 +1,7 @@
 import http from 'node:http'
 import {EventEmitter} from 'node:events'
 
+import type {ServerRequest} from 'srvx/types'
 import {toNodeHandler} from 'srvx/node'
 import debug from 'debug'
 import {EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
@@ -26,10 +27,10 @@ type Handlers = {
 }
 
 interface TusEvents {
-  [EVENTS.POST_CREATE]: (req: Request, upload: Upload, url: string) => void
-  [EVENTS.POST_RECEIVE]: (req: Request, upload: Upload) => void
-  [EVENTS.POST_FINISH]: (req: Request, res: Response, upload: Upload) => void
-  [EVENTS.POST_TERMINATE]: (req: Request, res: Response, id: string) => void
+  [EVENTS.POST_CREATE]: (req: ServerRequest, upload: Upload, url: string) => void
+  [EVENTS.POST_RECEIVE]: (req: ServerRequest, upload: Upload) => void
+  [EVENTS.POST_FINISH]: (req: ServerRequest, res: Response, upload: Upload) => void
+  [EVENTS.POST_TERMINATE]: (req: ServerRequest, res: Response, id: string) => void
 }
 
 type on = EventEmitter['on']
