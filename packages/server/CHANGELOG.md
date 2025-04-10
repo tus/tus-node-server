@@ -1,5 +1,15 @@
 # @tus/server
 
+## 2.1.0
+
+### Minor Changes
+
+- a128e97: Use srvx for convert Node.js req/res to Request/Response. This also comes with a performance boost. When using `server.handle()` in a Node.js environment, you can now access the orignal req/res via `req.node.req`/`req.node.res`.
+
+### Patch Changes
+
+- b163a62: Correctly return upload-offset header as a string instead of number
+
 ## 2.0.0
 
 ### Major Changes
