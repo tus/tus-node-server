@@ -264,75 +264,71 @@ describe('Server', () => {
       done()
     })
 
-    it('should allow overriding the HTTP origin', async () => {
+    it('should allow overriding the HTTP origin', (done) => {
       const origin = 'vimeo.com'
-      const req = httpMocks.createRequest({
-        headers: {origin},
-        method: 'OPTIONS',
-        url: '/',
-      })
-      // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
-      await server.handle(req, res)
-      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
+      request(listener)
+        .options('/')
+        .set('Origin', origin)
+        .expect(204)
+        .then((res) => {
+          assert.equal(res.headers['access-control-allow-origin'], origin)
+          done()
+        })
+        .catch(done)
     })
 
-    it('should allow overriding the HTTP origin only if match allowedOrigins', async () => {
+    it('should allow overriding the HTTP origin only if match allowedOrigins', (done) => {
       const origin = 'vimeo.com'
       server.options.allowedOrigins = ['vimeo.com']
-      const req = httpMocks.createRequest({
-        headers: {origin},
-        method: 'OPTIONS',
-        url: '/',
-      })
-      // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
-      await server.handle(req, res)
-      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
-      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'vimeo.com')
+      request(listener)
+        .options('/')
+        .set('Origin', origin)
+        .expect(204)
+        .then((res) => {
+          assert.equal(res.headers['access-control-allow-origin'], origin)
+          done()
+        })
+        .catch(done)
     })
 
-    it('should allow overriding the HTTP origin only if match allowedOrigins with multiple allowed domains', async () => {
+    it('should allow overriding the HTTP origin only if match allowedOrigins with multiple allowed domains', (done) => {
       const origin = 'vimeo.com'
       server.options.allowedOrigins = ['google.com', 'vimeo.com']
-      const req = httpMocks.createRequest({
-        headers: {origin},
-        method: 'OPTIONS',
-        url: '/',
-      })
-      // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
-      await server.handle(req, res)
-      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
-      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'vimeo.com')
+      request(listener)
+        .options('/')
+        .set('Origin', origin)
+        .expect(204)
+        .then((res) => {
+          assert.equal(res.headers['access-control-allow-origin'], origin)
+          done()
+        })
+        .catch(done)
     })
 
-    it(`should now allow overriding the HTTP origin if doesn't match allowedOrigins`, async () => {
+    it('should not allow overriding the HTTP origin if does not match allowedOrigins', (done) => {
       const origin = 'vimeo.com'
       server.options.allowedOrigins = ['google.com']
-      const req = httpMocks.createRequest({
-        headers: {origin},
-        method: 'OPTIONS',
-        url: '/',
-      })
-      // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
-      await server.handle(req, res)
-      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
-      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'google.com')
+      request(listener)
+        .options('/')
+        .set('Origin', origin)
+        .expect(204)
+        .then((res) => {
+          assert.equal(res.headers['access-control-allow-origin'], 'google.com')
+          done()
+        })
+        .catch(done)
     })
 
-    it('should return Access-Control-Allow-Origin if no origin header', async () => {
+    it('should return Access-Control-Allow-Origin if no origin header', (done) => {
       server.options.allowedOrigins = ['google.com']
-      const req = httpMocks.createRequest({
-        method: 'OPTIONS',
-        url: '/',
-      })
-      // @ts-expect-error todo
-      const res = new http.ServerResponse({method: 'OPTIONS'})
-      await server.handle(req, res)
-      assert.equal(res.hasHeader('Access-Control-Allow-Origin'), true)
-      assert.equal(res.getHeader('Access-Control-Allow-Origin'), 'google.com')
+      request(listener)
+        .options('/')
+        .expect(204)
+        .then((res) => {
+          assert.equal(res.headers['access-control-allow-origin'], 'google.com')
+          done()
+        })
+        .catch(done)
     })
 
     it('should not invoke handlers if onIncomingRequest throws', (done) => {
@@ -425,6 +421,38 @@ describe('Server', () => {
             done(err)
           }
         })
+    })
+
+    it('should preserve custom request', (done) => {
+      const userData = {username: 'admin'}
+      const server = new Server({
+        path: '/test/output',
+        datastore: new FileStore({directory}),
+        async onIncomingRequest(req) {
+          // @ts-expect-error fine
+          if (req?.node?.req?.user?.username === 'admin') {
+            done()
+          } else {
+            done(new Error('user data should be preserved in onIncomingRequest'))
+          }
+        },
+      })
+
+      // Simulate Express middleware by adding user property to request
+      const req = httpMocks.createRequest({
+        method: 'POST',
+        url: server.options.path,
+        headers: {
+          'tus-resumable': TUS_RESUMABLE,
+          'upload-length': '12345678',
+        },
+      })
+
+      // Add custom property like Express middleware would
+      req.user = userData
+
+      const res = httpMocks.createResponse({req})
+      server.handle(req, res)
     })
 
     it('should fire when a file is deleted', (done) => {

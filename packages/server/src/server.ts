@@ -1,11 +1,12 @@
 import http from 'node:http'
 import {EventEmitter} from 'node:events'
 
+import type {ServerRequest} from 'srvx/types'
+import {toNodeHandler} from 'srvx/node'
 import debug from 'debug'
 import {EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
 import type {DataStore, Upload, CancellationContext} from '@tus/utils'
 
-import {BaseHandler} from './handlers/BaseHandler.js'
 import {GetHandler} from './handlers/GetHandler.js'
 import {HeadHandler} from './handlers/HeadHandler.js'
 import {OptionsHandler} from './handlers/OptionsHandler.js'
@@ -15,7 +16,6 @@ import {DeleteHandler} from './handlers/DeleteHandler.js'
 import {validateHeader} from './validators/HeaderValidator.js'
 import type {ServerOptions, RouteHandler, WithOptional} from './types.js'
 import {MemoryLocker} from './lockers/index.js'
-import {getRequest, setResponse} from './web.js'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -27,10 +27,10 @@ type Handlers = {
 }
 
 interface TusEvents {
-  [EVENTS.POST_CREATE]: (req: Request, upload: Upload, url: string) => void
-  [EVENTS.POST_RECEIVE]: (req: Request, upload: Upload) => void
-  [EVENTS.POST_FINISH]: (req: Request, res: Response, upload: Upload) => void
-  [EVENTS.POST_TERMINATE]: (req: Request, res: Response, id: string) => void
+  [EVENTS.POST_CREATE]: (req: ServerRequest, upload: Upload, url: string) => void
+  [EVENTS.POST_RECEIVE]: (req: ServerRequest, upload: Upload) => void
+  [EVENTS.POST_FINISH]: (req: ServerRequest, res: Response, upload: Upload) => void
+  [EVENTS.POST_TERMINATE]: (req: ServerRequest, res: Response, id: string) => void
 }
 
 type on = EventEmitter['on']
@@ -119,19 +119,11 @@ export class Server extends EventEmitter {
   }
 
   get(path: string, handler: RouteHandler) {
-    this.handlers.GET.registerPath(this.options.path + path, handler)
+    this.handlers.GET.registerPath(path, handler)
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse) {
-    const {proto, host} = BaseHandler.extractHostAndProto(
-      // @ts-expect-error it's fine
-      new Headers(req.headers),
-      this.options.respectForwardedHeaders
-    )
-    const base = `${proto}://${host}${this.options.path}`
-    const webReq = await getRequest({request: req, base})
-    const webRes = await this.handler(webReq)
-    return setResponse(res, webRes)
+    return toNodeHandler(this.handler.bind(this))(req, res)
   }
 
   async handleWeb(req: Request) {
@@ -141,6 +133,19 @@ export class Server extends EventEmitter {
   private async handler(req: Request) {
     const context = this.createContext()
     const headers = new Headers()
+
+    // @ts-expect-error temporary until https://github.com/unjs/srvx/issues/44 is fixed
+    req.headers.get = (key: string) => {
+      for (const [k, v] of req.headers.entries()) {
+        if (k === key) {
+          if (v === '') {
+            return null
+          }
+          return v
+        }
+      }
+      return null
+    }
 
     const onError = async (error: {
       status_code?: number
@@ -164,7 +169,7 @@ export class Server extends EventEmitter {
     if (req.method === 'GET') {
       const handler = this.handlers.GET
       const res = await handler.send(req, context, headers).catch(onError)
-      context.abort
+      context.abort()
       return res
     }
 

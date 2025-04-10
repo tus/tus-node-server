@@ -202,6 +202,9 @@ observability.
 The main server request handler invoked on every request.
 Use this to integrate into your existing Node.js server.
 
+This handler converts `http.IncomingMessage`/`http.ServerResponse` to `Request`/`Response`.
+You can still access the Node.js versions via `req.node.req`/`req.node.res` in the hooks.
+
 #### `server.handleWeb(req: Request)`
 
 The main server request handler invoked on every request.
