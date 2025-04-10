@@ -113,7 +113,7 @@ export class PatchHandler extends BaseHandler {
         status: 204,
         headers: {
           ...Object.fromEntries(headers.entries()),
-          'Upload-Offset': newOffset,
+          'Upload-Offset': newOffset.toString(),
         } as Record<string, string | number>,
         body: '',
       }
