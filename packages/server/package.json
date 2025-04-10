@@ -38,7 +38,7 @@
     "mocha": "^11.0.1",
     "node-mocks-http": "^1.16.1",
     "should": "^13.2.3",
-    "sinon": "^18.0.0",
+    "sinon": "^20.0.0",
     "supertest": "^6.3.4"
   },
   "optionalDependencies": {
