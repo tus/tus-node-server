@@ -134,19 +134,6 @@ export class Server extends EventEmitter {
     const context = this.createContext()
     const headers = new Headers()
 
-    // @ts-expect-error temporary until https://github.com/unjs/srvx/issues/44 is fixed
-    req.headers.get = (key: string) => {
-      for (const [k, v] of req.headers.entries()) {
-        if (k === key) {
-          if (v === '') {
-            return null
-          }
-          return v
-        }
-      }
-      return null
-    }
-
     const onError = async (error: {
       status_code?: number
       body?: string
