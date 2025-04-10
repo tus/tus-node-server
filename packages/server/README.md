@@ -159,7 +159,7 @@ finished uploads. (`boolean`)
 #### `options.onUploadCreate`
 
 `onUploadCreate` will be invoked before a new upload is created.
-(`(req, res, upload) => Promise<{ metadata?: Record<string, string>}>`).
+(`(req, upload) => Promise<{ metadata?: Record<string, string>}>`).
 
 - If the function returns the (modified) response the upload will be created.
 - You can optionally return `metadata` which will merge `upload.metadata`.

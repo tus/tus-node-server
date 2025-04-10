@@ -97,7 +97,6 @@ export type ServerOptions = {
    * (or their fallbacks) will be sent to the client. This can be used to implement validation of upload
    * metadata or add headers.
    * @param req - The incoming HTTP request.
-   * @param res - The HTTP response.
    * @param upload - The Upload object.
    */
   onUploadCreate?: (
