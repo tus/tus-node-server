@@ -1,5 +1,5 @@
 ---
-"@tus/server": minor
+"@tus/server": patch
 ---
 
-fix bug: upload-offset header should be string
+Correctly return upload-offset header as a string instead of number
