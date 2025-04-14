@@ -14,7 +14,7 @@
     "@tus/file-store": "^2.0.0",
     "@tus/gcs-store": "^2.0.0",
     "@tus/s3-store": "^2.0.0",
-    "@tus/server": "^2.0.0"
+    "@tus/server": "^2.1.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
