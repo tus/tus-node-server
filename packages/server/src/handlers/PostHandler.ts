@@ -129,12 +129,7 @@ export class PostHandler extends BaseHandler {
       // The request MIGHT include a Content-Type header when using creation-with-upload extension
       if (validateHeader('content-type', req.headers.get('content-type'))) {
         const bodyMaxSize = await this.calculateMaxBodySize(req, upload, maxFileSize)
-        const newOffset = await this.writeToStore(
-          req.body ? Readable.fromWeb(req.body) : Readable.from([]),
-          upload,
-          bodyMaxSize,
-          context
-        )
+        const newOffset = await this.writeToStore(req.body, upload, bodyMaxSize, context)
 
         responseData.headers['Upload-Offset'] = newOffset.toString()
         isFinal = newOffset === Number.parseInt(upload_length as string, 10)

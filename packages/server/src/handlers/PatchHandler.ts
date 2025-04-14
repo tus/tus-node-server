@@ -96,12 +96,7 @@ export class PatchHandler extends BaseHandler {
         }
 
         const maxBodySize = await this.calculateMaxBodySize(req, upload, maxFileSize)
-        newOffset = await this.writeToStore(
-          req.body ? Readable.fromWeb(req.body) : Readable.from([]),
-          upload,
-          maxBodySize,
-          context
-        )
+        newOffset = await this.writeToStore(req.body, upload, maxBodySize, context)
       } finally {
         await lock.unlock()
       }

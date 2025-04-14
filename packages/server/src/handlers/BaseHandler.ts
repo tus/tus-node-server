@@ -5,7 +5,7 @@ import type {DataStore, CancellationContext} from '@tus/utils'
 import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'
 import stream from 'node:stream/promises'
-import {PassThrough, type Readable} from 'node:stream'
+import {PassThrough, Readable} from 'node:stream'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -127,7 +127,7 @@ export class BaseHandler extends EventEmitter {
   }
 
   protected writeToStore(
-    data: Readable,
+    webStream: ReadableStream | null,
     upload: Upload,
     maxFileSize: number,
     context: CancellationContext
@@ -143,10 +143,17 @@ export class BaseHandler extends EventEmitter {
       // Create a PassThrough stream as a proxy to manage the request stream.
       // This allows for aborting the write process without affecting the incoming request stream.
       const proxy = new PassThrough()
+      const nodeStream = webStream ? Readable.fromWeb(webStream) : Readable.from([])
+
+      // Ignore errors on the data stream to prevent crashes from client disconnections
+      // We handle errors on the proxy stream instead.
+      nodeStream.on('error', (err) => {
+        /* do nothing */
+      })
 
       // gracefully terminate the proxy stream when the request is aborted
       const onAbort = () => {
-        data.unpipe(proxy)
+        nodeStream.unpipe(proxy)
 
         if (!proxy.closed) {
           proxy.end()
@@ -155,13 +162,13 @@ export class BaseHandler extends EventEmitter {
       context.signal.addEventListener('abort', onAbort, {once: true})
 
       proxy.on('error', (err) => {
-        data.unpipe(proxy)
+        nodeStream.unpipe(proxy)
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
       const postReceive = throttle(
         (offset: number) => {
-          this.emit(EVENTS.POST_RECEIVE, data, {...upload, offset})
+          this.emit(EVENTS.POST_RECEIVE, nodeStream, {...upload, offset})
         },
         this.options.postReceiveInterval,
         {leading: false}
@@ -177,9 +184,13 @@ export class BaseHandler extends EventEmitter {
       // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
       // which would result in a socket hangup error for the client.
       stream
-        .pipeline(data.pipe(proxy), new StreamLimiter(maxFileSize), async (stream) => {
-          return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
-        })
+        .pipeline(
+          nodeStream.pipe(proxy),
+          new StreamLimiter(maxFileSize),
+          async (stream) => {
+            return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
+          }
+        )
         .then(resolve)
         .catch(reject)
         .finally(() => {
