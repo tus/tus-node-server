@@ -4,7 +4,7 @@ import {EventEmitter} from 'node:events'
 import type {ServerRequest} from 'srvx/types'
 import {toNodeHandler} from 'srvx/node'
 import debug from 'debug'
-import {EVENTS, ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
+import {EVENTS, ERRORS, REQUEST_METHODS, TUS_RESUMABLE, HEADERS} from '@tus/utils'
 import type {DataStore, Upload, CancellationContext} from '@tus/utils'
 
 import {GetHandler} from './handlers/GetHandler.js'
@@ -200,7 +200,10 @@ export class Server extends EventEmitter {
       'Access-Control-Allow-Origin',
       this.getCorsOrigin(req.headers.get('origin'))
     )
-    headers.set('Access-Control-Expose-Headers', EXPOSED_HEADERS)
+    headers.set(
+      'Access-Control-Expose-Headers',
+      [...HEADERS, this.options.exposedHeaders ?? []].join(', ')
+    )
 
     if (this.options.allowedCredentials === true) {
       headers.set('Access-Control-Allow-Credentials', 'true')

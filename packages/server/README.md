@@ -98,6 +98,10 @@ Allow `Forwarded`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers to overri
 
 Additional headers sent in `Access-Control-Allow-Headers` (`string[]`).
 
+#### `options.exposedHeaders`
+
+Additional headers sent in `Access-Control-Expose-Headers` (`string[]`).
+
 #### `options.generateUrl`
 
 Control how the upload URL is generated (`(req, { proto, host, path, id }) => string)`)
