@@ -32,6 +32,11 @@ export type ServerOptions = {
   allowedHeaders?: string[]
 
   /**
+   * Additional headers sent in `Access-Control-Expose-Headers`.
+   */
+  exposedHeaders?: string[]
+
+  /**
    * Set `Access-Control-Allow-Credentials` to true or false (the default)
    */
   allowedCredentials?: boolean

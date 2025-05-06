@@ -163,6 +163,19 @@ describe('Server', () => {
         })
     })
 
+    it('OPTIONS should return returns custom headers in Access-Control-Expose-Headers', (done) => {
+      server.options.exposedHeaders = ['Custom-Header']
+
+      request(listener)
+        .options('/')
+        .expect(204, '', (err, res) => {
+          res.headers.should.have.property('access-control-expose-headers')
+          res.headers['access-control-expose-headers'].should.containEql('Custom-Header')
+          server.options.exposedHeaders = []
+          done(err)
+        })
+    })
+
     it('OPTIONS should return returns custom headers in Access-Control-Allow-Credentials', (done) => {
       server.options.allowedCredentials = true
 
