@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.2.0
+
+### Minor Changes
+
+- 1768b06: Introduce `exposedHeaders` option for custom Access-Control-Expose-Headers
+
 ## 2.1.0
 
 ### Minor Changes
