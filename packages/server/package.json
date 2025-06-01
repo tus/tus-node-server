@@ -39,7 +39,7 @@
     "node-mocks-http": "^1.16.1",
     "should": "^13.2.3",
     "sinon": "^20.0.0",
-    "supertest": "^6.3.4"
+    "supertest": "^7.1.1"
   },
   "optionalDependencies": {
     "@redis/client": "^1.6.0",
