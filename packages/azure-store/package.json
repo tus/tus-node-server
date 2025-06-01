@@ -23,7 +23,7 @@
   "dependencies": {
     "@tus/utils": "^0.6.0",
     "@azure/storage-blob": "^12.24.0",
-    "debug": "^4.3.4"
+    "debug": "^4.4.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

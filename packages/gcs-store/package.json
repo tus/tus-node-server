@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@tus/utils": "^0.6.0",
-    "debug": "^4.3.4"
+    "debug": "^4.4.1"
   },
   "devDependencies": {
     "@google-cloud/storage": "^7.15.2",
