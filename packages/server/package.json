@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@tus/server",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Tus resumable upload protocol in Node.js",
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
