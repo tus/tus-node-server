@@ -228,7 +228,8 @@ export class Server extends EventEmitter {
       if (context.signal.aborted) {
         // If the request was aborted, we should not send any response body.
         // The server should just close the connection.
-        return this.handleAbortedRequest(context, resp)
+        resp.headers.set('Connection', 'close')
+        return resp
       }
 
       return resp
@@ -272,7 +273,7 @@ export class Server extends EventEmitter {
     return new Response(body, {status, headers})
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // biome-ignore lint/suspicious/noExplicitAny: it's fine
   listen(...args: any[]): http.Server {
     return http.createServer(this.handle.bind(this)).listen(...args)
   }
@@ -283,18 +284,6 @@ export class Server extends EventEmitter {
     }
 
     return this.datastore.deleteExpired()
-  }
-
-  protected handleAbortedRequest(context: CancellationContext, resp: Response) {
-    const isAborted = context.signal.aborted
-    if (isAborted) {
-      // If the request was aborted, we should not send any response body.
-      // The server should just close the connection.
-      resp.headers.set('Connection', 'close')
-      return resp
-    }
-
-    return resp
   }
 
   protected createContext() {
