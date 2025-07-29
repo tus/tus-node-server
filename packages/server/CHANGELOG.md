@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.2.1
+
+### Patch Changes
+
+- 7b719ea: Handle request cancellation gracefully on Node.js runtime
+
 ## 2.2.0
 
 ### Minor Changes
