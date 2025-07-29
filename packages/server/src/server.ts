@@ -134,6 +134,17 @@ export class Server extends EventEmitter {
     const context = this.createContext()
     const headers = new Headers()
 
+    // Special case on the Node.js runtime,
+    // We handle gracefully request errors such as disconnects or timeouts.
+    // This is important to avoid memory leaks and ensure that the server can
+    // handle subsequent requests without issues.
+    if ('node' in req && req.node) {
+      const nodeReq = (req.node as { req: http.IncomingMessage }).req
+      nodeReq.once('error', () => {
+        context.abort()
+      })
+    }
+
     const onError = async (error: {
       status_code?: number
       body?: string
@@ -212,7 +223,15 @@ export class Server extends EventEmitter {
     // Invoke the handler for the method requested
     const handler = this.handlers[req.method as keyof Handlers]
     if (handler) {
-      return handler.send(req, context, headers).catch(onError)
+      const resp = await handler.send(req, context, headers).catch(onError)
+
+      if (context.signal.aborted) {
+        // If the request was aborted, we should not send any response body.
+        // The server should just close the connection.
+        return this.handleAbortedRequest(context, resp)
+      }
+
+      return resp
     }
 
     return this.write(context, headers, 404, 'Not found\n')
@@ -264,6 +283,18 @@ export class Server extends EventEmitter {
     }
 
     return this.datastore.deleteExpired()
+  }
+
+  protected handleAbortedRequest(context: CancellationContext, resp: Response) {
+    const isAborted = context.signal.aborted
+    if (isAborted) {
+      // If the request was aborted, we should not send any response body.
+      // The server should just close the connection.
+      resp.headers.set('Connection', 'close')
+      return resp
+    }
+
+    return resp
   }
 
   protected createContext() {
