@@ -134,6 +134,17 @@ export class Server extends EventEmitter {
     const context = this.createContext()
     const headers = new Headers()
 
+    // Special case on the Node.js runtime,
+    // We handle gracefully request errors such as disconnects or timeouts.
+    // This is important to avoid memory leaks and ensure that the server can
+    // handle subsequent requests without issues.
+    if ('node' in req && req.node) {
+      const nodeReq = (req.node as {req: http.IncomingMessage}).req
+      nodeReq.once('error', () => {
+        context.abort()
+      })
+    }
+
     const onError = async (error: {
       status_code?: number
       body?: string
@@ -212,7 +223,16 @@ export class Server extends EventEmitter {
     // Invoke the handler for the method requested
     const handler = this.handlers[req.method as keyof Handlers]
     if (handler) {
-      return handler.send(req, context, headers).catch(onError)
+      const resp = await handler.send(req, context, headers).catch(onError)
+
+      if (context.signal.aborted) {
+        // If the request was aborted, we should not send any response body.
+        // The server should just close the connection.
+        resp.headers.set('Connection', 'close')
+        return resp
+      }
+
+      return resp
     }
 
     return this.write(context, headers, 404, 'Not found\n')
@@ -253,7 +273,7 @@ export class Server extends EventEmitter {
     return new Response(body, {status, headers})
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // biome-ignore lint/suspicious/noExplicitAny: it's fine
   listen(...args: any[]): http.Server {
     return http.createServer(this.handle.bind(this)).listen(...args)
   }
