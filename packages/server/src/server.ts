@@ -139,7 +139,7 @@ export class Server extends EventEmitter {
     // This is important to avoid memory leaks and ensure that the server can
     // handle subsequent requests without issues.
     if ('node' in req && req.node) {
-      const nodeReq = (req.node as { req: http.IncomingMessage }).req
+      const nodeReq = (req.node as {req: http.IncomingMessage}).req
       nodeReq.once('error', () => {
         context.abort()
       })
