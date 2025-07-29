@@ -1,7 +1,7 @@
 import http from 'node:http'
 import {EventEmitter} from 'node:events'
 
-import type {ServerRequest} from 'srvx/types'
+import type {ServerRequest} from 'srvx'
 import {toNodeHandler} from 'srvx/node'
 import debug from 'debug'
 import {EVENTS, ERRORS, REQUEST_METHODS, TUS_RESUMABLE, HEADERS} from '@tus/utils'

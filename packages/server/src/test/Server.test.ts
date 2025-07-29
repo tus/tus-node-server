@@ -442,7 +442,6 @@ describe('Server', () => {
         path: '/test/output',
         datastore: new FileStore({directory}),
         async onIncomingRequest(req) {
-          // @ts-expect-error fine
           if (req?.node?.req?.user?.username === 'admin') {
             done()
           } else {
