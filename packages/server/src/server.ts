@@ -139,6 +139,7 @@ export class Server extends EventEmitter {
     // This is important to avoid memory leaks and ensure that the server can
     // handle subsequent requests without issues.
     if ((req as ServerRequest)?.runtime?.node) {
+      // biome-ignore lint/style/noNonNullAssertion: it's fine
       const nodeReq = (req as ServerRequest).runtime?.node?.req!
       nodeReq.once('error', () => {
         context.abort()
