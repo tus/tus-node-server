@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.3.0
+
+### Minor Changes
+
+- 6e5e57e: Update srvx
+
 ## 2.2.1
 
 ### Patch Changes
