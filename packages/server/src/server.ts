@@ -130,7 +130,7 @@ export class Server extends EventEmitter {
     return this.handler(req)
   }
 
-  private async handler(req: Request) {
+  private async handler(req: Request | ServerRequest) {
     const context = this.createContext()
     const headers = new Headers()
 
@@ -138,8 +138,8 @@ export class Server extends EventEmitter {
     // We handle gracefully request errors such as disconnects or timeouts.
     // This is important to avoid memory leaks and ensure that the server can
     // handle subsequent requests without issues.
-    if ('node' in req && req.node) {
-      const nodeReq = (req.node as {req: http.IncomingMessage}).req
+    if ((req as ServerRequest)?.runtime?.node) {
+      const nodeReq = (req as ServerRequest).runtime?.node?.req!
       nodeReq.once('error', () => {
         context.abort()
       })
