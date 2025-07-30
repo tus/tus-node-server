@@ -140,8 +140,10 @@ export class Server extends EventEmitter {
     // handle subsequent requests without issues.
     if ((req as ServerRequest)?.runtime?.node) {
       // biome-ignore lint/style/noNonNullAssertion: it's fine
-      const nodeReq = (req as ServerRequest).runtime?.node?.req!
-      nodeReq.once('error', () => {
+      const node = (req as ServerRequest).runtime?.node!
+      // @ts-expect-error backwards compatibility. srvx moved req.node to req.runtime.node.
+      req.node = node
+      node.req.once('error', () => {
         context.abort()
       })
     }

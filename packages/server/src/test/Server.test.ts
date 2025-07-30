@@ -443,7 +443,7 @@ describe('Server', () => {
         datastore: new FileStore({directory}),
         async onIncomingRequest(req) {
           // @ts-expect-error fine
-          if (req?.runtime?.node?.req?.user?.username === 'admin') {
+          if (req?.node?.req?.user?.username === 'admin') {
             done()
           } else {
             done(new Error('user data should be preserved in onIncomingRequest'))
