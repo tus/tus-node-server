@@ -1,7 +1,7 @@
 import http from 'node:http'
 import {EventEmitter} from 'node:events'
 
-import type {ServerRequest} from 'srvx/types'
+import type {ServerRequest} from 'srvx'
 import {toNodeHandler} from 'srvx/node'
 import debug from 'debug'
 import {EVENTS, ERRORS, REQUEST_METHODS, TUS_RESUMABLE, HEADERS} from '@tus/utils'
@@ -130,7 +130,7 @@ export class Server extends EventEmitter {
     return this.handler(req)
   }
 
-  private async handler(req: Request) {
+  private async handler(req: Request | ServerRequest) {
     const context = this.createContext()
     const headers = new Headers()
 
@@ -138,9 +138,12 @@ export class Server extends EventEmitter {
     // We handle gracefully request errors such as disconnects or timeouts.
     // This is important to avoid memory leaks and ensure that the server can
     // handle subsequent requests without issues.
-    if ('node' in req && req.node) {
-      const nodeReq = (req.node as {req: http.IncomingMessage}).req
-      nodeReq.once('error', () => {
+    if ((req as ServerRequest)?.runtime?.node) {
+      // biome-ignore lint/style/noNonNullAssertion: it's fine
+      const node = (req as ServerRequest).runtime?.node!
+      // @ts-expect-error backwards compatibility. srvx moved req.node to req.runtime.node.
+      req.node = node
+      node.req.once('error', () => {
         context.abort()
       })
     }
