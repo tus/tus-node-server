@@ -13,7 +13,7 @@
     "format:check": "biome format --error-on-warnings .",
     "pretest": "tsc --build",
     "test": "npm test -w ./packages",
-    "version": "changeset version",
+    "version": "changeset version && npm install",
     "release": "gh workflow run release",
     "release:local": "npm run build && changeset publish"
   },
