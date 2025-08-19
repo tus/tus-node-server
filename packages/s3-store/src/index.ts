@@ -56,8 +56,7 @@ export type MetadataValue = {
 }
 
 function calcOffsetFromParts(parts?: Array<AWS.Part>) {
-  // @ts-expect-error not undefined
-  return parts && parts.length > 0 ? parts.reduce((a, b) => a + b.Size, 0) : 0
+  return parts && parts.length > 0 ? parts.reduce((a, b) => a + (b.Size ?? 0), 0) : 0
 }
 
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
