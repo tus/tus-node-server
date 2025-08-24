@@ -21,7 +21,7 @@
     "test": "mocha './dist/test/*.js' --exit --timeout 40000"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.758.0",
+    "@aws-sdk/client-s3": "^3.873.0",
     "@shopify/semaphore": "^3.1.0",
     "@tus/utils": "^0.6.0",
     "debug": "^4.3.4",
