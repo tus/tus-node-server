@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 2.0.1
+
+### Patch Changes
+
+- 011ac76: Fix offset being returned as `NaN` when there are no S3 parts found
+
 ## 2.0.0
 
 ### Major Changes
