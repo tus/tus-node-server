@@ -42,7 +42,7 @@
     "supertest": "^6.3.4"
   },
   "optionalDependencies": {
-    "@redis/client": "^1.6.0",
+    "@redis/client": "^5.8.2",
     "ioredis": "^5.4.1"
   },
   "engines": {
