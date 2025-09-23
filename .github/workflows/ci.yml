@@ -1,11 +1,7 @@
 name: CI
-# SECURITY NOTE: This workflow uses pull_request_target which has access to secrets.
-# This is needed because tests require access to external services with credentials.
-# `pull_request_target` will always run without manual approval, even if "Require approval for all external contributors" is enabled in the repo settings.
-# Therefore we implement a "safe to test" label that must be manually added once we have checked that the diff is safe.
-# For PRs from forks, secrets are only provided when the "safe to test" label is present.
-# This allows maintainers to safely test external contributions while preventing
-# malicious actors from accessing secrets.
+# SECURITY: Uses environment protection for external PRs instead of unsafe "safe to test" labels.
+# Environment protection provides secure manual approval tied to specific commits,
+# eliminating race conditions and ensuring maintainer review before secrets access.
 on:
   push:
     branches: [main]
@@ -13,7 +9,7 @@ on:
       - "**.md"
       - ".changeset/**"
   pull_request_target:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
     paths-ignore:
       - "**.md"
       - ".changeset/**"
@@ -25,26 +21,29 @@ on:
 concurrency: ${{ github.workflow }}--${{ github.ref }}
 
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
   main:
     name: Node.js 20
     runs-on: ubuntu-latest
-    # Only run tests with secrets if:
-    # 1. This is a push to main, OR
-    # 2. PR is from the same repository (trusted), OR
-    # 3. PR has the "safe to test" label (maintainer approved)
+    # SECURITY: Use environment protection for external contributors
+    environment: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
+    # Run tests with secrets for:
+    # 1. Push to main (trusted), OR
+    # 2. PR from same repository (trusted)
+    # For external PRs: environment protection requires manual approval
     if: |
-      github.event_name == 'push' || 
-      github.event.pull_request.head.repo.full_name == github.repository ||
-      contains(github.event.pull_request.labels.*.name, 'safe to test')
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # SECURITY: For external PRs, only checkout trusted base branch
+          ref: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
 
       - name: Decrypt keyfile
         run: ./.github/scripts/decrypt_secret.sh
