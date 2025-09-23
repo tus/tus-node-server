@@ -15,18 +15,49 @@ on:
       - ".changeset/**"
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - .github/workflows/ci.yml
+    paths-ignore:
+      - "**.md"
+      - ".changeset/**"
 
-concurrency: ${{ github.workflow }}--${{ github.ref }}
+concurrency:
+  group: ${{ github.workflow }}--${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
 
 jobs:
-  main:
-    name: Node.js 20
+  # Basic validation job - runs for all PRs without secrets
+  basic-validation:
+    name: Build and lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies
+        run: npm ci --no-fund --no-audit
+
+      - name: Build
+        run: npm run build
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Run linters
+        run: npm run lint
+
+  # Integration tests with secrets - requires approval for external PRs
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
     # SECURITY: Use environment protection for external contributors
     environment: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
@@ -42,8 +73,8 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
         with:
-          # SECURITY: For external PRs, only checkout trusted base branch
-          ref: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
+          # Environment protection provides security - we can safely checkout PR code
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Decrypt keyfile
         run: ./.github/scripts/decrypt_secret.sh
@@ -51,21 +82,15 @@ jobs:
           KEYFILE_PASSPHRASE: ${{secrets.KEYFILE_PASSPHRASE}}
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.19
+          node-version: 20.x
 
       - name: Install dependencies
         run: npm ci --no-fund --no-audit
 
       - name: Build
         run: npm run build
-
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: Run linters
-        run: npm run lint
 
       - name: Run tests
         run: npm run test
