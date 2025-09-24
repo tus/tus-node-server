@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -74,7 +74,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Environment protection provides security - we can safely checkout PR code
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
