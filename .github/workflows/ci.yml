@@ -13,11 +13,6 @@ on:
     paths-ignore:
       - "**.md"
       - ".changeset/**"
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths-ignore:
-      - "**.md"
-      - ".changeset/**"
 
 concurrency:
   group: ${{ github.workflow }}--${{ github.event_name == 'pull_request_target' && format('pr#{0}', github.event.pull_request.number) || github.ref }}
@@ -28,7 +23,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  # Basic validation job - runs for all triggers without secrets
+  # Basic validation job - runs for all PRs and pushes without secrets
   basic-validation:
     name: Build and lint
     runs-on: ubuntu-latest
@@ -63,14 +58,11 @@ jobs:
     # SECURITY: Use environment protection for external contributors only
     # Push events and internal PRs run without environment protection
     # External PRs require manual approval via 'external-testing' environment
-    environment: ${{ github.event_name != 'push' && github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
-    # Run tests with secrets for:
-    # 1. Push to main (trusted), OR
-    # 2. PR from same repository (trusted), OR
-    # 3. External PR (requires manual approval via environment protection)
-    if: |
-      github.event_name == 'push' ||
-      github.event_name == 'pull_request_target'
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
+    # Run tests with secrets for all triggers:
+    # 1. Push to main (trusted)
+    # 2. Internal PRs (trusted)
+    # 3. External PRs (requires manual approval via environment protection)
 
     steps:
       - name: Checkout sources
