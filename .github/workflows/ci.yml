@@ -28,11 +28,10 @@ permissions:
   pull-requests: read
 
 jobs:
-  # Basic validation job - runs for PRs and pushes without secrets
+  # Basic validation job - runs for all triggers without secrets
   basic-validation:
     name: Build and lint
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
 
     steps:
       - name: Checkout sources
