@@ -61,15 +61,17 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
-    # SECURITY: Use environment protection for external contributors
-    environment: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
+    # SECURITY: Use environment protection for external contributors only
+    # Push events and internal PRs run without environment protection
+    # External PRs require manual approval via 'external-testing' environment
+    environment: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && '' || 'external-testing' }}
     # Run tests with secrets for:
     # 1. Push to main (trusted), OR
-    # 2. PR from same repository (trusted)
-    # For external PRs: environment protection requires manual approval
+    # 2. PR from same repository (trusted), OR
+    # 3. External PR (requires manual approval via environment protection)
     if: |
       github.event_name == 'push' ||
-      (github.event.pull_request.head.repo.full_name == github.repository)
+      github.event_name == 'pull_request_target'
 
     steps:
       - name: Checkout sources
