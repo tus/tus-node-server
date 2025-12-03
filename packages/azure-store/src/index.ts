@@ -117,7 +117,7 @@ export class AzureStore extends DataStore {
     const upload = JSON.parse(propertyData.metadata.upload) as Upload
     // Metadata is base64 encoded to avoid errors for non-ASCII characters
     // so we need to decode it separately
-    upload.metadata = Metadata.parse(JSON.stringify(upload.metadata ?? {}))
+    upload.metadata = upload.metadata ? Metadata.parse(upload.metadata) : {}
 
     await this.cache.set(appendBlobClient.url, upload)
 
