@@ -35,7 +35,7 @@
     "@types/set-cookie-parser": "^2.4.10",
     "@types/sinon": "^17.0.3",
     "@types/supertest": "^2.0.16",
-    "mocha": "^11.0.1",
+    "mocha": "^11.7.3",
     "node-mocks-http": "^1.16.1",
     "should": "^13.2.3",
     "sinon": "^20.0.0",
