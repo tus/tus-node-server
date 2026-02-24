@@ -9,30 +9,51 @@ const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 'azure-store')
 
 describe('AzureStore', () => {
-  describe('with Account key', () => {
-    before(function () {
-      this.testFileSize = 960_244
-      this.testFileName = 'test.mp4'
-      this.storePath = storePath
-      this.testFilePath = path.resolve(fixturesPath, this.testFileName)
-    })
+  before(function () {
+    this.testFileSize = 960_244
+    this.testFileName = 'test.mp4'
+    this.storePath = storePath
+    this.testFilePath = path.resolve(fixturesPath, this.testFileName)
+  })
 
-    beforeEach(function () {
+  beforeEach(function () {
+    const hasCredentials =
+      process.env.AZURE_ACCOUNT_ID &&
+      process.env.AZURE_ACCOUNT_KEY &&
+      process.env.AZURE_CONTAINER_NAME
+
+    if (hasCredentials) {
       this.datastore = new AzureStore({
         account: process.env.AZURE_ACCOUNT_ID as string,
         accountKey: process.env.AZURE_ACCOUNT_KEY as string,
         containerName: process.env.AZURE_CONTAINER_NAME as string,
       })
-    })
+    } else {
+      const mockCredential: TokenCredential = {
+        getToken: async () => ({
+          token: 'mock-token',
+          expiresOnTimestamp: Date.now() + 3600_000,
+        }),
+      }
+      this.datastore = new AzureStore({
+        account: 'testaccount',
+        containerName: 'testcontainer',
+        credential: mockCredential,
+      })
+    }
+  })
 
-    shared.shouldHaveStoreMethods()
+  shared.shouldHaveStoreMethods()
+  if (
+    process.env.AZURE_ACCOUNT_ID &&
+    process.env.AZURE_ACCOUNT_KEY &&
+    process.env.AZURE_CONTAINER_NAME
+  ) {
     shared.shouldCreateUploads()
-    // shared.shouldRemoveUploads() // Not implemented yet
-    // shared.shouldExpireUploads() // Not implemented yet
     shared.shouldWriteUploads()
     shared.shouldHandleOffset()
-    shared.shouldDeclareUploadLength() // Creation-defer-length extension
-  })
+    shared.shouldDeclareUploadLength()
+  }
 
   describe('constructor', () => {
     it('should accept a TokenCredential instead of accountKey', () => {
@@ -48,17 +69,6 @@ describe('AzureStore', () => {
         credential: mockCredential,
       })
       assert.ok(store)
-    })
-
-    it('should throw when neither accountKey nor credential is provided', () => {
-      assert.throws(
-        () =>
-          new AzureStore({
-            account: 'testaccount',
-            containerName: 'testcontainer',
-          }),
-        /accountKey or credential/
-      )
     })
 
     it('should throw when account is missing', () => {
