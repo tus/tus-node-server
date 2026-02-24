@@ -121,7 +121,7 @@ export class AzureStore extends DataStore {
     if (typeof upload.metadata === 'string') {
       metadataStr = upload.metadata
     } else if (upload.metadata && typeof upload.metadata === 'object') {
-      metadataStr = JSON.stringify(upload.metadata??{})
+      metadataStr = JSON.stringify(upload.metadata ?? {})
     } else {
       metadataStr = '{}'
     }
