@@ -16,13 +16,21 @@ import {
   type ContainerClient,
   StorageSharedKeyCredential,
 } from '@azure/storage-blob'
+import type {TokenCredential} from '@azure/core-auth'
 
-type Options = {
-  cache?: KvStore<Upload>
-  account: string
-  accountKey: string
-  containerName: string
-}
+type Options =
+  | {
+      cache?: KvStore<Upload>
+      account: string
+      containerName: string
+      accountKey: string
+    }
+  | {
+      cache?: KvStore<Upload>
+      account: string
+      containerName: string
+      credential: TokenCredential
+    }
 
 const log = debug('tus-node-server:stores:azurestore')
 
@@ -44,23 +52,17 @@ export class AzureStore extends DataStore {
     if (!options.account) {
       throw new Error('Azure store must have a account')
     }
-    if (!options.accountKey) {
-      throw new Error('Azure store must have a account key')
-    }
     if (!options.containerName) {
       throw new Error('Azure store must have a container name')
     }
 
     const storageAccountBaseUrl = `https://${options.account}.blob.core.windows.net`
-    const sharedKeyCredential = new StorageSharedKeyCredential(
-      options.account,
-      options.accountKey
-    )
+    const credential =
+      'credential' in options
+        ? options.credential
+        : new StorageSharedKeyCredential(options.account, options.accountKey)
 
-    this.blobServiceClient = new BlobServiceClient(
-      storageAccountBaseUrl,
-      sharedKeyCredential
-    )
+    this.blobServiceClient = new BlobServiceClient(storageAccountBaseUrl, credential)
     this.containerClient = this.blobServiceClient.getContainerClient(
       options.containerName
     )

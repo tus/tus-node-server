@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@tus/utils": "^0.6.0",
+    "@azure/core-auth": "^1.9.0",
     "@azure/storage-blob": "^12.24.0",
     "debug": "^4.3.4"
   },
