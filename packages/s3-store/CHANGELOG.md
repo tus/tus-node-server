@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 2.0.2
+
+### Patch Changes
+
+- 0ad6c02: Ensure deferred promises are never uncaught
+
 ## 2.0.1
 
 ### Patch Changes
