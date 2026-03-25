@@ -421,6 +421,12 @@ export class S3Store extends DataStore {
           }
         })
 
+        // Prevent unhandled promise rejection before Promise.all is awaited
+        // we can ignore the error here as it will still be thrown by Promise.all below
+        deferred.catch(() => {
+          /* ignore */
+        })
+
         promises.push(deferred)
       })
       .on('chunkError', () => {
