@@ -326,6 +326,64 @@ describe('S3DataStore', () => {
     }
   })
 
+  it('should not have unhandled promise rejections when upload fails immediately', async () => {
+    const store = new S3Store({
+      partSize: 5 * 1024 * 1024,
+      s3ClientConfig,
+    })
+
+    const size = 10 * 1024 * 1024 // 10MB
+    const upload = new Upload({
+      id: shared.testId('immediate-failure'),
+      size,
+      offset: 0,
+    })
+
+    await store.create(upload)
+
+    // Stub uploadPart to fail, creating rejected deferred promises
+    // @ts-expect-error private method
+    const uploadPartStub = sinon.stub(store, 'uploadPart')
+    uploadPartStub.rejects(new Error('Upload part failure'))
+
+    // Create a stream that will fail partway through the SECOND chunk
+    // This ensures: 1) First chunk completes, creating a deferred promise that rejects
+    //               2) Stream fails while second chunk is being written (pendingChunkFilepath not null)
+    let bytesEmitted = 0
+    const failingStream = new Readable({
+      read() {
+        if (bytesEmitted >= 6 * 1024 * 1024) {
+          // Fail after emitting 6MB (partway through second chunk)
+          this.destroy()
+        } else {
+          const chunk = Buffer.alloc(1024 * 1024)
+          bytesEmitted += chunk.length
+          this.push(chunk)
+        }
+      },
+    })
+
+    // Track if we get an unhandledRejection event
+    let unhandledRejection = false
+    const handler = () => {
+      unhandledRejection = true
+    }
+    process.once('unhandledRejection', handler)
+
+    try {
+      await store.write(failingStream, upload.id, upload.offset)
+      assert.fail('Expected write to fail but it succeeded')
+    } catch (error) {
+      // Expected to throw
+      assert.equal(error.message, 'Upload part failure')
+    } finally {
+      uploadPartStub.restore()
+      process.removeListener('unhandledRejection', handler)
+    }
+
+    assert.equal(unhandledRejection, false)
+  })
+
   shared.shouldHaveStoreMethods()
   shared.shouldCreateUploads()
   shared.shouldRemoveUploads() // Termination extension
