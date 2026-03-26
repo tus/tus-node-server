@@ -132,7 +132,7 @@ export class BaseHandler extends EventEmitter {
     maxFileSize: number,
     context: CancellationContext
   ) {
-    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: async needed for sequential stream operations
     return new Promise<number>(async (resolve, reject) => {
       // Abort early if the operation has been cancelled.
       if (context.signal.aborted) {
@@ -147,7 +147,7 @@ export class BaseHandler extends EventEmitter {
 
       // Ignore errors on the data stream to prevent crashes from client disconnections
       // We handle errors on the proxy stream instead.
-      nodeStream.on('error', (err) => {
+      nodeStream.on('error', () => {
         /* do nothing */
       })
 

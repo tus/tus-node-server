@@ -321,7 +321,7 @@ describe('S3DataStore', () => {
     try {
       await store.write(Readable.from(Buffer.alloc(size)), upload.id, upload.offset)
       assert.fail('Expected write to fail but it succeeded')
-    } catch (error) {
+    } catch {
       assert.equal(uploadPartStub.callCount, 2, '2 parts should have been attempted')
     }
   })

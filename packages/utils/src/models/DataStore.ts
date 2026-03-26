@@ -1,5 +1,5 @@
 import EventEmitter from 'node:events'
-import stream from 'node:stream'
+import type stream from 'node:stream'
 
 import {Upload} from './Upload.js'
 
@@ -24,7 +24,7 @@ export class DataStore extends EventEmitter {
    * Called in DELETE requests. This method just deletes the file from the store.
    * http://tus.io/protocols/resumable-upload.html#termination
    */
-  async remove(id: string) {}
+  async remove(_id: string) {}
 
   /**
    * Called in PATCH requests. This method should write data
@@ -33,7 +33,7 @@ export class DataStore extends EventEmitter {
    *
    * http://tus.io/protocols/resumable-upload.html#concatenation
    */
-  async write(stream: stream.Readable, id: string, offset: number) {
+  async write(_stream: stream.Readable, _id: string, _offset: number) {
     return 0
   }
 
@@ -54,7 +54,7 @@ export class DataStore extends EventEmitter {
   /**
    * Called in PATCH requests when upload length is known after being defered.
    */
-  async declareUploadLength(id: string, upload_length: number) {}
+  async declareUploadLength(_id: string, _upload_length: number) {}
 
   /**
    * Returns number of expired uploads that were deleted.

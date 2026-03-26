@@ -155,7 +155,7 @@ export class AzureStore extends DataStore {
       await this.saveMetadata(appendBlobClient, upload)
 
       return upload
-    } catch (err) {
+    } catch {
       throw ERRORS.UNKNOWN_ERROR
     }
   }
@@ -196,7 +196,7 @@ export class AzureStore extends DataStore {
     const appendBlobClient = this.containerClient.getAppendBlobClient(id)
     const upload = await this.getMetadata(appendBlobClient)
 
-    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: async needed for sequential blob operations
     return new Promise(async (resolve, reject) => {
       if (offset < upload.offset) {
         //duplicate request scenario, dont want to write the same data
@@ -237,7 +237,7 @@ export class AzureStore extends DataStore {
         stream.on('error', async () => {
           return reject(ERRORS.UNKNOWN_ERROR)
         })
-      } catch (err) {
+      } catch {
         return reject('something went wrong while writing the file.')
       }
     })

@@ -602,7 +602,7 @@ describe('EndToEnd', () => {
           .expect(204)
           .expect('Tus-Resumable', TUS_RESUMABLE)
 
-        return Number.parseInt(res.headers['upload-offset'] || '0', 0)
+        return Number.parseInt(res.headers['upload-offset'] || '0', 10)
       }
 
       let offset = 0
@@ -717,7 +717,7 @@ describe('EndToEnd', () => {
           .send(body)
           .expect(204)
           .expect('Tus-Resumable', TUS_RESUMABLE)
-        return Number.parseInt(res.headers['upload-offset'] || '0', 0)
+        return Number.parseInt(res.headers['upload-offset'] || '0', 10)
       }
 
       let offset = 0

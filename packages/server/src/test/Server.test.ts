@@ -98,7 +98,7 @@ describe('Server', () => {
 
     before(() => {
       server = new Server({path: '/test/output', datastore: new DataStore()})
-      server.get('/some_url', (req) => {
+      server.get('/some_url', (_req) => {
         return new Response('Hello world!\n', {status: 200})
       })
       listener = server.listen()
@@ -374,7 +374,7 @@ describe('Server', () => {
           id = Buffer.from(id, 'utf-8').toString('base64url')
           return `${proto}://${host}${path}/${id}`
         },
-        getFileIdFromRequest(req, lastPath) {
+        getFileIdFromRequest(_req, lastPath) {
           if (!lastPath) {
             return
           }

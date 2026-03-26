@@ -1,5 +1,4 @@
 import debug from 'debug'
-import {Readable} from 'node:stream'
 
 import {BaseHandler} from './BaseHandler.js'
 

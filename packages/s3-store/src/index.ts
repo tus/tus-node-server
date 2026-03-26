@@ -369,7 +369,7 @@ export class S3Store extends DataStore {
     const promises: Promise<void>[] = []
     let pendingChunkFilepath: string | null = null
     let bytesUploaded = 0
-    let permit: Permit | undefined = undefined
+    let permit: Permit | undefined
 
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
@@ -731,8 +731,8 @@ export class S3Store extends DataStore {
       return 0
     }
 
-    let keyMarker: string | undefined = undefined
-    let uploadIdMarker: string | undefined = undefined
+    let keyMarker: string | undefined
+    let uploadIdMarker: string | undefined
     let isTruncated = true
     let deleted = 0
 
@@ -749,8 +749,7 @@ export class S3Store extends DataStore {
           const initiatedDate = multiPartUpload.Initiated
           return (
             initiatedDate &&
-            new Date().getTime() >
-              this.getExpirationDate(initiatedDate.toISOString()).getTime()
+            Date.now() > this.getExpirationDate(initiatedDate.toISOString()).getTime()
           )
         }) || []
 
