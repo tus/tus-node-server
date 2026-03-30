@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write # Required for OIDC
+  contents: write
+  pull-requests: write
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
