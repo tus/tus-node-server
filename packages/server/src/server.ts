@@ -123,7 +123,8 @@ export class Server extends EventEmitter {
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse) {
-    return toNodeHandler(this.handler.bind(this))(req, res)
+    const handler = toNodeHandler(this.handler.bind(this)) as (req: http.IncomingMessage, res: http.ServerResponse) => void | Promise<void>
+    return handler(req, res)
   }
 
   async handleWeb(req: Request) {
