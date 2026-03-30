@@ -1,11 +1,5 @@
 # @tus/s3-store
 
-## 2.0.2
-
-### Patch Changes
-
-- eb17620: Ensure deferred promises are never uncaught
-
 ## 2.0.1
 
 ### Patch Changes
