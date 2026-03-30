@@ -451,21 +451,20 @@ describe('Server', () => {
         },
       })
 
-      // Simulate Express middleware by adding user property to request
-      const req = httpMocks.createRequest({
-        method: 'POST',
-        url: server.options.path,
-        headers: {
-          'tus-resumable': TUS_RESUMABLE,
-          'upload-length': '12345678',
-        },
+      const listener = http.createServer((req, res) => {
+        ;(req as http.IncomingMessage & {user?: typeof userData}).user = userData
+        server.handle(req, res)
       })
-
-      // Add custom property like Express middleware would
-      req.user = userData
-
-      const res = httpMocks.createResponse({req})
-      server.handle(req, res)
+      request(listener)
+        .post(server.options.path)
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '12345678')
+        .end((err) => {
+          listener.close()
+          if (err) {
+            done(err)
+          }
+        })
     })
 
     it('should fire when a file is deleted', (done) => {
