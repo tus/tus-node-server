@@ -438,15 +438,16 @@ describe('Server', () => {
 
     it('should preserve custom request', (done) => {
       const userData = {username: 'admin'}
+      let preservedUser = false
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
         async onIncomingRequest(req) {
           // @ts-expect-error fine
           if (req?.node?.req?.user?.username === 'admin') {
-            done()
+            preservedUser = true
           } else {
-            done(new Error('user data should be preserved in onIncomingRequest'))
+            throw new Error('user data should be preserved in onIncomingRequest')
           }
         },
       })
@@ -460,10 +461,13 @@ describe('Server', () => {
         .set('Tus-Resumable', TUS_RESUMABLE)
         .set('Upload-Length', '12345678')
         .end((err) => {
-          listener.close()
           if (err) {
             done(err)
+            return
           }
+
+          assert.equal(preservedUser, true)
+          done()
         })
     })
 
