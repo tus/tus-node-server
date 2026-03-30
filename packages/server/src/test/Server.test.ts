@@ -453,7 +453,8 @@ describe('Server', () => {
       })
 
       const listener = http.createServer((req, res) => {
-        ;(req as http.IncomingMessage & {user?: typeof userData}).user = userData
+        const customReq = req as http.IncomingMessage & {user?: typeof userData}
+        customReq.user = userData
         server.handle(req, res)
       })
       listener.listen(0, () => {
