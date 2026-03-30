@@ -456,19 +456,23 @@ describe('Server', () => {
         ;(req as http.IncomingMessage & {user?: typeof userData}).user = userData
         server.handle(req, res)
       })
-      request(listener)
-        .post(server.options.path)
-        .set('Tus-Resumable', TUS_RESUMABLE)
-        .set('Upload-Length', '12345678')
-        .end((err) => {
-          if (err) {
-            done(err)
-            return
-          }
+      listener.listen(0, () => {
+        request(listener)
+          .post(server.options.path)
+          .set('Tus-Resumable', TUS_RESUMABLE)
+          .set('Upload-Length', '12345678')
+          .end((err) => {
+            listener.close((closeErr) => {
+              if (err ?? closeErr) {
+                done(err ?? closeErr)
+                return
+              }
 
-          assert.equal(preservedUser, true)
-          done()
-        })
+              assert.equal(preservedUser, true)
+              done()
+            })
+          })
+      })
     })
 
     it('should fire when a file is deleted', (done) => {
