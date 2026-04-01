@@ -22,7 +22,7 @@
     "@types/rimraf": "^3.0.2",
     "@types/sinon": "^17.0.3",
     "@types/supertest": "^2.0.16",
-    "@types/throttle": "^1.0.4",
+    "@types/throttle": "^1.0.5",
     "mocha": "^11.7.3",
     "rimraf": "^3.0.2",
     "should": "^13.2.3",
