@@ -1,6 +1,6 @@
 import {S3Store} from '@tus/s3-store'
 import {Server, TUS_RESUMABLE} from '@tus/server'
-import type {SuperAgentTest} from 'supertest'
+import type {Agent} from 'supertest'
 import request from 'supertest'
 import type http from 'node:http'
 import {describe} from 'node:test'
@@ -33,7 +33,7 @@ const createStore = (options: S3Options = {}) =>
     s3ClientConfig: s3Credentials,
   })
 
-const createUpload = async (agent: SuperAgentTest, uploadLength?: number) => {
+const createUpload = async (agent: Agent, uploadLength?: number) => {
   const req = agent.post(STORE_PATH).set('Tus-Resumable', TUS_RESUMABLE)
 
   if (uploadLength) {
@@ -53,7 +53,7 @@ const allocMB = (mb: number) => Buffer.alloc(1024 * 1024 * mb)
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const patchUpload = async (
-  agent: SuperAgentTest,
+  agent: Agent,
   uploadId: string,
   data: Buffer,
   offset = 0,
@@ -78,7 +78,7 @@ describe('S3 Store E2E', () => {
   describe('Expiration extension', () => {
     let server: Server
     let listener: http.Server
-    let agent: SuperAgentTest
+    let agent: Agent
     let store: S3Store
 
     before((done) => {
@@ -296,7 +296,7 @@ describe('S3 Store E2E', () => {
   describe('Upload', () => {
     let server: Server
     let listener: http.Server
-    let agent: SuperAgentTest
+    let agent: Agent
     let store: S3Store
 
     before((done) => {
