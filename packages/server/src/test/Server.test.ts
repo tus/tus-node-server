@@ -438,6 +438,10 @@ describe('Server', () => {
 
     it('should preserve custom request', (done) => {
       const userData = {username: 'admin'}
+      const requestHeaders = {
+        'Tus-Resumable': TUS_RESUMABLE,
+        'Upload-Length': '12345678',
+      }
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
@@ -455,16 +459,20 @@ describe('Server', () => {
       const req = httpMocks.createRequest({
         method: 'POST',
         url: server.options.path,
-        headers: {
-          'tus-resumable': TUS_RESUMABLE,
-          'upload-length': '12345678',
-        },
+        headers: requestHeaders,
       })
 
       // Add custom property like Express middleware would
       req.user = userData
+      const mockReq = req as typeof req & {rawHeaders: string[]}
+      mockReq.rawHeaders = Object.entries(requestHeaders).flat()
 
       const res = httpMocks.createResponse({req})
+      const mockRes = res as typeof res & {
+        off: (...args: unknown[]) => unknown
+        removeListener: (...args: unknown[]) => unknown
+      }
+      mockRes.off = res.removeListener.bind(res)
       server.handle(req, res)
     })
 

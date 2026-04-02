@@ -2,7 +2,7 @@ import http from 'node:http'
 import {EventEmitter} from 'node:events'
 
 import type {ServerRequest} from 'srvx'
-import {toNodeHandler} from 'srvx/node'
+import {NodeRequest, sendNodeResponse} from 'srvx/node'
 import debug from 'debug'
 import {EVENTS, ERRORS, REQUEST_METHODS, TUS_RESUMABLE, HEADERS} from '@tus/utils'
 import type {DataStore, Upload, CancellationContext} from '@tus/utils'
@@ -123,7 +123,9 @@ export class Server extends EventEmitter {
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse) {
-    return toNodeHandler(this.handler.bind(this))(req, res)
+    const request = new NodeRequest({req, res})
+    const response = await this.handler(request)
+    return sendNodeResponse(res, response)
   }
 
   async handleWeb(req: Request) {
