@@ -439,8 +439,8 @@ describe('Server', () => {
     it('should preserve custom request', (done) => {
       const userData = {username: 'admin'}
       const requestHeaders = {
-        'tus-resumable': TUS_RESUMABLE,
-        'upload-length': '12345678',
+        'Tus-Resumable': TUS_RESUMABLE,
+        'Upload-Length': '12345678',
       }
       const server = new Server({
         path: '/test/output',
