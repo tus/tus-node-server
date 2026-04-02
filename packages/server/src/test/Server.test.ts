@@ -464,15 +464,15 @@ describe('Server', () => {
 
       // Add custom property like Express middleware would
       req.user = userData
-      const reqWithRawHeaders = req as typeof req & {rawHeaders: string[]}
-      reqWithRawHeaders.rawHeaders = Object.entries(requestHeaders).flat()
+      const mockReq = req as typeof req & {rawHeaders: string[]}
+      mockReq.rawHeaders = Object.entries(requestHeaders).flat()
 
       const res = httpMocks.createResponse({req})
-      const resWithOff = res as typeof res & {
+      const mockRes = res as typeof res & {
         off: (...args: unknown[]) => unknown
         removeListener: (...args: unknown[]) => unknown
       }
-      resWithOff.off = res.removeListener.bind(res)
+      mockRes.off = res.removeListener.bind(res)
       server.handle(req, res)
     })
 
