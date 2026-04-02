@@ -438,42 +438,42 @@ describe('Server', () => {
 
     it('should preserve custom request', (done) => {
       const userData = {username: 'admin'}
-      let preservedUser = false
+      const requestHeaders = {
+        'tus-resumable': TUS_RESUMABLE,
+        'upload-length': '12345678',
+      }
       const server = new Server({
         path: '/test/output',
         datastore: new FileStore({directory}),
         async onIncomingRequest(req) {
           // @ts-expect-error fine
           if (req?.node?.req?.user?.username === 'admin') {
-            preservedUser = true
+            done()
           } else {
-            throw new Error('user data should be preserved in onIncomingRequest')
+            done(new Error('user data should be preserved in onIncomingRequest'))
           }
         },
       })
 
-      const listener = http.createServer((req, res) => {
-        const customReq = req as http.IncomingMessage & {user?: typeof userData}
-        customReq.user = userData
-        server.handle(req, res)
+      // Simulate Express middleware by adding user property to request
+      const req = httpMocks.createRequest({
+        method: 'POST',
+        url: server.options.path,
+        headers: requestHeaders,
       })
-      listener.listen(0, () => {
-        request(listener)
-          .post(server.options.path)
-          .set('Tus-Resumable', TUS_RESUMABLE)
-          .set('Upload-Length', '12345678')
-          .end((err) => {
-            listener.close((closeErr) => {
-              if (err ?? closeErr) {
-                done(err ?? closeErr)
-                return
-              }
 
-              assert.equal(preservedUser, true)
-              done()
-            })
-          })
-      })
+      // Add custom property like Express middleware would
+      req.user = userData
+      const reqWithRawHeaders = req as typeof req & {rawHeaders: string[]}
+      reqWithRawHeaders.rawHeaders = Object.entries(requestHeaders).flat()
+
+      const res = httpMocks.createResponse({req})
+      const resWithOff = res as typeof res & {
+        off: (...args: unknown[]) => unknown
+        removeListener: (...args: unknown[]) => unknown
+      }
+      resWithOff.off = res.removeListener.bind(res)
+      server.handle(req, res)
     })
 
     it('should fire when a file is deleted', (done) => {
