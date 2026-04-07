@@ -4,4 +4,4 @@
 "@tus/utils": minor
 ---
 
-Require @redis/client ^5.11.0 for the RedisKvStore
+Require @redis/client ^5.0.0 for the RedisKvStore
