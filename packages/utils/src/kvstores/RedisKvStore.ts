@@ -30,7 +30,10 @@ export class RedisKvStore<T = Upload> implements KvStore<T> {
 
   async list(): Promise<Array<string>> {
     const keys = new Set<string>()
-    for await (const batch of this.redis.scanIterator({MATCH: `${this.prefix}*`, COUNT: 20})) {
+    for await (const batch of this.redis.scanIterator({
+      MATCH: `${this.prefix}*`,
+      COUNT: 20,
+    })) {
       for (const key of batch) keys.add(key)
     }
     return Array.from(keys)
