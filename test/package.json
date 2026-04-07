@@ -11,10 +11,10 @@
     "./stores.test": "./dist/stores.test.js"
   },
   "dependencies": {
-    "@tus/file-store": "^2.0.0",
-    "@tus/gcs-store": "^2.0.0",
-    "@tus/s3-store": "^2.0.2",
-    "@tus/server": "^2.3.0"
+    "@tus/file-store": "^2.1.0",
+    "@tus/gcs-store": "^2.0.1",
+    "@tus/s3-store": "^2.0.3",
+    "@tus/server": "^2.4.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
