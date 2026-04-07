@@ -1,5 +1,11 @@
 # @tus/utils
 
+## 0.7.0
+
+### Minor Changes
+
+- 43152b5: Require @redis/client ^5.0.0 for the RedisKvStore
+
 ## 0.6.0
 
 ### Minor Changes
