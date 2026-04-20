@@ -445,7 +445,6 @@ export class S3Store extends DataStore {
           log(`[${metadata.file.id}] failed to remove chunk ${pendingChunkFilepath}`)
         }
       }
-
       promises.push(Promise.reject(error))
     } finally {
       // Wait for all promises. We don't want to return
@@ -463,6 +462,22 @@ export class S3Store extends DataStore {
    * This is where S3 concatenates all the uploaded parts.
    */
   protected async finishMultipartUpload(metadata: MetadataValue, parts: Array<AWS.Part>) {
+    // Handle zero-byte uploads - S3 requires at least one part to complete a multipart upload
+    // S3 allows the last part to be 0 bytes, so we upload a single empty part
+    if (parts.length === 0) {
+      const uploadResult = await this.client.uploadPart({
+        Bucket: this.bucket,
+        Key: metadata.file.id,
+        UploadId: metadata['upload-id'],
+        PartNumber: 1,
+        Body: Buffer.alloc(0),
+      })
+      parts.push({
+        ETag: uploadResult.ETag,
+        PartNumber: 1,
+      })
+    }
+
     const response = await this.client.completeMultipartUpload({
       Bucket: this.bucket,
       Key: metadata.file.id,
