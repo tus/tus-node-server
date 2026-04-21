@@ -1,5 +1,13 @@
 # @tus/s3-store
 
+## 2.0.3
+
+### Patch Changes
+
+- 0f3ec0c: Handle zero byte uploads gracefully
+- Updated dependencies [43152b5]
+  - @tus/utils@0.7.0
+
 ## 2.0.2
 
 ### Patch Changes
