@@ -22,13 +22,13 @@
   },
   "dependencies": {
     "@tus/utils": "^0.7.0",
-    "debug": "^4.3.4",
+    "debug": "^4.4.3",
     "lodash.throttle": "^4.1.1",
     "set-cookie-parser": "^2.7.1",
     "srvx": "~0.8.9"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.12",
+    "@types/debug": "^4.1.13",
     "@types/lodash.throttle": "^4.1.9",
     "@types/mocha": "^10.0.6",
     "@types/node": "^22.13.7",
