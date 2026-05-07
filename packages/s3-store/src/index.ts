@@ -17,7 +17,7 @@ import {
   MemoryKvStore,
 } from '@tus/utils'
 
-import {Semaphore, type Permit} from '@shopify/semaphore'
+import {Semaphore} from 'async-mutex'
 import MultiStream from 'multistream'
 import crypto from 'node:crypto'
 import path from 'node:path'
@@ -369,14 +369,15 @@ export class S3Store extends DataStore {
     const promises: Promise<void>[] = []
     let pendingChunkFilepath: string | null = null
     let bytesUploaded = 0
-    let permit: Permit | undefined
+    let releasePermit: (() => void) | undefined
 
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
       directory: os.tmpdir(),
     })
       .on('beforeChunkStarted', async () => {
-        permit = await this.partUploadSemaphore.acquire()
+        const [, release] = await this.partUploadSemaphore.acquire()
+        releasePermit = release
       })
       .on('chunkStarted', (filepath) => {
         pendingChunkFilepath = filepath
@@ -384,7 +385,7 @@ export class S3Store extends DataStore {
       .on('chunkFinished', ({path, size: partSize}) => {
         pendingChunkFilepath = null
 
-        const acquiredPermit = permit
+        const acquiredRelease = releasePermit
         const partNumber = currentPartNumber++
 
         offset += partSize
@@ -415,9 +416,7 @@ export class S3Store extends DataStore {
             fsProm.rm(path).catch(() => {
               /* ignore */
             })
-            acquiredPermit?.release().catch(() => {
-              /* ignore */
-            })
+            acquiredRelease?.()
           }
         })
 
@@ -430,9 +429,7 @@ export class S3Store extends DataStore {
         promises.push(deferred)
       })
       .on('chunkError', () => {
-        permit?.release().catch(() => {
-          /* ignore */
-        })
+        releasePermit?.()
       })
 
     try {
