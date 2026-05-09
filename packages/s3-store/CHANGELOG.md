@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 2.0.4
+
+### Patch Changes
+
+- 8c1c03a: Bump @aws-sdk/client-s3 from ^3.758.0 to ^3.1045.0
+
 ## 2.0.3
 
 ### Patch Changes

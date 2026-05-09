@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.4.1
+
+### Patch Changes
+
+- 35654c8: Bump srvx from 0.8.9 to 0.11.13
+
 ## 2.4.0
 
 ### Minor Changes
