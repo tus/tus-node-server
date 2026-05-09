@@ -1,21 +1,19 @@
-import http from 'node:http'
 import {EventEmitter} from 'node:events'
-
-import type {ServerRequest} from 'srvx'
-import {toNodeHandler} from 'srvx/node'
+import http from 'node:http'
+import type {CancellationContext, DataStore, Upload} from '@tus/utils'
+import {ERRORS, EVENTS, HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
 import debug from 'debug'
-import {EVENTS, ERRORS, REQUEST_METHODS, TUS_RESUMABLE, HEADERS} from '@tus/utils'
-import type {DataStore, Upload, CancellationContext} from '@tus/utils'
-
+import type {ServerRequest} from 'srvx'
+import {NodeRequest, sendNodeResponse} from 'srvx/node'
+import {DeleteHandler} from './handlers/DeleteHandler.js'
 import {GetHandler} from './handlers/GetHandler.js'
 import {HeadHandler} from './handlers/HeadHandler.js'
 import {OptionsHandler} from './handlers/OptionsHandler.js'
 import {PatchHandler} from './handlers/PatchHandler.js'
 import {PostHandler} from './handlers/PostHandler.js'
-import {DeleteHandler} from './handlers/DeleteHandler.js'
-import {validateHeader} from './validators/HeaderValidator.js'
-import type {ServerOptions, RouteHandler, WithOptional} from './types.js'
 import {MemoryLocker} from './lockers/index.js'
+import type {RouteHandler, ServerOptions, WithOptional} from './types.js'
+import {validateHeader} from './validators/HeaderValidator.js'
 
 type Handlers = {
   GET: InstanceType<typeof GetHandler>
@@ -123,7 +121,9 @@ export class Server extends EventEmitter {
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse) {
-    return toNodeHandler(this.handler.bind(this))(req, res)
+    const request = new NodeRequest({req, res})
+    const response = await this.handler(request)
+    return sendNodeResponse(res, response)
   }
 
   async handleWeb(req: Request) {
