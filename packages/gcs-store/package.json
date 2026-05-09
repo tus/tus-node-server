@@ -34,7 +34,7 @@
     "should": "^13.2.3"
   },
   "peerDependencies": {
-    "@google-cloud/storage": "^7.19.0"
+    "@google-cloud/storage": "^7.15.2"
   },
   "engines": {
     "node": ">=20.19.0"
