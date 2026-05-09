@@ -1,20 +1,17 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-throw-literal */
 import 'should'
 
 import {strict as assert} from 'node:assert'
-import http from 'node:http'
 import fs from 'node:fs/promises'
+import http from 'node:http'
 import path from 'node:path'
-
-import request from 'supertest'
-import Throttle from 'throttle'
-
-import {Server} from '@tus/server'
 import {FileStore} from '@tus/file-store'
-import {TUS_RESUMABLE, EVENTS, DataStore, Metadata} from '@tus/utils'
+import {Server} from '@tus/server'
+import {DataStore, EVENTS, Metadata, TUS_RESUMABLE} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
+import type {ServerRequest} from 'srvx'
+import request from 'supertest'
+import Throttle from 'throttle'
 
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
@@ -460,19 +457,12 @@ describe('Server', () => {
         method: 'POST',
         url: server.options.path,
         headers: requestHeaders,
+        rawHeaders: Object.entries(requestHeaders).flat(),
       })
-
       // Add custom property like Express middleware would
       req.user = userData
-      const mockReq = req as typeof req & {rawHeaders: string[]}
-      mockReq.rawHeaders = Object.entries(requestHeaders).flat()
-
       const res = httpMocks.createResponse({req})
-      const mockRes = res as typeof res & {
-        off: (...args: unknown[]) => unknown
-        removeListener: (...args: unknown[]) => unknown
-      }
-      mockRes.off = res.removeListener.bind(res)
+
       server.handle(req, res)
     })
 
