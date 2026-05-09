@@ -45,7 +45,7 @@ const deleteFile = (file_name: string) => {
 describe('EndToEnd', () => {
   let server: InstanceType<typeof Server>
   let listener: http.Server
-  let agent: request.SuperAgentTest
+  let agent: request.Agent
   let file_to_delete: string
 
   describe('FileStore', () => {
@@ -106,7 +106,7 @@ describe('EndToEnd', () => {
             assert.equal('location' in res.headers, true)
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
-            file_to_delete = res.headers.location.split('/').pop()
+            file_to_delete = res.headers.location.split('/').pop()!
             done()
           })
       })
@@ -122,7 +122,7 @@ describe('EndToEnd', () => {
             assert.equal('location' in res.headers, true)
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
-            file_id = res.headers.location.split('/').pop()
+            file_id = res.headers.location.split('/').pop()!
             done()
           })
       })
@@ -139,7 +139,7 @@ describe('EndToEnd', () => {
             assert.equal('location' in res.headers, true)
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
-            deferred_file_id = res.headers.location.split('/').pop()
+            deferred_file_id = res.headers.location.split('/').pop()!
             done()
           })
       })
@@ -471,7 +471,7 @@ describe('EndToEnd', () => {
           .expect(201)
           .end((_, res) => {
             assert.equal('upload-expires' in res.headers, true)
-            file_id = res.headers.location.split('/').pop()
+            file_id = res.headers.location.split('/').pop()!
             done()
           })
       })
@@ -488,7 +488,7 @@ describe('EndToEnd', () => {
           .expect(201)
 
         assert.equal('upload-expires' in res.headers, true)
-        file_id = res.headers.location.split('/').pop()
+        file_id = res.headers.location.split('/').pop()!
 
         const msg = 'tus test'
         const patch_res = await agent
@@ -513,7 +513,7 @@ describe('EndToEnd', () => {
           .expect(201)
 
         assert.equal('upload-expires' in res.headers, true)
-        file_id = res.headers.location.split('/').pop()
+        file_id = res.headers.location.split('/').pop()!
 
         await new Promise<void>((resolve, reject) => {
           setTimeout(() => {
@@ -868,7 +868,7 @@ describe('EndToEnd', () => {
             assert.equal('location' in res.headers, true)
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
-            file_id = res.headers.location.split('/').pop()
+            file_id = res.headers.location.split('/').pop()!
             files_created.push(file_id.split('&upload_id')[0])
             done()
           })
@@ -886,7 +886,7 @@ describe('EndToEnd', () => {
             assert.equal('location' in res.headers, true)
             assert.equal(res.headers['tus-resumable'], TUS_RESUMABLE)
             // Save the id for subsequent tests
-            deferred_file_id = res.headers.location.split('/').pop()
+            deferred_file_id = res.headers.location.split('/').pop()!
             files_created.push(deferred_file_id.split('&upload_id')[0])
             done()
           })

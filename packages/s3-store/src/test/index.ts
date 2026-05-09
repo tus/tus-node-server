@@ -1,12 +1,13 @@
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
+import stream from 'node:stream/promises'
 
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
 import * as shared from '../../../utils/dist/test/stores.js'
-import {Upload} from '@tus/utils'
+import {StreamLimiter, Upload} from '@tus/utils'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
@@ -18,6 +19,7 @@ const s3ClientConfig = {
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
   },
   region: process.env.AWS_REGION,
+  endpoint: process.env.AWS_ENDPOINT,
 }
 
 describe('S3DataStore', () => {
@@ -253,10 +255,12 @@ describe('S3DataStore', () => {
 
     await store.create(upload)
 
-    const offset = await store.write(
+    const offset = await stream.pipeline(
       Readable.from(Buffer.alloc(size)),
-      upload.id,
-      upload.offset
+      new StreamLimiter(999),
+      async (stream) => {
+        return store.write(stream as StreamLimiter, upload.id, upload.offset)
+      }
     )
     assert.equal(offset, size, 'Write should return 0 offset')
 
