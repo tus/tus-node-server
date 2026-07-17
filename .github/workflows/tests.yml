@@ -31,6 +31,19 @@ jobs:
     # External PRs require manual approval via the external-testing environment.
     environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
 
+    # Redis for the @tus/server RedisLocker/IoRedisLocker integration tests.
+    # Reachable at 127.0.0.1:6379 and the suites skip themselves if Redis is unavailable.
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
