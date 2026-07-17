@@ -1,7 +1,7 @@
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
 import stream, {promises as streamProm} from 'node:stream'
-import type {Readable} from 'node:stream'
+import {Readable} from 'node:stream'
 
 import type AWS from '@aws-sdk/client-s3'
 import {NoSuchKey, NotFound, S3, type S3ClientConfig} from '@aws-sdk/client-s3'
@@ -231,7 +231,7 @@ export class S3Store extends DataStore {
 
   protected async uploadPart(
     metadata: MetadataValue,
-    readStream: fs.ReadStream | Readable,
+    readStream: fs.ReadStream | Readable | Buffer,
     partNumber: number
   ): Promise<string> {
     const data = await this.client.uploadPart({
@@ -369,7 +369,7 @@ export class S3Store extends DataStore {
     const promises: Promise<void>[] = []
     let pendingChunkFilepath: string | null = null
     let bytesUploaded = 0
-    let permit: Permit | undefined = undefined
+    let permit: Permit | undefined
 
     const splitterStream = new StreamSplitter({
       chunkSize: this.calcOptimalPartSize(size),
@@ -421,6 +421,12 @@ export class S3Store extends DataStore {
           }
         })
 
+        // Prevent unhandled promise rejection before Promise.all is awaited
+        // we can ignore the error here as it will still be thrown by Promise.all below
+        deferred.catch(() => {
+          /* ignore */
+        })
+
         promises.push(deferred)
       })
       .on('chunkError', () => {
@@ -439,7 +445,6 @@ export class S3Store extends DataStore {
           log(`[${metadata.file.id}] failed to remove chunk ${pendingChunkFilepath}`)
         }
       }
-
       promises.push(Promise.reject(error))
     } finally {
       // Wait for all promises. We don't want to return
@@ -457,6 +462,16 @@ export class S3Store extends DataStore {
    * This is where S3 concatenates all the uploaded parts.
    */
   protected async finishMultipartUpload(metadata: MetadataValue, parts: Array<AWS.Part>) {
+    // Handle zero-byte uploads - S3 requires at least one part to complete a multipart upload
+    // S3 allows the last part to be 0 bytes, so we upload a single empty part
+    if (parts.length === 0) {
+      const eTag = await this.uploadPart(metadata, Buffer.alloc(0), 1)
+      parts.push({
+        ETag: eTag,
+        PartNumber: 1,
+      })
+    }
+
     const response = await this.client.completeMultipartUpload({
       Bucket: this.bucket,
       Key: metadata.file.id,
@@ -725,8 +740,8 @@ export class S3Store extends DataStore {
       return 0
     }
 
-    let keyMarker: string | undefined = undefined
-    let uploadIdMarker: string | undefined = undefined
+    let keyMarker: string | undefined
+    let uploadIdMarker: string | undefined
     let isTruncated = true
     let deleted = 0
 
@@ -743,8 +758,7 @@ export class S3Store extends DataStore {
           const initiatedDate = multiPartUpload.Initiated
           return (
             initiatedDate &&
-            new Date().getTime() >
-              this.getExpirationDate(initiatedDate.toISOString()).getTime()
+            Date.now() > this.getExpirationDate(initiatedDate.toISOString()).getTime()
           )
         }) || []
 

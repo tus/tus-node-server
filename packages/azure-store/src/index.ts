@@ -1,14 +1,5 @@
 import type stream from 'node:stream'
-import debug from 'debug'
-import {
-  DataStore,
-  Upload,
-  ERRORS,
-  type KvStore,
-  MemoryKvStore,
-  TUS_RESUMABLE,
-  Metadata,
-} from '@tus/utils'
+import type {TokenCredential} from '@azure/core-auth'
 import {
   type AppendBlobClient,
   type BlobGetPropertiesResponse,
@@ -16,7 +7,16 @@ import {
   type ContainerClient,
   StorageSharedKeyCredential,
 } from '@azure/storage-blob'
-import type {TokenCredential} from '@azure/core-auth'
+import {
+  DataStore,
+  ERRORS,
+  type KvStore,
+  MemoryKvStore,
+  Metadata,
+  TUS_RESUMABLE,
+  Upload,
+} from '@tus/utils'
+import debug from 'debug'
 
 type Options =
   | {
@@ -157,7 +157,7 @@ export class AzureStore extends DataStore {
       await this.saveMetadata(appendBlobClient, upload)
 
       return upload
-    } catch (err) {
+    } catch {
       throw ERRORS.UNKNOWN_ERROR
     }
   }
@@ -198,7 +198,7 @@ export class AzureStore extends DataStore {
     const appendBlobClient = this.containerClient.getAppendBlobClient(id)
     const upload = await this.getMetadata(appendBlobClient)
 
-    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: <explanation>
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: async needed for sequential blob operations
     return new Promise(async (resolve, reject) => {
       if (offset < upload.offset) {
         //duplicate request scenario, dont want to write the same data
@@ -239,7 +239,7 @@ export class AzureStore extends DataStore {
         stream.on('error', async () => {
           return reject(ERRORS.UNKNOWN_ERROR)
         })
-      } catch (err) {
+      } catch {
         return reject('something went wrong while writing the file.')
       }
     })

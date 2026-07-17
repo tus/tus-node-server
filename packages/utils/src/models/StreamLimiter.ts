@@ -23,7 +23,11 @@ export class StreamLimiter extends Transform {
     this.maxSize = maxSize
   }
 
-  _transform(chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback): void {
+  _transform(
+    chunk: Buffer,
+    _encoding: BufferEncoding,
+    callback: TransformCallback
+  ): void {
     this.currentSize += chunk.length
     if (this.currentSize > this.maxSize) {
       callback(new MaxFileExceededError())

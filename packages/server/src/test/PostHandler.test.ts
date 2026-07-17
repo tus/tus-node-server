@@ -399,7 +399,7 @@ describe('PostHandler', () => {
         const handler = new PostHandler(store, {
           path: '/test/output',
           locker: new MemoryLocker(),
-          onUploadFinish: async (req, res) => ({res, status_code: 200}),
+          onUploadFinish: async (_req, res) => ({res, status_code: 200}),
         })
 
         const req = new Request('https://example.com/test/output', {

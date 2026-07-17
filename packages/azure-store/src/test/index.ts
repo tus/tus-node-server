@@ -1,8 +1,8 @@
 import 'should'
 import {strict as assert} from 'node:assert'
 import path from 'node:path'
-import {AzureStore} from '@tus/azure-store'
 import type {TokenCredential} from '@azure/core-auth'
+import {AzureStore} from '@tus/azure-store'
 import * as shared from '../../../utils/dist/test/stores.js'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')

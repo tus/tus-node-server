@@ -1,5 +1,22 @@
 # @tus/server
 
+## 2.4.1
+
+### Patch Changes
+
+- 35654c8: Bump srvx from 0.8.9 to 0.11.13
+
+## 2.4.0
+
+### Minor Changes
+
+- 43152b5: Require @redis/client ^5.0.0 for the RedisKvStore
+
+### Patch Changes
+
+- Updated dependencies [43152b5]
+  - @tus/utils@0.7.0
+
 ## 2.3.0
 
 ### Minor Changes
