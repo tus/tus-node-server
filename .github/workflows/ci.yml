@@ -64,6 +64,19 @@ jobs:
     # 2. Internal PRs (trusted)
     # 3. External PRs (requires manual approval via environment protection)
 
+    # Redis for the @tus/server RedisLocker/IoRedisLocker integration tests.
+    # Reachable at 127.0.0.1:6379 and the suites skip themselves if redis is unavailable
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
