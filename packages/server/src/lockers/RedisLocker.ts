@@ -135,6 +135,11 @@ class RedisLock implements Lock {
 
   async lock(stopSignal: AbortSignal, requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
+    // If the request was already aborted before we started, begin aborted too:
+    // adding the listener below would not fire for an already-dispatched event.
+    if (stopSignal.aborted) {
+      abortController.abort()
+    }
     const onAbort = () => {
       abortController.abort()
     }
@@ -181,6 +186,19 @@ class RedisLock implements Lock {
         void Promise.resolve(requestRelease()).catch(() => {})
       }
       await subscriber.subscribe(this.locker.channel(id), this.listener)
+
+      // We may have timed out or been aborted while SET/subscribe were in flight.
+      // If so, roll back the just-acquired lock instead of leaving it orphaned
+      // (the watchdog would otherwise keep extending it forever).
+      if (signal.aborted) {
+        await subscriber.unsubscribe(this.locker.channel(id), this.listener)
+        this.listener = undefined
+        await this.locker.redis.eval(RELEASE_SCRIPT, {
+          keys: [this.locker.key(id)],
+          arguments: [this.token],
+        })
+        return false
+      }
 
       this.startWatchdog(id, requestRelease)
       return true

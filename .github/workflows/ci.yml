@@ -65,10 +65,12 @@ jobs:
     # 3. External PRs (requires manual approval via environment protection)
 
     # Redis for the @tus/server RedisLocker/IoRedisLocker integration tests.
-    # Reachable at 127.0.0.1:6379 and the suites skip themselves if redis is unavailable
+    # Reachable at 127.0.0.1:6379. In CI (CI=true) the suites fail if redis is
+    # unavailable; locally they skip themselves instead.
     services:
       redis:
-        image: redis:latest
+        # Pinned to redis 7.4 by immutable digest for reproducible, tamper-proof CI.
+        image: redis:7.4@sha256:a8f08480e1f88f2647fed492d1178c06abb0d0c1fbf02c682a61e2f483fb3954
         ports:
           - 6379:6379
         options: >-

@@ -5,8 +5,6 @@ import {ERRORS, IoRedisLocker} from '@tus/server'
 import {Redis} from 'ioredis'
 import sinon from 'sinon'
 
-// Integration tests requiring a reachable Redis. Skipped (not failed) when none
-// is available. Point at a different instance with REDIS_URL.
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://127.0.0.1:6379'
 
 describe('IoRedisLocker', () => {
@@ -40,8 +38,11 @@ describe('IoRedisLocker', () => {
       probe = client()
       await probe.connect()
       await probe.ping()
-    } catch {
-      // No Redis reachable — skip the suite instead of failing.
+    } catch (err) {
+      // When in CI throw an error if Redis is unreachable, otherwise skip
+      if (process.env.CI) {
+        throw err
+      }
       this.skip()
     }
   })
@@ -99,7 +100,7 @@ describe('IoRedisLocker', () => {
 
     const holder = locker.newLock(id)
     await holder.lock(signal, () => {
-      // acknowledge but refuse to release
+      // refuse to release
     })
 
     const contender = locker.newLock(id)

@@ -141,6 +141,11 @@ class IoRedisLock implements Lock {
 
   async lock(stopSignal: AbortSignal, requestRelease: RequestRelease): Promise<void> {
     const abortController = new AbortController()
+    // If the request was already aborted before we started, begin aborted too:
+    // adding the listener below would not fire for an already-dispatched event.
+    if (stopSignal.aborted) {
+      abortController.abort()
+    }
     const onAbort = () => {
       abortController.abort()
     }
@@ -190,6 +195,18 @@ class IoRedisLock implements Lock {
       this.acquired = true
 
       await subscriber.subscribe(channel)
+
+      // We may have timed out or been aborted while SET/subscribe were in flight.
+      // If so, roll back the just-acquired lock instead of leaving it orphaned
+      // (the watchdog would otherwise keep extending it forever).
+      if (signal.aborted) {
+        this.locker.releaseHandlers.delete(channel)
+        this.acquired = false
+        await subscriber.unsubscribe(channel)
+        await this.locker.ioredis.eval(RELEASE_SCRIPT, 1, this.locker.key(id), this.token)
+        return false
+      }
+
       this.startWatchdog(id, requestRelease)
 
       return true
