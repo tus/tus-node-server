@@ -5,9 +5,6 @@ import {createClient, type RedisClientType} from '@redis/client'
 import {ERRORS, RedisLocker} from '@tus/server'
 import sinon from 'sinon'
 
-// These are integration tests: they require a reachable Redis. When none is
-// available (e.g. CI without a redis service) the whole suite is skipped rather
-// than failed. Point at a different instance with REDIS_URL.
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://127.0.0.1:6379'
 
 describe('RedisLocker', () => {
@@ -42,8 +39,11 @@ describe('RedisLocker', () => {
     try {
       probe = await connect()
       await probe.ping()
-    } catch {
-      // No Redis reachable — skip the suite instead of failing.
+    } catch (err) {
+      // Throw when in CI but just skip otherwise
+      if (process.env.CI) {
+        throw err
+      }
       this.skip()
     }
   })
@@ -84,7 +84,6 @@ describe('RedisLocker', () => {
       cancel()
     })
 
-    // lock2 can only succeed if lock1 was nudged (over pub/sub) and released.
     await lock2.lock(signal, async () => {
       cancel2()
     })
@@ -102,7 +101,7 @@ describe('RedisLocker', () => {
 
     const holder = locker.newLock(id)
     await holder.lock(signal, () => {
-      // acknowledge but refuse to release
+      // refuse to release
     })
 
     const contender = locker.newLock(id)
@@ -142,8 +141,6 @@ describe('RedisLocker', () => {
 
     await lock.lock(new AbortController().signal, () => {})
 
-    // Wait well beyond the 400ms TTL; the watchdog (renews every ~200ms) should
-    // have extended it, so the key must still exist.
     await delay(700)
     assert.strictEqual(
       await probe.exists(`lock:${id}`),
@@ -156,7 +153,6 @@ describe('RedisLocker', () => {
   })
 
   it('coordinates the lock across two separate locker instances', async () => {
-    // Two lockers with independent connections simulate two server processes.
     const a = await makeLocker()
     const b = await makeLocker()
     const id = randomUUID()
