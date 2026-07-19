@@ -33,11 +33,8 @@ type Options =
       containerName: string
     }
 
-type StoredUpload = Pick<
-  Upload,
-  'id' | 'size' | 'offset' | 'storage' | 'creation_date'
-> & {
-  metadata?: string | Upload['metadata']
+type StoredUpload = Omit<Upload, 'metadata' | 'sizeIsDeferred'> & {
+  metadata: string
 }
 
 const log = debug('tus-node-server:stores:azurestore')
@@ -132,15 +129,11 @@ export class AzureStore extends DataStore {
       throw ERRORS.FILE_NOT_FOUND
     }
     const storedUpload = JSON.parse(propertyData.metadata.upload) as StoredUpload
-    let metadata = storedUpload.metadata
     // Metadata is base64 encoded to avoid errors for non-ASCII characters
     // so we need to decode it separately
-    if (typeof metadata === 'string') {
-      metadata = metadata ? Metadata.parse(metadata) : {}
-    }
     const upload = new Upload({
       ...storedUpload,
-      metadata: metadata ?? {},
+      metadata: storedUpload.metadata ? Metadata.parse(storedUpload.metadata) : {},
     })
 
     await this.cache.set(appendBlobClient.url, upload)
