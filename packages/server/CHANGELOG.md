@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.4.2
+
+### Patch Changes
+
+- 5bce3d7: Allow `allowedOrigins` to be a function for dynamic origin validation.
+
 ## 2.4.1
 
 ### Patch Changes
