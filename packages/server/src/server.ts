@@ -138,9 +138,8 @@ export class Server extends EventEmitter {
     // We handle gracefully request errors such as disconnects or timeouts.
     // This is important to avoid memory leaks and ensure that the server can
     // handle subsequent requests without issues.
-    if ((req as ServerRequest)?.runtime?.node) {
-      // biome-ignore lint/style/noNonNullAssertion: it's fine
-      const node = (req as ServerRequest).runtime?.node!
+    const node = (req as ServerRequest).runtime?.node
+    if (node) {
       // @ts-expect-error backwards compatibility. srvx moved req.node to req.runtime.node.
       req.node = node
       node.req.once('error', () => {
