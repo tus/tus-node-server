@@ -1,14 +1,4 @@
 import type stream from 'node:stream'
-import debug from 'debug'
-import {
-  DataStore,
-  Upload,
-  ERRORS,
-  type KvStore,
-  MemoryKvStore,
-  TUS_RESUMABLE,
-  Metadata,
-} from '@tus/utils'
 import {
   type AppendBlobClient,
   type BlobGetPropertiesResponse,
@@ -16,13 +6,32 @@ import {
   type ContainerClient,
   StorageSharedKeyCredential,
 } from '@azure/storage-blob'
+import {
+  DataStore,
+  ERRORS,
+  type KvStore,
+  MemoryKvStore,
+  Metadata,
+  TUS_RESUMABLE,
+  Upload,
+} from '@tus/utils'
+import debug from 'debug'
 
-type Options = {
-  cache?: KvStore<Upload>
-  account: string
-  accountKey: string
-  containerName: string
-}
+type Options =
+  | {
+      cache?: KvStore<Upload>
+      client: ContainerClient
+      account?: never
+      accountKey?: never
+      containerName?: never
+    }
+  | {
+      cache?: KvStore<Upload>
+      client?: never
+      account: string
+      accountKey: string
+      containerName: string
+    }
 
 const log = debug('tus-node-server:stores:azurestore')
 
@@ -32,7 +41,6 @@ const log = debug('tus-node-server:stores:azurestore')
  */
 export class AzureStore extends DataStore {
   private cache: KvStore<Upload>
-  private blobServiceClient: BlobServiceClient
   private containerClient: ContainerClient
   private containerName: string
 
@@ -41,30 +49,32 @@ export class AzureStore extends DataStore {
     this.cache = options.cache ?? new MemoryKvStore<Upload>()
     this.extensions = ['creation', 'creation-defer-length']
 
-    if (!options.account) {
-      throw new Error('Azure store must have a account')
-    }
-    if (!options.accountKey) {
-      throw new Error('Azure store must have a account key')
-    }
-    if (!options.containerName) {
-      throw new Error('Azure store must have a container name')
+    if (options.client) {
+      this.containerClient = options.client
+    } else {
+      if (!options.account) {
+        throw new Error('Azure store must have a account')
+      }
+      if (!options.accountKey) {
+        throw new Error('Azure store must have a account key')
+      }
+      if (!options.containerName) {
+        throw new Error('Azure store must have a container name')
+      }
+
+      const storageAccountBaseUrl = `https://${options.account}.blob.core.windows.net`
+      const sharedKeyCredential = new StorageSharedKeyCredential(
+        options.account,
+        options.accountKey
+      )
+      const blobServiceClient = new BlobServiceClient(
+        storageAccountBaseUrl,
+        sharedKeyCredential
+      )
+      this.containerClient = blobServiceClient.getContainerClient(options.containerName)
     }
 
-    const storageAccountBaseUrl = `https://${options.account}.blob.core.windows.net`
-    const sharedKeyCredential = new StorageSharedKeyCredential(
-      options.account,
-      options.accountKey
-    )
-
-    this.blobServiceClient = new BlobServiceClient(
-      storageAccountBaseUrl,
-      sharedKeyCredential
-    )
-    this.containerClient = this.blobServiceClient.getContainerClient(
-      options.containerName
-    )
-    this.containerName = options.containerName
+    this.containerName = this.containerClient.containerName
   }
 
   /**

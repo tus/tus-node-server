@@ -1,5 +1,7 @@
 import 'should'
+import {strict as assert} from 'node:assert'
 import path from 'node:path'
+import {ContainerClient} from '@azure/storage-blob'
 import {AzureStore} from '@tus/azure-store'
 import * as shared from '../../../utils/dist/test/stores.js'
 
@@ -29,4 +31,13 @@ describe('AzureStore', () => {
   shared.shouldWriteUploads()
   shared.shouldHandleOffset()
   shared.shouldDeclareUploadLength() // Creation-defer-length extension
+
+  it('should accept a client', () => {
+    const client = new ContainerClient(
+      'https://testaccount.blob.core.windows.net/testcontainer'
+    )
+    const store = new AzureStore({client})
+
+    assert.ok(store)
+  })
 })

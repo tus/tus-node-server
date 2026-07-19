@@ -39,6 +39,29 @@ const server = new Server({
 // ...
 ```
 
+Alternatively, construct a [`ContainerClient`][] yourself to use any
+authentication method supported by the Azure SDK:
+
+```js
+import { DefaultAzureCredential } from "@azure/identity";
+import { ContainerClient } from "@azure/storage-blob";
+import { Server } from "@tus/server";
+import { AzureStore } from "@tus/azure-store";
+
+const account = process.env.AZURE_ACCOUNT_ID;
+const container = process.env.AZURE_CONTAINER_NAME;
+const client = new ContainerClient(
+  `https://${account}.blob.core.windows.net/${container}`,
+  new DefaultAzureCredential(),
+);
+
+const server = new Server({
+  path: "/files",
+  datastore: new AzureStore({ client }),
+});
+// ...
+```
+
 ## API
 
 This package exports `AzureStore`. There is no default export.
@@ -58,6 +81,12 @@ Azure account key (`string`).
 #### `options.containerName`
 
 Azure storage container name (`string`).
+
+#### `options.client`
+
+An Azure [`ContainerClient`][] configured by the consumer. Use this instead of
+`account`, `accountKey`, and `containerName` to configure authentication,
+connection details, and the Azure SDK pipeline yourself.
 
 #### `options.cache`
 
@@ -107,3 +136,4 @@ See
 [kvstores]: https://github.com/tus/tus-node-server/tree/main/packages/server#kvstores
 [`KvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/Types.ts
 [`MemoryKvStore`]: https://github.com/tus/tus-node-server/blob/main/packages/utils/src/kvstores/MemoryKvStore.ts
+[`ContainerClient`]: https://learn.microsoft.com/javascript/api/@azure/storage-blob/containerclient
