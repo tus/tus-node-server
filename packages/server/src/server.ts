@@ -209,10 +209,10 @@ export class Server extends EventEmitter {
     }
 
     // Enable CORS
-    headers.set(
-      'Access-Control-Allow-Origin',
-      this.getCorsOrigin(req.headers.get('origin'))
-    )
+    const corsOrigin = this.getCorsOrigin(req.headers.get('origin'))
+    if (corsOrigin) {
+      headers.set('Access-Control-Allow-Origin', corsOrigin)
+    }
     headers.set(
       'Access-Control-Expose-Headers',
       [...HEADERS, this.options.exposedHeaders ?? []].join(', ')
@@ -240,20 +240,25 @@ export class Server extends EventEmitter {
     return this.write(context, headers, 404, 'Not found\n')
   }
 
-  private getCorsOrigin(origin?: string | null): string {
-    const isOriginAllowed =
-      this.options.allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ??
-      true
+  private getCorsOrigin(origin?: string | null): string | null {
+    const {allowedOrigins} = this.options
 
-    if (origin && isOriginAllowed) {
-      return origin
+    if (typeof allowedOrigins === 'function') {
+      return origin && allowedOrigins(origin) ? origin : null
     }
 
-    if (this.options.allowedOrigins && this.options.allowedOrigins.length > 0) {
-      return this.options.allowedOrigins[0]
+    if (!allowedOrigins) {
+      return '*'
     }
 
-    return '*'
+    if (!origin) {
+      return allowedOrigins[0] ?? null
+    }
+
+    const isOriginAllowed = allowedOrigins.some(
+      (allowedOrigin) => allowedOrigin === origin
+    )
+    return isOriginAllowed ? origin : (allowedOrigins[0] ?? null)
   }
 
   async write(context: CancellationContext, headers: Headers, status: number, body = '') {
