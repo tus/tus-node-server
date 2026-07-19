@@ -248,18 +248,18 @@ export class Server extends EventEmitter {
       return origin && allowedOrigins(origin) ? origin : null
     }
 
-    const isOriginAllowed =
-      allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ?? true
-
-    if (origin && isOriginAllowed) {
-      return origin
+    if (!allowedOrigins) {
+      return '*'
     }
 
-    if (allowedOrigins && allowedOrigins.length > 0) {
-      return allowedOrigins[0]
+    if (!origin) {
+      return allowedOrigins[0] ?? null
     }
 
-    return '*'
+    const isOriginAllowed = allowedOrigins.some(
+      (allowedOrigin) => allowedOrigin === origin
+    )
+    return isOriginAllowed ? origin : (allowedOrigins[0] ?? null)
   }
 
   async write(context: CancellationContext, headers: Headers, status: number, body = '') {

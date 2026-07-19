@@ -274,17 +274,22 @@ describe('Server', () => {
       done()
     })
 
-    it('should allow overriding the HTTP origin', (done) => {
+    it('should return a wildcard origin if allowedOrigins is undefined', async () => {
       const origin = 'vimeo.com'
-      request(listener)
-        .options('/')
-        .set('Origin', origin)
-        .expect(204)
-        .then((res) => {
-          assert.equal(res.headers['access-control-allow-origin'], origin)
-          done()
+      const defaultServer = new Server({
+        path: '/files',
+        datastore: new DataStore(),
+        allowedCredentials: true,
+      })
+      const response = await defaultServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'OPTIONS',
+          headers: {Origin: origin},
         })
-        .catch(done)
+      )
+
+      assert.equal(response.headers.get('Access-Control-Allow-Origin'), '*')
+      assert.equal(response.headers.get('Access-Control-Allow-Credentials'), 'true')
     })
 
     it('should allow overriding the HTTP origin only if match allowedOrigins', (done) => {
@@ -336,6 +341,19 @@ describe('Server', () => {
         .expect(204)
         .then((res) => {
           assert.equal(res.headers['access-control-allow-origin'], 'google.com')
+          done()
+        })
+        .catch(done)
+    })
+
+    it('should omit Access-Control-Allow-Origin if allowedOrigins is empty', (done) => {
+      server.options.allowedOrigins = []
+      request(listener)
+        .options('/')
+        .set('Origin', 'vimeo.com')
+        .expect(204)
+        .then((res) => {
+          assert.equal(res.headers['access-control-allow-origin'], undefined)
           done()
         })
         .catch(done)

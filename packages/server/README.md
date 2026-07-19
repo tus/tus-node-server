@@ -80,7 +80,8 @@ Trusted origins (`string[]` | `(origin: string) => boolean`).
 
 Sends the client's origin back in `Access-Control-Allow-Origin` if it matches. A function
 can be used to evaluate origins dynamically; when it returns `false`, the
-`Access-Control-Allow-Origin` header is omitted.
+`Access-Control-Allow-Origin` header is omitted. When this option is undefined, the header
+defaults to `*`; an empty array omits the header.
 
 #### `options.postReceiveInterval`
 
