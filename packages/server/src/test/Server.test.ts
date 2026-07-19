@@ -9,7 +9,6 @@ import {Server} from '@tus/server'
 import {DataStore, EVENTS, Metadata, TUS_RESUMABLE} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
-import type {ServerRequest} from 'srvx'
 import request from 'supertest'
 import Throttle from 'throttle'
 

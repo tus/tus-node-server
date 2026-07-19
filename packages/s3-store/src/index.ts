@@ -1,7 +1,7 @@
 import os from 'node:os'
 import fs, {promises as fsProm} from 'node:fs'
 import stream, {promises as streamProm} from 'node:stream'
-import {Readable} from 'node:stream'
+import type {Readable} from 'node:stream'
 
 import type AWS from '@aws-sdk/client-s3'
 import {NoSuchKey, NotFound, S3, type S3ClientConfig} from '@aws-sdk/client-s3'
