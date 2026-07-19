@@ -1,5 +1,12 @@
 # @tus/azure-store
 
+## 2.0.2
+
+### Patch Changes
+
+- 0973e28: Fix downloads failing when upload metadata is loaded from Azure Blob Storage.
+- b603c51: Allow consumers to provide a configured Azure `ContainerClient`.
+
 ## 2.0.1
 
 ### Patch Changes
