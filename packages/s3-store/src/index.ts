@@ -17,7 +17,7 @@ import {
   MemoryKvStore,
 } from '@tus/utils'
 
-import {Semaphore, type Permit} from '@shopify/semaphore'
+import {Semaphore, type Permit} from './semaphore.js'
 import MultiStream from 'multistream'
 import crypto from 'node:crypto'
 import path from 'node:path'
