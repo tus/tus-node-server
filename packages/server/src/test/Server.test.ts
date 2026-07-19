@@ -341,6 +341,34 @@ describe('Server', () => {
         .catch(done)
     })
 
+    it('should support a function for dynamic allowedOrigins', async () => {
+      const origin = 'https://tenant.example.com'
+      const allowedOrigins = new Set<string>()
+      const dynamicServer = new Server({
+        path: '/files',
+        datastore: new DataStore(),
+        allowedOrigins: (requestOrigin) => allowedOrigins.has(requestOrigin),
+      })
+
+      const deniedResponse = await dynamicServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'OPTIONS',
+          headers: {Origin: origin},
+        })
+      )
+      assert.equal(deniedResponse.headers.get('Access-Control-Allow-Origin'), null)
+
+      allowedOrigins.add(origin)
+
+      const allowedResponse = await dynamicServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'OPTIONS',
+          headers: {Origin: origin},
+        })
+      )
+      assert.equal(allowedResponse.headers.get('Access-Control-Allow-Origin'), origin)
+    })
+
     it('should not invoke handlers if onIncomingRequest throws', (done) => {
       const server = new Server({
         path: '/test/output',

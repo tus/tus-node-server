@@ -42,9 +42,10 @@ export type ServerOptions = {
   allowedCredentials?: boolean
 
   /**
-   * Add trusted origins to `Access-Control-Allow-Origin`.
+   * Add trusted origins to `Access-Control-Allow-Origin`, or provide a function
+   * to determine whether an origin is trusted.
    */
-  allowedOrigins?: string[]
+  allowedOrigins?: string[] | ((origin: string) => boolean)
 
   /**
    * Interval in milliseconds for sending progress of an upload over `EVENTS.POST_RECEIVE`

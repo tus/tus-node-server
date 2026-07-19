@@ -210,10 +210,10 @@ export class Server extends EventEmitter {
     }
 
     // Enable CORS
-    headers.set(
-      'Access-Control-Allow-Origin',
-      this.getCorsOrigin(req.headers.get('origin'))
-    )
+    const corsOrigin = this.getCorsOrigin(req.headers.get('origin'))
+    if (corsOrigin) {
+      headers.set('Access-Control-Allow-Origin', corsOrigin)
+    }
     headers.set(
       'Access-Control-Expose-Headers',
       [...HEADERS, this.options.exposedHeaders ?? []].join(', ')
@@ -241,17 +241,22 @@ export class Server extends EventEmitter {
     return this.write(context, headers, 404, 'Not found\n')
   }
 
-  private getCorsOrigin(origin?: string | null): string {
+  private getCorsOrigin(origin?: string | null): string | null {
+    const {allowedOrigins} = this.options
+
+    if (typeof allowedOrigins === 'function') {
+      return origin && allowedOrigins(origin) ? origin : null
+    }
+
     const isOriginAllowed =
-      this.options.allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ??
-      true
+      allowedOrigins?.some((allowedOrigin) => allowedOrigin === origin) ?? true
 
     if (origin && isOriginAllowed) {
       return origin
     }
 
-    if (this.options.allowedOrigins && this.options.allowedOrigins.length > 0) {
-      return this.options.allowedOrigins[0]
+    if (allowedOrigins && allowedOrigins.length > 0) {
+      return allowedOrigins[0]
     }
 
     return '*'
