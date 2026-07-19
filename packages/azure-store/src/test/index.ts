@@ -1,7 +1,7 @@
 import 'should'
 import {strict as assert} from 'node:assert'
 import path from 'node:path'
-import type {TokenCredential} from '@azure/core-auth'
+import {ContainerClient} from '@azure/storage-blob'
 import {AzureStore} from '@tus/azure-store'
 import * as shared from '../../../utils/dist/test/stores.js'
 
@@ -29,16 +29,10 @@ describe('AzureStore', () => {
         containerName: process.env.AZURE_CONTAINER_NAME as string,
       })
     } else {
-      const mockCredential: TokenCredential = {
-        getToken: async () => ({
-          token: 'mock-token',
-          expiresOnTimestamp: Date.now() + 3600_000,
-        }),
-      }
       this.datastore = new AzureStore({
-        account: 'testaccount',
-        containerName: 'testcontainer',
-        credential: mockCredential,
+        containerClient: new ContainerClient(
+          'https://testaccount.blob.core.windows.net/testcontainer'
+        ),
       })
     }
   })
@@ -55,44 +49,48 @@ describe('AzureStore', () => {
     shared.shouldDeclareUploadLength()
   }
 
-  describe('constructor', () => {
-    it('should accept a TokenCredential instead of accountKey', () => {
-      const mockCredential: TokenCredential = {
-        getToken: async () => ({
-          token: 'mock-token',
-          expiresOnTimestamp: Date.now() + 3600_000,
+  it('should accept a ContainerClient', () => {
+    const containerClient = new ContainerClient(
+      'https://testaccount.blob.core.windows.net/testcontainer'
+    )
+    const store = new AzureStore({containerClient})
+
+    assert.ok(store)
+  })
+
+  it('should throw when account is missing', () => {
+    assert.throws(
+      () =>
+        new AzureStore({
+          account: '',
+          containerName: 'test',
+          accountKey: 'key',
         }),
-      }
-      const store = new AzureStore({
-        account: 'testaccount',
-        containerName: 'testcontainer',
-        credential: mockCredential,
-      })
-      assert.ok(store)
-    })
+      /account/
+    )
+  })
 
-    it('should throw when account is missing', () => {
-      assert.throws(
-        () =>
-          new AzureStore({
-            account: '',
-            containerName: 'test',
-            accountKey: 'key',
-          }),
-        /account/
-      )
-    })
+  it('should throw when accountKey is missing', () => {
+    assert.throws(
+      () =>
+        new AzureStore({
+          account: 'test',
+          containerName: 'test',
+          accountKey: '',
+        }),
+      /account key/
+    )
+  })
 
-    it('should throw when containerName is missing', () => {
-      assert.throws(
-        () =>
-          new AzureStore({
-            account: 'test',
-            containerName: '',
-            accountKey: 'key',
-          }),
-        /container name/
-      )
-    })
+  it('should throw when containerName is missing', () => {
+    assert.throws(
+      () =>
+        new AzureStore({
+          account: 'test',
+          containerName: '',
+          accountKey: 'key',
+        }),
+      /container name/
+    )
   })
 })

@@ -1,5 +1,4 @@
 import type stream from 'node:stream'
-import type {TokenCredential} from '@azure/core-auth'
 import {
   type AppendBlobClient,
   type BlobGetPropertiesResponse,
@@ -21,15 +20,17 @@ import debug from 'debug'
 type Options =
   | {
       cache?: KvStore<Upload>
-      account: string
-      containerName: string
-      accountKey: string
+      containerClient: ContainerClient
+      account?: never
+      accountKey?: never
+      containerName?: never
     }
   | {
       cache?: KvStore<Upload>
+      containerClient?: never
       account: string
+      accountKey: string
       containerName: string
-      credential: TokenCredential
     }
 
 const log = debug('tus-node-server:stores:azurestore')
@@ -40,7 +41,6 @@ const log = debug('tus-node-server:stores:azurestore')
  */
 export class AzureStore extends DataStore {
   private cache: KvStore<Upload>
-  private blobServiceClient: BlobServiceClient
   private containerClient: ContainerClient
   private containerName: string
 
@@ -49,24 +49,31 @@ export class AzureStore extends DataStore {
     this.cache = options.cache ?? new MemoryKvStore<Upload>()
     this.extensions = ['creation', 'creation-defer-length']
 
-    if (!options.account) {
-      throw new Error('Azure store must have a account')
-    }
-    if (!options.containerName) {
-      throw new Error('Azure store must have a container name')
-    }
+    if (options.containerClient) {
+      this.containerClient = options.containerClient
+    } else {
+      if (!options.account) {
+        throw new Error('Azure store must have a account')
+      }
+      if (!options.accountKey) {
+        throw new Error('Azure store must have a account key')
+      }
+      if (!options.containerName) {
+        throw new Error('Azure store must have a container name')
+      }
 
-    const storageAccountBaseUrl = `https://${options.account}.blob.core.windows.net`
-    const credential =
-      'credential' in options
-        ? options.credential
-        : new StorageSharedKeyCredential(options.account, options.accountKey)
-
-    this.blobServiceClient = new BlobServiceClient(storageAccountBaseUrl, credential)
-    this.containerClient = this.blobServiceClient.getContainerClient(
-      options.containerName
-    )
-    this.containerName = options.containerName
+      const storageAccountBaseUrl = `https://${options.account}.blob.core.windows.net`
+      const sharedKeyCredential = new StorageSharedKeyCredential(
+        options.account,
+        options.accountKey
+      )
+      const blobServiceClient = new BlobServiceClient(
+        storageAccountBaseUrl,
+        sharedKeyCredential
+      )
+      this.containerClient = blobServiceClient.getContainerClient(options.containerName)
+    }
+    this.containerName = this.containerClient.containerName
   }
 
   /**
