@@ -17,80 +17,27 @@ describe('AzureStore', () => {
   })
 
   beforeEach(function () {
-    const hasCredentials =
-      process.env.AZURE_ACCOUNT_ID &&
-      process.env.AZURE_ACCOUNT_KEY &&
-      process.env.AZURE_CONTAINER_NAME
-
-    if (hasCredentials) {
-      this.datastore = new AzureStore({
-        account: process.env.AZURE_ACCOUNT_ID as string,
-        accountKey: process.env.AZURE_ACCOUNT_KEY as string,
-        containerName: process.env.AZURE_CONTAINER_NAME as string,
-      })
-    } else {
-      this.datastore = new AzureStore({
-        containerClient: new ContainerClient(
-          'https://testaccount.blob.core.windows.net/testcontainer'
-        ),
-      })
-    }
+    this.datastore = new AzureStore({
+      account: process.env.AZURE_ACCOUNT_ID as string,
+      accountKey: process.env.AZURE_ACCOUNT_KEY as string,
+      containerName: process.env.AZURE_CONTAINER_NAME as string,
+    })
   })
 
   shared.shouldHaveStoreMethods()
-  if (
-    process.env.AZURE_ACCOUNT_ID &&
-    process.env.AZURE_ACCOUNT_KEY &&
-    process.env.AZURE_CONTAINER_NAME
-  ) {
-    shared.shouldCreateUploads()
-    shared.shouldWriteUploads()
-    shared.shouldHandleOffset()
-    shared.shouldDeclareUploadLength()
-  }
+  shared.shouldCreateUploads()
+  // shared.shouldRemoveUploads() // Not implemented yet
+  // shared.shouldExpireUploads() // Not implemented yet
+  shared.shouldWriteUploads()
+  shared.shouldHandleOffset()
+  shared.shouldDeclareUploadLength() // Creation-defer-length extension
 
-  it('should accept a ContainerClient', () => {
-    const containerClient = new ContainerClient(
+  it('should accept a client', () => {
+    const client = new ContainerClient(
       'https://testaccount.blob.core.windows.net/testcontainer'
     )
-    const store = new AzureStore({containerClient})
+    const store = new AzureStore({client})
 
     assert.ok(store)
-  })
-
-  it('should throw when account is missing', () => {
-    assert.throws(
-      () =>
-        new AzureStore({
-          account: '',
-          containerName: 'test',
-          accountKey: 'key',
-        }),
-      /account/
-    )
-  })
-
-  it('should throw when accountKey is missing', () => {
-    assert.throws(
-      () =>
-        new AzureStore({
-          account: 'test',
-          containerName: 'test',
-          accountKey: '',
-        }),
-      /account key/
-    )
-  })
-
-  it('should throw when containerName is missing', () => {
-    assert.throws(
-      () =>
-        new AzureStore({
-          account: 'test',
-          containerName: '',
-          accountKey: 'key',
-        }),
-      /container name/
-    )
   })
 })

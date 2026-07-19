@@ -50,14 +50,14 @@ import { AzureStore } from "@tus/azure-store";
 
 const account = process.env.AZURE_ACCOUNT_ID;
 const container = process.env.AZURE_CONTAINER_NAME;
-const containerClient = new ContainerClient(
+const client = new ContainerClient(
   `https://${account}.blob.core.windows.net/${container}`,
   new DefaultAzureCredential(),
 );
 
 const server = new Server({
   path: "/files",
-  datastore: new AzureStore({ containerClient }),
+  datastore: new AzureStore({ client }),
 });
 // ...
 ```
@@ -82,7 +82,7 @@ Azure account key (`string`).
 
 Azure storage container name (`string`).
 
-#### `options.containerClient`
+#### `options.client`
 
 An Azure [`ContainerClient`][] configured by the consumer. Use this instead of
 `account`, `accountKey`, and `containerName` to configure authentication,

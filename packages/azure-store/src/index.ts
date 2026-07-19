@@ -20,14 +20,14 @@ import debug from 'debug'
 type Options =
   | {
       cache?: KvStore<Upload>
-      containerClient: ContainerClient
+      client: ContainerClient
       account?: never
       accountKey?: never
       containerName?: never
     }
   | {
       cache?: KvStore<Upload>
-      containerClient?: never
+      client?: never
       account: string
       accountKey: string
       containerName: string
@@ -49,8 +49,8 @@ export class AzureStore extends DataStore {
     this.cache = options.cache ?? new MemoryKvStore<Upload>()
     this.extensions = ['creation', 'creation-defer-length']
 
-    if (options.containerClient) {
-      this.containerClient = options.containerClient
+    if (options.client) {
+      this.containerClient = options.client
     } else {
       if (!options.account) {
         throw new Error('Azure store must have a account')
@@ -73,6 +73,7 @@ export class AzureStore extends DataStore {
       )
       this.containerClient = blobServiceClient.getContainerClient(options.containerName)
     }
+
     this.containerName = this.containerClient.containerName
   }
 
