@@ -3,6 +3,7 @@ import {strict as assert} from 'node:assert'
 import path from 'node:path'
 import {ContainerClient} from '@azure/storage-blob'
 import {AzureStore} from '@tus/azure-store'
+import {Metadata} from '@tus/utils'
 import * as shared from '../../../utils/dist/test/stores.js'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
@@ -39,5 +40,28 @@ describe('AzureStore', () => {
     const store = new AzureStore({client})
 
     assert.ok(store)
+  })
+})
+
+describe('AzureStore persisted metadata', () => {
+  it('decodes TUS metadata loaded from Azure', async () => {
+    const metadata = {filename: '世界.pdf', is_confidential: null}
+    const storedUpload = JSON.stringify({
+      id: 'persisted-upload',
+      offset: 7,
+      size: 42,
+      metadata: Metadata.stringify(metadata),
+    })
+    const client = {
+      containerName: 'container',
+      getAppendBlobClient: () => ({
+        url: 'https://example.com/container/persisted-upload',
+        getProperties: async () => ({metadata: {upload: storedUpload}}),
+      }),
+    } as unknown as ContainerClient
+    const store = new AzureStore({client})
+    const upload = await store.getUpload('persisted-upload')
+
+    assert.deepStrictEqual(upload.metadata, metadata)
   })
 })
