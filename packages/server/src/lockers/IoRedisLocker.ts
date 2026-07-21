@@ -73,8 +73,13 @@ class IoRedisClient implements LockClient {
   }
 
   async subscribe(channel: string, onMessage: () => void): Promise<() => Promise<void>> {
+    try {
+      await this.subscriber.subscribe(channel)
+    } catch (err) {
+      this.releaseHandlers.delete(channel)
+      throw err
+    }
     this.releaseHandlers.set(channel, onMessage)
-    await this.subscriber.subscribe(channel)
     return async () => {
       this.releaseHandlers.delete(channel)
       await this.subscriber.unsubscribe(channel)
