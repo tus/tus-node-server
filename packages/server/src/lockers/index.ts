@@ -1,3 +1,6 @@
-export * from './MemoryLocker.js'
-export * from './RedisLocker.js'
+export * from './RedisLockEngine.js'
+
+export * from './NodeRedisLocker.js'
 export * from './IoRedisLocker.js'
+
+export * from './MemoryLocker.js'
