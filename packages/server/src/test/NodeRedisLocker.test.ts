@@ -2,12 +2,20 @@ import assert from 'node:assert'
 import {randomUUID} from 'node:crypto'
 import {setTimeout as delay} from 'node:timers/promises'
 import {createClient, type RedisClientType} from '@redis/client'
-import {ERRORS, RedisLocker} from '@tus/server'
+import {NodeRedisLocker} from '@tus/server'
 import sinon from 'sinon'
+import {type ContractLockerOptions, lockerContract} from './lockerContract.js'
 
+// These are integration tests: they require a reachable Redis. Locally, when none
+// is available, the whole suite is skipped rather than failed. In CI a Redis
+// service is provisioned so an unreachable Redis fails instead. Point at a
+// different instance with REDIS_URL
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://127.0.0.1:6379'
 
-describe('RedisLocker', () => {
+// Localize sinon so it doesn't interfere with other tests when restore() is called (took me a bit to realize this...)
+const sandbox = sinon.createSandbox()
+
+describe('NodeRedisLocker', () => {
   const conns: RedisClientType[] = []
   let probe: RedisClientType
 
@@ -22,10 +30,10 @@ describe('RedisLocker', () => {
     return client
   }
 
-  async function makeLocker(options: Partial<Record<string, number>> = {}) {
+  async function makeLocker(options: ContractLockerOptions = {}) {
     const redis = await connect()
     const subscriber = await connect()
-    return new RedisLocker({
+    return new NodeRedisLocker({
       redis,
       subscriber,
       acquireLockTimeout: 1000,
@@ -48,11 +56,19 @@ describe('RedisLocker', () => {
     }
   })
 
+  afterEach(() => {
+    sandbox.restore()
+  })
+
   after(async () => {
     await Promise.allSettled(conns.map((c) => (c.isOpen ? c.quit() : Promise.resolve())))
   })
 
-  it('acquires a lock and releases it', async () => {
+  lockerContract((options) => makeLocker(options))
+
+  // Client specific tests below
+
+  it('sets and clears the redis key around a lock', async () => {
     const locker = await makeLocker()
     const id = randomUUID()
     const lock = locker.newLock(id)
@@ -68,72 +84,6 @@ describe('RedisLocker', () => {
     )
   })
 
-  it('acquires a lock by notifying the holder to release it', async () => {
-    const locker = await makeLocker()
-    const id = randomUUID()
-    const signal = new AbortController().signal
-
-    const cancel = sinon.spy()
-    const cancel2 = sinon.spy()
-
-    const lock1 = locker.newLock(id)
-    const lock2 = locker.newLock(id)
-
-    await lock1.lock(signal, async () => {
-      await lock1.unlock()
-      cancel()
-    })
-
-    await lock2.lock(signal, async () => {
-      cancel2()
-    })
-
-    await lock2.unlock()
-
-    assert.strictEqual(cancel.callCount, 1, 'holder should be asked to release once')
-    assert.strictEqual(cancel2.callCount, 0, 'uncontended lock2 should never be nudged')
-  })
-
-  it('returns a lock timeout error when the holder never releases', async () => {
-    const locker = await makeLocker({acquireLockTimeout: 400})
-    const id = randomUUID()
-    const signal = new AbortController().signal
-
-    const holder = locker.newLock(id)
-    await holder.lock(signal, () => {
-      // refuse to release
-    })
-
-    const contender = locker.newLock(id)
-    await assert.rejects(
-      contender.lock(signal, () => {}),
-      (e) => e === ERRORS.ERR_LOCK_TIMEOUT
-    )
-
-    await holder.unlock()
-  })
-
-  it('stops trying to acquire when the abort signal is aborted', async () => {
-    const locker = await makeLocker({acquireLockTimeout: 5000})
-    const id = randomUUID()
-    const abortController = new AbortController()
-
-    const holder = locker.newLock(id)
-    await holder.lock(abortController.signal, () => {
-      // refuse to release
-    })
-
-    setTimeout(() => abortController.abort(), 100)
-
-    const contender = locker.newLock(id)
-    await assert.rejects(
-      contender.lock(abortController.signal, () => {}),
-      (e) => e === ERRORS.ERR_LOCK_TIMEOUT
-    )
-
-    await holder.unlock()
-  })
-
   it('keeps the lock alive past its TTL via the watchdog', async () => {
     const locker = await makeLocker({redisLockTimeout: 400})
     const id = randomUUID()
@@ -141,6 +91,7 @@ describe('RedisLocker', () => {
 
     await lock.lock(new AbortController().signal, () => {})
 
+    // Wait well beyond the 400ms TTL. The watchdog renews every ~200ms so the key must still exist
     await delay(700)
     assert.strictEqual(
       await probe.exists(`lock:${id}`),
@@ -153,12 +104,13 @@ describe('RedisLocker', () => {
   })
 
   it('coordinates the lock across two separate locker instances', async () => {
+    // Two lockers with independent connections simulate two server processes
     const a = await makeLocker()
     const b = await makeLocker()
     const id = randomUUID()
     const signal = new AbortController().signal
 
-    const released = sinon.spy()
+    const released = sandbox.spy()
 
     const lockA = a.newLock(id)
     await lockA.lock(signal, async () => {
@@ -171,5 +123,43 @@ describe('RedisLocker', () => {
     await lockB.unlock()
 
     assert.strictEqual(released.callCount, 1, 'nudge should cross connections via Redis')
+  })
+
+  it('releases the key if subscribing fails during acquisition', async () => {
+    const redis = await connect()
+    const subscriber = await connect()
+    sandbox.stub(subscriber, 'subscribe').rejects(new Error('subscribe boom'))
+
+    const locker = new NodeRedisLocker({redis, subscriber, redisLockTimeout: 1000})
+    const id = randomUUID()
+    const lock = locker.newLock(id)
+
+    await assert.rejects(
+      lock.lock(new AbortController().signal, () => {}),
+      /subscribe boom/
+    )
+    assert.strictEqual(
+      await probe.exists(`lock:${id}`),
+      0,
+      'key must not be orphaned when subscribe fails'
+    )
+  })
+
+  it('still releases ownership if unsubscribing fails during unlock', async () => {
+    const redis = await connect()
+    const subscriber = await connect()
+    const locker = new NodeRedisLocker({redis, subscriber, redisLockTimeout: 1000})
+    const id = randomUUID()
+    const lock = locker.newLock(id)
+
+    await lock.lock(new AbortController().signal, () => {})
+    sandbox.stub(subscriber, 'unsubscribe').rejects(new Error('unsubscribe boom'))
+
+    await assert.rejects(lock.unlock(), /unsubscribe boom/)
+    assert.strictEqual(
+      await probe.exists(`lock:${id}`),
+      0,
+      'release EVAL must run even if unsubscribe fails'
+    )
   })
 })
