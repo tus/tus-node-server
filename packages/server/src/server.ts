@@ -52,6 +52,8 @@ export class Server extends EventEmitter {
   datastore: DataStore
   handlers: Handlers
   options: ServerOptions
+  private exposedHeadersValue: string
+  private exposedHeadersRef?: string[]
 
   constructor(options: WithOptional<ServerOptions, 'locker'> & {datastore: DataStore}) {
     super()
@@ -83,6 +85,9 @@ export class Server extends EventEmitter {
     const {datastore, ...rest} = options
     this.options = rest as ServerOptions
     this.datastore = datastore
+    // The value only changes when the option is reassigned, so build it once
+    // instead of spreading and joining on every request.
+    this.exposedHeadersValue = this.buildExposedHeaders()
     this.handlers = {
       // GET handlers should be written in the implementations
       GET: new GetHandler(this.datastore, this.options),
@@ -213,10 +218,11 @@ export class Server extends EventEmitter {
     if (corsOrigin) {
       headers.set('Access-Control-Allow-Origin', corsOrigin)
     }
-    headers.set(
-      'Access-Control-Expose-Headers',
-      [...HEADERS, this.options.exposedHeaders ?? []].join(', ')
-    )
+    // Rebuild only when the exposedHeaders option was reassigned.
+    if (this.options.exposedHeaders !== this.exposedHeadersRef) {
+      this.exposedHeadersValue = this.buildExposedHeaders()
+    }
+    headers.set('Access-Control-Expose-Headers', this.exposedHeadersValue)
 
     if (this.options.allowedCredentials === true) {
       headers.set('Access-Control-Allow-Credentials', 'true')
@@ -238,6 +244,11 @@ export class Server extends EventEmitter {
     }
 
     return this.write(context, headers, 404, 'Not found\n')
+  }
+
+  private buildExposedHeaders(): string {
+    this.exposedHeadersRef = this.options.exposedHeaders
+    return [...HEADERS, this.options.exposedHeaders ?? []].join(', ')
   }
 
   private getCorsOrigin(origin?: string | null): string | null {
