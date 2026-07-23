@@ -374,6 +374,24 @@ describe('PostHandler', () => {
         assert.equal(upload.size, 1024)
       })
 
+      it('should let onUploadFinish override response headers without mutating them', async () => {
+        const store = sinon.createStubInstance(DataStore)
+        const hookHeaders = Object.freeze({'x-test': 'overridden'})
+        const handler = new PostHandler(store, {
+          path: '/test/output',
+          locker: new MemoryLocker(),
+          onUploadFinish: async () => ({headers: hookHeaders}),
+        })
+
+        const req = new Request('https://example.com/test/output', {
+          headers: {'upload-length': '0', host: 'localhost:3000'},
+        })
+        const res = await handler.send(req, context, new Headers({'x-test': 'default'}))
+
+        assert.equal(res.headers.get('x-test'), 'overridden')
+        assert.deepEqual(hookHeaders, {'x-test': 'overridden'})
+      })
+
       it('should call onUploadFinish hook for empty file without content-type', async () => {
         const store = sinon.createStubInstance(DataStore)
         const spy = sinon.stub().resolvesArg(1)
