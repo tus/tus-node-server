@@ -147,7 +147,7 @@ export class PostHandler extends BaseHandler {
         if (patch.status_code) responseData.status = patch.status_code
         if (patch.body) responseData.body = patch.body
         if (patch.headers)
-          responseData.headers = Object.assign(patch.headers, responseData.headers)
+          responseData.headers = Object.assign(responseData.headers, patch.headers)
       } catch (error) {
         log(`onUploadFinish: ${error.body}`)
         throw error
