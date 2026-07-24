@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.4.3
+
+### Patch Changes
+
+- 42bc9da: Ensure `PostHandler` `onUploadFinish` hook headers override response defaults correctly.
+
 ## 2.4.2
 
 ### Patch Changes
