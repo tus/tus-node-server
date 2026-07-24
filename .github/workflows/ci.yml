@@ -67,11 +67,10 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
-        # Environment protection keeps it safe
-        allow-unsafe-pr-checkout: true
         with:
           # Environment protection provides security - we can safely checkout PR code
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          allow-unsafe-pr-checkout: true
 
       - name: Decrypt keyfile
         run: ./.github/scripts/decrypt_secret.sh
