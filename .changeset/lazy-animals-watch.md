@@ -2,4 +2,4 @@
 "@tus/server": patch
 ---
 
-Compute the `Access-Control-Expose-Headers` value once in the constructor instead of rebuilding it on every request.
+Use the precomputed `EXPOSED_HEADERS` constant for the default `Access-Control-Expose-Headers` value instead of rebuilding it on every request.
