@@ -1,5 +1,13 @@
 # @tus/file-store
 
+## 2.1.1
+
+### Patch Changes
+
+- d2489f2: Reject encoded path separators and NUL bytes in default upload IDs, and prevent file store paths from escaping their configured directory. Applications using nested IDs must provide a custom `getFileIdFromRequest`.
+- Updated dependencies [d2489f2]
+  - @tus/utils@0.7.1
+
 ## 2.1.0
 
 ### Minor Changes
