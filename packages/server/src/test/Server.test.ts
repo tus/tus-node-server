@@ -133,6 +133,24 @@ describe('Server', () => {
       request(listener).post('/').expect(412, 'Tus-Resumable Required\n', done)
     })
 
+    it('should reject encoded path traversal IDs', async () => {
+      const outsidePath = path.resolve(directory, '..', 'outside-victim')
+      await fs.writeFile(outsidePath, 'keep me')
+
+      try {
+        const response = await server.handleWeb(
+          new Request('http://localhost/test/output/..%2Foutside-victim', {
+            method: 'DELETE',
+            headers: {'Tus-Resumable': TUS_RESUMABLE},
+          })
+        )
+        assert.equal(response.status, 404)
+        assert.equal(await fs.readFile(outsidePath, 'utf8'), 'keep me')
+      } finally {
+        await fs.rm(outsidePath, {force: true})
+      }
+    })
+
     it('OPTIONS should return configuration', (done) => {
       request(listener)
         .options('/')

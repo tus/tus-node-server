@@ -51,6 +51,18 @@ describe('BaseHandler', () => {
     assert.equal(id, '1234 5#')
   })
 
+  it('should reject decoded path separators and null bytes', () => {
+    for (const id of ['..%2Ffile', '..%5Cfile', 'file%00', 'file%']) {
+      const req = new Request(`https://example.com/test/output/${id}`)
+      assert.equal(handler.getFileIdFromRequest(req), undefined)
+    }
+  })
+
+  it('should allow IDs containing two consecutive dots', () => {
+    const req = new Request('https://example.com/test/output/file..name')
+    assert.equal(handler.getFileIdFromRequest(req), 'file..name')
+  })
+
   it('should allow to to generate a url with a custom function', () => {
     const handler = new BaseHandler(store, {
       path: '/path',

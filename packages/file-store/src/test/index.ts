@@ -4,6 +4,7 @@ import {strict as assert} from 'node:assert'
 import fs from 'node:fs'
 import fsProm from 'node:fs/promises'
 import path from 'node:path'
+import {Readable} from 'node:stream'
 
 import sinon from 'sinon'
 
@@ -66,6 +67,22 @@ describe('FileStore', function () {
       const stats = fs.statSync(path.join(this.datastore.directory, file.id))
       assert.equal(stats.size, 0)
     })
+
+    it('should support nested upload IDs', async function () {
+      const file = new Upload({id: 'nested/path/upload', size: 0, offset: 0})
+
+      await this.datastore.create(file)
+      assert.equal((await this.datastore.getUpload(file.id)).id, file.id)
+      await this.datastore.remove(file.id)
+    })
+
+    it('should reject paths outside the configured directory', async function () {
+      const outsidePath = path.resolve(this.datastore.directory, '..', 'outside-upload')
+      const file = new Upload({id: '../outside-upload', size: 0, offset: 0})
+
+      await assert.rejects(this.datastore.create(file), {status_code: 404})
+      assert.equal(fs.existsSync(outsidePath), false)
+    })
   })
 
   describe('write', function () {
@@ -83,11 +100,34 @@ describe('FileStore', function () {
       const stats = fs.statSync(this.testFilePath)
       assert.equal(stats.size, this.testFileSize)
     })
+
+    it('should reject paths outside the configured directory', async function () {
+      await assert.rejects(
+        this.datastore.write(Readable.from('changed'), '../outside-upload', 0),
+        {status_code: 404}
+      )
+    })
   })
 
   describe('getUpload', () => {
     it('should reject directories', function () {
       return this.datastore.getUpload('').should.be.rejected()
+    })
+  })
+
+  describe('remove', () => {
+    it('should not delete files outside the configured directory', async function () {
+      const outsidePath = path.resolve(this.datastore.directory, '..', 'outside-victim')
+      await fsProm.writeFile(outsidePath, 'keep me')
+
+      try {
+        await assert.rejects(this.datastore.remove('../outside-victim'), {
+          status_code: 404,
+        })
+        assert.equal(await fsProm.readFile(outsidePath, 'utf8'), 'keep me')
+      } finally {
+        await fsProm.rm(outsidePath, {force: true})
+      }
     })
   })
 
@@ -104,6 +144,23 @@ describe('FileStore', function () {
       // One upload consists of the file and the JSON info file.
       // But from the list perspective that is only one upload.
       assert.strictEqual(list.length, 1)
+    })
+
+    it('should not access files outside the configured directory', async () => {
+      const store = new FileConfigstore(storePath)
+      const outsidePath = path.resolve(storePath, '..', 'outside-config.json')
+      await fsProm.writeFile(outsidePath, '{"original":true}')
+
+      try {
+        assert.equal(await store.get('../outside-config'), undefined)
+        await assert.rejects(
+          store.set('../outside-config', new Upload({id: 'outside', size: 0, offset: 0}))
+        )
+        await assert.rejects(store.delete('../outside-config'))
+        assert.equal(await fsProm.readFile(outsidePath, 'utf8'), '{"original":true}')
+      } finally {
+        await fsProm.rm(outsidePath, {force: true})
+      }
     })
   })
 

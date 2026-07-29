@@ -66,17 +66,31 @@ export class BaseHandler extends EventEmitter {
 
   getFileIdFromRequest(req: Request) {
     const match = reExtractFileID.exec(req.url as string)
-
-    if (this.options.getFileIdFromRequest) {
-      const lastPath = match ? decodeURIComponent(match[1]) : undefined
-      return this.options.getFileIdFromRequest(req, lastPath)
+    if (!match) {
+      return this.options.getFileIdFromRequest?.(req)
     }
 
-    if (!match || this.options.path.includes(match[1])) {
+    let id: string
+    try {
+      id = decodeURIComponent(match[1])
+    } catch {
       return
     }
 
-    return decodeURIComponent(match[1])
+    if (this.options.getFileIdFromRequest) {
+      return this.options.getFileIdFromRequest(req, id)
+    }
+
+    if (
+      this.options.path.includes(match[1]) ||
+      id.includes('/') ||
+      id.includes('\\') ||
+      id.includes('\0')
+    ) {
+      return
+    }
+
+    return id
   }
 
   static extractHostAndProto(headers: Headers, respectForwardedHeaders?: boolean) {

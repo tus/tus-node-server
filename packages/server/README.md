@@ -127,8 +127,9 @@ Checkout the example how to
 Control how the Upload-ID is extracted from the request
 (`(req: Request, lastPath?: string) => string | void`)
 
-By default, it expects everything in the path after the last `/` to be the upload id.
-`lastPath` is everything after the last `/`.
+By default, it expects everything in the path after the last `/` to be the upload id and
+rejects decoded path separators and NUL bytes. `lastPath` is everything after the last
+`/`. A custom function is responsible for validating the ID it returns.
 
 Checkout the example how to
 [store files in custom nested directories](#example-store-files-in-custom-nested-directories).

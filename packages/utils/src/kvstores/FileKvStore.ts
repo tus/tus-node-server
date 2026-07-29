@@ -3,6 +3,8 @@ import path from 'node:path'
 
 import type {KvStore} from './Types.js'
 import type {Upload} from '../models/index.js'
+import {ERRORS} from '../constants.js'
+import {isPathInsideDirectory} from '../path.js'
 
 /**
  * FileConfigstore writes the `Upload` JSON metadata to disk next the uploaded file itself.
@@ -43,6 +45,10 @@ export class FileKvStore<T = Upload> implements KvStore<T> {
   }
 
   private resolve(key: string): string {
-    return path.resolve(this.directory, `${key}.json`)
+    const filePath = path.resolve(this.directory, `${key}.json`)
+    if (!isPathInsideDirectory(this.directory, filePath)) {
+      throw ERRORS.FILE_NOT_FOUND
+    }
+    return filePath
   }
 }
