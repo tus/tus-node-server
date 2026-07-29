@@ -1,5 +1,15 @@
 # @tus/server
 
+## 2.4.3
+
+### Patch Changes
+
+- 7d6f382: Use the precomputed `EXPOSED_HEADERS` constant for the default `Access-Control-Expose-Headers` value instead of rebuilding it on every request.
+- d2489f2: Reject encoded path separators and NUL bytes in default upload IDs, and prevent file store paths from escaping their configured directory. Applications using nested IDs must provide a custom `getFileIdFromRequest`.
+- 42bc9da: Ensure `PostHandler` `onUploadFinish` hook headers override response defaults correctly.
+- Updated dependencies [d2489f2]
+  - @tus/utils@0.7.1
+
 ## 2.4.2
 
 ### Patch Changes
