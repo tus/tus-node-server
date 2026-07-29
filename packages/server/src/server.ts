@@ -1,7 +1,14 @@
 import {EventEmitter} from 'node:events'
 import http from 'node:http'
 import type {CancellationContext, DataStore, Upload} from '@tus/utils'
-import {ERRORS, EVENTS, EXPOSED_HEADERS, HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from '@tus/utils'
+import {
+  ERRORS,
+  EVENTS,
+  EXPOSED_HEADERS,
+  HEADERS,
+  REQUEST_METHODS,
+  TUS_RESUMABLE,
+} from '@tus/utils'
 import debug from 'debug'
 import type {ServerRequest} from 'srvx'
 import {NodeRequest, sendNodeResponse} from 'srvx/node'
