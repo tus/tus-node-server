@@ -272,8 +272,7 @@ export class Server extends EventEmitter {
 
   async write(context: CancellationContext, headers: Headers, status: number, body = '') {
     const isAborted = context.signal.aborted
-    const responseBody =
-      status === 204 || status === 205 || status === 304 ? null : body
+    const responseBody = status === 204 || status === 205 || status === 304 ? null : body
 
     if (responseBody !== null) {
       headers.set('Content-Length', String(Buffer.byteLength(responseBody, 'utf8')))
