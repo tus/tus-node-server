@@ -184,19 +184,23 @@ export class BaseHandler extends EventEmitter {
         reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
       })
 
-      const postReceive = throttle(
-        (offset: number) => {
-          this.emit(EVENTS.POST_RECEIVE, nodeStream, {...upload, offset})
-        },
-        this.options.postReceiveInterval,
-        {leading: false}
-      )
-
-      let tempOffset = upload.offset
-      proxy.on('data', (chunk: Buffer) => {
-        tempOffset += chunk.byteLength
-        postReceive(tempOffset)
-      })
+      const postReceive =
+        this.listenerCount(EVENTS.POST_RECEIVE) > 0
+          ? throttle(
+              (offset: number) => {
+                this.emit(EVENTS.POST_RECEIVE, nodeStream, {...upload, offset})
+              },
+              this.options.postReceiveInterval,
+              {leading: false}
+            )
+          : undefined
+      if (postReceive) {
+        let tempOffset = upload.offset
+        proxy.on('data', (chunk: Buffer) => {
+          tempOffset += chunk.byteLength
+          postReceive(tempOffset)
+        })
+      }
 
       // Pipe the request stream through the proxy. We use the proxy instead of the request stream directly
       // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
@@ -209,11 +213,11 @@ export class BaseHandler extends EventEmitter {
             return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
           }
         )
-        .then(resolve)
-        .catch(reject)
         .finally(() => {
+          postReceive?.cancel()
           context.signal.removeEventListener('abort', onAbort)
         })
+        .then(resolve, reject)
     })
   }
 
