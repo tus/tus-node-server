@@ -78,9 +78,10 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v7
         with:
-          # Test the event's pinned proposed merge, including the current base.
+          # Test GitHub's proposed merge, including the current base.
+          # If the merge ref does not exist, checkout fails instead of testing the base.
           # External PRs cannot reach this step until the environment is approved.
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          ref: ${{ github.event_name == 'pull_request_target' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
           allow-unsafe-pr-checkout: true
 
       - name: Decrypt keyfile
