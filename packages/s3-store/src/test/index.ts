@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
 import stream from 'node:stream/promises'
 
+import {NoSuchUpload} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
@@ -280,6 +281,28 @@ describe('S3DataStore', () => {
     } catch (error) {
       assert.fail(`Zero byte file was not uploaded to S3: ${error.message}`)
     }
+  })
+
+  it('should report a missing multipart upload as a missing file when removing it', async function () {
+    const store = this.datastore as S3Store
+    const id = shared.testId('missing-multipart-upload')
+
+    // @ts-expect-error protected method
+    sinon.stub(store, 'getMetadata').resolves({
+      file: new Upload({id, size: 1, offset: 1}),
+      'upload-id': 'missing-upload-id',
+      'tus-version': '1.0.0',
+    })
+
+    // @ts-expect-error protected property
+    sinon.stub(store.client, 'abortMultipartUpload').rejects(
+      new NoSuchUpload({
+        $metadata: {httpStatusCode: 404},
+        message: 'The specified upload does not exist.',
+      })
+    )
+
+    await assert.rejects(store.remove(id), {status_code: 404})
   })
 
   it('should use default maxMultipartParts when not specified', () => {
