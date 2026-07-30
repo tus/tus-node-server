@@ -119,8 +119,8 @@ export const shouldRemoveUploads = () => {
       assert.equal(this.datastore.hasExtension('termination'), true)
     })
 
-    it('should reject when the file does not exist', function () {
-      return this.datastore.remove('doesnt_exist').should.be.rejected()
+    it('should reject with file not found when the file does not exist', async function () {
+      await assert.rejects(this.datastore.remove('doesnt_exist'), {status_code: 404})
     })
 
     it('should delete the file when it does exist', async function () {

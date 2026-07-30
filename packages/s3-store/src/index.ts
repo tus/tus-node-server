@@ -4,7 +4,7 @@ import stream, {promises as streamProm} from 'node:stream'
 import type {Readable} from 'node:stream'
 
 import type AWS from '@aws-sdk/client-s3'
-import {NoSuchKey, NotFound, S3, type S3ClientConfig} from '@aws-sdk/client-s3'
+import {S3, type S3ClientConfig} from '@aws-sdk/client-s3'
 import debug from 'debug'
 
 import {
@@ -57,6 +57,23 @@ export type MetadataValue = {
 
 function calcOffsetFromParts(parts?: Array<AWS.Part>) {
   return parts && parts.length > 0 ? parts.reduce((a, b) => a + (b.Size ?? 0), 0) : 0
+}
+
+const S3_NOT_FOUND_ERROR_CODES = new Set(['NotFound', 'NoSuchKey', 'NoSuchUpload'])
+
+function isS3NotFoundError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+
+  return (
+    ('name' in error &&
+      typeof error.name === 'string' &&
+      S3_NOT_FOUND_ERROR_CODES.has(error.name)) ||
+    ('Code' in error &&
+      typeof error.Code === 'string' &&
+      S3_NOT_FOUND_ERROR_CODES.has(error.Code))
+  )
 }
 
 // Implementation (based on https://github.com/tus/tusd/blob/master/s3store/s3store.go)
@@ -326,7 +343,7 @@ export class S3Store extends DataStore {
       })
       return data.Body as Readable
     } catch (error) {
-      if (error instanceof NoSuchKey) {
+      if (isS3NotFoundError(error)) {
         return undefined
       }
 
@@ -342,7 +359,7 @@ export class S3Store extends DataStore {
       })
       return data.ContentLength
     } catch (error) {
-      if (error instanceof NotFound) {
+      if (isS3NotFoundError(error)) {
         return undefined
       }
       throw error
@@ -662,7 +679,7 @@ export class S3Store extends DataStore {
       // completed and therefore can ensure the the offset is the size.
       // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
       // Spaces, can also return NoSuchKey.
-      if (error.Code === 'NoSuchUpload' || error.Code === 'NoSuchKey') {
+      if (isS3NotFoundError(error)) {
         return new Upload({
           ...metadata.file,
           offset: metadata.file.size as number,
@@ -708,7 +725,7 @@ export class S3Store extends DataStore {
         })
       }
     } catch (error) {
-      if (error?.code && ['NotFound', 'NoSuchKey', 'NoSuchUpload'].includes(error.Code)) {
+      if (isS3NotFoundError(error)) {
         log('remove: No file found.', error)
         throw ERRORS.FILE_NOT_FOUND
       }
