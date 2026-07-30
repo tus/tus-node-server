@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.4.4
+
+### Patch Changes
+
+- 0cf2903: Fix a crash when a response hook returns a null-body status (204, 205, or 304).
+
 ## 2.4.3
 
 ### Patch Changes

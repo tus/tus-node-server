@@ -13,8 +13,8 @@
   "dependencies": {
     "@tus/file-store": "^2.1.1",
     "@tus/gcs-store": "^2.0.1",
-    "@tus/s3-store": "^2.0.5",
-    "@tus/server": "^2.4.3"
+    "@tus/s3-store": "^2.0.6",
+    "@tus/server": "^2.4.4"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",

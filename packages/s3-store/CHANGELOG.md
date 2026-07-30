@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 2.0.6
+
+### Patch Changes
+
+- 69253d9: Return a file-not-found error when S3 reports that an upload or object does not exist
+
 ## 2.0.5
 
 ### Patch Changes
