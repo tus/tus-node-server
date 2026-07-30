@@ -272,9 +272,11 @@ export class Server extends EventEmitter {
 
   async write(context: CancellationContext, headers: Headers, status: number, body = '') {
     const isAborted = context.signal.aborted
+    const responseBody =
+      status === 204 || status === 205 || status === 304 ? null : body
 
-    if (status !== 204) {
-      headers.set('Content-Length', String(Buffer.byteLength(body, 'utf8')))
+    if (responseBody !== null) {
+      headers.set('Content-Length', String(Buffer.byteLength(responseBody, 'utf8')))
     }
 
     if (isAborted) {
@@ -286,7 +288,7 @@ export class Server extends EventEmitter {
       headers.set('Connection', 'close')
     }
 
-    return new Response(body, {status, headers})
+    return new Response(responseBody, {status, headers})
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: it's fine

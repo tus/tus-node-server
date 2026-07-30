@@ -39,6 +39,14 @@ describe('BaseHandler', () => {
     assert.equal(await res.text(), body)
   })
 
+  it('write() should omit the body for null-body statuses', () => {
+    for (const status of [204, 205, 304]) {
+      const res = handler.write(status, {}, 'ignored')
+      assert.equal(res.status, status)
+      assert.equal(res.body, null)
+    }
+  })
+
   it('should get ID correctly from nested URL', () => {
     const req = new Request('https://example.com/some/path/yeah/1234')
     const id = handler.getFileIdFromRequest(req)
