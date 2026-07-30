@@ -153,6 +153,7 @@ describe('PostHandler', () => {
           res.headers.get('location'),
           'http://localhost:3000/test/output/1234'
         )
+        assert.equal(res.headers.get('Content-Length'), '0')
         assert.equal(res.status, 201)
       })
     })
@@ -390,6 +391,28 @@ describe('PostHandler', () => {
 
         assert.equal(res.headers.get('x-test'), 'overridden')
         assert.deepEqual(hookHeaders, {'x-test': 'overridden'})
+      })
+
+      it('should omit the body for a null-body onUploadFinish response', async () => {
+        const store = sinon.createStubInstance(DataStore)
+        const handler = new PostHandler(store, {
+          path: '/test/output',
+          locker: new MemoryLocker(),
+          onUploadFinish: async () => ({
+            status_code: 304,
+            body: 'ignored',
+            headers: {'Content-Length': 7},
+          }),
+        })
+        const req = new Request('https://example.com/test/output', {
+          headers: {'upload-length': '0', host: 'localhost:3000'},
+        })
+
+        const res = await handler.send(req, context)
+
+        assert.equal(res.status, 304)
+        assert.equal(res.headers.has('Content-Length'), false)
+        assert.equal(res.body, null)
       })
 
       it('should call onUploadFinish hook for empty file without content-type', async () => {

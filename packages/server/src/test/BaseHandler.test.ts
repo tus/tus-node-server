@@ -39,6 +39,17 @@ describe('BaseHandler', () => {
     assert.equal(await res.text(), body)
   })
 
+  for (const status of [204, 205, 304]) {
+    it(`write() should omit the body for ${status}`, () => {
+      const headers = new Headers({'Content-Length': '7'})
+      const res = handler.write(status, headers, 'ignored')
+      assert.equal(res.status, status)
+      assert.equal(res.headers.has('Content-Length'), false)
+      assert.equal(res.body, null)
+      assert.equal(headers.get('Content-Length'), '7')
+    })
+  }
+
   it('should get ID correctly from nested URL', () => {
     const req = new Request('https://example.com/some/path/yeah/1234')
     const id = handler.getFileIdFromRequest(req)

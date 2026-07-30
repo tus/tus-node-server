@@ -793,5 +793,24 @@ describe('Server', () => {
 
       assert.equal(spy.calledOnce, true)
     })
+
+    for (const status_code of [204, 205, 304]) {
+      it(`should omit the body when onResponseError returns ${status_code}`, async () => {
+        const server = new Server({
+          path: '/test/output',
+          datastore: new DataStore(),
+          onResponseError: () => ({status_code, body: 'ignored'}),
+        })
+        server.get('/error', () => {
+          throw new Error('test error')
+        })
+
+        const response = await server.handleWeb(new Request('http://localhost/error'))
+
+        assert.equal(response.status, status_code)
+        assert.equal(response.headers.has('Content-Length'), false)
+        assert.equal(response.body, null)
+      })
+    }
   })
 })

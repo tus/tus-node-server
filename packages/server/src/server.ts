@@ -19,6 +19,7 @@ import {OptionsHandler} from './handlers/OptionsHandler.js'
 import {PatchHandler} from './handlers/PatchHandler.js'
 import {PostHandler} from './handlers/PostHandler.js'
 import {MemoryLocker} from './lockers/index.js'
+import {createResponse} from './response.js'
 import type {RouteHandler, ServerOptions, WithOptional} from './types.js'
 import {validateHeader} from './validators/HeaderValidator.js'
 
@@ -273,10 +274,6 @@ export class Server extends EventEmitter {
   async write(context: CancellationContext, headers: Headers, status: number, body = '') {
     const isAborted = context.signal.aborted
 
-    if (status !== 204) {
-      headers.set('Content-Length', String(Buffer.byteLength(body, 'utf8')))
-    }
-
     if (isAborted) {
       // This condition handles situations where the request has been flagged as aborted.
       // In such cases, the server informs the client that the connection will be closed.
@@ -286,7 +283,7 @@ export class Server extends EventEmitter {
       headers.set('Connection', 'close')
     }
 
-    return new Response(body, {status, headers})
+    return createResponse(status, headers, body)
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: it's fine

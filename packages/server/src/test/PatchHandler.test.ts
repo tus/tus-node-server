@@ -70,6 +70,36 @@ describe('PatchHandler', () => {
     assert.equal(upload.size, size)
   })
 
+  it('should omit the body for a null-body onUploadFinish response', async () => {
+    const size = 1024
+    const req = new Request(`https://example.com${path}/1234`, {
+      method: 'PATCH',
+      headers: new Headers({
+        'content-type': 'application/offset+octet-stream',
+        'upload-offset': '0',
+      }),
+      duplex: 'half',
+      body: new ArrayBuffer(size),
+    })
+    const handler = new PatchHandler(store, {
+      path,
+      locker: new MemoryLocker(),
+      onUploadFinish: async () => ({
+        status_code: 205,
+        body: 'ignored',
+        headers: {'Content-Length': 7},
+      }),
+    })
+    store.getUpload.resolves(new Upload({id: '1234', offset: 0, size}))
+    store.write.resolves(size)
+
+    const res = await handler.send(req, context)
+
+    assert.equal(res.status, 205)
+    assert.equal(res.headers.has('Content-Length'), false)
+    assert.equal(res.body, null)
+  })
+
   describe('send()', () => {
     it('should 404 urls without a path', () => {
       req = new Request(`https://example.com${path}/`, {
