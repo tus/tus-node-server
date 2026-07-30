@@ -26,8 +26,7 @@ export class BaseHandler extends EventEmitter {
   }
 
   write(status: number, headers = {}, body?: string) {
-    const responseBody =
-      status === 204 || status === 205 || status === 304 ? null : body
+    const responseBody = status === 204 || status === 205 || status === 304 ? null : body
     const res = new Response(responseBody, {headers, status})
     if (responseBody) {
       res.headers.set(

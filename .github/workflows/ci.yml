@@ -8,11 +8,18 @@ on:
     paths-ignore:
       - "**.md"
       - ".changeset/**"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "**.md"
+      - ".changeset/**"
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths-ignore:
       - "**.md"
       - ".changeset/**"
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}--${{ github.event_name == 'pull_request_target' && format('pr#{0}', github.event.pull_request.number) || github.ref }}
@@ -23,8 +30,10 @@ permissions:
   pull-requests: read
 
 jobs:
-  # Basic validation job - runs for all PRs and pushes without secrets
+  # Validate the proposed merge in an unprivileged pull_request workflow.
+  # pull_request_target is reserved for the environment-gated secret tests.
   basic-validation:
+    if: github.event_name != 'pull_request_target'
     name: Build and lint
     runs-on: ubuntu-latest
 
@@ -53,6 +62,7 @@ jobs:
 
   # Integration tests with secrets - requires approval for external PRs
   tests:
+    if: github.event_name != 'pull_request'
     name: Tests
     runs-on: ubuntu-latest
     # SECURITY: Use environment protection for external contributors only
@@ -68,8 +78,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v7
         with:
-          # Environment protection provides security - we can safely checkout PR code
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Test the event's pinned proposed merge, including the current base.
+          # External PRs cannot reach this step until the environment is approved.
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
           allow-unsafe-pr-checkout: true
 
       - name: Decrypt keyfile
