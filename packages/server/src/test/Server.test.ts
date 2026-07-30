@@ -794,8 +794,8 @@ describe('Server', () => {
       assert.equal(spy.calledOnce, true)
     })
 
-    for (const status_code of [204, 205, 304]) {
-      it(`should omit the body when onResponseError returns ${status_code}`, async () => {
+    it('should omit the body when onResponseError returns a null-body status', async () => {
+      for (const status_code of [204, 205, 304]) {
         const server = new Server({
           path: '/test/output',
           datastore: new DataStore(),
@@ -810,7 +810,7 @@ describe('Server', () => {
         assert.equal(response.status, status_code)
         assert.equal(response.headers.has('Content-Length'), false)
         assert.equal(response.body, null)
-      })
-    }
+      }
+    })
   })
 })

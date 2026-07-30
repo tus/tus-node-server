@@ -6,7 +6,6 @@ import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
 import throttle from 'lodash.throttle'
 import stream from 'node:stream/promises'
 import {PassThrough, Readable} from 'node:stream'
-import {createResponse, type ResponseHeaders} from '../response.js'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -26,12 +25,12 @@ export class BaseHandler extends EventEmitter {
     this.options = options
   }
 
-  write(
-    status: number,
-    headers: ResponseHeaders = {},
-    body?: string
-  ) {
-    return createResponse(status, headers, body)
+  write(status: number, headers = {}, body?: string) {
+    const res = new Response(status === 204 ? null : body, {headers, status})
+    if (status !== 204 && body) {
+      res.headers.set('Content-Length', Buffer.byteLength(body, 'utf8').toString())
+    }
+    return res
   }
 
   generateUrl(req: Request, id: string) {

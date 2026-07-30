@@ -19,7 +19,6 @@ import {OptionsHandler} from './handlers/OptionsHandler.js'
 import {PatchHandler} from './handlers/PatchHandler.js'
 import {PostHandler} from './handlers/PostHandler.js'
 import {MemoryLocker} from './lockers/index.js'
-import {createResponse} from './response.js'
 import type {RouteHandler, ServerOptions, WithOptional} from './types.js'
 import {validateHeader} from './validators/HeaderValidator.js'
 
@@ -273,6 +272,12 @@ export class Server extends EventEmitter {
 
   async write(context: CancellationContext, headers: Headers, status: number, body = '') {
     const isAborted = context.signal.aborted
+    const responseBody =
+      status === 204 || status === 205 || status === 304 ? null : body
+
+    if (responseBody !== null) {
+      headers.set('Content-Length', String(Buffer.byteLength(responseBody, 'utf8')))
+    }
 
     if (isAborted) {
       // This condition handles situations where the request has been flagged as aborted.
@@ -283,7 +288,7 @@ export class Server extends EventEmitter {
       headers.set('Connection', 'close')
     }
 
-    return createResponse(status, headers, body)
+    return new Response(responseBody, {status, headers})
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: it's fine
