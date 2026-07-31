@@ -8,6 +8,7 @@ import sinon from 'sinon'
 import {EVENTS, Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {PostHandler} from '../handlers/PostHandler.js'
 import {MemoryLocker} from '@tus/server'
+import {createContext} from './utils.js'
 
 const options = {
   path: '/test',
@@ -22,12 +23,7 @@ describe('PostHandler', () => {
   store.hasExtension.withArgs('creation-defer-length').returns(true)
 
   beforeEach(() => {
-    const abortController = new AbortController()
-    context = {
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-      signal: abortController.signal,
-    }
+    context = createContext()
   })
 
   describe('constructor()', () => {
