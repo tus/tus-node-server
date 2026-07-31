@@ -7,6 +7,7 @@ import sinon from 'sinon'
 import {ERRORS, EVENTS, DataStore, type CancellationContext} from '@tus/utils'
 import {DeleteHandler} from '../handlers/DeleteHandler.js'
 import {MemoryLocker} from '@tus/server'
+import {createContext} from './utils.js'
 
 describe('DeleteHandler', () => {
   const path = '/test/output'
@@ -23,12 +24,7 @@ describe('DeleteHandler', () => {
       locker: new MemoryLocker(),
     })
     req = new Request(`http://example.com/${path}/1234`, {method: 'DELETE'})
-    const abortController = new AbortController()
-    context = {
-      signal: abortController.signal,
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-    }
+    context = createContext()
   })
 
   it('should 404 if no file id match', () => {
