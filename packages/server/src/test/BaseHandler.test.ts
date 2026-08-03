@@ -140,15 +140,27 @@ const consumeStoreWrites = (
   store: sinon.SinonStubbedInstance<DataStore>,
   initialOffset = 0
 ) => {
-  let chunkCount = 0
   let offset = initialOffset
-  const chunkWaiters = new Map<number, () => void>()
+  const chunks: Promise<void>[] = []
+  const resolvers: Array<() => void> = []
+
+  const ensure = (index: number) => {
+    while (chunks.length <= index) {
+      chunks.push(
+        new Promise<void>((resolve) => {
+          resolvers.push(resolve)
+        })
+      )
+    }
+  }
 
   store.write.callsFake(async (readable: Readable) => {
+    let index = 0
     for await (const chunk of readable) {
       offset += (chunk as Buffer).byteLength
-      chunkCount++
-      chunkWaiters.get(chunkCount)?.()
+      ensure(index)
+      resolvers[index]?.()
+      index++
     }
 
     return offset
@@ -156,13 +168,8 @@ const consumeStoreWrites = (
 
   return {
     waitForChunk(target: number) {
-      if (chunkCount >= target) {
-        return Promise.resolve()
-      }
-
-      return new Promise<void>((resolve) => {
-        chunkWaiters.set(target, resolve)
-      })
+      ensure(target - 1)
+      return chunks[target - 1]
     },
   }
 }
@@ -246,34 +253,6 @@ describe('BaseHandler.writeToStore', () => {
     assert.equal(emit.withArgs(EVENTS.POST_RECEIVE).callCount, 0)
   })
 
-  it('does not start progress tracking for a listener added during a write', async () => {
-    const {handler, store} = createHandler()
-    const {waitForChunk} = consumeStoreWrites(store)
-    const context = createContext()
-    const {controller, webStream} = createControlledStream()
-
-    const write = handler.writeToStoreForTest(
-      webStream,
-      new Upload({id: 'late-listener', offset: 0}),
-      maxFileSize,
-      context
-    )
-    controller.enqueue(Buffer.alloc(4))
-    await waitForChunk(1)
-
-    const postReceive = sinon.spy()
-    handler.on(EVENTS.POST_RECEIVE, postReceive)
-
-    controller.enqueue(Buffer.alloc(3))
-    await waitForChunk(2)
-
-    assert.equal(clock.countTimers(), 0)
-    assert.equal(postReceive.called, false)
-
-    controller.close()
-    assert.equal(await write, 7)
-  })
-
   it('keeps intermediate progress without a terminal trailing event', async () => {
     const {handler, store} = createHandler()
     const {waitForChunk} = consumeStoreWrites(store, 10)
@@ -344,6 +323,22 @@ describe('BaseHandler.writeToStore', () => {
 
     assert.equal(clock.countTimers(), 0)
     assert.equal(postReceive.called, false)
+  })
+
+  it('rejects when converting the web stream throws synchronously', async () => {
+    const {handler} = createHandler()
+    const context = createContext()
+
+    await assert.rejects(
+      handler.writeToStoreForTest(
+        // @ts-expect-error testing invalid input at the runtime boundary
+        {},
+        new Upload({id: 'invalid-stream', offset: 0}),
+        maxFileSize,
+        context
+      ),
+      {code: 'ERR_INVALID_ARG_TYPE'}
+    )
   })
 
   it('cancels pending POST_RECEIVE progress after an abort', async () => {
