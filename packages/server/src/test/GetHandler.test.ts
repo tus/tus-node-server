@@ -10,6 +10,7 @@ import {GetHandler} from '../handlers/GetHandler.js'
 import {type CancellationContext, DataStore, Upload} from '@tus/utils'
 import {FileStore} from '@tus/file-store'
 import {MemoryLocker} from '@tus/server'
+import {createContext} from './utils.js'
 
 describe('GetHandler', () => {
   const path = '/test/output'
@@ -19,12 +20,7 @@ describe('GetHandler', () => {
 
   beforeEach(() => {
     req = new Request('http://localhost/test', {method: 'GET'})
-    const abortController = new AbortController()
-    context = {
-      signal: abortController.signal,
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-    }
+    context = createContext()
   })
 
   describe('test error responses', () => {
