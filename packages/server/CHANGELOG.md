@@ -1,5 +1,15 @@
 # @tus/server
 
+## 2.4.4
+
+### Patch Changes
+
+- 92db7b8: Stop delayed `POST_RECEIVE` events from firing after an upload write settles, and skip
+  progress tracking for writes that start without `POST_RECEIVE` listeners. Use `POST_FINISH`
+  when a terminal upload notification is required.
+- 0cf2903: Fix a crash when a response hook returns a null-body status (204, 205, or 304).
+- 6757b9e: Stop hanging when a request body stream errors, and treat that failure as an aborted request instead of exposing runtime error details.
+
 ## 2.4.3
 
 ### Patch Changes
