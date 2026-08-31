@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.4.5
+
+### Patch Changes
+
+- 4493247: Set CORS headers before the 412 Tus-Resumable check and header-validation 400s so browsers can read those responses.
+
 ## 2.4.4
 
 ### Patch Changes
