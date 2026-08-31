@@ -185,6 +185,24 @@ export class Server extends EventEmitter {
     // of the protocol used by the Client or the Server.
     headers.set('Tus-Resumable', TUS_RESUMABLE)
 
+    // CORS must be set before the 412 and validation 400 returns below.
+    // Browsers otherwise treat those as a network failure and cannot read
+    // the status. GET still dispatches earlier and stays CORS-less.
+    const corsOrigin = this.getCorsOrigin(req.headers.get('origin'))
+    if (corsOrigin) {
+      headers.set('Access-Control-Allow-Origin', corsOrigin)
+    }
+    headers.set(
+      'Access-Control-Expose-Headers',
+      this.options.exposedHeaders?.length
+        ? [...HEADERS, this.options.exposedHeaders].join(', ')
+        : EXPOSED_HEADERS
+    )
+
+    if (this.options.allowedCredentials === true) {
+      headers.set('Access-Control-Allow-Credentials', 'true')
+    }
+
     if (req.method !== 'OPTIONS' && !req.headers.get('tus-resumable')) {
       return this.write(context, headers, 412, 'Tus-Resumable Required\n')
     }
@@ -213,22 +231,6 @@ export class Server extends EventEmitter {
 
     if (invalid_headers.length > 0) {
       return this.write(context, headers, 400, `Invalid ${invalid_headers.join(' ')}\n`)
-    }
-
-    // Enable CORS
-    const corsOrigin = this.getCorsOrigin(req.headers.get('origin'))
-    if (corsOrigin) {
-      headers.set('Access-Control-Allow-Origin', corsOrigin)
-    }
-    headers.set(
-      'Access-Control-Expose-Headers',
-      this.options.exposedHeaders?.length
-        ? [...HEADERS, this.options.exposedHeaders].join(', ')
-        : EXPOSED_HEADERS
-    )
-
-    if (this.options.allowedCredentials === true) {
-      headers.set('Access-Control-Allow-Credentials', 'true')
     }
 
     // Invoke the handler for the method requested
