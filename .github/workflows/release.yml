@@ -33,7 +33,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish
         id: changesets
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d
+        uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1
         with:
           # Note: pnpm install after versioning is necessary to refresh lockfile
           version: npm run version
