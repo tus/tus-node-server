@@ -155,8 +155,8 @@ The locker interface to manage locks for exclusive access control over resources
 
 By default it uses an in-memory locker ([`MemoryLocker`][]) for safe concurrent access to
 uploads using a single server. When running multiple instances of the server, you need to
-provide a locker implementation that is shared between all instances (such as a
-`RedisLocker`).
+provide a locker implementation that is shared between all instances, such as
+[`NodeRedisLocker` or `IoRedisLocker`](#lockers).
 
 #### `options.disableTerminationForFinishedUploads`
 
@@ -368,6 +368,63 @@ new S3Store({
   cache: new IoRedisKvStore<MetadataValue>(client, prefix),
 });
 ```
+
+### Lockers
+
+A locker guarantees exclusive access to an upload while a request is handled. The default
+`MemoryLocker` only works within a single process. When running multiple instances, use
+one of the Redis-backed lockers so all instances share the same locks.
+
+Both Redis lockers need two clients: one for commands and a dedicated one for Pub/Sub
+(a subscribed connection can not run other commands). Locks are stored with a TTL
+(`redisLockTimeout`) and automatically extended while held. When another instance wants
+the lock, the current holder is asked to release it via Pub/Sub.
+
+Options (shared by both):
+
+- `acquireLockTimeout` – max time to wait for a busy lock (default `30000`ms)
+- `acquireLockRetry` – delay between acquire attempts (default `100`ms)
+- `redisLockTimeout` – TTL of the lock key in Redis (default `30000`ms)
+- `prefix` – prefix for lock keys (default `"lock"`)
+- `subPrefix` – prefix for Pub/Sub channels (default `"lock:release"`)
+
+#### `NodeRedisLocker`
+
+```ts
+import { Server, NodeRedisLocker } from "@tus/server";
+import { createClient } from "@redis/client";
+
+const redis = createClient({ url: "redis://localhost:6379" });
+const subscriber = redis.duplicate();
+await Promise.all([redis.connect(), subscriber.connect()]);
+
+new Server({
+  // ...
+  locker: new NodeRedisLocker({ redis, subscriber }),
+});
+```
+
+#### `IoRedisLocker`
+
+```ts
+import { Server, IoRedisLocker } from "@tus/server";
+import Redis from "ioredis";
+
+const ioredis = new Redis();
+const subscriber = ioredis.duplicate();
+
+new Server({
+  // ...
+  locker: new IoRedisLocker({ ioredis, subscriber }),
+});
+```
+
+#### `RedisLockEngine`
+
+Both lockers are thin adapters around `RedisLockEngine`, which contains the actual lock
+logic. To support another Redis client, implement the `LockClient` interface
+(`tryAcquire`, `extend`, `release`, `publish`, `subscribe`) and pass it as `client` to
+`new RedisLockEngine({ client, ...options })`.
 
 ## Examples
 
