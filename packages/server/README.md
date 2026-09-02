@@ -18,6 +18,7 @@
   - [Example: integrate tus into Next.js](#example-integrate-tus-into-nextjs)
   - [Example: validate metadata when an upload is created](#example-validate-metadata-when-an-upload-is-created)
   - [Example: store files in custom nested directories](#example-store-files-in-custom-nested-directories)
+  - [Example: use a Redis locker for multiple instances](#example-use-a-redis-locker-for-multiple-instances)
   - [Example: use with Nginx](#example-use-with-nginx)
 - [Types](#types)
 - [Compatibility](#compatibility)
@@ -371,16 +372,27 @@ new S3Store({
 
 ### Lockers
 
-A locker guarantees exclusive access to an upload while a request is handled. The default
-`MemoryLocker` only works within a single process. When running multiple instances, use
-one of the Redis-backed lockers so all instances share the same locks.
+A locker guarantees exclusive access to an upload while a request is handled. Pass one to
+[`options.locker`](#optionslocker).
 
-Both Redis lockers need two clients: one for commands and a dedicated one for Pub/Sub
-(a subscribed connection can not run other commands). Locks are stored with a TTL
-(`redisLockTimeout`) and automatically extended while held. When another instance wants
-the lock, the current holder is asked to release it via Pub/Sub.
+#### `MemoryLocker`
 
-Options (shared by both):
+The default. Locks are kept in memory, so it only works within a single process.
+Accepts `acquireLockTimeout` (max time to wait for a busy lock, in ms).
+
+#### `NodeRedisLocker`
+
+Distributed locker backed by [`@redis/client`](https://www.npmjs.com/package/@redis/client)
+for running multiple instances of the server. Requires a `redis` client for commands and
+a dedicated `subscriber` client for Pub/Sub.
+
+#### `IoRedisLocker`
+
+Same as `NodeRedisLocker` but backed by [`ioredis`](https://www.npmjs.com/package/ioredis).
+Requires an `ioredis` client and a dedicated `subscriber` client.
+
+Both Redis lockers store locks with a TTL that is extended while held and ask the current
+holder to release the lock via Pub/Sub when another instance needs it. Shared options:
 
 - `acquireLockTimeout` – max time to wait for a busy lock (default `30000`ms)
 - `acquireLockRetry` – delay between acquire attempts (default `100`ms)
@@ -388,43 +400,13 @@ Options (shared by both):
 - `prefix` – prefix for lock keys (default `"lock"`)
 - `subPrefix` – prefix for Pub/Sub channels (default `"lock:release"`)
 
-#### `NodeRedisLocker`
-
-```ts
-import { Server, NodeRedisLocker } from "@tus/server";
-import { createClient } from "@redis/client";
-
-const redis = createClient({ url: "redis://localhost:6379" });
-const subscriber = redis.duplicate();
-await Promise.all([redis.connect(), subscriber.connect()]);
-
-new Server({
-  // ...
-  locker: new NodeRedisLocker({ redis, subscriber }),
-});
-```
-
-#### `IoRedisLocker`
-
-```ts
-import { Server, IoRedisLocker } from "@tus/server";
-import Redis from "ioredis";
-
-const ioredis = new Redis();
-const subscriber = ioredis.duplicate();
-
-new Server({
-  // ...
-  locker: new IoRedisLocker({ ioredis, subscriber }),
-});
-```
+See [Example: use a Redis locker for multiple instances](#example-use-a-redis-locker-for-multiple-instances).
 
 #### `RedisLockEngine`
 
-Both lockers are thin adapters around `RedisLockEngine`, which contains the actual lock
-logic. To support another Redis client, implement the `LockClient` interface
-(`tryAcquire`, `extend`, `release`, `publish`, `subscribe`) and pass it as `client` to
-`new RedisLockEngine({ client, ...options })`.
+The lock logic shared by both Redis lockers. To support another Redis client, implement
+the `LockClient` interface (`tryAcquire`, `extend`, `release`, `publish`, `subscribe`) and
+pass it as `client` to `new RedisLockEngine({ client, ...options })`.
 
 ## Examples
 
@@ -669,6 +651,43 @@ const server = new Server({
     // and you need to extract the ID yourself
     return Buffer.from(lastPath, "base64url").toString("utf-8");
   },
+});
+```
+
+### Example: use a Redis locker for multiple instances
+
+When running more than one instance of the server, use a [Redis locker](#lockers) so all
+instances share the same locks. Both lockers need a client for commands and a separate
+one for Pub/Sub, as a subscribed Redis connection can not run other commands.
+
+With `@redis/client`:
+
+```ts
+import { Server, NodeRedisLocker } from "@tus/server";
+import { createClient } from "@redis/client";
+
+const redis = createClient({ url: "redis://localhost:6379" });
+const subscriber = redis.duplicate();
+await Promise.all([redis.connect(), subscriber.connect()]);
+
+const server = new Server({
+  // ...
+  locker: new NodeRedisLocker({ redis, subscriber }),
+});
+```
+
+With `ioredis`:
+
+```ts
+import { Server, IoRedisLocker } from "@tus/server";
+import Redis from "ioredis";
+
+const ioredis = new Redis();
+const subscriber = ioredis.duplicate();
+
+const server = new Server({
+  // ...
+  locker: new IoRedisLocker({ ioredis, subscriber }),
 });
 ```
 
