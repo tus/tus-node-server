@@ -1,14 +1,13 @@
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
-import stream from 'node:stream/promises'
 
 import {NoSuchUpload} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
 import * as shared from '../../../utils/dist/test/stores.js'
-import {StreamLimiter, Upload} from '@tus/utils'
+import {Upload} from '@tus/utils'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
