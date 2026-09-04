@@ -274,6 +274,33 @@ describe('S3DataStore', () => {
     }
   })
 
+  it('should allow creation-with-upload for a zero byte file', async function () {
+    const store = this.datastore as S3Store
+    const size = 0
+    const upload = new Upload({
+      id: shared.testId('zero-byte-creation-with-upload'),
+      size,
+      offset: 0,
+    })
+
+    await store.create(upload)
+
+    // PostHandler still calls write() when Content-Type is application/offset+octet-stream
+    const offset = await store.write(Readable.from(Buffer.alloc(size)), upload.id, 0)
+    assert.equal(offset, size)
+
+    const finalUpload = await store.getUpload(upload.id)
+    assert.equal(finalUpload.offset, size)
+
+    // @ts-expect-error private
+    const s3Client = store.client
+    const headResult = await s3Client.getObject({
+      Bucket: s3ClientConfig.bucket,
+      Key: upload.id,
+    })
+    assert.equal(headResult.ContentLength, size)
+  })
+
   it('should report a missing multipart upload as a missing file when removing it', async function () {
     const store = this.datastore as S3Store
     const id = shared.testId('missing-multipart-upload')
