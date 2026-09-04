@@ -576,6 +576,12 @@ export class S3Store extends DataStore {
    * Creates a multipart upload on S3 attaching any metadata to it.
    * Also, a `${file_id}.info` file is created which holds some information
    * about the upload itself like: `upload-id`, `upload-length`, etc.
+   *
+   * When `Upload-Length` is 0, `@tus/server` treats the upload as immediately
+   * final and calls `onUploadFinish` without `write()`. Complete the empty
+   * multipart here so the object exists before finish hooks run
+   * (`finishMultipartUpload` already uploads a zero-byte part when `parts`
+   * is empty).
    */
   public async create(upload: Upload) {
     log(`[${upload.id}] initializing multipart upload`)
@@ -603,6 +609,14 @@ export class S3Store extends DataStore {
     }
     await this.saveMetadata(upload, res.UploadId as string)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
+
+    if (upload.size === 0 && !upload.sizeIsDeferred) {
+      const metadata = await this.getMetadata(upload.id)
+      await this.finishMultipartUpload(metadata, [])
+      await this.completeMetadata(metadata.file)
+      await this.clearCache(upload.id)
+      log(`[${upload.id}] zero-byte multipart upload completed`)
+    }
 
     return upload
   }

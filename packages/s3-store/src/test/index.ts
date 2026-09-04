@@ -254,16 +254,8 @@ describe('S3DataStore', () => {
       offset: 0,
     })
 
+    // @tus/server marks size-0 uploads final on create and does not call write().
     await store.create(upload)
-
-    const offset = await stream.pipeline(
-      Readable.from(Buffer.alloc(size)),
-      new StreamLimiter(999),
-      async (stream) => {
-        return store.write(stream as StreamLimiter, upload.id, upload.offset)
-      }
-    )
-    assert.equal(offset, size, 'Write should return 0 offset')
 
     // Check .info file via getUpload
     const finalUpload = await store.getUpload(upload.id)
