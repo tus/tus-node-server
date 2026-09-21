@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
 import stream from 'node:stream/promises'
 
-import {NoSuchUpload} from '@aws-sdk/client-s3'
+import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
@@ -304,6 +304,43 @@ describe('S3DataStore', () => {
 
     await assert.rejects(store.remove(id), {status_code: 404})
   })
+
+  for (const [S3Error, completed] of [
+    [NoSuchUpload, true],
+    [NoSuchKey, true],
+    [NotFound, false],
+  ] as const) {
+    for (const errorField of ['name', 'Code']) {
+      const outcome = completed ? 'report a completed upload' : 'propagate the error'
+
+      it(`should ${outcome} when listing parts fails with ${S3Error.name} (via ${errorField})`, async function () {
+        const store = this.datastore as S3Store
+        const id = shared.testId('missing-multipart-upload')
+
+        // @ts-expect-error protected method
+        sinon.stub(store, 'getMetadata').resolves({
+          file: new Upload({id, size: 10, offset: 0}),
+          'upload-id': 'missing-upload-id',
+          'tus-version': '1.0.0',
+        })
+
+        const error =
+          errorField === 'name'
+            ? new S3Error({$metadata: {httpStatusCode: 404}, message: S3Error.name})
+            : {Code: S3Error.name}
+
+        // @ts-expect-error protected property
+        sinon.stub(store.client, 'listParts').rejects(error)
+
+        if (completed) {
+          const upload = await store.getUpload(id)
+          assert.equal(upload.offset, 10)
+        } else {
+          await assert.rejects(store.getUpload(id), (thrown) => thrown === error)
+        }
+      })
+    }
+  }
 
   it('should use default maxMultipartParts when not specified', () => {
     const store = new S3Store({
