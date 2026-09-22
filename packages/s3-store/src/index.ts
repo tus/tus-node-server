@@ -60,19 +60,17 @@ function calcOffsetFromParts(parts?: Array<AWS.Part>) {
 }
 
 const S3_NOT_FOUND_ERROR_CODES = new Set(['NotFound', 'NoSuchKey', 'NoSuchUpload'])
+// Excludes `NotFound`, which the AWS SDK also assigns to any 404 without an S3 error code.
+const S3_MISSING_UPLOAD_ERROR_CODES = new Set(['NoSuchKey', 'NoSuchUpload'])
 
-function isS3NotFoundError(error: unknown): boolean {
+function isS3NotFoundError(error: unknown, codes = S3_NOT_FOUND_ERROR_CODES): boolean {
   if (typeof error !== 'object' || error === null) {
     return false
   }
 
   return (
-    ('name' in error &&
-      typeof error.name === 'string' &&
-      S3_NOT_FOUND_ERROR_CODES.has(error.name)) ||
-    ('Code' in error &&
-      typeof error.Code === 'string' &&
-      S3_NOT_FOUND_ERROR_CODES.has(error.Code))
+    ('name' in error && typeof error.name === 'string' && codes.has(error.name)) ||
+    ('Code' in error && typeof error.Code === 'string' && codes.has(error.Code))
   )
 }
 
@@ -679,7 +677,7 @@ export class S3Store extends DataStore {
       // completed and therefore can ensure the the offset is the size.
       // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
       // Spaces, can also return NoSuchKey.
-      if (isS3NotFoundError(error)) {
+      if (isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
         return new Upload({
           ...metadata.file,
           offset: metadata.file.size as number,
