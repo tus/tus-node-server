@@ -31,6 +31,21 @@ jobs:
     # External PRs require manual approval via the external-testing environment.
     environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-testing' || '' }}
 
+    # Redis for the @tus/server RedisLocker/IoRedisLocker integration tests.
+    # Reachable at 127.0.0.1:6379. In CI (CI=true) the suites fail if Redis is
+    # unavailable; locally they skip themselves instead.
+    services:
+      redis:
+        # Pinned to Redis 7.4 by immutable digest for reproducible, tamper-proof CI.
+        image: redis:7.4@sha256:a8f08480e1f88f2647fed492d1178c06abb0d0c1fbf02c682a61e2f483fb3954
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
