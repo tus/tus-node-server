@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.5.0
+
+### Minor Changes
+
+- 3fa03a8: Add NodeRedisLocker and IoRedisLocker for distributed lock coordination across horizontally scaled servers, plus a shared RedisLockEngine for building custom Redis-backed lockers
+
 ## 2.4.5
 
 ### Patch Changes
