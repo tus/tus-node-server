@@ -1,14 +1,13 @@
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import {Readable} from 'node:stream'
-import stream from 'node:stream/promises'
 
 import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
 import * as shared from '../../../utils/dist/test/stores.js'
-import {StreamLimiter, Upload} from '@tus/utils'
+import {Upload} from '@tus/utils'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
@@ -254,16 +253,8 @@ describe('S3DataStore', () => {
       offset: 0,
     })
 
+    // @tus/server marks size-0 uploads final on create and does not call write().
     await store.create(upload)
-
-    const offset = await stream.pipeline(
-      Readable.from(Buffer.alloc(size)),
-      new StreamLimiter(999),
-      async (stream) => {
-        return store.write(stream as StreamLimiter, upload.id, upload.offset)
-      }
-    )
-    assert.equal(offset, size, 'Write should return 0 offset')
 
     // Check .info file via getUpload
     const finalUpload = await store.getUpload(upload.id)
@@ -281,6 +272,33 @@ describe('S3DataStore', () => {
     } catch (error) {
       assert.fail(`Zero byte file was not uploaded to S3: ${error.message}`)
     }
+  })
+
+  it('should allow creation-with-upload for a zero byte file', async function () {
+    const store = this.datastore as S3Store
+    const size = 0
+    const upload = new Upload({
+      id: shared.testId('zero-byte-creation-with-upload'),
+      size,
+      offset: 0,
+    })
+
+    await store.create(upload)
+
+    // PostHandler still calls write() when Content-Type is application/offset+octet-stream
+    const offset = await store.write(Readable.from(Buffer.alloc(size)), upload.id, 0)
+    assert.equal(offset, size)
+
+    const finalUpload = await store.getUpload(upload.id)
+    assert.equal(finalUpload.offset, size)
+
+    // @ts-expect-error private
+    const s3Client = store.client
+    const headResult = await s3Client.getObject({
+      Bucket: s3ClientConfig.bucket,
+      Key: upload.id,
+    })
+    assert.equal(headResult.ContentLength, size)
   })
 
   it('should report a missing multipart upload as a missing file when removing it', async function () {
