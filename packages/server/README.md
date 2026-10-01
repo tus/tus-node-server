@@ -11,6 +11,7 @@
 - [API](#api)
   - [`new Server(options)`](#new-serveroptions)
   - [`EVENTS`](#events)
+  - [Lockers](#lockers)
 - [Examples](#examples)
   - [Example: integrate tus into Express](#example-integrate-tus-into-express)
   - [Example: integrate tus into Koa](#example-integrate-tus-into-koa)
@@ -153,10 +154,8 @@ Checkout the example how to
 The locker interface to manage locks for exclusive access control over resources
 ([`Locker`][] or `(req: Request) => Promise<Locker>`).
 
-By default it uses an in-memory locker ([`MemoryLocker`][]) for safe concurrent access to
-uploads using a single server. When running multiple instances of the server, you need to
-provide a locker implementation that is shared between all instances (such as a
-`RedisLocker`).
+The default [`MemoryLocker`][] controls access to uploads in one process. For multiple
+server processes, use a shared locker, such as [`NodeRedisLocker` or `IoRedisLocker`](#lockers).
 
 #### `options.disableTerminationForFinishedUploads`
 
@@ -302,6 +301,61 @@ import {EVENTS} from '@tus/server'
 // ...
 server.on(EVENTS.POST_TERMINATE, (req, res, id => {})
 ```
+
+### Lockers
+
+`NodeRedisLocker` and `IoRedisLocker` use Redis to control access to uploads across server
+processes. All processes must use the same Redis database, `prefix`, and `subPrefix`.
+They must also have access to the same upload storage.
+
+Set `options.locker` to the `locker` in one of these examples. Use a separate client for
+`subscriber`. This client receives requests to release locks.
+
+#### `NodeRedisLocker`
+
+Install the client with `npm install @redis/client`.
+
+```js
+import { NodeRedisLocker } from "@tus/server";
+import { createClient } from "@redis/client";
+
+const redis = createClient({ url: "redis://localhost:6379" });
+const subscriber = redis.duplicate();
+redis.on("error", console.error);
+subscriber.on("error", console.error);
+await Promise.all([redis.connect(), subscriber.connect()]);
+
+const locker = new NodeRedisLocker({ redis, subscriber });
+```
+
+#### `IoRedisLocker`
+
+Install the client with `npm install ioredis`. This client connects automatically.
+
+```js
+import { IoRedisLocker } from "@tus/server";
+import Redis from "ioredis";
+
+const ioredis = new Redis("redis://localhost:6379");
+const subscriber = ioredis.duplicate();
+
+const locker = new IoRedisLocker({ ioredis, subscriber });
+```
+
+#### Redis locker options
+
+Both lockers accept these optional settings. Time values are in milliseconds.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `acquireLockTimeout` | `30000` | Maximum time to wait for a lock. |
+| `acquireLockRetry` | `100` | Delay between attempts to acquire a lock. |
+| `redisLockTimeout` | `30000` | Lock expiration time in Redis. The locker extends this time while it holds the lock. |
+| `prefix` | `"lock"` | Prefix for Redis lock keys. |
+| `subPrefix` | `"lock:release"` | Prefix for Redis channels that carry requests to release locks. |
+
+Set `acquireLockTimeout` to at least `redisLockTimeout`. Use different prefixes for
+applications that must not share locks.
 
 ### Key-Value Stores
 
