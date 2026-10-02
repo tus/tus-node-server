@@ -525,6 +525,26 @@ export const OPTIONS = server.handleWeb;
 export const HEAD = server.handleWeb;
 ```
 
+### Example: integrate tus into Elysia
+
+Elysia passes a web `Request` to its handlers, so use `handleWeb`.
+
+```ts
+import { Elysia } from "elysia";
+import { Server } from "@tus/server";
+import { FileStore } from "@tus/file-store";
+
+const tusServer = new Server({
+  path: "/files",
+  datastore: new FileStore({ directory: "./files" }),
+});
+
+const handler = ({ request }: { request: Request }) =>
+  tusServer.handleWeb(request);
+
+new Elysia().all("/files", handler).all("/files/*", handler).listen(3000);
+```
+
 ### Example: validate metadata when an upload is created
 
 ```js
