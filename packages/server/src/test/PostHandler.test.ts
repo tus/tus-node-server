@@ -373,6 +373,7 @@ describe('PostHandler', () => {
 
       it('should let onUploadFinish override response headers without mutating them', async () => {
         const store = sinon.createStubInstance(DataStore)
+        store.write.resolves(0)
         const hookHeaders = Object.freeze({'x-test': 'overridden'})
         const handler = new PostHandler(store, {
           path: '/test/output',
@@ -388,6 +389,35 @@ describe('PostHandler', () => {
         assert.equal(res.headers.get('x-test'), 'overridden')
         assert.deepEqual(hookHeaders, {'x-test': 'overridden'})
       })
+
+      for (const size of [1024, undefined]) {
+        const scenario = size === undefined ? 'deferred' : 'positive'
+
+        it(`should not write or finish an ordinary POST with ${scenario} size`, async () => {
+          const store = sinon.createStubInstance(DataStore)
+          store.hasExtension.withArgs('creation-defer-length').returns(true)
+          store.create.resolvesArg(0)
+          const onUploadFinish = sinon.stub().resolves({})
+          const onPostFinish = sinon.spy()
+          const handler = new PostHandler(store, {...options, onUploadFinish})
+          handler.on(EVENTS.POST_FINISH, onPostFinish)
+          const headers = new Headers()
+          if (size === undefined) {
+            headers.set('upload-defer-length', '1')
+          } else {
+            headers.set('upload-length', size.toString())
+          }
+          const req = new Request('https://example.com/test', {method: 'POST', headers})
+
+          const res = await handler.send(req, context)
+
+          assert.equal(res.status, 201)
+          assert.equal(store.create.calledOnce, true)
+          assert.equal(store.write.called, false)
+          assert.equal(onUploadFinish.called, false)
+          assert.equal(onPostFinish.called, false)
+        })
+      }
 
       for (const creationWithUpload of [false, true]) {
         const scenario = creationWithUpload ? 'creation-with-upload' : 'ordinary POST'
@@ -430,6 +460,7 @@ describe('PostHandler', () => {
 
       it('does not set Location header if onUploadFinish hook returned a not eligible status code', async () => {
         const store = sinon.createStubInstance(DataStore)
+        store.write.resolves(0)
         const handler = new PostHandler(store, {
           path: '/test/output',
           locker: new MemoryLocker(),

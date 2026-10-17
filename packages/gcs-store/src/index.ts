@@ -79,13 +79,16 @@ export class GCSStore extends DataStore {
 
         upload.offset = offset
 
-        const options = {
+        const options: CreateWriteStreamOptions = {
           metadata: {
             metadata: {
               tus_version: TUS_RESUMABLE,
               ...this.#stringifyUploadKeys(upload),
             },
           },
+        }
+        if (upload.metadata?.contentType) {
+          options.contentType = upload.metadata.contentType
         }
         const write_stream = destination.createWriteStream(options)
         if (!write_stream || readable.destroyed) {
