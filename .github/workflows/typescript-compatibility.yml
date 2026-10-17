@@ -1,0 +1,71 @@
+name: TypeScript compatibility
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - package.json
+      - package-lock.json
+      - "**/tsconfig*.json"
+      - .github/workflows/typescript-compatibility.yml
+      - .github/scripts/typescript-compatibility.mjs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}--${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Packed packages on TypeScript 5.8 and Node 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout proposed merge
+        uses: actions/checkout@v7
+        with:
+          path: head
+          persist-credentials: false
+
+      - name: Checkout PR base
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+
+      - name: Install minimum supported Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.19.0
+
+      - name: Build base packages
+        working-directory: base
+        run: |
+          npm ci --no-fund --no-audit
+          npm run build
+
+      - name: Build proposed packages
+        working-directory: head
+        run: |
+          npm ci --no-fund --no-audit
+          npm run build
+
+      - name: Compare and consume packed packages
+        env:
+          COMPAT_OUTPUT: ${{ runner.temp }}/typescript-compatibility
+        run: node head/.github/scripts/typescript-compatibility.mjs base head "$COMPAT_OUTPUT"
+
+      - name: Retain packed packages and consumer diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-compatibility
+          path: |
+            ${{ runner.temp }}/typescript-compatibility/**/*.tgz
+            ${{ runner.temp }}/typescript-compatibility/**/*.log
+            ${{ runner.temp }}/typescript-compatibility/consumer/package*.json
+            ${{ runner.temp }}/typescript-compatibility/consumer/tsconfig.json
+            ${{ runner.temp }}/typescript-compatibility/consumer/entrypoints.*
