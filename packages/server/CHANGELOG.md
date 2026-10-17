@@ -1,5 +1,11 @@
 # @tus/server
 
+## 2.4.6
+
+### Patch Changes
+
+- 13486ed: Use the existing `CancellationContext` return type for `Server.createContext` so declaration generation succeeds with newer Node.js typings. This preserves the existing context shape and runtime behavior.
+
 ## 2.4.5
 
 ### Patch Changes
