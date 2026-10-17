@@ -5,6 +5,7 @@ import sinon from 'sinon'
 import {ERRORS, DataStore, Upload, type CancellationContext} from '@tus/utils'
 import {HeadHandler} from '../handlers/HeadHandler.js'
 import {MemoryLocker} from '@tus/server'
+import {createContext} from './utils.js'
 
 describe('HeadHandler', () => {
   const path = '/test/output'
@@ -22,12 +23,7 @@ describe('HeadHandler', () => {
     req = new Request(`${url}/1234`, {
       method: 'HEAD',
     })
-    const abortController = new AbortController()
-    context = {
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-      signal: abortController.signal,
-    }
+    context = createContext()
   })
 
   it('should 404 if no file id match', () => {

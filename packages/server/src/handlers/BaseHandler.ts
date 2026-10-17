@@ -1,11 +1,10 @@
 import EventEmitter from 'node:events'
-
-import type {ServerOptions} from '../types.js'
-import type {DataStore, CancellationContext} from '@tus/utils'
-import {ERRORS, type Upload, StreamLimiter, EVENTS} from '@tus/utils'
-import throttle from 'lodash.throttle'
-import stream from 'node:stream/promises'
 import {PassThrough, Readable} from 'node:stream'
+import stream from 'node:stream/promises'
+import type {CancellationContext, DataStore} from '@tus/utils'
+import {ERRORS, EVENTS, StreamLimiter, type Upload} from '@tus/utils'
+import throttle from 'lodash.throttle'
+import type {ServerOptions} from '../types.js'
 
 const reExtractFileID = /([^/]+)\/?$/
 const reForwardedHost = /host="?([^";]+)/
@@ -144,77 +143,89 @@ export class BaseHandler extends EventEmitter {
     return lock
   }
 
-  protected writeToStore(
+  protected async writeToStore(
     webStream: ReadableStream | null,
     upload: Upload,
     maxFileSize: number,
     context: CancellationContext
   ) {
-    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: async needed for sequential stream operations
-    return new Promise<number>(async (resolve, reject) => {
-      // Abort early if the operation has been cancelled.
-      if (context.signal.aborted) {
-        reject(ERRORS.ABORTED)
-        return
+    // Abort early if the operation has been cancelled.
+    if (context.signal.aborted) {
+      throw ERRORS.ABORTED
+    }
+
+    // Create a PassThrough stream as a proxy to manage the request stream.
+    // This allows for aborting the write process without affecting the incoming request stream.
+    const proxy = new PassThrough()
+    const nodeStream = webStream ? Readable.fromWeb(webStream) : Readable.from([])
+    let sourceError: unknown
+    let hasSourceError = false
+
+    // Pipe does not forward source errors to the destination.
+    // Handle source errors here so that pipeline rejects,
+    // without destroying underlying request.
+    nodeStream.on('error', (error) => {
+      sourceError = error
+      hasSourceError = true
+      nodeStream.unpipe(proxy)
+
+      // Server handler will destroy the proxy stream if the request is aborted
+      // so we only destroy the proxy if the request is still active.
+      if (!context.signal.aborted) {
+        proxy.destroy(error)
       }
+    })
 
-      // Create a PassThrough stream as a proxy to manage the request stream.
-      // This allows for aborting the write process without affecting the incoming request stream.
-      const proxy = new PassThrough()
-      const nodeStream = webStream ? Readable.fromWeb(webStream) : Readable.from([])
+    // gracefully terminate the proxy stream when the request is aborted
+    const onAbort = () => {
+      nodeStream.unpipe(proxy)
 
-      // Ignore errors on the data stream to prevent crashes from client disconnections
-      // We handle errors on the proxy stream instead.
-      nodeStream.on('error', () => {
-        /* do nothing */
-      })
-
-      // gracefully terminate the proxy stream when the request is aborted
-      const onAbort = () => {
-        nodeStream.unpipe(proxy)
-
-        if (!proxy.closed) {
-          proxy.end()
-        }
+      // A source error may have already destroyed the proxy stream, end only if still active.
+      if (!proxy.destroyed) {
+        proxy.end()
       }
-      context.signal.addEventListener('abort', onAbort, {once: true})
+    }
+    context.signal.addEventListener('abort', onAbort, {once: true})
 
-      proxy.on('error', (err) => {
-        nodeStream.unpipe(proxy)
-        reject(err.name === 'AbortError' ? ERRORS.ABORTED : err)
-      })
-
-      const postReceive = throttle(
-        (offset: number) => {
-          this.emit(EVENTS.POST_RECEIVE, nodeStream, {...upload, offset})
-        },
-        this.options.postReceiveInterval,
-        {leading: false}
-      )
-
+    const postReceive =
+      this.listenerCount(EVENTS.POST_RECEIVE) > 0
+        ? throttle(
+            (offset: number) => {
+              this.emit(EVENTS.POST_RECEIVE, nodeStream, {...upload, offset})
+            },
+            this.options.postReceiveInterval,
+            {leading: false}
+          )
+        : undefined
+    if (postReceive) {
       let tempOffset = upload.offset
       proxy.on('data', (chunk: Buffer) => {
         tempOffset += chunk.byteLength
         postReceive(tempOffset)
       })
+    }
 
+    try {
       // Pipe the request stream through the proxy. We use the proxy instead of the request stream directly
       // to ensure that errors in the pipeline do not cause the request stream to be destroyed,
       // which would result in a socket hangup error for the client.
-      stream
-        .pipeline(
-          nodeStream.pipe(proxy),
-          new StreamLimiter(maxFileSize),
-          async (stream) => {
-            return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
-          }
-        )
-        .then(resolve)
-        .catch(reject)
-        .finally(() => {
-          context.signal.removeEventListener('abort', onAbort)
-        })
-    })
+      return await stream.pipeline(
+        nodeStream.pipe(proxy),
+        new StreamLimiter(maxFileSize),
+        async (stream) => {
+          return this.store.write(stream as StreamLimiter, upload.id, upload.offset)
+        }
+      )
+    } catch (error) {
+      nodeStream.unpipe(proxy)
+      const isSourceError = hasSourceError && error === sourceError
+      const isAbortError = error instanceof Error && error.name === 'AbortError'
+
+      throw isSourceError || isAbortError ? ERRORS.ABORTED : error
+    } finally {
+      postReceive?.cancel()
+      context.signal.removeEventListener('abort', onAbort)
+    }
   }
 
   getConfiguredMaxSize(req: Request, id: string | null) {

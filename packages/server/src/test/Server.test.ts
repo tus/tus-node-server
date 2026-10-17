@@ -1,12 +1,14 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
+import {once} from 'node:events'
 import fs from 'node:fs/promises'
 import http from 'node:http'
+import type {AddressInfo} from 'node:net'
 import path from 'node:path'
 import {FileStore} from '@tus/file-store'
 import {Server} from '@tus/server'
-import {DataStore, EVENTS, Metadata, TUS_RESUMABLE} from '@tus/utils'
+import {DataStore, ERRORS, EVENTS, Metadata, TUS_RESUMABLE, Upload} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
 import request from 'supertest'
@@ -15,6 +17,23 @@ import Throttle from 'throttle'
 // Test server crashes on http://{some-ip} so we remove the protocol...
 const removeProtocol = (location: string) => location.slice(6)
 const directory = path.resolve(import.meta.dirname, 'output', 'server')
+
+const stubWriteUntilEnd = (datastore: DataStore) => {
+  let resume!: () => void
+  const started = new Promise<void>((resolve) => {
+    resume = resolve
+  })
+  const write = sinon
+    .stub(datastore, 'write')
+    .callsFake(async (readable, _id, offset) => {
+      for await (const chunk of readable) {
+        offset += (chunk as Buffer).byteLength
+        resume()
+      }
+      return offset
+    })
+  return {started, write}
+}
 
 describe('Server', () => {
   before(async () => {
@@ -133,6 +152,42 @@ describe('Server', () => {
       request(listener).post('/').expect(412, 'Tus-Resumable Required\n', done)
     })
 
+    it('should include CORS headers on 412 and validation 400 responses', async () => {
+      const origin = 'https://app.example.com'
+      const corsServer = new Server({
+        path: '/files',
+        datastore: new DataStore(),
+        allowedOrigins: [origin],
+        allowedCredentials: true,
+      })
+
+      const precondition = await corsServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'POST',
+          headers: {Origin: origin},
+        })
+      )
+      assert.equal(precondition.status, 412)
+      assert.equal(precondition.headers.get('Access-Control-Allow-Origin'), origin)
+      assert.equal(precondition.headers.get('Access-Control-Allow-Credentials'), 'true')
+      assert.ok(precondition.headers.get('Access-Control-Expose-Headers'))
+
+      const invalid = await corsServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'POST',
+          headers: {
+            Origin: origin,
+            'Tus-Resumable': TUS_RESUMABLE,
+            'Upload-Length': '-3',
+          },
+        })
+      )
+      assert.equal(invalid.status, 400)
+      assert.equal(invalid.headers.get('Access-Control-Allow-Origin'), origin)
+      assert.equal(invalid.headers.get('Access-Control-Allow-Credentials'), 'true')
+      assert.ok(invalid.headers.get('Access-Control-Expose-Headers'))
+    })
+
     it('should reject encoded path traversal IDs', async () => {
       const outsidePath = path.resolve(directory, '..', 'outside-victim')
       await fs.writeFile(outsidePath, 'keep me')
@@ -148,6 +203,77 @@ describe('Server', () => {
         assert.equal(await fs.readFile(outsidePath, 'utf8'), 'keep me')
       } finally {
         await fs.rm(outsidePath, {force: true})
+      }
+    })
+
+    it('should not expose handleWeb request body errors', async () => {
+      const datastore = new DataStore()
+      sinon
+        .stub(datastore, 'getUpload')
+        .resolves(new Upload({id: 'stream-error', offset: 0, size: 10}))
+      const {started} = stubWriteUntilEnd(datastore)
+
+      let controller!: ReadableStreamDefaultController<Uint8Array>
+      const response = new Server({path: '/files', datastore}).handleWeb(
+        new Request('http://localhost/files/stream-error', {
+          method: 'PATCH',
+          headers: {
+            'Content-Length': '10',
+            'Content-Type': 'application/offset+octet-stream',
+            'Tus-Resumable': TUS_RESUMABLE,
+            'Upload-Offset': '0',
+          },
+          duplex: 'half',
+          body: new ReadableStream<Uint8Array>({
+            start(streamController) {
+              controller = streamController
+            },
+          }),
+        })
+      )
+
+      controller.enqueue(Buffer.from('chunk'))
+      await started
+      controller.error(new Error('private runtime body failure'))
+
+      const res = await response
+      assert.equal(res.status, ERRORS.ABORTED.status_code)
+      assert.equal(await res.text(), ERRORS.ABORTED.body)
+    })
+
+    it('should gracefully finish a partial write when a Node client disconnects', async () => {
+      const datastore = new DataStore()
+      sinon
+        .stub(datastore, 'getUpload')
+        .resolves(new Upload({id: '1234', offset: 0, size: 2}))
+      const {started, write} = stubWriteUntilEnd(datastore)
+
+      const s = new Server({path: '/files', datastore}).listen()
+      if (!s.listening) {
+        await once(s, 'listening')
+      }
+
+      const req = http.request({
+        hostname: '127.0.0.1',
+        port: (s.address() as AddressInfo).port,
+        path: '/files/1234',
+        method: 'PATCH',
+        headers: {
+          'Content-Length': '2',
+          'Content-Type': 'application/offset+octet-stream',
+          'Tus-Resumable': TUS_RESUMABLE,
+          'Upload-Offset': '0',
+        },
+      })
+      req.on('error', () => {})
+
+      try {
+        req.write('x')
+        await started
+        req.destroy()
+        assert.equal(await write.firstCall.returnValue, 1)
+      } finally {
+        s.close()
       }
     })
 

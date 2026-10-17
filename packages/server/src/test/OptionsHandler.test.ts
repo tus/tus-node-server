@@ -11,6 +11,7 @@ import {
   type CancellationContext,
 } from '@tus/utils'
 import {MemoryLocker, type ServerOptions} from '@tus/server'
+import {createContext} from './utils.js'
 
 describe('OptionsHandler', () => {
   const options: ServerOptions = {
@@ -25,12 +26,7 @@ describe('OptionsHandler', () => {
   let req: Request
 
   beforeEach(() => {
-    const abortController = new AbortController()
-    context = {
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-      signal: abortController.signal,
-    }
+    context = createContext()
     req = new Request(`https://example.com${options.path}/1234`, {method: 'OPTIONS'})
   })
 

@@ -10,6 +10,7 @@ import sinon from 'sinon'
 import {PatchHandler} from '../handlers/PatchHandler.js'
 import {Upload, DataStore, type CancellationContext} from '@tus/utils'
 import {MemoryLocker} from '@tus/server'
+import {createContext} from './utils.js'
 
 describe('PatchHandler', () => {
   const path = '/test/output'
@@ -26,12 +27,7 @@ describe('PatchHandler', () => {
       headers: new Headers(),
       duplex: 'half',
     })
-    const abortController = new AbortController()
-    context = {
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-      signal: abortController.signal,
-    }
+    context = createContext()
   })
 
   it('should 403 if no Content-Type header', () => {
@@ -271,12 +267,7 @@ describe('PatchHandler', () => {
       body: bodyStream,
     })
 
-    const abortController = new AbortController()
-    context = {
-      cancel: () => abortController.abort(),
-      abort: () => abortController.abort(),
-      signal: abortController.signal,
-    }
+    context = createContext()
 
     let accumulatedBuffer: Buffer = Buffer.alloc(0)
 
