@@ -152,6 +152,42 @@ describe('Server', () => {
       request(listener).post('/').expect(412, 'Tus-Resumable Required\n', done)
     })
 
+    it('should include CORS headers on 412 and validation 400 responses', async () => {
+      const origin = 'https://app.example.com'
+      const corsServer = new Server({
+        path: '/files',
+        datastore: new DataStore(),
+        allowedOrigins: [origin],
+        allowedCredentials: true,
+      })
+
+      const precondition = await corsServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'POST',
+          headers: {Origin: origin},
+        })
+      )
+      assert.equal(precondition.status, 412)
+      assert.equal(precondition.headers.get('Access-Control-Allow-Origin'), origin)
+      assert.equal(precondition.headers.get('Access-Control-Allow-Credentials'), 'true')
+      assert.ok(precondition.headers.get('Access-Control-Expose-Headers'))
+
+      const invalid = await corsServer.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'POST',
+          headers: {
+            Origin: origin,
+            'Tus-Resumable': TUS_RESUMABLE,
+            'Upload-Length': '-3',
+          },
+        })
+      )
+      assert.equal(invalid.status, 400)
+      assert.equal(invalid.headers.get('Access-Control-Allow-Origin'), origin)
+      assert.equal(invalid.headers.get('Access-Control-Allow-Credentials'), 'true')
+      assert.ok(invalid.headers.get('Access-Control-Expose-Headers'))
+    })
+
     it('should reject encoded path traversal IDs', async () => {
       const outsidePath = path.resolve(directory, '..', 'outside-victim')
       await fs.writeFile(outsidePath, 'keep me')
