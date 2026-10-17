@@ -19,7 +19,7 @@ jobs:
   consumers:
     name: TS 5.8 / Node ${{ matrix.node }} / types ${{ matrix.types }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -29,40 +29,56 @@ jobs:
           - node: 22.x
             types: 22.13.7
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - name: Checkout proposed head
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+          persist-credentials: false
+
+      - name: Checkout exact base
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          path: base
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+          cache-dependency-path: |
+            base/package-lock.json
+            head/package-lock.json
 
-      - name: Install development dependencies
-        run: npm ci --no-fund --no-audit
-
-      - name: Build with the repository compiler and Node 26 types
-        run: npm run build
-
-      - name: Pack the published libraries
+      - name: Build base packages with their locked development dependencies
+        working-directory: base
         run: |
-          mkdir -p "$RUNNER_TEMP/node-types-packages"
-          npm pack --workspace packages/utils --workspace packages/server --workspace packages/file-store --workspace packages/s3-store --workspace packages/gcs-store --workspace packages/azure-store --pack-destination "$RUNNER_TEMP/node-types-packages"
+          npm ci --no-fund --no-audit
+          npm run build
 
-      - name: Install an isolated consumer
+      - name: Build head packages with their locked development dependencies
+        working-directory: head
+        run: |
+          npm ci --no-fund --no-audit
+          npm run build
+
+      - name: Compare strict consumer diagnostics and exercise both packed runtimes
         env:
           NODE_TYPES_VERSION: ${{ matrix.types }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/node-types-consumer"
-          cp .github/fixtures/node-types-consumer/* "$RUNNER_TEMP/node-types-consumer/"
-          cd "$RUNNER_TEMP/node-types-consumer"
-          npm pkg set "overrides.@types/node=$NODE_TYPES_VERSION"
-          npm install --no-fund --no-audit --save-exact typescript@5.8.2 "@types/node@$NODE_TYPES_VERSION" "$RUNNER_TEMP"/node-types-packages/*.tgz
-          npm ls @types/node typescript @tus/utils @tus/server
+          COMPAT_OUTPUT: ${{ runner.temp }}/node-types-compatibility
+        run: node head/.github/scripts/node-types-compatibility.mjs base head "$COMPAT_OUTPUT"
 
-      - name: Exercise the packaged runtime on supported Node.js
-        id: runtime
-        working-directory: ${{ runner.temp }}/node-types-consumer
-        run: node runtime.mjs
-
-      - name: Compile the published declarations without skipLibCheck
-        if: ${{ !cancelled() && steps.runtime.outcome != 'skipped' }}
-        working-directory: ${{ runner.temp }}/node-types-consumer
-        run: ./node_modules/.bin/tsc --project tsconfig.json
+      - name: Retain packed packages, dependency lock, and raw diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-types-compatibility-${{ matrix.types }}
+          path: |
+            ${{ runner.temp }}/node-types-compatibility/**/*.tgz
+            ${{ runner.temp }}/node-types-compatibility/*.log
+            ${{ runner.temp }}/node-types-compatibility/*.json
+            ${{ runner.temp }}/node-types-compatibility/consumer/package*.json
+            ${{ runner.temp }}/node-types-compatibility/consumer/tsconfig.json
+            ${{ runner.temp }}/node-types-compatibility/consumer/consumer.ts
+            ${{ runner.temp }}/node-types-compatibility/consumer/runtime.mjs
