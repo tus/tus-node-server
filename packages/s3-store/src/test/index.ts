@@ -1,9 +1,14 @@
 import path from 'node:path'
 import assert from 'node:assert/strict'
+import {once} from 'node:events'
+import fs from 'node:fs'
+import {createServer, type Server} from 'node:http'
+import type {AddressInfo} from 'node:net'
 import {Readable} from 'node:stream'
 import stream from 'node:stream/promises'
+import {setTimeout as sleep} from 'node:timers/promises'
 
-import {NoSuchUpload} from '@aws-sdk/client-s3'
+import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
@@ -305,6 +310,43 @@ describe('S3DataStore', () => {
     await assert.rejects(store.remove(id), {status_code: 404})
   })
 
+  for (const [S3Error, completed] of [
+    [NoSuchUpload, true],
+    [NoSuchKey, true],
+    [NotFound, false],
+  ] as const) {
+    for (const errorField of ['name', 'Code']) {
+      const outcome = completed ? 'report a completed upload' : 'propagate the error'
+
+      it(`should ${outcome} when listing parts fails with ${S3Error.name} (via ${errorField})`, async function () {
+        const store = this.datastore as S3Store
+        const id = shared.testId('missing-multipart-upload')
+
+        // @ts-expect-error protected method
+        sinon.stub(store, 'getMetadata').resolves({
+          file: new Upload({id, size: 10, offset: 0}),
+          'upload-id': 'missing-upload-id',
+          'tus-version': '1.0.0',
+        })
+
+        const error =
+          errorField === 'name'
+            ? new S3Error({$metadata: {httpStatusCode: 404}, message: S3Error.name})
+            : {Code: S3Error.name}
+
+        // @ts-expect-error protected property
+        sinon.stub(store.client, 'listParts').rejects(error)
+
+        if (completed) {
+          const upload = await store.getUpload(id)
+          assert.equal(upload.offset, 10)
+        } else {
+          await assert.rejects(store.getUpload(id), (thrown) => thrown === error)
+        }
+      })
+    }
+  }
+
   it('should use default maxMultipartParts when not specified', () => {
     const store = new S3Store({
       s3ClientConfig,
@@ -409,6 +451,96 @@ describe('S3DataStore', () => {
     }
 
     assert.equal(unhandledRejection, false)
+  })
+
+  describe('temp file cleanup', () => {
+    const partSize = 8 * 1024 * 1024
+    const metadata = {
+      file: new Upload({id: 'upload-id', size: partSize, offset: 0}),
+      'upload-id': 'multipart-id',
+      'tus-version': '1.0.0',
+    }
+    let server: Server
+
+    before(async () => {
+      server = createServer((_, res) => {
+        res.writeHead(500).end('<Error><Code>InternalError</Code></Error>')
+      })
+      server.listen(0, '127.0.0.1')
+      await once(server, 'listening')
+    })
+
+    after(() => {
+      server.closeAllConnections()
+      server.close()
+    })
+
+    afterEach(() => {
+      sinon.restore()
+    })
+
+    function createStore() {
+      return new S3Store({
+        s3ClientConfig: {
+          bucket: 'test-bucket',
+          region: 'us-east-1',
+          endpoint: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
+          forcePathStyle: true,
+          credentials: {accessKeyId: 'test', secretAccessKey: 'test'},
+          maxAttempts: 1,
+          requestChecksumCalculation: 'WHEN_REQUIRED',
+        },
+      })
+    }
+
+    it('closes the part reader after an early S3 error', async () => {
+      const store = createStore()
+      const createReadStream = sinon.spy(fs, 'createReadStream')
+      await assert.rejects(
+        // @ts-expect-error protected method
+        store.uploadParts(metadata, Readable.from([Buffer.alloc(partSize)]), 1, 0),
+        {name: 'InternalError'}
+      )
+      assert.equal(createReadStream.firstCall.returnValue.destroyed, true)
+    })
+
+    it('closes an unread part reader when the upload fails', async () => {
+      const store = createStore()
+      // @ts-expect-error protected method
+      sinon.stub(store, 'uploadPart').rejects(new Error('Upload failed'))
+      const createReadStream = sinon.spy(fs, 'createReadStream')
+      await assert.rejects(
+        // @ts-expect-error protected method
+        store.uploadParts(metadata, Readable.from([Buffer.alloc(partSize)]), 1, 0),
+        /Upload failed/
+      )
+      assert.equal(createReadStream.firstCall.returnValue.destroyed, true)
+    })
+
+    it('removes the downloaded incomplete part when deleting it from S3 fails', async () => {
+      const store = createStore()
+      // @ts-expect-error protected method
+      sinon.stub(store, 'getMetadata').resolves(metadata)
+      // @ts-expect-error protected method
+      sinon.stub(store, 'retrieveParts').resolves([])
+      // @ts-expect-error protected method
+      sinon.stub(store, 'getIncompletePart').resolves(Readable.from([Buffer.alloc(1024)]))
+      // @ts-expect-error protected method
+      sinon.stub(store, 'deleteIncompletePart').rejects(new Error('Delete failed'))
+      // @ts-expect-error protected method
+      const uniqueTmpFileName = sinon.spy(store, 'uniqueTmpFileName')
+
+      await assert.rejects(
+        store.write(Readable.from([Buffer.alloc(10)]), 'upload-id', 1024),
+        /Delete failed/
+      )
+
+      const tmpPath: string = await uniqueTmpFileName.firstCall.returnValue
+      for (let attempt = 0; attempt < 100 && fs.existsSync(tmpPath); attempt++) {
+        await sleep(20)
+      }
+      assert.equal(fs.existsSync(tmpPath), false)
+    })
   })
 
   shared.shouldHaveStoreMethods()
