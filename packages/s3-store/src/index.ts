@@ -574,6 +574,13 @@ export class S3Store extends DataStore {
    * Creates a multipart upload on S3 attaching any metadata to it.
    * Also, a `${file_id}.info` file is created which holds some information
    * about the upload itself like: `upload-id`, `upload-length`, etc.
+   *
+   * When `Upload-Length` is 0, `@tus/server` treats the upload as immediately
+   * final and calls `onUploadFinish` without `write()` (unless using
+   * creation-with-upload). Complete the empty multipart here so the object
+   * exists before finish hooks run (`finishMultipartUpload` already uploads a
+   * zero-byte part when `parts` is empty). `write()` is idempotent if the
+   * multipart was already completed for that final offset.
    */
   public async create(upload: Upload) {
     log(`[${upload.id}] initializing multipart upload`)
@@ -602,6 +609,14 @@ export class S3Store extends DataStore {
     await this.saveMetadata(upload, res.UploadId as string)
     log(`[${upload.id}] multipart upload created (${res.UploadId})`)
 
+    if (upload.size === 0 && !upload.sizeIsDeferred) {
+      const metadata = await this.getMetadata(upload.id)
+      await this.finishMultipartUpload(metadata, [])
+      await this.completeMetadata(metadata.file)
+      await this.clearCache(upload.id)
+      log(`[${upload.id}] zero-byte multipart upload completed`)
+    }
+
     return upload
   }
 
@@ -619,7 +634,24 @@ export class S3Store extends DataStore {
   public async write(src: stream.Readable, id: string, offset: number): Promise<number> {
     // Metadata request needs to happen first
     const metadata = await this.getMetadata(id)
-    const parts = await this.retrieveParts(id)
+    let parts: Array<AWS.Part>
+    try {
+      parts = await this.retrieveParts(id)
+    } catch (error) {
+      // create() may already have completed a zero-byte multipart upload.
+      // creation-with-upload still calls write() with an empty body; treat that
+      // as a no-op when the requested offset is already the final size.
+      if (
+        isS3NotFoundError(error) &&
+        metadata.file.size !== undefined &&
+        offset === metadata.file.size
+      ) {
+        src.resume()
+        await streamProm.finished(src).catch(() => undefined)
+        return offset
+      }
+      throw error
+    }
     // biome-ignore lint/style/noNonNullAssertion: it's fine
     const partNumber: number = parts.length > 0 ? parts[parts.length - 1].PartNumber! : 0
     const nextPartNumber = partNumber + 1
