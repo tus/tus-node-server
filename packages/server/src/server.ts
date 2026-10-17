@@ -305,7 +305,7 @@ export class Server extends EventEmitter {
     return this.datastore.deleteExpired()
   }
 
-  protected createContext() {
+  protected createContext(): CancellationContext {
     // Initialize two AbortControllers:
     // 1. `requestAbortController` for instant request termination, particularly useful for stopping clients to upload when errors occur.
     // 2. `abortWithDelayController` to introduce a delay before aborting, allowing the server time to complete ongoing operations.
