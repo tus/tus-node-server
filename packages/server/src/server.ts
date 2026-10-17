@@ -133,7 +133,7 @@ export class Server extends EventEmitter {
     return sendNodeResponse(res, response)
   }
 
-  async handleWeb(req: Request) {
+  async handleWeb(req: Request): Promise<Response> {
     return this.handler(req)
   }
 

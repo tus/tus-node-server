@@ -2,6 +2,10 @@
 
 ## Changesets
 
+Use Node.js 24 and npm 10.9 or newer when running Changesets commands, including
+`npm run version` and `npm run release:local`. These requirements apply to release
+tooling; the published packages continue to support Node.js 20.19 and newer.
+
 We use [changesets](https://github.com/changesets/changesets) to manage versioning,
 changelogs and publishing. This means when you contribute a PR you have to run
 `npx changeset add` to indicate the semver bump you are making and to add a changelog

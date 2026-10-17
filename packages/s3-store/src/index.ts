@@ -608,7 +608,7 @@ export class S3Store extends DataStore {
     return upload
   }
 
-  async read(id: string) {
+  async read(id: string): Promise<stream.Readable> {
     const data = await this.client.getObject({
       Bucket: this.bucket,
       Key: id,
