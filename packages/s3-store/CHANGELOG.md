@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 2.0.8
+
+### Patch Changes
+
+- ecd2bbb: Close temporary part file readers after S3 uploads succeed or fail, and remove the downloaded incomplete part when deleting it from S3 fails, preventing file descriptor and disk space leaks.
+
 ## 2.0.7
 
 ### Patch Changes
