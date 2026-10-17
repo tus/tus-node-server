@@ -80,7 +80,7 @@ export class GCSStore extends DataStore {
         upload.offset = offset
 
         const options = {
-          contentType: upload.metadata?.contentType,
+          contentType: upload.metadata?.contentType || undefined,
           metadata: {
             metadata: {
               tus_version: TUS_RESUMABLE,
