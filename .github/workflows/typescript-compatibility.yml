@@ -1,6 +1,8 @@
 name: TypeScript compatibility
 
 on:
+  merge_group:
+    types: [checks_requested]
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
@@ -26,13 +28,14 @@ jobs:
       - name: Checkout proposed merge
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.sha }}
           path: head
           persist-credentials: false
 
-      - name: Checkout PR base
+      - name: Checkout immutable base
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
           path: base
           persist-credentials: false
 

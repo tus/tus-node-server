@@ -45,7 +45,6 @@ const consumerManifest = {
   overrides: {'@types/node': '20.19.0'},
 }
 writeJson(join(consumer, 'package.json'), consumerManifest)
-// Reuse the base's external resolutions, without its workspace links or toolchain contract.
 const baseLock = readJson(join(base, 'package-lock.json'))
 writeJson(join(consumer, 'package-lock.json'), {
   lockfileVersion: 3,
@@ -73,25 +72,6 @@ function normalized(pkg, path) {
   return printer.printFile(source)
 }
 
-const differences = []
-for (const [name, oldPackage] of before) {
-  const newPackage = after.get(name)
-  const oldManifest = readJson(join(oldPackage.directory, 'package.json'))
-  const newManifest = readJson(join(newPackage.directory, 'package.json'))
-  assert.deepEqual(newManifest, oldManifest, `${name} published manifest changed`)
-  // All current packages have one root export. Fail if coverage needs extending.
-  assert.equal(oldManifest.exports, './dist/index.js', `${name} needs entrypoint coverage`)
-  const paths = oldPackage.files.map(({path}) => path).sort()
-  assert.deepEqual(newPackage.files.map(({path}) => path).sort(), paths, `${name} packed files changed`)
-  assert(paths.includes('dist/index.js') && paths.includes('dist/index.d.ts'), `${name} missing entrypoint output`)
-  for (const path of paths.filter((path) => path.endsWith('.js') || path.endsWith('.d.ts'))) {
-    if (normalized(oldPackage, path) !== normalized(newPackage, path)) {
-      differences.push(`${name}/${path}`)
-    }
-  }
-}
-writeFileSync(join(output, 'artifact-differences.log'), `${differences.join('\n')}\n`)
-
 const imports = [...before.keys()].map((name, index) => `import * as entry${index} from '${name}'`)
 const uses = [...before.keys()].map((name, index) => `console.log('${name}', Object.keys(entry${index}).sort())`)
 const entrypoints = `${[...imports, ...uses].join('\n')}\n`
@@ -111,28 +91,105 @@ writeJson(join(consumer, 'tsconfig.json'), {
   files: ['entrypoints.ts'],
 })
 
-function check(label, args) {
+function capture(label, args) {
   const result = spawnSync(process.execPath, args, {cwd: consumer, encoding: 'utf8'})
   const log = `${result.stdout ?? ''}${result.stderr ?? ''}`
   writeFileSync(join(output, `${label}.log`), log)
   process.stdout.write(log)
-  assert.ifError(result.error)
-  assert.equal(result.status, 0, `${label} failed. See ${label}.log`)
-  return result.stdout
+  if (result.error) process.stderr.write(`${result.error}\n`)
+  return {...result, log}
 }
 
 const tsc = require.resolve('typescript/bin/tsc')
-check('base-types', [tsc, '--project', 'tsconfig.json'])
-const baseExports = check('base-runtime', ['entrypoints.mjs'])
+const typeArgs = [tsc, '--project', 'tsconfig.json', '--pretty', 'false']
+const baseTypes = capture('base-types', typeArgs)
+const baseRuntime = capture('base-runtime', ['entrypoints.mjs'])
 
-// Replace only our packed packages so both compilers face identical consumer dependencies.
 for (const [name, pkg] of after) {
   const directory = join(consumer, 'node_modules', name)
   rmSync(directory, {recursive: true, force: true})
   mkdirSync(directory, {recursive: true})
   execFileSync('tar', ['-xzf', pkg.tarball, '-C', directory, '--strip-components=1'])
 }
-check('head-types', [tsc, '--project', 'tsconfig.json'])
-assert.equal(check('head-runtime', ['entrypoints.mjs']), baseExports, 'Runtime exports changed')
-assert.deepEqual(differences, [], 'Emitted JS or declarations changed beyond printer normalization')
-console.log(`Compared published artifacts and consumed all ${before.size} package entrypoints`)
+const headTypes = capture('head-types', typeArgs)
+const headRuntime = capture('head-runtime', ['entrypoints.mjs'])
+
+const failures = []
+function verify(label, check) {
+  try {
+    check()
+  } catch (error) {
+    failures.push(label)
+    console.error(`${label}: ${error.message}`)
+  }
+}
+
+function checkExit(label, result, status) {
+  assert.ifError(result.error)
+  assert.equal(result.signal, null, `${label} terminated by a signal`)
+  assert.equal(result.status, status, `${label} failed. See ${label}.log`)
+}
+
+const knownSrvxDiagnostics = [
+  [4, 22, "TS2307: Cannot find module 'aws-lambda' or its corresponding type declarations."],
+  [5, 38, "TS2307: Cannot find module 'cloudflare:workers' or its corresponding type declarations."],
+  [7, 22, "TS2307: Cannot find module 'bun' or its corresponding type declarations."],
+  [8, 21, "TS2307: Cannot find module '@cloudflare/workers-types' or its corresponding type declarations."],
+  [137, 10, "TS2503: Cannot find namespace 'Deno'."],
+  [185, 14, "TS2503: Cannot find namespace 'Deno'."],
+  [229, 11, "TS2503: Cannot find namespace 'Deno'."],
+  [229, 33, "TS2503: Cannot find namespace 'Deno'."],
+  [249, 12, "TS2304: Cannot find name 'FetchEvent'."],
+  [298, 51, "TS2503: Cannot find namespace 'Deno'."],
+  [298, 73, "TS2503: Cannot find namespace 'Deno'."],
+].map(([line, column, message]) => `node_modules/srvx/dist/types.d.mts(${line},${column}): error ${message}`).sort()
+
+const diagnostics = (result) => result.log.split(/\r?\n/).filter((line) => line.length > 0).sort()
+const baseDiagnostics = diagnostics(baseTypes)
+const headDiagnostics = diagnostics(headTypes)
+verify('baseline types', () => {
+  checkExit('base-types', baseTypes, baseDiagnostics.length > 0 ? 2 : 0)
+  if (baseDiagnostics.length > 0) {
+    assert.deepEqual(baseDiagnostics, knownSrvxDiagnostics, 'Unexpected baseline diagnostics')
+    const warning = 'Baseline compilation is not clean: 11 known srvx missing-platform diagnostics. Head must match exactly.'
+    writeFileSync(join(output, 'baseline-warning.log'), `${warning}\n`)
+    console.warn(`::warning::${warning}`)
+  }
+})
+verify('head types', () => {
+  checkExit('head-types', headTypes, headDiagnostics.length > 0 ? 2 : 0)
+  assert.deepEqual(headDiagnostics, baseDiagnostics, 'Consumer diagnostics changed. See base-types.log and head-types.log')
+})
+verify('base runtime', () => checkExit('base-runtime', baseRuntime, 0))
+verify('head runtime', () => checkExit('head-runtime', headRuntime, 0))
+verify('runtime exports', () => assert.equal(headRuntime.stdout, baseRuntime.stdout, 'Runtime exports changed'))
+
+const differences = []
+for (const [name, oldPackage] of before) {
+  verify(`${name} artifacts`, () => {
+    const newPackage = after.get(name)
+    const oldManifest = readJson(join(oldPackage.directory, 'package.json'))
+    const newManifest = readJson(join(newPackage.directory, 'package.json'))
+    assert.deepEqual(newManifest, oldManifest, `${name} published manifest changed`)
+    assert.equal(oldManifest.exports, './dist/index.js', `${name} needs entrypoint coverage`)
+    const paths = oldPackage.files.map(({path}) => path).sort()
+    assert.deepEqual(newPackage.files.map(({path}) => path).sort(), paths, `${name} packed files changed`)
+    assert(paths.includes('dist/index.js') && paths.includes('dist/index.d.ts'), `${name} missing entrypoint output`)
+    for (const path of paths.filter((path) => path.endsWith('.js') || path.endsWith('.d.ts'))) {
+      if (normalized(oldPackage, path) !== normalized(newPackage, path)) {
+        differences.push(`${name}/${path}`)
+      }
+    }
+  })
+}
+writeFileSync(join(output, 'artifact-differences.log'), `${differences.join('\n')}\n`)
+
+verify('emitted artifacts', () => assert.deepEqual(
+  differences, [], 'Emitted JS or declarations changed; inspect artifact-differences.log before judging consumer impact'
+))
+writeJson(join(output, 'verification-failures.log'), failures)
+assert.deepEqual(failures, [], 'Compatibility checks failed')
+console.log(`Compared published artifacts and runtime exports for all ${before.size} package entrypoints`)
+console.log(baseDiagnostics.length > 0
+  ? 'Strict compilation remains non-clean with only the unchanged known srvx diagnostics.'
+  : 'Both package versions passed strict consumer compilation.')
