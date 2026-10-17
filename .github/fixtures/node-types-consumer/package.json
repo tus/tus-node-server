@@ -1,0 +1,5 @@
+{
+  "name": "tus-node-types-consumer",
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,68 @@
+name: Node types compatibility
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}--${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  consumers:
+    name: TS 5.8 / Node ${{ matrix.node }} / types ${{ matrix.types }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node: 20.19.0
+            types: 20.19.0
+          - node: 22.x
+            types: 22.13.7
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install development dependencies
+        run: npm ci --no-fund --no-audit
+
+      - name: Build with the repository compiler and Node 26 types
+        run: npm run build
+
+      - name: Pack the published libraries
+        run: |
+          mkdir -p "$RUNNER_TEMP/node-types-packages"
+          npm pack --workspace packages/utils --workspace packages/server --workspace packages/file-store --workspace packages/s3-store --workspace packages/gcs-store --workspace packages/azure-store --pack-destination "$RUNNER_TEMP/node-types-packages"
+
+      - name: Install an isolated consumer
+        env:
+          NODE_TYPES_VERSION: ${{ matrix.types }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/node-types-consumer"
+          cp .github/fixtures/node-types-consumer/* "$RUNNER_TEMP/node-types-consumer/"
+          cd "$RUNNER_TEMP/node-types-consumer"
+          npm pkg set "overrides.@types/node=$NODE_TYPES_VERSION"
+          npm install --no-fund --no-audit --save-exact typescript@5.8.2 "@types/node@$NODE_TYPES_VERSION" "$RUNNER_TEMP"/node-types-packages/*.tgz
+          npm ls @types/node typescript @tus/utils @tus/server
+
+      - name: Exercise the packaged runtime on supported Node.js
+        id: runtime
+        working-directory: ${{ runner.temp }}/node-types-consumer
+        run: node runtime.mjs
+
+      - name: Compile the published declarations without skipLibCheck
+        if: ${{ !cancelled() && steps.runtime.outcome != 'skipped' }}
+        working-directory: ${{ runner.temp }}/node-types-consumer
+        run: ./node_modules/.bin/tsc --project tsconfig.json
