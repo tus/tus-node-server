@@ -408,10 +408,11 @@ export class S3Store extends DataStore {
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: it's fine
         const deferred = new Promise<void>(async (resolve, reject) => {
+          let readable: fs.ReadStream | undefined
           try {
             // Only the first chunk of each PATCH request can prepend
             // an incomplete part (last chunk) from the previous request.
-            const readable = fs.createReadStream(path)
+            readable = fs.createReadStream(path)
             readable.on('error', reject)
 
             if (partSize >= this.minPartSize || isFinalPart) {
@@ -427,6 +428,8 @@ export class S3Store extends DataStore {
             splitterStream.destroy(error)
             reject(error)
           } finally {
+            // The SDK doesn't consume the body if the request fails early.
+            readable?.destroy()
             fsProm.rm(path).catch(() => {
               /* ignore */
             })
@@ -605,7 +608,7 @@ export class S3Store extends DataStore {
     return upload
   }
 
-  async read(id: string) {
+  async read(id: string): Promise<stream.Readable> {
     const data = await this.client.getObject({
       Bucket: this.bucket,
       Key: id,
@@ -629,7 +632,14 @@ export class S3Store extends DataStore {
 
     if (incompletePart) {
       // once the file is on disk, we delete the incomplete part
-      await this.deleteIncompletePart(id)
+      try {
+        await this.deleteIncompletePart(id)
+      } catch (error) {
+        fsProm.rm(incompletePart.path).catch(() => {
+          /* ignore */
+        })
+        throw error
+      }
 
       offset = requestedOffset - incompletePart.size
       src = new MultiStream([incompletePart.createReader({cleanUpOnEnd: true}), src])
