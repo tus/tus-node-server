@@ -2,6 +2,7 @@
 import 'should'
 
 import {strict as assert} from 'node:assert'
+import {buffer} from 'node:stream/consumers'
 
 import sinon from 'sinon'
 
@@ -372,6 +373,7 @@ describe('PostHandler', () => {
 
       it('should let onUploadFinish override response headers without mutating them', async () => {
         const store = sinon.createStubInstance(DataStore)
+        store.write.resolves(0)
         const hookHeaders = Object.freeze({'x-test': 'overridden'})
         const handler = new PostHandler(store, {
           path: '/test/output',
@@ -388,28 +390,77 @@ describe('PostHandler', () => {
         assert.deepEqual(hookHeaders, {'x-test': 'overridden'})
       })
 
-      it('should call onUploadFinish hook for empty file without content-type', async () => {
-        const store = sinon.createStubInstance(DataStore)
-        const spy = sinon.stub().resolvesArg(1)
-        const handler = new PostHandler(store, {
-          path: '/test/output',
-          locker: new MemoryLocker(),
-          onUploadFinish: spy,
-        })
+      for (const size of [1024, undefined]) {
+        const scenario = size === undefined ? 'deferred' : 'positive'
 
-        const req = new Request('https://example.com/test/output', {
-          headers: {'upload-length': '0', host: 'localhost:3000'},
-        })
+        it(`should not write or finish an ordinary POST with ${scenario} size`, async () => {
+          const store = sinon.createStubInstance(DataStore)
+          store.hasExtension.withArgs('creation-defer-length').returns(true)
+          store.create.resolvesArg(0)
+          const onUploadFinish = sinon.stub().resolves({})
+          const onPostFinish = sinon.spy()
+          const handler = new PostHandler(store, {...options, onUploadFinish})
+          handler.on(EVENTS.POST_FINISH, onPostFinish)
+          const headers = new Headers()
+          if (size === undefined) {
+            headers.set('upload-defer-length', '1')
+          } else {
+            headers.set('upload-length', size.toString())
+          }
+          const req = new Request('https://example.com/test', {method: 'POST', headers})
 
-        await handler.send(req, context)
-        assert.equal(spy.calledOnce, true)
-        const upload = spy.args[0][1]
-        assert.equal(upload.offset, 0)
-        assert.equal(upload.size, 0)
-      })
+          const res = await handler.send(req, context)
+
+          assert.equal(res.status, 201)
+          assert.equal(store.create.calledOnce, true)
+          assert.equal(store.write.called, false)
+          assert.equal(onUploadFinish.called, false)
+          assert.equal(onPostFinish.called, false)
+        })
+      }
+
+      for (const creationWithUpload of [false, true]) {
+        const scenario = creationWithUpload ? 'creation-with-upload' : 'ordinary POST'
+
+        it(`should finalize an empty file before onUploadFinish for ${scenario}`, async () => {
+          const store = sinon.createStubInstance(DataStore)
+          const files = new Map<string, Buffer>()
+          store.create.resolvesArg(0)
+          store.write.callsFake(async (stream, id) => {
+            files.set(id, await buffer(stream))
+            return 0
+          })
+          const onUploadFinish = sinon.spy(async (_req: Request, upload: Upload) => {
+            assert.deepEqual(
+              files.get(upload.id),
+              Buffer.alloc(0),
+              'The empty file must exist before onUploadFinish'
+            )
+            assert.equal(upload.offset, 0)
+            assert.equal(upload.size, 0)
+            return {}
+          })
+          const handler = new PostHandler(store, {...options, onUploadFinish})
+          const headers = new Headers({'upload-length': '0', host: 'localhost:3000'})
+          if (creationWithUpload) {
+            headers.set('content-type', 'application/offset+octet-stream')
+          }
+          const req = new Request('https://example.com/test', {
+            method: 'POST',
+            headers,
+            body: creationWithUpload ? new Uint8Array(0) : undefined,
+          })
+
+          const res = await handler.send(req, context)
+
+          assert.equal(res.status, 201)
+          assert.equal(onUploadFinish.calledOnce, true)
+        })
+      }
 
       it('does not set Location header if onUploadFinish hook returned a not eligible status code', async () => {
         const store = sinon.createStubInstance(DataStore)
+        store.write.resolves(0)
         const handler = new PostHandler(store, {
           path: '/test/output',
           locker: new MemoryLocker(),

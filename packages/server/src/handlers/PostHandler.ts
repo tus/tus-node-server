@@ -123,7 +123,7 @@ export class PostHandler extends BaseHandler {
 
       this.emit(EVENTS.POST_CREATE, req, upload, url)
 
-      isFinal = upload.size === 0 && !upload.sizeIsDeferred
+      isFinal = false
 
       // The request MIGHT include a Content-Type header when using creation-with-upload extension
       if (validateHeader('content-type', req.headers.get('content-type'))) {
@@ -133,6 +133,9 @@ export class PostHandler extends BaseHandler {
         responseData.headers['Upload-Offset'] = newOffset.toString()
         isFinal = newOffset === Number.parseInt(upload_length as string, 10)
         upload.offset = newOffset
+      } else if (upload.size === 0) {
+        upload.offset = await this.writeToStore(null, upload, 0, context)
+        isFinal = upload.offset === upload.size
       }
     } catch (e) {
       context.abort()
