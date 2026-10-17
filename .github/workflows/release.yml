@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: lts/*
+          node-version: 24.x
 
       - name: Install dependencies
         run: npm ci --no-fund --no-audit
@@ -35,11 +35,10 @@ jobs:
         id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51
         with:
-          # Note: pnpm install after versioning is necessary to refresh lockfile
-          version: npm run version
-          publish: npm run release:local
-          commit: "[ci] release"
-          title: "[ci] release"
-        env:
-          # Needs access to push to main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # npm install after versioning refreshes the lockfile.
+          version-script: npm run version
+          publish-script: npm run release:local
+          commit-message: "[ci] release"
+          pr-title: "[ci] release"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-with-git-cli: true
