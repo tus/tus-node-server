@@ -7,6 +7,7 @@ import type {AddressInfo} from 'node:net'
 import {Readable} from 'node:stream'
 import stream from 'node:stream/promises'
 import {setTimeout as sleep} from 'node:timers/promises'
+import {gzipSync} from 'node:zlib'
 
 import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
@@ -328,6 +329,32 @@ describe('S3DataStore', () => {
 
     // @ts-expect-error protected method
     assert.equal(await store.getIncompletePartSize(upload.id), undefined)
+  })
+
+  it('should preserve content headers metadata on the completed object', async function () {
+    const store = this.datastore as S3Store
+    const body = gzipSync('x')
+    const upload = new Upload({
+      id: shared.testId('content-headers'),
+      size: body.length,
+      offset: 0,
+      metadata: {
+        contentType: 'text/plain',
+        cacheControl: 'max-age=3600',
+        contentEncoding: 'gzip',
+      },
+    })
+
+    await store.create(upload)
+    const offset = await store.write(Readable.from(body), upload.id, 0)
+    assert.equal(offset, body.length)
+
+    // @ts-expect-error protected property
+    const client = store.client
+    const head = await client.headObject({Bucket: s3ClientConfig.bucket, Key: upload.id})
+    assert.equal(head.ContentType, 'text/plain')
+    assert.equal(head.CacheControl, 'max-age=3600')
+    assert.equal(head.ContentEncoding, 'gzip')
   })
 
   for (const [S3Error, completed] of [
