@@ -49,6 +49,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
+          # Keep the published Node 20 compatibility check.
           node-version: 20.x
           cache: npm
           cache-dependency-path: package-lock.json
