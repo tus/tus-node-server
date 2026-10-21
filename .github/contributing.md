@@ -2,7 +2,7 @@
 
 ## Changesets
 
-Use Node.js 24 and npm 10.9 or newer when running Changesets commands, including
+Use Node.js 26.12.1 and npm 10.9 or newer when running Changesets commands, including
 `npm run version` and `npm run release:local`. These requirements apply to release
 tooling; the published packages continue to support Node.js 20.19 and newer.
 
