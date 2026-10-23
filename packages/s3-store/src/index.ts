@@ -743,7 +743,7 @@ export class S3Store extends DataStore {
     await this.client.deleteObjects({
       Bucket: this.bucket,
       Delete: {
-        Objects: [{Key: id}, {Key: this.infoKey(id)}],
+        Objects: [{Key: id}, {Key: this.infoKey(id)}, {Key: this.partKey(id, true)}],
       },
     })
 
