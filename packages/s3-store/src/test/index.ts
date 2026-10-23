@@ -310,6 +310,26 @@ describe('S3DataStore', () => {
     await assert.rejects(store.remove(id), {status_code: 404})
   })
 
+  it('should delete the incomplete part when removing an upload', async function () {
+    const store = this.datastore as S3Store
+    const incompleteSize = 1024
+    const upload = new Upload({
+      id: shared.testId('remove-incomplete-part'),
+      size: incompleteSize * 2,
+      offset: 0,
+    })
+
+    await store.create(upload)
+    await store.write(Readable.from(Buffer.alloc(incompleteSize)), upload.id, 0)
+    // @ts-expect-error protected method
+    assert.equal(await store.getIncompletePartSize(upload.id), incompleteSize)
+
+    await store.remove(upload.id)
+
+    // @ts-expect-error protected method
+    assert.equal(await store.getIncompletePartSize(upload.id), undefined)
+  })
+
   for (const [S3Error, completed] of [
     [NoSuchUpload, true],
     [NoSuchKey, true],
