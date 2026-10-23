@@ -1,5 +1,14 @@
 # @tus/s3-store
 
+## 2.0.9
+
+### Patch Changes
+
+- 6498076: Delete the incomplete part object (`<id>.part`) when removing an upload so terminating an upload that has a pending sub-minimum-size chunk no longer leaves an orphaned object in the bucket.
+- Updated dependencies [206f892]
+- Updated dependencies [73bd7f0]
+  - @tus/utils@0.7.2
+
 ## 2.0.8
 
 ### Patch Changes
