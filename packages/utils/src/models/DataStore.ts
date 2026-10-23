@@ -27,11 +27,10 @@ export class DataStore extends EventEmitter {
   async remove(_id: string) {}
 
   /**
-   * Called in PATCH requests. This method should write data
-   * to the DataStore file, and possibly implement the
-   * concatenation extension.
-   *
-   * http://tus.io/protocols/resumable-upload.html#concatenation
+   * Called in POST and PATCH requests to write data and return the new offset.
+   * A POST with Upload-Length: 0 passes an empty stream at offset 0.
+   * When the returned offset reaches the declared size, the stored upload
+   * must be complete.
    */
   async write(_stream: stream.Readable, _id: string, _offset: number) {
     return 0
