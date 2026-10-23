@@ -35,7 +35,20 @@ export class FileKvStore<T = Upload> implements KvStore<T> {
   }
 
   async list(): Promise<Array<string>> {
-    const files = new Set(await fs.readdir(this.directory))
+    const entries = await fs.readdir(this.directory, {
+      recursive: true,
+      withFileTypes: true,
+    })
+    const files = new Set(
+      entries
+        .filter((entry) => entry.isFile())
+        .map((entry) =>
+          path
+            .relative(this.directory, path.join(entry.parentPath, entry.name))
+            .split(path.sep)
+            .join('/')
+        )
+    )
     // To only return tus file IDs we check if the file has a corresponding JSON info file
     return [...files].filter((file) => files.has(`${file}.json`)).sort()
   }

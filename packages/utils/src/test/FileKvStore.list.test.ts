@@ -19,7 +19,13 @@ describe('FileKvStore', () => {
   })
 
   const touch = (...names: string[]) =>
-    Promise.all(names.map((name) => fs.writeFile(path.join(directory, name), '')))
+    Promise.all(
+      names.map(async (name) => {
+        const file = path.join(directory, name)
+        await fs.mkdir(path.dirname(file), {recursive: true})
+        await fs.writeFile(file, '')
+      })
+    )
 
   describe('list', () => {
     it('ignores unpaired files', async () => {
@@ -45,6 +51,39 @@ describe('FileKvStore', () => {
     it('returns sorted ids', async () => {
       await touch('b', 'b.json', 'c', 'c.json', 'a', 'a.json')
       assert.deepEqual(await store.list(), ['a', 'b', 'c'])
+    })
+
+    it('lists nested ids with their full relative paths', async () => {
+      await touch(
+        'upload',
+        'upload.json',
+        'a/upload',
+        'a/upload.json',
+        'b/deep/upload',
+        'b/deep/upload.json'
+      )
+      assert.deepEqual(await store.list(), ['a/upload', 'b/deep/upload', 'upload'])
+    })
+
+    it('does not pair files across directories', async () => {
+      await touch('a/upload', 'b/upload.json')
+      assert.deepEqual(await store.list(), [])
+    })
+
+    it('ignores directories with a matching JSON file', async () => {
+      await fs.mkdir(path.join(directory, 'folder'))
+      await touch('folder.json')
+      assert.deepEqual(await store.list(), [])
+    })
+
+    it('does not follow directory symlinks', async () => {
+      await touch('real/upload', 'real/upload.json')
+      await fs.symlink(
+        path.join(directory, 'real'),
+        path.join(directory, 'link'),
+        'junction'
+      )
+      assert.deepEqual(await store.list(), ['real/upload'])
     })
   })
 })

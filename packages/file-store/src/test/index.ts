@@ -131,6 +131,30 @@ describe('FileStore', function () {
     })
   })
 
+  describe('deleteExpired', () => {
+    it('removes expired nested uploads and keeps unexpired uploads', async function () {
+      this.datastore.expirationPeriodInMilliseconds = 60_000
+      const expired = new Upload({
+        id: 'nested/path/expired',
+        size: 10,
+        offset: 0,
+        creation_date: new Date(Date.now() - 120_000).toISOString(),
+      })
+      const fresh = new Upload({id: 'nested/path/fresh', size: 10, offset: 0})
+      await this.datastore.create(expired)
+      await this.datastore.create(fresh)
+
+      assert.equal(await this.datastore.deleteExpired(), 1)
+      await assert.rejects(fsProm.stat(path.join(storePath, expired.id)), {
+        code: 'ENOENT',
+      })
+      await assert.rejects(fsProm.stat(path.join(storePath, `${expired.id}.json`)), {
+        code: 'ENOENT',
+      })
+      assert.equal((await this.datastore.getUpload(fresh.id)).id, fresh.id)
+    })
+  })
+
   describe('FileConfigstore', () => {
     it('should ignore random files in directory when calling list()', async () => {
       const store = new FileConfigstore(storePath)
