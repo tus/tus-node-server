@@ -1,5 +1,12 @@
 # @tus/utils
 
+## 0.7.2
+
+### Patch Changes
+
+- 206f892: Fix `FileKvStore.list()` missing or mispairing uploads whose ids share a prefix (e.g. `id` and `id.j`).
+- 73bd7f0: Fix `FileKvStore.list()` to include nested upload IDs. Expiration cleanup now removes existing nested uploads that meet the expiration rules, which were previously skipped.
+
 ## 0.7.1
 
 ### Patch Changes
