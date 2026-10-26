@@ -89,4 +89,31 @@ describe('HeadHandler', () => {
     const res = await handler.send(req, context)
     assert.equal(res.headers.has('Upload-Metadata'), false)
   })
+
+  describe('expiration', () => {
+    const creation_date = new Date(Date.now() - 120_000).toISOString()
+
+    before(() => {
+      fake_store.hasExtension.withArgs('expiration').returns(true)
+      fake_store.getExpiration.returns(60_000)
+    })
+
+    it('should resolve completed uploads after expiration', async () => {
+      fake_store.getUpload.resolves(
+        new Upload({id: '1234', offset: 4, size: 4, creation_date})
+      )
+      const res = await handler.send(req, context)
+      assert.equal(res.status, 200)
+      assert.equal(res.headers.get('Upload-Offset'), '4')
+    })
+
+    for (const size of [4, undefined]) {
+      it(`should 410 unfinished uploads after expiration (size: ${size})`, () => {
+        fake_store.getUpload.resolves(
+          new Upload({id: '1234', offset: 0, size, creation_date})
+        )
+        return assert.rejects(() => handler.send(req, context), {status_code: 410})
+      })
+    }
+  })
 })
