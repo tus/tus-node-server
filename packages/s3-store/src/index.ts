@@ -712,14 +712,15 @@ export class S3Store extends DataStore {
   }
 
   public async declareUploadLength(file_id: string, upload_length: number) {
-    const {file, 'upload-id': uploadId} = await this.getMetadata(file_id)
-    if (!file) {
+    const metadata = await this.getMetadata(file_id)
+    if (!metadata.file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    file.size = upload_length
+    metadata.file.size = upload_length
 
-    await this.saveMetadata(file, uploadId)
+    await this.saveMetadata(metadata.file, metadata['upload-id'])
+    await this.cache.set(file_id, metadata)
   }
 
   public async remove(id: string): Promise<void> {
@@ -747,7 +748,7 @@ export class S3Store extends DataStore {
       },
     })
 
-    this.clearCache(id)
+    await this.clearCache(id)
   }
 
   protected getExpirationDate(created_at: string) {
