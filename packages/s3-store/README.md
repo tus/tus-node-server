@@ -10,6 +10,7 @@
 - [Use](#use)
 - [API](#api)
   - [`new S3Store(options)`](#new-s3storeoptions)
+- [Metadata](#metadata)
 - [Extensions](#extensions)
 - [Examples](#examples)
   - [Example: using `credentials` to fetch credentials inside a AWS container](#example-using-credentials-to-fetch-credentials-inside-a-aws-container)
@@ -137,6 +138,19 @@ overall upload bandwidth available for other concurrent uploads.
   is a limiting factor, increasing `maxConcurrentPartUploads` won’t lead to higher
   throughput. Instead, it will result in additional resource consumption without
   proportional gains in transfer speed.
+
+## Metadata
+
+These upload metadata keys are forwarded to S3 as headers on the stored object:
+
+| Metadata key      | S3 header          |
+| ----------------- | ------------------ |
+| `contentType`     | `Content-Type`     |
+| `cacheControl`    | `Cache-Control`    |
+| `contentEncoding` | `Content-Encoding` |
+
+`contentEncoding` only labels the object; S3 does not compress it. Set it (e.g. `gzip`)
+only when the client uploads bytes that are already encoded that way.
 
 ## Extensions
 
