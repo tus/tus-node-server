@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import {createServer, type Server} from 'node:http'
 import type {AddressInfo} from 'node:net'
 import {Readable} from 'node:stream'
+import {buffer} from 'node:stream/consumers'
 import stream from 'node:stream/promises'
 import {setTimeout as sleep} from 'node:timers/promises'
 import {gzipSync} from 'node:zlib'
@@ -13,6 +14,7 @@ import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store} from '@tus/s3-store'
+import {Server as TusServer} from '@tus/server'
 import * as shared from '../../../utils/dist/test/stores.js'
 import {StreamLimiter, Upload} from '@tus/utils'
 
@@ -288,6 +290,47 @@ describe('S3DataStore', () => {
       assert.fail(`Zero byte file was not uploaded to S3: ${error.message}`)
     }
   })
+
+  for (const creationWithUpload of [false, true]) {
+    const scenario = creationWithUpload ? 'creation-with-upload' : 'ordinary POST'
+
+    it(`should persist an empty S3 object before onUploadFinish for ${scenario}`, async function () {
+      const store: S3Store = this.datastore
+      const id = shared.testId('zero-byte-post')
+      const onUploadFinish = sinon.spy(async (_req: Request, upload: Upload) => {
+        const contents = await buffer(await store.read(upload.id))
+        assert.deepEqual(contents, Buffer.alloc(0))
+        assert.equal(upload.offset, 0)
+        assert.equal(upload.size, 0)
+        return {}
+      })
+      const server = new TusServer({
+        path: '/files',
+        datastore: store,
+        namingFunction: () => id,
+        onUploadFinish,
+      })
+      const headers = new Headers({
+        'tus-resumable': '1.0.0',
+        'upload-length': '0',
+        host: 'localhost',
+      })
+      if (creationWithUpload) {
+        headers.set('content-type', 'application/offset+octet-stream')
+      }
+
+      const response = await server.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'POST',
+          headers,
+          body: creationWithUpload ? new Uint8Array(0) : undefined,
+        })
+      )
+
+      assert.equal(response.status, 201, await response.text())
+      assert.equal(onUploadFinish.calledOnce, true)
+    })
+  }
 
   it('should report a missing multipart upload as a missing file when removing it', async function () {
     const store = this.datastore as S3Store
