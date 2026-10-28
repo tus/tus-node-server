@@ -4,7 +4,9 @@ import {once} from 'node:events'
 import fs from 'node:fs'
 import {createServer, type Server} from 'node:http'
 import type {AddressInfo} from 'node:net'
+import {tmpdir} from 'node:os'
 import {Readable} from 'node:stream'
+import {buffer} from 'node:stream/consumers'
 import stream from 'node:stream/promises'
 import {setTimeout as sleep} from 'node:timers/promises'
 import {gzipSync} from 'node:zlib'
@@ -12,9 +14,9 @@ import {gzipSync} from 'node:zlib'
 import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
-import {S3Store} from '@tus/s3-store'
+import {S3Store, type MetadataValue} from '@tus/s3-store'
 import * as shared from '../../../utils/dist/test/stores.js'
-import {StreamLimiter, Upload} from '@tus/utils'
+import {FileKvStore, StreamLimiter, Upload} from '@tus/utils'
 
 const fixturesPath = path.resolve('../', '../', 'test', 'fixtures')
 const storePath = path.resolve('../', '../', 'test', 'output', 's3-store')
@@ -289,6 +291,34 @@ describe('S3DataStore', () => {
     }
   })
 
+  for (const size of [0, 10]) {
+    it(`should finalize a ${size}-byte deferred upload with FileKvStore`, async () => {
+      const directory = await fs.promises.mkdtemp(
+        path.join(tmpdir(), 'tus-declared-length-')
+      )
+      const store = new S3Store({
+        cache: new FileKvStore<MetadataValue>(directory),
+        s3ClientConfig,
+      })
+      const upload = new Upload({
+        id: shared.testId('declared-length-file-cache'),
+        offset: 0,
+      })
+
+      try {
+        await store.create(upload)
+        assert.equal((await store.getUpload(upload.id)).size, undefined)
+
+        await store.declareUploadLength(upload.id, size)
+        const data = Buffer.alloc(size, 0x61)
+        assert.equal(await store.write(Readable.from([data]), upload.id, 0), size)
+        assert.deepEqual(await buffer(await store.read(upload.id)), data)
+      } finally {
+        await fs.promises.rm(directory, {recursive: true, force: true})
+      }
+    })
+  }
+
   it('should report a missing multipart upload as a missing file when removing it', async function () {
     const store = this.datastore as S3Store
     const id = shared.testId('missing-multipart-upload')
@@ -309,6 +339,27 @@ describe('S3DataStore', () => {
     )
 
     await assert.rejects(store.remove(id), {status_code: 404})
+  })
+
+  it('should reject when clearing the cache fails after removing an upload', async function () {
+    const store = this.datastore as S3Store
+    const id = shared.testId('remove-cache-failure')
+    const error = new Error('cache unavailable')
+
+    // @ts-expect-error protected method
+    sinon.stub(store, 'getMetadata').resolves({
+      file: new Upload({id, size: 1, offset: 0}),
+      'upload-id': 'upload-id',
+      'tus-version': '1.0.0',
+    })
+    // @ts-expect-error protected property
+    sinon.stub(store.client, 'abortMultipartUpload').resolves({})
+    // @ts-expect-error protected property
+    sinon.stub(store.client, 'deleteObjects').resolves({})
+    // @ts-expect-error protected method
+    sinon.stub(store, 'clearCache').rejects(error)
+
+    await assert.rejects(store.remove(id), (thrown) => thrown === error)
   })
 
   it('should delete the incomplete part when removing an upload', async function () {
