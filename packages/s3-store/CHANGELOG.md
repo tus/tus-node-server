@@ -1,5 +1,11 @@
 # @tus/s3-store
 
+## 2.1.0
+
+### Minor Changes
+
+- 697bebf: Forward the `contentEncoding` upload metadata to S3 as `Content-Encoding` when creating the multipart upload, matching `contentType` and `cacheControl`.
+
 ## 2.0.9
 
 ### Patch Changes
