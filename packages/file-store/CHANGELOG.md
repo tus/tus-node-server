@@ -1,5 +1,11 @@
 # @tus/file-store
 
+## 2.1.2
+
+### Patch Changes
+
+- 670e47b: Preserve completed uploads during expiration cleanup by checking the actual file size instead of the persisted metadata offset. Skip uploads that disappear during cleanup.
+
 ## 2.1.1
 
 ### Patch Changes

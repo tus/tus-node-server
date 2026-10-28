@@ -1,5 +1,11 @@
 # @tus/gcs-store
 
+## 2.0.2
+
+### Patch Changes
+
+- a7bfaa4: Preserve the explicit `contentType` from upload metadata when a write at offset 0 replaces the GCS object, including empty writes.
+
 ## 2.0.1
 
 ### Patch Changes
