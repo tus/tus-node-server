@@ -545,19 +545,7 @@ export class S3Store extends DataStore {
    */
   protected async clearCache(id: string) {
     log(`[${id}] removing cached data`)
-    try {
-      await this.cache.delete(id)
-    } catch (error) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code === 'ENOENT'
-      ) {
-        return
-      }
-      throw error
-    }
+    await this.cache.delete(id)
   }
 
   protected calcOptimalPartSize(size?: number): number {
@@ -700,35 +688,35 @@ export class S3Store extends DataStore {
       // A missing multipart upload can mean completion or abortion.
       // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
       // Spaces, can also return NoSuchKey.
-      if (isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
-        let object: AWS.HeadObjectCommandOutput
-        try {
-          object = await this.client.headObject({Bucket: this.bucket, Key: id})
-        } catch (headError) {
-          if (isS3NotFoundError(headError)) {
-            throw ERRORS.FILE_NOT_FOUND
-          }
-          throw headError
-        }
-
-        if (
-          metadata.file.size === undefined ||
-          object.ContentLength !== metadata.file.size
-        ) {
-          throw ERRORS.FILE_NOT_FOUND
-        }
-
-        return new Upload({
-          ...metadata.file,
-          offset: metadata.file.size,
-          size: metadata.file.size,
-          metadata: metadata.file.metadata,
-          storage: metadata.file.storage,
-        })
+      if (!isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
+        log(error)
+        throw error
       }
 
-      log(error)
-      throw error
+      let object: AWS.HeadObjectCommandOutput
+      try {
+        object = await this.client.headObject({Bucket: this.bucket, Key: id})
+      } catch (headError) {
+        if (isS3NotFoundError(headError)) {
+          throw ERRORS.FILE_NOT_FOUND
+        }
+        throw headError
+      }
+
+      if (
+        metadata.file.size === undefined ||
+        object.ContentLength !== metadata.file.size
+      ) {
+        throw ERRORS.FILE_NOT_FOUND
+      }
+
+      return new Upload({
+        ...metadata.file,
+        offset: metadata.file.size,
+        size: metadata.file.size,
+        metadata: metadata.file.metadata,
+        storage: metadata.file.storage,
+      })
     }
 
     const incompletePartSize = await this.getIncompletePartSize(id)
