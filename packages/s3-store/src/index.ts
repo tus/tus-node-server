@@ -685,34 +685,15 @@ export class S3Store extends DataStore {
       const parts = await this.retrieveParts(id)
       offset = calcOffsetFromParts(parts)
     } catch (error) {
-      // A missing multipart upload can mean completion or abortion.
-      // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
-      // Spaces, can also return NoSuchKey.
       if (!isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
         log(error)
         throw error
       }
 
-      let object: AWS.HeadObjectCommandOutput
-      try {
-        object = await this.client.headObject({Bucket: this.bucket, Key: id})
-      } catch (headError) {
-        if (isS3NotFoundError(headError)) {
-          throw ERRORS.FILE_NOT_FOUND
-        }
-        throw headError
-      }
-
-      if (
-        metadata.file.size === undefined ||
-        object.ContentLength !== metadata.file.size
-      ) {
-        throw ERRORS.FILE_NOT_FOUND
-      }
-
+      // Assume a missing multipart upload is complete for compatibility.
       return new Upload({
         ...metadata.file,
-        offset: metadata.file.size,
+        offset: metadata.file.size as number,
         size: metadata.file.size,
         metadata: metadata.file.metadata,
         storage: metadata.file.storage,

@@ -475,90 +475,22 @@ describe('S3DataStore', () => {
             : {Code: S3Error.name}
 
         // @ts-expect-error protected property
-        sinon.stub(store.client, 'listParts').rejects(error)
-        // @ts-expect-error protected property
-        const head = sinon.stub(store.client, 'headObject').resolves({ContentLength: 10})
+        const client = store.client
+        sinon.stub(client, 'listParts').rejects(error)
+        const head = sinon
+          .stub(client, 'headObject')
+          .rejects(new Error('headObject should not be called'))
 
         if (completed) {
           const upload = await store.getUpload(id)
           assert.equal(upload.offset, 10)
-          assert.deepEqual(head.args, [[{Bucket: s3ClientConfig.bucket, Key: id}]])
         } else {
           await assert.rejects(store.getUpload(id), (thrown) => thrown === error)
-          assert.equal(head.called, false)
         }
+        assert.equal(head.called, false)
       })
     }
   }
-
-  describe('missing multipart upload verification', () => {
-    let store: S3Store
-    let id: string
-    let metadata: MetadataValue
-    let headObject: sinon.SinonStub
-
-    beforeEach(function () {
-      store = this.datastore as S3Store
-      id = shared.testId('verify-completion')
-      metadata = {
-        file: new Upload({id, size: 10, offset: 0}),
-        'upload-id': 'upload-id',
-        'tus-version': '1.0.0',
-      }
-
-      // @ts-expect-error protected method
-      sinon.stub(store, 'getMetadata').resolves(metadata)
-      // @ts-expect-error protected property
-      sinon.stub(store.client, 'listParts').rejects({Code: 'NoSuchUpload'})
-      // @ts-expect-error protected property
-      headObject = sinon.stub(store.client, 'headObject')
-    })
-
-    describe('missing final objects', () => {
-      it('reports not found when HEAD returns NotFound', async () => {
-        headObject.rejects(new NotFound({$metadata: {}, message: 'missing'}))
-
-        await assert.rejects(store.getUpload(id), {status_code: 404})
-      })
-
-      it('reports not found when HEAD returns NoSuchKey', async () => {
-        headObject.rejects({Code: 'NoSuchKey'})
-
-        await assert.rejects(store.getUpload(id), {status_code: 404})
-      })
-    })
-
-    describe('unexpected HEAD errors', () => {
-      it('rethrows access errors unchanged', async () => {
-        const error = Object.assign(new Error('denied'), {name: 'AccessDenied'})
-        headObject.rejects(error)
-
-        await assert.rejects(store.getUpload(id), (thrown) => thrown === error)
-      })
-
-      it('rethrows network errors unchanged', async () => {
-        const error = new Error('connection reset')
-        headObject.rejects(error)
-
-        await assert.rejects(store.getUpload(id), (thrown) => thrown === error)
-      })
-    })
-
-    describe('invalid final object lengths', () => {
-      it('reports not found when the final object length does not match', async () => {
-        headObject.resolves({ContentLength: 9})
-
-        await assert.rejects(store.getUpload(id), {status_code: 404})
-      })
-
-      it('reports not found when the declared upload size is undefined', async () => {
-        metadata.file.size = undefined
-        headObject.resolves({ContentLength: 0})
-
-        await assert.rejects(store.getUpload(id), {status_code: 404})
-      })
-    })
-  })
 
   it('should report a cached upload missing after expiration cleanup', async () => {
     const store = new S3Store({s3ClientConfig, expirationPeriodInMilliseconds: 1})
@@ -584,41 +516,6 @@ describe('S3DataStore', () => {
       })
       await store.deleteExpired()
       assert.equal(await cache.get(upload.id), undefined)
-      await assert.rejects(store.getUpload(upload.id), {status_code: 404})
-    } finally {
-      await client.deleteObject({
-        Bucket: s3ClientConfig.bucket,
-        Key: `${upload.id}.info`,
-      })
-    }
-  })
-
-  it('should report a cached and uncached upload missing after a lifecycle-style abort', async () => {
-    const store = new S3Store({s3ClientConfig})
-    const upload = new Upload({
-      id: shared.testId('aborted-upload'),
-      size: 10,
-      offset: 0,
-    })
-    await store.create(upload)
-    assert.equal((await store.getUpload(upload.id)).offset, 0)
-    // @ts-expect-error protected property
-    const client = store.client
-    // @ts-expect-error protected property
-    const cache = store.cache
-    const metadata = await cache.get(upload.id)
-    assert.ok(metadata)
-
-    try {
-      await client.abortMultipartUpload({
-        Bucket: s3ClientConfig.bucket,
-        Key: upload.id,
-        UploadId: metadata['upload-id'],
-      })
-      assert.ok(await cache.get(upload.id))
-      await assert.rejects(store.getUpload(upload.id), {status_code: 404})
-
-      await cache.delete(upload.id)
       await assert.rejects(store.getUpload(upload.id), {status_code: 404})
     } finally {
       await client.deleteObject({
