@@ -177,39 +177,56 @@ export class FileStore extends DataStore {
   }
 
   async deleteExpired(): Promise<number> {
-    const now = new Date()
-    const toDelete: Promise<void>[] = []
-
     if (!this.configstore.list) {
       throw ERRORS.UNSUPPORTED_EXPIRATION_EXTENSION
     }
+    const expiration = this.getExpiration()
+    if (expiration <= 0) {
+      return 0
+    }
 
+    const now = Date.now()
+    const toDelete: Promise<void>[] = []
+    let deleted = 0
     const uploadKeys = await this.configstore.list()
     for (const file_id of uploadKeys) {
       try {
-        const info = await this.configstore.get(file_id)
+        const info = await this.getUpload(file_id)
         if (
-          info &&
-          'creation_date' in info &&
-          this.getExpiration() > 0 &&
           info.size !== info.offset &&
-          info.creation_date
+          info.creation_date &&
+          now > Date.parse(info.creation_date) + expiration
         ) {
-          const creation = new Date(info.creation_date)
-          const expires = new Date(creation.getTime() + this.getExpiration())
-          if (now > expires) {
-            toDelete.push(this.remove(file_id))
-          }
+          toDelete.push(
+            this.remove(file_id).then(
+              () => {
+                deleted++
+              },
+              async (error) => {
+                if (error !== ERRORS.FILE_NOT_FOUND) throw error
+
+                try {
+                  await fsProm.lstat(this.resolve(file_id))
+                } catch (statError) {
+                  if ((statError as NodeJS.ErrnoException).code === FILE_DOESNT_EXIST) {
+                    return
+                  }
+                  throw statError
+                }
+                throw error
+              }
+            )
+          )
         }
       } catch (error) {
-        if (error !== ERRORS.FILE_NO_LONGER_EXISTS) {
+        if (error !== ERRORS.FILE_NOT_FOUND && error !== ERRORS.FILE_NO_LONGER_EXISTS) {
           throw error
         }
       }
     }
 
     await Promise.all(toDelete)
-    return toDelete.length
+    return deleted
   }
 
   getExpiration(): number {

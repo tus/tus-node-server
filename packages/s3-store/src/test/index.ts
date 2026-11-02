@@ -9,11 +9,13 @@ import {Readable} from 'node:stream'
 import {buffer} from 'node:stream/consumers'
 import stream from 'node:stream/promises'
 import {setTimeout as sleep} from 'node:timers/promises'
+import {gzipSync} from 'node:zlib'
 
 import {NoSuchKey, NoSuchUpload, NotFound} from '@aws-sdk/client-s3'
 import sinon from 'sinon'
 
 import {S3Store, type MetadataValue} from '@tus/s3-store'
+import {Server as TusServer} from '@tus/server'
 import * as shared from '../../../utils/dist/test/stores.js'
 import {FileKvStore, StreamLimiter, Upload} from '@tus/utils'
 
@@ -318,6 +320,47 @@ describe('S3DataStore', () => {
     })
   }
 
+  for (const creationWithUpload of [false, true]) {
+    const scenario = creationWithUpload ? 'creation-with-upload' : 'ordinary POST'
+
+    it(`should persist an empty S3 object before onUploadFinish for ${scenario}`, async function () {
+      const store: S3Store = this.datastore
+      const id = shared.testId('zero-byte-post')
+      const onUploadFinish = sinon.spy(async (_req: Request, upload: Upload) => {
+        const contents = await buffer(await store.read(upload.id))
+        assert.deepEqual(contents, Buffer.alloc(0))
+        assert.equal(upload.offset, 0)
+        assert.equal(upload.size, 0)
+        return {}
+      })
+      const server = new TusServer({
+        path: '/files',
+        datastore: store,
+        namingFunction: () => id,
+        onUploadFinish,
+      })
+      const headers = new Headers({
+        'tus-resumable': '1.0.0',
+        'upload-length': '0',
+        host: 'localhost',
+      })
+      if (creationWithUpload) {
+        headers.set('content-type', 'application/offset+octet-stream')
+      }
+
+      const response = await server.handleWeb(
+        new Request('http://localhost/files', {
+          method: 'POST',
+          headers,
+          body: creationWithUpload ? new Uint8Array(0) : undefined,
+        })
+      )
+
+      assert.equal(response.status, 201, await response.text())
+      assert.equal(onUploadFinish.calledOnce, true)
+    })
+  }
+
   it('should report a missing multipart upload as a missing file when removing it', async function () {
     const store = this.datastore as S3Store
     const id = shared.testId('missing-multipart-upload')
@@ -381,6 +424,32 @@ describe('S3DataStore', () => {
     assert.equal(await store.getIncompletePartSize(upload.id), undefined)
   })
 
+  it('should preserve content headers metadata on the completed object', async function () {
+    const store = this.datastore as S3Store
+    const body = gzipSync('x')
+    const upload = new Upload({
+      id: shared.testId('content-headers'),
+      size: body.length,
+      offset: 0,
+      metadata: {
+        contentType: 'text/plain',
+        cacheControl: 'max-age=3600',
+        contentEncoding: 'gzip',
+      },
+    })
+
+    await store.create(upload)
+    const offset = await store.write(Readable.from(body), upload.id, 0)
+    assert.equal(offset, body.length)
+
+    // @ts-expect-error protected property
+    const client = store.client
+    const head = await client.headObject({Bucket: s3ClientConfig.bucket, Key: upload.id})
+    assert.equal(head.ContentType, 'text/plain')
+    assert.equal(head.CacheControl, 'max-age=3600')
+    assert.equal(head.ContentEncoding, 'gzip')
+  })
+
   for (const [S3Error, completed] of [
     [NoSuchUpload, true],
     [NoSuchKey, true],
@@ -407,16 +476,132 @@ describe('S3DataStore', () => {
 
         // @ts-expect-error protected property
         sinon.stub(store.client, 'listParts').rejects(error)
+        // @ts-expect-error protected property
+        const head = sinon.stub(store.client, 'headObject').resolves({ContentLength: 10})
 
         if (completed) {
           const upload = await store.getUpload(id)
           assert.equal(upload.offset, 10)
+          assert.deepEqual(head.args, [[{Bucket: s3ClientConfig.bucket, Key: id}]])
         } else {
           await assert.rejects(store.getUpload(id), (thrown) => thrown === error)
+          assert.equal(head.called, false)
         }
       })
     }
   }
+
+  describe('missing multipart upload verification', () => {
+    for (const scenario of [
+      {
+        name: 'missing object',
+        error: new NotFound({$metadata: {}, message: 'missing'}),
+        missing: true,
+      },
+      {name: 'missing key', error: {Code: 'NoSuchKey'}, missing: true},
+      {
+        name: 'access denied',
+        error: Object.assign(new Error('denied'), {name: 'AccessDenied'}),
+        missing: false,
+      },
+      {name: 'network failure', error: new Error('connection reset'), missing: false},
+      {name: 'size mismatch', size: 10, length: 9, missing: true},
+      {name: 'undeclared size', size: undefined, length: 0, missing: true},
+    ]) {
+      it(`should reject a ${scenario.name} instead of reporting completion`, async function () {
+        const store = this.datastore as S3Store
+        const id = shared.testId('verify-completion')
+        // @ts-expect-error protected method
+        sinon.stub(store, 'getMetadata').resolves({
+          file: new Upload({
+            id,
+            size: 'size' in scenario ? scenario.size : 10,
+            offset: 0,
+          }),
+          'upload-id': 'upload-id',
+          'tus-version': '1.0.0',
+        })
+        // @ts-expect-error protected property
+        sinon.stub(store.client, 'listParts').rejects({Code: 'NoSuchUpload'})
+        // @ts-expect-error protected property
+        const head = sinon.stub(store.client, 'headObject')
+        if ('error' in scenario) {
+          head.rejects(scenario.error)
+        } else {
+          head.resolves({ContentLength: scenario.length})
+        }
+
+        await assert.rejects(
+          store.getUpload(id),
+          scenario.missing ? {status_code: 404} : (error) => error === scenario.error
+        )
+      })
+    }
+  })
+
+  for (const cleanup of [false, true]) {
+    it(`should report a cached upload missing after ${cleanup ? 'expiration cleanup' : 'a lifecycle-style abort'}`, async () => {
+      const store = new S3Store({s3ClientConfig, expirationPeriodInMilliseconds: 1})
+      const upload = new Upload({
+        id: shared.testId('aborted-upload'),
+        size: 10,
+        offset: 0,
+      })
+      await store.create(upload)
+      assert.equal((await store.getUpload(upload.id)).offset, 0)
+      // @ts-expect-error protected property
+      const client = store.client
+      // @ts-expect-error protected property
+      const cache = store.cache
+      const metadata = await cache.get(upload.id)
+      assert.ok(metadata)
+
+      try {
+        if (cleanup) {
+          sinon.stub(client, 'listMultipartUploads').resolves({
+            Uploads: [
+              {Key: upload.id, UploadId: metadata['upload-id'], Initiated: new Date(0)},
+            ],
+          })
+          await store.deleteExpired()
+          assert.equal(await cache.get(upload.id), undefined)
+        } else {
+          await client.abortMultipartUpload({
+            Bucket: s3ClientConfig.bucket,
+            Key: upload.id,
+            UploadId: metadata['upload-id'],
+          })
+          assert.ok(await cache.get(upload.id))
+        }
+
+        await assert.rejects(store.getUpload(upload.id), {status_code: 404})
+        // Also verify the lifecycle case with metadata loaded from S3, not the cache.
+        await cache.delete(upload.id)
+        await assert.rejects(store.getUpload(upload.id), {status_code: 404})
+      } finally {
+        await client.deleteObject({
+          Bucket: s3ClientConfig.bucket,
+          Key: `${upload.id}.info`,
+        })
+      }
+    })
+  }
+
+  it('should reject when cache eviction fails during expiration cleanup', async () => {
+    const store = new S3Store({s3ClientConfig, expirationPeriodInMilliseconds: 1})
+    const error = new Error('cache unavailable')
+    // @ts-expect-error protected property
+    const client = store.client
+    sinon.stub(client, 'listMultipartUploads').resolves({
+      Uploads: [{Key: 'expired', UploadId: 'upload-id', Initiated: new Date(0)}],
+    })
+    sinon.stub(client, 'deleteObjects').resolves({})
+    sinon.stub(client, 'abortMultipartUpload').resolves({})
+    // @ts-expect-error protected method
+    sinon.stub(store, 'clearCache').rejects(error)
+
+    await assert.rejects(store.deleteExpired(), (thrown) => thrown === error)
+  })
 
   it('should use default maxMultipartParts when not specified', () => {
     const store = new S3Store({

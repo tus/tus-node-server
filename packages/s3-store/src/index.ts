@@ -594,6 +594,10 @@ export class S3Store extends DataStore {
       request.CacheControl = upload.metadata.cacheControl
     }
 
+    if (upload.metadata?.contentEncoding) {
+      request.ContentEncoding = upload.metadata.contentEncoding
+    }
+
     upload.creation_date = new Date().toISOString()
 
     const res = await this.client.createMultipartUpload(request)
@@ -681,16 +685,30 @@ export class S3Store extends DataStore {
       const parts = await this.retrieveParts(id)
       offset = calcOffsetFromParts(parts)
     } catch (error) {
-      // Check if the error is caused by the upload not being found. This happens
-      // when the multipart upload has already been completed or aborted. Since
-      // we already found the info object, we know that the upload has been
-      // completed and therefore can ensure the the offset is the size.
+      // A missing multipart upload can mean completion or abortion.
       // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
       // Spaces, can also return NoSuchKey.
       if (isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
+        let object: AWS.HeadObjectCommandOutput
+        try {
+          object = await this.client.headObject({Bucket: this.bucket, Key: id})
+        } catch (headError) {
+          if (isS3NotFoundError(headError)) {
+            throw ERRORS.FILE_NOT_FOUND
+          }
+          throw headError
+        }
+
+        if (
+          metadata.file.size === undefined ||
+          object.ContentLength !== metadata.file.size
+        ) {
+          throw ERRORS.FILE_NOT_FOUND
+        }
+
         return new Upload({
           ...metadata.file,
-          offset: metadata.file.size as number,
+          offset: metadata.file.size,
           size: metadata.file.size,
           metadata: metadata.file.metadata,
           storage: metadata.file.storage,
@@ -830,6 +848,12 @@ export class S3Store extends DataStore {
           })
         }),
       ])
+
+      await Promise.all(
+        expiredUploads.map((expiredUpload) =>
+          this.clearCache(expiredUpload.Key as string)
+        )
+      )
 
       deleted += objectsDeleted.reduce((all, acc) => all + (acc.Deleted?.length ?? 0), 0)
 

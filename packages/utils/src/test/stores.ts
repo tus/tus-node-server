@@ -92,10 +92,10 @@ export const shouldExpireUploads = () => {
       assert.equal(this.datastore.hasExtension('expiration'), true)
     })
 
-    it('should expire upload', async function () {
+    it('should expire incomplete upload', async function () {
       const file = new Upload({
         id: testId('expiration-test'),
-        size: this.testFileSize,
+        size: this.testFileSize + 1,
         offset: 0,
         metadata: {filename: 'world_domination_plan.pdf', is_confidential: null},
       })
