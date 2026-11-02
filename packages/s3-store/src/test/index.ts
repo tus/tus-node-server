@@ -587,18 +587,46 @@ describe('S3DataStore', () => {
     })
   }
 
+  it('should tolerate missing file cache entries during expiration cleanup', async () => {
+    const directory = await fs.promises.mkdtemp(path.join(tmpdir(), 'tus-expired-cache-'))
+    const cache = new FileKvStore<MetadataValue>(directory)
+    const store = new S3Store({
+      cache,
+      s3ClientConfig,
+      expirationPeriodInMilliseconds: 1,
+    })
+    // @ts-expect-error protected property
+    const client = store.client
+    const get = sinon.spy(cache, 'get')
+    const set = sinon.spy(cache, 'set')
+    sinon.stub(client, 'listMultipartUploads').resolves({
+      Uploads: [{Key: 'expired', UploadId: 'upload-id', Initiated: new Date(0)}],
+    })
+    sinon.stub(client, 'deleteObjects').resolves({Deleted: [{Key: 'expired.info'}]})
+    sinon.stub(client, 'abortMultipartUpload').resolves({})
+
+    try {
+      assert.equal(await store.deleteExpired(), 1)
+      assert.equal(get.called, false)
+      assert.equal(set.called, false)
+    } finally {
+      await fs.promises.rm(directory, {recursive: true, force: true})
+    }
+  })
+
   it('should reject when cache eviction fails during expiration cleanup', async () => {
     const store = new S3Store({s3ClientConfig, expirationPeriodInMilliseconds: 1})
     const error = new Error('cache unavailable')
     // @ts-expect-error protected property
     const client = store.client
+    // @ts-expect-error protected property
+    const cache = store.cache
     sinon.stub(client, 'listMultipartUploads').resolves({
       Uploads: [{Key: 'expired', UploadId: 'upload-id', Initiated: new Date(0)}],
     })
     sinon.stub(client, 'deleteObjects').resolves({})
     sinon.stub(client, 'abortMultipartUpload').resolves({})
-    // @ts-expect-error protected method
-    sinon.stub(store, 'clearCache').rejects(error)
+    sinon.stub(cache, 'delete').rejects(error)
 
     await assert.rejects(store.deleteExpired(), (thrown) => thrown === error)
   })

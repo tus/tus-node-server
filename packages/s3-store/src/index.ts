@@ -545,7 +545,19 @@ export class S3Store extends DataStore {
    */
   protected async clearCache(id: string) {
     log(`[${id}] removing cached data`)
-    await this.cache.delete(id)
+    try {
+      await this.cache.delete(id)
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return
+      }
+      throw error
+    }
   }
 
   protected calcOptimalPartSize(size?: number): number {
