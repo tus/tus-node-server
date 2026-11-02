@@ -28,6 +28,7 @@ export class HeadHandler extends BaseHandler {
     // be used if the Server is keeping track of expired uploads.
     const now = new Date()
     if (
+      file.offset !== file.size &&
       this.store.hasExtension('expiration') &&
       this.store.getExpiration() > 0 &&
       file.creation_date &&
