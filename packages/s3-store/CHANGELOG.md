@@ -1,5 +1,19 @@
 # @tus/s3-store
 
+## 2.1.0
+
+### Minor Changes
+
+- 697bebf: Forward the `contentEncoding` upload metadata to S3 as `Content-Encoding` when creating the multipart upload, matching `contentType` and `cacheControl`.
+
+### Patch Changes
+
+- 15e647e: Update cached metadata after declaring a deferred upload length so uploads can finish with caches that return copies such as RedisKvStore, IoRedisKvStore and FileKvStore.
+  `remove` now awaits cache eviction so a failing cache rejects the termination instead of causing an unhandled rejection.
+  Expiration cleanup also evicts cached metadata.
+- Updated dependencies [15e647e]
+  - @tus/utils@0.7.3
+
 ## 2.0.9
 
 ### Patch Changes
