@@ -40,8 +40,7 @@ describe('FileStore', function () {
   })
 
   this.afterEach(async () => {
-    // @ts-expect-error ignore
-    fs.mkdir.restore()
+    sinon.restore()
     await cleanup()
   })
 
@@ -132,8 +131,44 @@ describe('FileStore', function () {
   })
 
   describe('deleteExpired', () => {
-    it('removes expired nested uploads and keeps unexpired uploads', async function () {
+    beforeEach(function () {
       this.datastore.expirationPeriodInMilliseconds = 60_000
+    })
+
+    const expiredUpload = (id: string, size = 10) =>
+      new Upload({
+        id,
+        size,
+        offset: 0,
+        creation_date: new Date(Date.now() - 120_000).toISOString(),
+      })
+
+    it('skips listing when expiration is 0', async function () {
+      this.datastore.expirationPeriodInMilliseconds = 0
+      const list = sinon.stub(this.datastore.configstore, 'list').resolves([])
+
+      assert.equal(await this.datastore.deleteExpired(), 0)
+      assert.equal(list.called, false)
+    })
+
+    for (const [id, contents] of [
+      ['completed', Buffer.from('completed upload')],
+      ['nested/path/completed', Buffer.from('completed upload')],
+      ['empty', Buffer.alloc(0)],
+    ] as const) {
+      it(`keeps completed upload ${id} after expiration`, async function () {
+        await this.datastore.create(expiredUpload(id, contents.length))
+        if (contents.length) {
+          await this.datastore.write(Readable.from(contents), id, 0)
+        }
+
+        assert.equal(await this.datastore.deleteExpired(), 0)
+        assert.equal((await this.datastore.getUpload(id)).offset, contents.length)
+        assert.deepEqual(await fsProm.readFile(path.join(storePath, id)), contents)
+      })
+    }
+
+    it('removes expired nested uploads and keeps unexpired uploads', async function () {
       const expired = new Upload({
         id: 'nested/path/expired',
         size: 10,
@@ -153,6 +188,61 @@ describe('FileStore', function () {
       })
       assert.equal((await this.datastore.getUpload(fresh.id)).id, fresh.id)
     })
+
+    for (const suffix of ['', '.json']) {
+      it(`continues cleanup when missing${suffix} disappears after listing`, async function () {
+        for (const id of ['missing', 'remaining']) {
+          await this.datastore.create(expiredUpload(id))
+        }
+        const store = this.datastore.configstore
+        const list = store.list.bind(store)
+        sinon.stub(store, 'list').callsFake(async () => {
+          const ids = await list()
+          await fsProm.rm(path.join(storePath, `missing${suffix}`))
+          return ids
+        })
+
+        assert.equal(await this.datastore.deleteExpired(), 1)
+        await assert.rejects(fsProm.stat(path.join(storePath, 'remaining')), {
+          code: 'ENOENT',
+        })
+      })
+    }
+
+    it('continues cleanup when an upload disappears before removal', async function () {
+      for (const id of ['missing', 'remaining']) {
+        await this.datastore.create(expiredUpload(id))
+      }
+      const remove = this.datastore.remove.bind(this.datastore)
+      sinon.stub(this.datastore, 'remove').callsFake(async (id: unknown) => {
+        if (id === 'missing') {
+          await fsProm.rm(path.join(storePath, id))
+        }
+        return remove(id as string)
+      })
+
+      assert.equal(await this.datastore.deleteExpired(), 1)
+      await assert.rejects(fsProm.stat(path.join(storePath, 'remaining')), {
+        code: 'ENOENT',
+      })
+    })
+
+    for (const lstatFails of [false, true]) {
+      it(`rejects when removal fails and ${lstatFails ? 'the file check fails' : 'the file remains'}`, async function () {
+        await this.datastore.create(expiredUpload('locked'))
+        const error = Object.assign(new Error('EIO'), {code: 'EIO'})
+        sinon.stub(fsProm, 'unlink').rejects(error)
+        if (lstatFails) {
+          sinon.stub(fsProm, 'lstat').rejects(error)
+        }
+
+        await assert.rejects(
+          this.datastore.deleteExpired(),
+          lstatFails ? (thrown) => thrown === error : {status_code: 404}
+        )
+        await fsProm.stat(path.join(storePath, 'locked'))
+      })
+    }
   })
 
   describe('FileConfigstore', () => {

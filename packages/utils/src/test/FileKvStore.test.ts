@@ -27,6 +27,27 @@ describe('FileKvStore', () => {
       })
     )
 
+  describe('delete', () => {
+    it('succeeds when the key is absent', async () => {
+      await store.delete('missing')
+    })
+
+    it('succeeds when deleting a key more than once', async () => {
+      await store.set('upload', {n: 1})
+      await store.delete('upload')
+      await store.delete('upload')
+      assert.equal(await store.get('upload'), undefined)
+    })
+
+    it('does not delete a directory at the key path', async () => {
+      const directoryPath = path.join(directory, 'key.json')
+      await fs.mkdir(directoryPath)
+
+      await assert.rejects(store.delete('key'))
+      assert.equal((await fs.stat(directoryPath)).isDirectory(), true)
+    })
+  })
+
   describe('list', () => {
     it('ignores unpaired files', async () => {
       await touch('stray', 'orphan.json')

@@ -31,7 +31,7 @@ export class FileKvStore<T = Upload> implements KvStore<T> {
   }
 
   async delete(key: string): Promise<void> {
-    await fs.rm(this.resolve(key))
+    await fs.rm(this.resolve(key), {force: true})
   }
 
   async list(): Promise<Array<string>> {
