@@ -1,5 +1,11 @@
 # @tus/utils
 
+## 0.7.3
+
+### Patch Changes
+
+- 15e647e: Define `KvStore.delete` to succeed for missing keys and implement it in `FileKvStore`.
+
 ## 0.7.2
 
 ### Patch Changes

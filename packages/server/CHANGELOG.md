@@ -1,5 +1,15 @@
 # @tus/server
 
+## 2.4.7
+
+### Patch Changes
+
+- b4da88a: Allow HEAD requests for completed uploads after their original expiration deadline. Unfinished uploads continue to return 410 Gone after expiration.
+- a7bfaa4: Finalize zero-length uploads before calling `onUploadFinish` or emitting `POST_FINISH`. Ordinary POST requests with `Upload-Length: 0` now call the store's `write` method with an empty stream at offset 0, so stores can complete the empty object.
+- 4f7b9ad: Remove the unused `set-cookie-parser` dependency.
+- Updated dependencies [15e647e]
+  - @tus/utils@0.7.3
+
 ## 2.4.6
 
 ### Patch Changes
