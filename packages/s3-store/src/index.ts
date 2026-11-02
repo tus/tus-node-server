@@ -685,24 +685,19 @@ export class S3Store extends DataStore {
       const parts = await this.retrieveParts(id)
       offset = calcOffsetFromParts(parts)
     } catch (error) {
-      // Check if the error is caused by the upload not being found. This happens
-      // when the multipart upload has already been completed or aborted. Since
-      // we already found the info object, we know that the upload has been
-      // completed and therefore can ensure the the offset is the size.
-      // AWS S3 returns NoSuchUpload, but other implementations, such as DigitalOcean
-      // Spaces, can also return NoSuchKey.
-      if (isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
-        return new Upload({
-          ...metadata.file,
-          offset: metadata.file.size as number,
-          size: metadata.file.size,
-          metadata: metadata.file.metadata,
-          storage: metadata.file.storage,
-        })
+      if (!isS3NotFoundError(error, S3_MISSING_UPLOAD_ERROR_CODES)) {
+        log(error)
+        throw error
       }
 
-      log(error)
-      throw error
+      // Assume a missing multipart upload is complete for compatibility.
+      return new Upload({
+        ...metadata.file,
+        offset: metadata.file.size as number,
+        size: metadata.file.size,
+        metadata: metadata.file.metadata,
+        storage: metadata.file.storage,
+      })
     }
 
     const incompletePartSize = await this.getIncompletePartSize(id)
@@ -716,14 +711,15 @@ export class S3Store extends DataStore {
   }
 
   public async declareUploadLength(file_id: string, upload_length: number) {
-    const {file, 'upload-id': uploadId} = await this.getMetadata(file_id)
-    if (!file) {
+    const metadata = await this.getMetadata(file_id)
+    if (!metadata.file) {
       throw ERRORS.FILE_NOT_FOUND
     }
 
-    file.size = upload_length
+    metadata.file.size = upload_length
 
-    await this.saveMetadata(file, uploadId)
+    await this.saveMetadata(metadata.file, metadata['upload-id'])
+    await this.cache.set(file_id, metadata)
   }
 
   public async remove(id: string): Promise<void> {
@@ -751,7 +747,7 @@ export class S3Store extends DataStore {
       },
     })
 
-    this.clearCache(id)
+    await this.clearCache(id)
   }
 
   protected getExpirationDate(created_at: string) {
@@ -833,6 +829,12 @@ export class S3Store extends DataStore {
           })
         }),
       ])
+
+      await Promise.all(
+        expiredUploads.map((expiredUpload) =>
+          this.clearCache(expiredUpload.Key as string)
+        )
+      )
 
       deleted += objectsDeleted.reduce((all, acc) => all + (acc.Deleted?.length ?? 0), 0)
 
