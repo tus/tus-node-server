@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import {BaseHandler} from './BaseHandler.js'
 
-import {ERRORS, EVENTS, type CancellationContext, type Upload} from '@tus/utils'
+import {ERRORS, EVENTS, type CancellationContext, Upload} from '@tus/utils'
 
 const log = debug('tus-node-server:handlers:patch')
 
@@ -70,6 +70,7 @@ export class PatchHandler extends BaseHandler {
 
         // The request MUST validate upload-length related headers
         const upload_length = req.headers.get('upload-length')
+        let maxBodySize: number
         if (upload_length !== null) {
           const size = Number.parseInt(upload_length, 10)
           // Throw error if extension is not supported
@@ -90,11 +91,18 @@ export class PatchHandler extends BaseHandler {
             throw ERRORS.ERR_MAX_SIZE_EXCEEDED
           }
 
+          // Reject a known oversized body before persisting the declaration.
+          maxBodySize = await this.calculateMaxBodySize(
+            req,
+            new Upload({id, offset, size}),
+            maxFileSize
+          )
           await this.store.declareUploadLength(id, size)
           upload.size = size
+        } else {
+          maxBodySize = await this.calculateMaxBodySize(req, upload, maxFileSize)
         }
 
-        const maxBodySize = await this.calculateMaxBodySize(req, upload, maxFileSize)
         newOffset = await this.writeToStore(req.body, upload, maxBodySize, context)
       } finally {
         await lock.unlock()

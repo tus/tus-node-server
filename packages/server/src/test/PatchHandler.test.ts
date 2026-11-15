@@ -119,6 +119,57 @@ describe('PatchHandler', () => {
       assert.equal(store.declareUploadLength.calledOnceWith('file', 10), true)
     })
 
+    for (const {offset, length, body} of [
+      {offset: 4, length: 6, body: 10},
+      {offset: 0, length: 0, body: 1},
+    ]) {
+      it(`rejects a body exceeding the declared length ${length} at offset ${offset}`, async () => {
+        const request = new Request(`https://example.com${path}/file`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Length': String(body),
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': String(offset),
+            'Upload-Length': String(length),
+          },
+          duplex: 'half',
+          body: new ArrayBuffer(body),
+        })
+        store.hasExtension.withArgs('creation-defer-length').returns(true)
+        const upload = new Upload({id: 'file', offset})
+        store.getUpload.resolves(upload)
+
+        await assert.rejects(handler.send(request, context), {
+          status_code: 413,
+          body: "upload's size exceeded\n",
+        })
+        assert.equal(store.declareUploadLength.called, false)
+        assert.equal(store.write.called, false)
+        assert.equal(upload.size, undefined)
+      })
+    }
+
+    it('accepts a zero-length declaration with an empty body', async () => {
+      const request = new Request(`https://example.com${path}/file`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Length': '0',
+          'Content-Type': 'application/offset+octet-stream',
+          'Upload-Offset': '0',
+          'Upload-Length': '0',
+        },
+        duplex: 'half',
+        body: new ArrayBuffer(0),
+      })
+      store.hasExtension.withArgs('creation-defer-length').returns(true)
+      store.getUpload.resolves(new Upload({id: 'file', offset: 0}))
+      store.write.resolves(0)
+
+      const response = await handler.send(request, context)
+      assert.equal(response.status, 204)
+      assert.equal(store.declareUploadLength.calledOnceWith('file', 0), true)
+    })
+
     it('should 400 if upload-length is already set', () => {
       const req = new Request(`https://example.com${path}/file`, {
         method: 'PATCH',
