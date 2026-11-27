@@ -6,11 +6,13 @@ import fs from 'node:fs/promises'
 import http from 'node:http'
 import type {AddressInfo} from 'node:net'
 import path from 'node:path'
+import {Readable} from 'node:stream'
 import {FileStore} from '@tus/file-store'
 import {Server} from '@tus/server'
 import {DataStore, ERRORS, EVENTS, Metadata, TUS_RESUMABLE, Upload} from '@tus/utils'
 import httpMocks from 'node-mocks-http'
 import sinon from 'sinon'
+import {FastResponse} from 'srvx/node'
 import request from 'supertest'
 import Throttle from 'throttle'
 
@@ -150,6 +152,61 @@ describe('Server', () => {
 
     it('should 412 !OPTIONS requests without the Tus header', (done) => {
       request(listener).post('/').expect(412, 'Tus-Resumable Required\n', done)
+    })
+
+    const pagesApp = () =>
+      http.createServer((req, res) => {
+        Object.assign(res, {revalidate: async () => {}})
+        const writeHead = res.writeHead.bind(res)
+        res.writeHead = (
+          status,
+          reason?,
+          headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[]
+        ) => {
+          if (typeof reason !== 'string') return writeHead(status, reason)
+          // The compression bundled with Next.js Pages cannot read flat arrays.
+          return writeHead(status, reason, Array.isArray(headers) ? undefined : headers)
+        }
+        res.setHeader('X-App', 'pages')
+        void server.handle(req, res)
+      })
+
+    it('preserves upload headers through Next.js Pages middleware', async () => {
+      await request(pagesApp())
+        .post('/test/output')
+        .set('Tus-Resumable', TUS_RESUMABLE)
+        .set('Upload-Length', '1')
+        .expect(201)
+        .expect('Location', /\/test\/output\/.+/)
+        .expect('Tus-Resumable', TUS_RESUMABLE)
+        .expect('X-App', 'pages')
+    })
+
+    it('preserves an early stream error through Pages middleware', async () => {
+      server.get('/failed-stream', () => {
+        const body = new Readable({
+          read() {
+            this.destroy(new Error('read failed'))
+          },
+        })
+        return new FastResponse(body, {headers: {'X-Success': 'true'}})
+      })
+      const response = await request(pagesApp()).get('/failed-stream').expect(500)
+      assert.equal(response.headers['x-success'], undefined)
+    })
+
+    it('keeps separate Set-Cookie headers through Pages middleware', async () => {
+      server.get('/cookies', () => {
+        const headers = new Headers()
+        headers.append('Set-Cookie', 'first=1; Path=/')
+        headers.append('Set-Cookie', 'second=2; Path=/')
+        return new Response('ok', {status: 202, statusText: 'Queued', headers})
+      })
+      const response = await request(pagesApp()).get('/cookies').expect(202, 'ok')
+      assert.deepEqual(response.headers['set-cookie'], [
+        'first=1; Path=/',
+        'second=2; Path=/',
+      ])
     })
 
     it('should include CORS headers on 412 and validation 400 responses', async () => {
