@@ -130,7 +130,44 @@ export class Server extends EventEmitter {
   async handle(req: http.IncomingMessage, res: http.ServerResponse) {
     const request = new NodeRequest({req, res})
     const response = await this.handler(request)
-    return sendNodeResponse(res, response)
+    const writeHead = res.writeHead
+    if (
+      req.httpVersionMajor !== 1 ||
+      writeHead === http.ServerResponse.prototype.writeHead ||
+      res.headersSent ||
+      // revalidate is attached by the Next.js Pages API resolver.
+      typeof Reflect.get(res, 'revalidate') !== 'function'
+    ) {
+      return sendNodeResponse(res, response)
+    }
+
+    // Next.js compression accepts a headers object but misreads the flat array
+    // from srvx. Translate at write time so stream errors can still set the status.
+    const middlewareWriteHead: typeof writeHead = function (this: typeof res, ...args) {
+      const index = typeof args[1] === 'string' ? 2 : 1
+      const raw = args[index]
+      if (
+        Array.isArray(raw) &&
+        raw.length % 2 === 0 &&
+        raw.every((field) => typeof field === 'string')
+      ) {
+        const fields: Record<string, string | string[]> = Object.create(null)
+        for (let i = 0; i < raw.length; i += 2) {
+          const name = raw[i].toLowerCase()
+          const previous = fields[name]
+          const value = raw[i + 1]
+          fields[name] = previous === undefined ? value : [previous, value].flat()
+        }
+        args[index] = fields
+      }
+      return Reflect.apply(writeHead, this, args)
+    }
+    res.writeHead = middlewareWriteHead
+    try {
+      return await sendNodeResponse(res, response)
+    } finally {
+      if (res.writeHead === middlewareWriteHead) res.writeHead = writeHead
+    }
   }
 
   async handleWeb(req: Request): Promise<Response> {
